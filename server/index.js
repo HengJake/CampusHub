@@ -1,8 +1,11 @@
-const express = require('express');
-const app = express()
+import express from 'express';
 
-app.use("/", (req, res) => {
-    res.send("Server is running");
-});
+const app = express();
 
-app.listen(5000, console.log("Server started on PORT 5000"));
+app.get("/", (req,res) => {
+    res.send("Server is ready");
+})
+
+app.listen(5000, () => {
+    console.log("Server started at PORT 5000")
+})
