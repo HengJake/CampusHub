@@ -13,7 +13,7 @@ app.use(express.json());
 // app.get("/CampusHub", (req, res) => {
 //     res.send("Server is ready!");
 // })
-// ================Handle users===============
+// ================add users===============
 app.post("/api/Users", async (req, res) => {
   const userData = req.body;
   // Validate userData here if necessary
