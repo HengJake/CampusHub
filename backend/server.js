@@ -12,7 +12,10 @@ const app = express();
 // allow json in requests
 app.use(express.json());
 
+// manage user routes
 app.use("/api/Users", userRoutes);
+
+// manage classroom routes
 app.use("/api/Classroom", classroomRoutes);
 
 
