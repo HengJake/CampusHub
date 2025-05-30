@@ -1,11 +1,13 @@
 // OverallPerformance component
+import "./overall-performance.scss"; // Importing the CSS file for styling
 
 function OverallPerformance() {
   return (
     <div className="overall-performance">
-      <h1>OverallPerformance</h1>
     </div>
   );
 }
 
 export default OverallPerformance;
+
+

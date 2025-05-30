@@ -1,5 +1,6 @@
 import { Box } from "@chakra-ui/react";
 import { Routes, Route } from "react-router-dom";
+import "./general.scss";
 
 // general component
 import Navbar from "./component/general/navBar/navBar";
