@@ -1,10 +1,14 @@
 import express from 'express';
-import { createUser, createAttendance, createAcademicResult } from '../controllers/users.controllers.js';
+import { createUser, createAttendance, createAcademicResult, getUser, deleteUser } from '../controllers/users.controllers.js';
 import mongoose from 'mongoose';
 
 const router = express.Router();
 
 router.post('/', createUser);
+
+router.get('/', getUser);
+
+router.delete('/:id', deleteUser);
 
 router.post("/:id/Attendances", createAttendance);
 

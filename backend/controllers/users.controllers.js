@@ -1,6 +1,7 @@
 import { Users, Attendance, AcademicResult } from "../models/users.model.js";
 import mongoose from "mongoose";
 
+//Create New User
 export const createUser = async (req, res) => {
   const userData = req.body;
   // Validate userData here if necessary
@@ -28,6 +29,44 @@ export const createUser = async (req, res) => {
   }
 };
 
+//Read User
+export const getUser = async (req, res) => {
+  try {
+    const user = await Users.find({});
+    res.status(200).json({success: true, data: user});
+  } catch (error) {
+    console.log("Error fetching users:", error);
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  };
+
+
+//Update User
+
+//Delete User
+export const deleteUser = async (req, res) => {
+  const { ID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(ID)) {
+      return res
+      .status(404)
+      .json({ success: false, message: "Invalid ID" });
+    }
+
+    try {
+      await Users.findByIdAndDelete(ID);
+      res.status(200)
+      .json({ success: true, message: "User deleted successfully" });
+    }  catch (error) {
+      console.log("Error deleting user:", error);
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  }
+  
+//---------------------------------------------------------------------------------
+
+
+// Create Attendance Record
 export const createAttendance = async (req, res) => {
   const userID = req.params.id;
   const attendanceData = req.body;
@@ -54,6 +93,7 @@ export const createAttendance = async (req, res) => {
   }
 };
 
+// Create Academic Result Record
 export const createAcademicResult = async (req, res) => {
   const userID = req.params.id;
   const resultData = req.body;
@@ -82,3 +122,4 @@ export const createAcademicResult = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
