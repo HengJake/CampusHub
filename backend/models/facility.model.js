@@ -10,4 +10,6 @@ const facilitySchema = new mongoose.Schema({
   available_slots: Number,
   sensors: [sensorSchema],
 });
-module.exports = mongoose.model("Facility", facilitySchema);
+
+const Facility = mongoose.model("Facility", facilitySchema);
+export default Facility;
