@@ -42,19 +42,41 @@ export const getUser = async (req, res) => {
 
 
 //Update User
+export const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const user = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res
+      .status(404)
+      .json({ success: false, message: "Invalid User ID" });
+  }
+
+  try {
+    const updatedUser = await Users.findByIdAndUpdate(id, user, {
+      new: true,
+    });
+    res.status(200).json({success: true, data: updatedUser});
+  }catch (error) {
+    console.log("Error updating user:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+
+};
+
 
 //Delete User
 export const deleteUser = async (req, res) => {
-  const { ID } = req.params;
+  const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(ID)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res
       .status(404)
       .json({ success: false, message: "Invalid ID" });
     }
 
     try {
-      await Users.findByIdAndDelete(ID);
+      await Users.findByIdAndDelete(id);
       res.status(200)
       .json({ success: true, message: "User deleted successfully" });
     }  catch (error) {
@@ -62,7 +84,7 @@ export const deleteUser = async (req, res) => {
       res.status(500).json({ success: false, message: "Internal server error" });
     }
   }
-  
+
 //---------------------------------------------------------------------------------
 
 
