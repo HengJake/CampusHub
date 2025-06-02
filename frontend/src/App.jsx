@@ -1,9 +1,8 @@
 import { Box } from "@chakra-ui/react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import "./general.scss";
 
 // general component
-import Navbar from "./component/general/navBar/navBar";
 import LandingHome from "./pages/commonPage/landinghome/landinghome";
 import SignUp from "./pages/commonPage/signup/signup";
 import Login from "./pages/commonPage/login/login";
@@ -33,11 +32,14 @@ import CourtBooking from "./component/userSide/court-booking/court-booking";
 import CourtPayment from "./component/userSide/court-payment/court-payment";
 import CourtPaymentDetails from "./component/userSide/court-payment-details/court-payment-details";
 
+// set different bar for different pages
+import Navbar from "./component/general/navBar/navBar";
+
 function App() {
   return (
     <Box minH="100vh">
-      <Navbar />
-      <Routes>
+    <Navbar />
+    <Routes>
         {/* Basic Routes */}
         <Route path="/" element={<LandingHome />} />
         <Route path="/signup" element={<SignUp />} />

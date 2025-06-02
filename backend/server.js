@@ -2,7 +2,6 @@ import express from "express";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import userRoutes from "./routes/users.route.js";
-import classroomRoutes from "./routes/classroom.route.js";
 
 dotenv.config();
 
@@ -15,8 +14,6 @@ app.use(express.json());
 // manage user routes
 app.use("/api/Users", userRoutes);
 
-// manage classroom routes
-app.use("/api/Classroom", classroomRoutes);
 
 
 app.listen(PORT, () => {
