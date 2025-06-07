@@ -7,5 +7,5 @@ const transportScheduleSchema = new mongoose.Schema({
   capacity: Number,
 });
 
-const TransportSchedule = mongoose.model("TransportSchedule", transportScheduleSchema);
-export default TransportSchedule;
+const Transport = mongoose.model("TransportSchedule", transportScheduleSchema);
+export default Transport;

@@ -1,54 +1,63 @@
+// Common Pages (camelCase folder/file names, PascalCase components)
+import Landing from "./pages/commonPage/landing/landing.jsx";
+import Service from "./pages/commonPage/service/service.jsx";
+import ContactUs from "./pages/commonPage/contactUs/contactUs.jsx";
+import Pricing from "./pages/commonPage/pricing/pricing.jsx";
+import Login from "./pages/commonPage/login/login.jsx";
+import Signup from "./pages/commonPage/signup/signup.jsx";
+import LoginCampushub from "./pages/commonPage/loginCampushub/loginCampushub.jsx";
+import About from "./pages/commonPage/about/about.jsx";
+
+// User Pages
+import UserDashboard from "./pages/userPage/userDashboard/userDashboard.jsx";
+import BookFacility from "./pages/userPage/bookFacility/bookFacility.jsx";
+import BookLocker from "./pages/userPage/bookLocker/bookLocker.jsx";
+import ParkingLot from "./pages/userPage/parkingLot/parkingLot.jsx";
+import ClassroomFinder from "./pages/userPage/classroomFinder/classroomFinder.jsx";
+import ClassSchedule from "./pages/userPage/classSchedule/classSchedule.jsx";
+import Result from "./pages/userPage/result/result.jsx";
+import Attendance from "./pages/userPage/attendance/attendance.jsx";
+import BusSchedule from "./pages/userPage/busSchedule/busSchedule.jsx";
+import CampusRide from "./pages/userPage/campusRide/campusRide.jsx";
+import Feedback from "./pages/userPage/feedback/feedback.jsx";
+import UserSetting from "./pages/userPage/userSetting/userSetting.jsx";
+import UserProfile from "./pages/userPage/userProfile/userProfile.jsx";
+
+// School Admin Pages
+import AdminDashboard from "./pages/schoolAdminPage/adminDashboard/adminDashboard.jsx";
+import StudentManagement from "./pages/schoolAdminPage/studentManagement/studentManagement.jsx";
+import FacilityManagement from "./pages/schoolAdminPage/facilityManagement/facilityManagement.jsx";
+import LockerManagement from "./pages/schoolAdminPage/lockerManagement/lockerManagement.jsx";
+import ParkingManagement from "./pages/schoolAdminPage/parkingManagement/parkingManagement.jsx";
+import BookingManagement from "./pages/schoolAdminPage/bookingManagement/bookingManagement.jsx";
+import FeedbackManagement from "./pages/schoolAdminPage/feedbackManagement/feedbackManagement.jsx";
+import AnnouncementManagement from "./pages/schoolAdminPage/announcementManagement/announcementManagement.jsx";
+import AdminSetting from "./pages/schoolAdminPage/adminSetting/adminSetting.jsx";
+import AdminProfile from "./pages/schoolAdminPage/adminProfile/adminProfile.jsx";
+
+// CampusHub Admin Pages
+import CampushubDashboard from "./pages/campusHubAdminPage/campushubDashboard/campushubDashboard.jsx";
+import Subscription from "./pages/campusHubAdminPage/subscription/subscription.jsx";
+import AnalyticalReport from "./pages/campusHubAdminPage/analyticalReport/analyticalReport.jsx";
+import ClientManagement from "./pages/campusHubAdminPage/clientManagement/clientManagement.jsx";
+import UserOversight from "./pages/campusHubAdminPage/userOversight/userOversight.jsx";
+import CampushubSetting from "./pages/campusHubAdminPage/campushubSetting/campushubSetting.jsx";
+import CampushubProfile from "./pages/campusHubAdminPage/campushubProfile/campushubProfile.jsx";
+
 import { Box, Button } from "@chakra-ui/react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Cookies from "js-cookie";
 import { useState } from "react";
 import "./general.scss";
-import "./component/general/generalComponent.scss";
-
-// general component
-import LandingHome from "./pages/commonPage/landinghome/landinghome";
-import SignUp from "./pages/commonPage/signup/signup";
-import Login from "./pages/commonPage/login/login";
-
-// common pages
-import About from "./pages/commonPage/about/about";
-import Pricing from "./pages/commonPage/pricing/pricing";
-import Service from "./pages/commonPage/service/service";
-import Contact from "./pages/commonPage/contact/contact";
-
-// user side components
-import TwoFAPage from "./pages/userSide/twofa/twofa";
-import Dashboard from "./pages/userSide/dashboard/dashboard";
-import Timetable from "./pages/userSide/timetable/timetable";
-import Results from "./pages/userSide/results/results";
-import OverallPerformance from "./pages/userSide/overall-performance/overall-performance";
-import SignAttendance from "./pages/userSide/sign-attendance/sign-attendance";
-import Profile from "./pages/userSide/profile/profile";
-import EditProfile from "./pages/userSide/edit-profile/edit-profile";
-import Settings from "./pages/userSide/settings/settings";
-import ClassFinder from "./pages/userSide/class-finder/class-finder";
-import BookingsDashboard from "./pages/userSide/bookings/bookings";
-import BusSchedule from "./pages/userSide/bus-schedule/bus-schedule";
-import Transport from "./pages/userSide/transport/transport";
-import TransportBooking from "./pages/userSide/transport-booking/transport-booking";
-import TransportBookingDetails from "./pages/userSide/transport-booking-details/transport-booking-details";
-import MapParkingLot from "./pages/userSide/parking-map/parking-map";
-import ParkingReservation from "./pages/userSide/bookings/bookings";
-import ParkingPayment from "./pages/userSide/class-finder/class-finder";
-import GymLockerBooking from "./pages/userSide/gym-locker-booking/gym-locker-booking";
-import LockerPayment from "./pages/userSide/locker-payment/locker-payment";
-import LockerDetails from "./pages/userSide/locker-details/locker-details";
-import CourtBooking from "./pages/userSide/court-booking/court-booking";
-import CourtPayment from "./pages/userSide/court-payment/court-payment";
-import CourtPaymentDetails from "./pages/userSide/court-payment-details/court-payment-details";
+import "./component/generalComponent.scss";
 
 // set different bar for different pages
-import CANavbar from "./component/general/navBar/companyAdminNavBar";
-import SANavbar from "./component/general/navBar/schoolAdminNavBar";
+import SANavbar from "./component/navBar/schoolAdminNavBar.jsx";
+import CANavbar from "./component/navBar/campusHubAdminNavBar.jsx";
 
-import LNavbar from "./component/general/navBar/landingNavBar";
-import RNavBar from "./component/general/navBar/registrationNavBar";
-import SNavBar from "./component/general/navBar/studentNavBar";
+import LNavbar from "./component/navBar/landingNavBar";
+import RNavBar from "./component/navBar/registrationNavBar";
+import SNavBar from "./component/navBar/studentNavBar";
 
 function App() {
   // Set the cookie
@@ -82,14 +91,27 @@ function App() {
     RenderedNavbar = <SNavBar />;
   } else if (userRole === "admin") {
     RenderedNavbar = <CANavbar />;
-  } else if (userRole === "moderator") {
+  } else if (userRole === "company") {
     RenderedNavbar = <SANavbar />;
   } else {
     RenderedNavbar = <LNavbar />;
   }
 
+  const getBgColor = () => {
+    switch (userRole) {
+      case "user":
+        return "blue.50";
+      case "company":
+        return "green.50";
+      case "admin":
+        return "#DAD7CD";
+      default:
+        return "gray.500";
+    }
+  };
+
   return (
-    <Box minH="100vh" display="flex" flexDirection="column">
+    <Box minH="100vh" display="flex" flexDirection="column" bg={getBgColor()}>
       <Box display="flex" flex="1">
         <Box height={"fit-content"} width={"100%"}>
           {RenderedNavbar}
@@ -97,62 +119,80 @@ function App() {
       </Box>
 
       <Box ml={"125px"} flex="1">
-        <Button onClick={() => setCookie("userRole", "admin", 7)}>
-          Set Admin
+        <Button
+          bg={"gray.900"}
+          onClick={() => setCookie("userRole", "admin", 7)}
+        >
+          Set Company
         </Button>
-        <Button onClick={() => setCookie("userRole", "user", 7)}>
+        <Button
+          bg={"gray.900"}
+          onClick={() => setCookie("userRole", "user", 7)}
+        >
           Set User
         </Button>
-        <Button onClick={() => setCookie("userRole", "moderator", 7)}>
-          Set Moderator
+        <Button
+          bg={"gray.900"}
+          onClick={() => setCookie("userRole", "company", 7)}
+        >
+          Set School
         </Button>
-        <Button onClick={() => deleteCookie("userRole")}>Delete Cookie</Button>
-        <Button onClick={() => alert(Cookies.get("userRole"))}>
+        <Button bg={"gray.900"} onClick={() => deleteCookie("userRole")}>
+          Delete Cookie
+        </Button>
+        <Button bg={"gray.900"} onClick={() => alert(Cookies.get("userRole"))}>
           Log Cookies
         </Button>
 
         <Routes>
-          {/* Basic Routes */}
-          <Route path="/" element={<LandingHome />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/pricing" element={<Pricing />} />
+          {/* Common Pages */}
+          <Route path="/" element={<Landing />} />
           <Route path="/service" element={<Service />} />
-          <Route path="/contact" element={<Contact />} />
+          <Route path="/contact-us" element={<ContactUs />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login-campushub" element={<LoginCampushub />} />
+          <Route path="/about" element={<About />} />
 
-          <Route path="/2fa" element={<TwoFAPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/timetable" element={<Timetable />} />
-          <Route path="/results" element={<Results />} />
-          <Route path="/overall-performance" element={<OverallPerformance />} />
-          <Route path="/sign-attendance" element={<SignAttendance />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/edit-profile" element={<EditProfile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/class-finder" element={<ClassFinder />} />
-
-          {/* Booking-related Routes */}
-          <Route path="/bookings" element={<BookingsDashboard />} />
+          {/* User Pages */}
+          <Route path="/user-dashboard" element={<UserDashboard />} />
+          <Route path="/book-facility" element={<BookFacility />} />
+          <Route path="/book-locker" element={<BookLocker />} />
+          <Route path="/parking-lot" element={<ParkingLot />} />
+          <Route path="/classroom-finder" element={<ClassroomFinder />} />
+          <Route path="/class-schedule" element={<ClassSchedule />} />
+          <Route path="/result" element={<Result />} />
+          <Route path="/attendance" element={<Attendance />} />
           <Route path="/bus-schedule" element={<BusSchedule />} />
-          <Route path="/ride" element={<Transport />} />
-          <Route path="/ride-booking" element={<TransportBooking />} />
+          <Route path="/campus-ride" element={<CampusRide />} />
+          <Route path="/feedback" element={<Feedback />} />
+          <Route path="/user-setting" element={<UserSetting />} />
+          <Route path="/user-profile" element={<UserProfile />} />
+
+          {/* School Admin Pages */}
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/student-management" element={<StudentManagement />} />
+          <Route path="/facility-management" element={<FacilityManagement />} />
+          <Route path="/locker-management" element={<LockerManagement />} />
+          <Route path="/parking-management" element={<ParkingManagement />} />
+          <Route path="/booking-management" element={<BookingManagement />} />
+          <Route path="/feedback-management" element={<FeedbackManagement />} />
           <Route
-            path="/ride-booking-details"
-            element={<TransportBookingDetails />}
+            path="/announcement-management"
+            element={<AnnouncementManagement />}
           />
-          <Route path="/parking-map" element={<MapParkingLot />} />
-          <Route path="/parking-reservation" element={<ParkingReservation />} />
-          <Route path="/parking-payment" element={<ParkingPayment />} />
-          <Route path="/gym-locker-booking" element={<GymLockerBooking />} />
-          <Route path="/locker-payment" element={<LockerPayment />} />
-          <Route path="/locker-details" element={<LockerDetails />} />
-          <Route path="/court-booking" element={<CourtBooking />} />
-          <Route path="/court-payment" element={<CourtPayment />} />
-          <Route
-            path="/court-payment-details"
-            element={<CourtPaymentDetails />}
-          />
+          <Route path="/admin-setting" element={<AdminSetting />} />
+          <Route path="/admin-profile" element={<AdminProfile />} />
+
+          {/* CampusHub Admin Pages */}
+          <Route path="/campushub-dashboard" element={<CampushubDashboard />} />
+          <Route path="/subscription" element={<Subscription />} />
+          <Route path="/analytical-report" element={<AnalyticalReport />} />
+          <Route path="/client-management" element={<ClientManagement />} />
+          <Route path="/user-oversight" element={<UserOversight />} />
+          <Route path="/campushub-setting" element={<CampushubSetting />} />
+          <Route path="/campushub-profile" element={<CampushubProfile />} />
         </Routes>
       </Box>
     </Box>

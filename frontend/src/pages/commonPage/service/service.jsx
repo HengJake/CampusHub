@@ -1,10 +1,8 @@
-import React from 'react'
-import "./service.scss";
+import React from 'react';
+import './service.scss';
 
-function Service() {
-  return (
-    <div>Service</div>
-  )
+function service() {
+  return <div className="service">service Page</div>;
 }
 
-export default Service
+export default service;

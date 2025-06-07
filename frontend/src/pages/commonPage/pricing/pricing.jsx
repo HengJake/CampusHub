@@ -1,11 +1,8 @@
-// LandingHome component
+import React from 'react';
+import './pricing.scss';
 
-function LandingHome() {
-  return (
-    <div className="landinghome">
-      <h1>LandingHome</h1>
-    </div>
-  );
+function pricing() {
+  return <div className="pricing">pricing Page</div>;
 }
 
-export default LandingHome;
+export default pricing;

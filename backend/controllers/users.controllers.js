@@ -1,4 +1,4 @@
-import { Users} from "../models/users.model.js";
+import { User } from "../models/users.model.js";
 import mongoose from "mongoose";
 
 //Create New User
@@ -10,13 +10,13 @@ export const createUser = async (req, res) => {
     return res
       .status(400)
       .json({ success: false, message: "Invalid user data" });
-  } else if (await Users.findOne({ email: userData.email })) {
+  } else if (await User.findOne({ email: userData.email })) {
     return res
       .status(400)
       .json({ success: false, message: "Email already exists" });
   }
 
-  const newUser = new Users(userData);
+  const newUser = new User(userData);
 
   try {
     await newUser.save();
@@ -33,14 +33,13 @@ export const createUser = async (req, res) => {
 //Read User
 export const getUser = async (req, res) => {
   try {
-    const user = await Users.find({});
-    res.status(200).json({success: true, data: user});
+    const user = await User.find({});
+    res.status(200).json({ success: true, data: user });
   } catch (error) {
     console.log("Error fetching users:", error);
-      res.status(500).json({ success: false, message: "Internal server error" });
-    }
-  };
-
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
 
 //Update User
 export const updateUser = async (req, res) => {
@@ -48,42 +47,37 @@ export const updateUser = async (req, res) => {
   const user = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res
-      .status(404)
-      .json({ success: false, message: "Invalid User ID" });
+    return res.status(404).json({ success: false, message: "Invalid User ID" });
   }
 
   try {
-    const updatedUser = await Users.findByIdAndUpdate(id, user, {
+    const updatedUser = await User.findByIdAndUpdate(id, user, {
       new: true,
     });
-    res.status(200).json({success: true, data: updatedUser});
-  }catch (error) {
+    res.status(200).json({ success: true, data: updatedUser });
+  } catch (error) {
     console.log("Error updating user:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
-
 };
-
 
 //Delete User
 export const deleteUser = async (req, res) => {
   const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-      .status(404)
-      .json({ success: false, message: "Invalid ID" });
-    }
-
-    try {
-      await Users.findByIdAndDelete(id);
-      res.status(200)
-      .json({ success: true, message: "User deleted successfully" });
-    }  catch (error) {
-      console.log("Error deleting user:", error);
-      res.status(500).json({ success: false, message: "Internal server error" });
-    }
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ success: false, message: "Invalid ID" });
   }
+
+  try {
+    await User.findByIdAndDelete(id);
+    res
+      .status(200)
+      .json({ success: true, message: "User deleted successfully" });
+  } catch (error) {
+    console.log("Error deleting user:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
 
 //---------------------------------------------------------------------------------

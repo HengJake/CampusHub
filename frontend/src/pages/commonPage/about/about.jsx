@@ -1,11 +1,8 @@
-// LandingHome component
+import React from 'react';
+import './about.scss';
 
-function LandingHome() {
-  return (
-    <div className="landinghome">
-      <h1>LandingHome</h1>
-    </div>
-  );
+function about() {
+  return <div className="about">about Page</div>;
 }
 
-export default LandingHome;
+export default about;
