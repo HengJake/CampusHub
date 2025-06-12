@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 // import userRoutes from "./routes/users.route.js";
+import facilityRoutes from "./routes/facility.routes.js";
 
 dotenv.config();
 
@@ -11,8 +12,9 @@ const app = express();
 // allow json in requests
 app.use(express.json());
 
-// manage user routes
-// app.use("/api/Users", userRoutes);
+// manage Facility routes
+app.use("/api/facility", facilityRoutes);
+
 
 
 

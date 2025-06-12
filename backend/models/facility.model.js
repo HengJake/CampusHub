@@ -7,6 +7,7 @@ const facilitySchema = new mongoose.Schema({
     },
     Type: {
         type: String,
+        enum: ['classroom', 'laboratory', 'outdoor', 'indoor', 'meeting_room'],
         require: true,
     },
     Description: {
@@ -15,6 +16,7 @@ const facilitySchema = new mongoose.Schema({
     },
     Availability: {
         type: String,
+        enum: ['available', 'unavailable','booked','maintenance'],
         require: true,
     }
 },{ timestamps: true });
