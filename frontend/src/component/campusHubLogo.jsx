@@ -9,11 +9,23 @@ import {
   Box,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
+import { getCookie } from "./cookieUtils";
 
 export const CampusHubLogo = () => {
+  let logoLink;
+  const role = getCookie("userRole");
+  if (role === "user") {
+    logoLink = "/user-dashboard";
+  } else if (role === "admin") {
+    logoLink = "/admin-dashboard";
+  } else if (role === "company") {
+    logoLink = "/campushub-dashboard";
+  } else {
+    logoLink = "/";
+  }
   return (
     <Box zIndex={100}>
-      <Link to="/">
+      <Link to={logoLink}>
         <HStack>
           <Image
             src="/Logo.png"

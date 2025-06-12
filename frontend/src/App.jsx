@@ -89,9 +89,9 @@ function App() {
     RenderedNavbar = <RNavBar />;
   } else if (userRole === "user") {
     RenderedNavbar = <SNavBar />;
-  } else if (userRole === "admin") {
-    RenderedNavbar = <CANavbar />;
   } else if (userRole === "company") {
+    RenderedNavbar = <CANavbar />;
+  } else if (userRole === "admin") {
     RenderedNavbar = <SANavbar />;
   } else {
     RenderedNavbar = <LNavbar />;
@@ -102,11 +102,11 @@ function App() {
       case "user":
         return "blue.50";
       case "company":
-        return "green.50";
-      case "admin":
         return "#DAD7CD";
+      case "admin":
+        return "green.50";
       default:
-        return "gray.500";
+        return "gray.200";
     }
   };
 
@@ -123,7 +123,7 @@ function App() {
           bg={"gray.900"}
           onClick={() => setCookie("userRole", "admin", 7)}
         >
-          Set Company
+          Set School
         </Button>
         <Button
           bg={"gray.900"}
@@ -135,7 +135,7 @@ function App() {
           bg={"gray.900"}
           onClick={() => setCookie("userRole", "company", 7)}
         >
-          Set School
+          Set Company
         </Button>
         <Button bg={"gray.900"} onClick={() => deleteCookie("userRole")}>
           Delete Cookie
