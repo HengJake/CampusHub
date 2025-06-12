@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
-import userRoutes from "./routes/users.route.js";
+// import userRoutes from "./routes/users.route.js";
 
 dotenv.config();
 
@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 
 // manage user routes
-app.use("/api/Users", userRoutes);
+// app.use("/api/Users", userRoutes);
 
 
 

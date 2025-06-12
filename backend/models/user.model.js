@@ -1,21 +1,33 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    email: { type: String, unique: true, required: true },
-    password: { type: String, required: true },
-    role: {
-      type: String,
-      enum: ["student", "lecturer", "companyAdmin", "schoolAdmin"],
-      required: true,
-    },
-    twoFA_enabled: {type: Boolean, default: false},
+const userSchema = new mongoose.Schema({
+  Name: {
+    type: String,
+    required: true,
   },
-  {
-    timestamps: true, // createAt , updatedAt
-  }
-);
+  Password: {
+    type: String,
+    required: true,
+  },
+  PhoneNumber: {
+    type: Number,
+    required: true,
+  },
+  Email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  Role: {
+    type: String,
+    enum: ["student", "lecturer", "companyAdmin", "schoolAdmin"],
+    required: true,
+  },
+  twoFA_enabled: {
+    type: Boolean,
+    default: false,
+  },
+}, {timestamps: true});
 
-// mongo will change User to users in the database
-export const User = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+export default User;
