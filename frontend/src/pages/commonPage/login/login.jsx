@@ -2,7 +2,7 @@ import React from 'react';
 import './login.scss';
 
 function login() {
-  return <div className="login">login Page</div>;
+  return <div className="login">asdasdsd</div>;
 }
 
 export default login;
