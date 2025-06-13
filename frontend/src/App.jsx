@@ -84,17 +84,23 @@ function App() {
   const [userRole, setUserRole] = useState(Cookies.get("userRole") || null);
 
   let RenderedNavbar;
+  let margin;
 
-  if (path === "/login" || path === "/signup") {
+  if (path === "/login" || path === "/signup" || path === "/login-campushub") {
     RenderedNavbar = <RNavBar />;
+    margin = 0;
   } else if (userRole === "user") {
     RenderedNavbar = <SNavBar />;
+    margin = "125px";
   } else if (userRole === "company") {
     RenderedNavbar = <CANavbar />;
+    margin = "125px";
   } else if (userRole === "admin") {
     RenderedNavbar = <SANavbar />;
+    margin = "125px";
   } else {
     RenderedNavbar = <LNavbar />;
+    margin = "125px";
   }
 
   const getBgColor = () => {
@@ -112,14 +118,14 @@ function App() {
 
   return (
     <Box minH="100vh" display="flex" flexDirection="column" bg={getBgColor()}>
-      <Box display="flex" flex="1">
+      <Box display="flex">
         <Box height={"fit-content"} width={"100%"}>
           {RenderedNavbar}
         </Box>
       </Box>
 
-      <Box ml={"125px"} flex="1" display={"flex"}>
-        {/* <Button
+      <Box ml={margin} flex="1" display={"flex"}>
+        {/*  <Button
           bg={"gray.900"}
           onClick={() => setCookie("userRole", "admin", 7)}
         >
