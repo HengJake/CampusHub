@@ -1,5 +1,5 @@
 import React from "react";
-import "./loginCampushub.scss";
+import "./loginSchool.scss";
 import {
   Box,
   VStack,
@@ -12,24 +12,38 @@ import {
   InputLeftElement,
   Checkbox,
   Link as ChakraLink,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  Heading,
 } from "@chakra-ui/react";
 import { FaPhoneAlt } from "react-icons/fa";
 import { HiOutlineMail } from "react-icons/hi";
 import { MdCheckBoxOutlineBlank } from "react-icons/md";
 import { MdOutlineCheckBox } from "react-icons/md";
+import { useDisclosure } from "@chakra-ui/react";
 
-function loginCampushub() {
+function LoginSchool() {
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
     <Box
       flex={1}
       display={"flex"}
+      flexDirection={"column"}
       justifyContent={"center"}
       alignItems={"center"}
       overflow={"hidden"}
     >
+      <Heading color={"#344E41"} mb={10}>
+        School Admin Login
+      </Heading>
       {/*Company Admin Login Form */}
       <Box
         p={3}
@@ -39,7 +53,7 @@ function loginCampushub() {
         border="1px solid rgba(255, 255, 255, 0.2)"
         boxShadow="lg"
         borderRadius="lg"
-        color={"#d6c2b4"}
+        color={"#DAD7CD"}
         zIndex={100}
       >
         <VStack>
@@ -71,60 +85,102 @@ function loginCampushub() {
               <Text textAlign={"left"}>Remember me</Text>
               <Checkbox colorScheme="orange"></Checkbox>
             </HStack>
-            <ChakraLink whiteSpace="nowrap">
+            <ChakraLink whiteSpace="nowrap" onClick={onOpen}>
               Forget Password
             </ChakraLink>
           </HStack>
 
-          <Button w={"100%"} bg={"#8b5e3c"} mt={5}>
+          <Button w={"100%"} bg={"#588157"} mt={5}>
             LOGIN
           </Button>
         </VStack>
       </Box>
 
+      {/*Pop Up */}
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent bg={"#3A5A40"}>
+          <ModalHeader>Forget Password</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Input variant="flushed" placeholder="Enter your email" />
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={onClose}>
+              Close
+            </Button>
+            <Button variant="ghost">Secondary Action</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
       {/*Background box */}
+      {/*First layer */}
       <Box
         position="fixed"
-        bottom="-200px"
-        left="-200px"
+        bottom="-20%"
+        left="-10%"
         width="300px"
         height="600px"
         borderRadius="full"
-        bgGradient="linear(to-br, #a57b5e, #8b5e3c)"
+        bgGradient="linear(to-br, #A3B18A, #588157)"
         zIndex="0"
       ></Box>
       <Box
         position="fixed"
-        bottom="-300px"
-        left="-100px"
+        bottom="-20%"
+        right="-10%"
         width="300px"
         height="600px"
         borderRadius="full"
-        bgGradient="linear(to-br, #a57b5e, #8b5e3c)"
+        bgGradient="linear(to-br, #A3B18A, #588157)"
+        zIndex="0"
+      ></Box>
+      {/*Second layer */}
+      <Box
+        position="fixed"
+        bottom="-40%"
+        left="10%"
+        width="300px"
+        height="600px"
+        borderRadius="full"
+        bgGradient="linear(to-br, #A3B18A, #588157)"
         zIndex="0"
       ></Box>
       <Box
         position="fixed"
-        bottom="-200px"
-        right="-200px"
+        bottom="-40%"
+        right="10%"
         width="300px"
         height="600px"
         borderRadius="full"
-        bgGradient="linear(to-br, #a57b5e, #8b5e3c)"
+        bgGradient="linear(to-br, #A3B18A, #588157)"
+        zIndex="0"
+      ></Box>
+      {/*Third layer */}
+      <Box
+        position="fixed"
+        bottom="-60%"
+        right="20%"
+        width="300px"
+        height="600px"
+        borderRadius="full"
+        bgGradient="linear(to-br, #A3B18A, #588157)"
         zIndex="0"
       ></Box>
       <Box
         position="fixed"
-        bottom="-300px"
-        right="-100px"
+        bottom="-60%"
+        left="20%"
         width="300px"
         height="600px"
         borderRadius="full"
-        bgGradient="linear(to-br, #a57b5e, #8b5e3c)"
+        bgGradient="linear(to-br, #A3B18A, #588157)"
         zIndex="0"
       ></Box>
     </Box>
   );
 }
 
-export default loginCampushub;
+export default LoginSchool;
