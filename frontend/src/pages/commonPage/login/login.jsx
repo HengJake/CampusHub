@@ -28,7 +28,7 @@ import { Checkbox, CheckboxGroup } from "@chakra-ui/react";
 function login() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   return (
-    <Box flex={1} display={"flex"} justifyContent="center" alignItems="center">
+    <Box flex={1} display={"flex"} justifyContent="center" alignItems="center" >
       {/* LoginBox */}
       <Box
         position="fixed"
@@ -41,6 +41,7 @@ function login() {
         bg="rgba(0, 0, 0, 0.24)" // translucent glass
         boxShadow="lg"
         color={"black"}
+        
       >
         <Heading
           padding={"5"}

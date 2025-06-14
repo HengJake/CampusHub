@@ -126,7 +126,7 @@ function App() {
       </Box>
 
       <Box ml={margin} flex="1" display={"flex"}>
-       <Button
+       {/* <Button
           bg={"gray.900"}
           onClick={() => setCookie("userRole", "admin", 7)}
         >
@@ -149,7 +149,7 @@ function App() {
         </Button>
         <Button bg={"gray.900"} onClick={() => alert(Cookies.get("userRole"))}>
           Log Cookies
-        </Button> 
+        </Button>  */}
 
         <Routes>
           {/* Common Pages */}
