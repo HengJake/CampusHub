@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 // import userRoutes from "./routes/users.route.js";
 import facilityRoutes from "./routes/facility.routes.js";
+import userRoutes from "./routes/user.routes.js";
 
 dotenv.config();
 
@@ -14,9 +15,7 @@ app.use(express.json());
 
 // manage Facility routes
 app.use("/api/facility", facilityRoutes);
-
-
-
+app.use("/api/user", userRoutes);
 
 app.listen(PORT, () => {
   connectDB();
