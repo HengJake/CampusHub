@@ -6,6 +6,7 @@ import Pricing from "./pages/commonPage/pricing/pricing.jsx";
 import Login from "./pages/commonPage/login/login.jsx";
 import Signup from "./pages/commonPage/signup/signup.jsx";
 import LoginCampushub from "./pages/commonPage/loginCampushub/loginCampushub.jsx";
+import LoginSchool from "./pages/commonPage/loginSchool/loginSchool.jsx";
 import About from "./pages/commonPage/about/about.jsx";
 
 // User Pages
@@ -86,7 +87,7 @@ function App() {
   let RenderedNavbar;
   let margin;
 
-  if (path === "/login" || path === "/signup" || path === "/login-campushub") {
+  if (path === "/login" || path === "/signup" || path === "/login-campushub" || path === "/login-school") {
     RenderedNavbar = <RNavBar />;
     margin = 0;
   } else if (userRole === "user") {
@@ -100,7 +101,7 @@ function App() {
     margin = "125px";
   } else {
     RenderedNavbar = <LNavbar />;
-    margin = "125px";
+    margin = "0";
   }
 
   const getBgColor = () => {
@@ -125,7 +126,7 @@ function App() {
       </Box>
 
       <Box ml={margin} flex="1" display={"flex"}>
-         {/* <Button
+       <Button
           bg={"gray.900"}
           onClick={() => setCookie("userRole", "admin", 7)}
         >
@@ -148,7 +149,7 @@ function App() {
         </Button>
         <Button bg={"gray.900"} onClick={() => alert(Cookies.get("userRole"))}>
           Log Cookies
-        </Button> */}
+        </Button> 
 
         <Routes>
           {/* Common Pages */}
@@ -159,6 +160,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login-campushub" element={<LoginCampushub />} />
+          <Route path="/login-school" element={<LoginSchool />} />
           <Route path="/about" element={<About />} />
 
           {/* User Pages */}
