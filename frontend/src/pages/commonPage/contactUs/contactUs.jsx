@@ -30,7 +30,6 @@ function contactUs() {
   return (
     <Flex w="100%" h="100vh" justify="center" align="center">
       <Box
-        classname="ContactUs"
         w={"90%"}
         justifyContent={"center"}
         height={"100%"}
