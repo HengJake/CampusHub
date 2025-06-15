@@ -87,7 +87,12 @@ function App() {
   let RenderedNavbar;
   let margin;
 
-  if (path === "/login" || path === "/signup" || path === "/login-campushub" || path === "/login-school") {
+  if (
+    path === "/login" ||
+    path === "/signup" ||
+    path === "/login-campushub" ||
+    path === "/login-school"
+  ) {
     RenderedNavbar = <RNavBar />;
     margin = 0;
   } else if (userRole === "user") {
@@ -107,13 +112,13 @@ function App() {
   const getBgColor = () => {
     switch (userRole) {
       case "user":
-        return "blue.50";
+        return "brand.userBg";
       case "company":
-        return "#DAD7CD";
+        return "brand.companyBg";
       case "admin":
-        return "green.50";
+        return "brand.adminBg";
       default:
-        return "gray.200";
+        return "brand.defaultBg";
     }
   };
 
@@ -126,7 +131,7 @@ function App() {
       </Box>
 
       <Box ml={margin} flex="1" display={"flex"}>
-       {/* <Button
+        {/* <Button
           bg={"gray.900"}
           onClick={() => setCookie("userRole", "admin", 7)}
         >

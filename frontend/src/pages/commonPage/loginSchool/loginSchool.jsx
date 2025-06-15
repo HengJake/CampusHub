@@ -21,10 +21,7 @@ import {
   ModalFooter,
   Heading,
 } from "@chakra-ui/react";
-import { FaPhoneAlt } from "react-icons/fa";
 import { HiOutlineMail } from "react-icons/hi";
-import { MdCheckBoxOutlineBlank } from "react-icons/md";
-import { MdOutlineCheckBox } from "react-icons/md";
 import { useDisclosure } from "@chakra-ui/react";
 
 function LoginSchool() {

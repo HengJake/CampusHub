@@ -9,14 +9,10 @@ import {
 } from "@chakra-ui/react";
 import React from "react";
 import { Link } from "react-router-dom";
-import { FaMoon } from "react-icons/fa";
-import { IoSunny } from "react-icons/io5";
 import { MdAccountCircle } from "react-icons/md";
 import { CampusHubLogo } from "../campusHubLogo.jsx";
 
 function navBar() {
-  // const { colorMode, toggleColorMode } = useColorMode();
-
   return (
     <Container maxWidth={"100vw"} px={4} className="navBar">
       <Flex
@@ -41,7 +37,7 @@ function navBar() {
             <Link to="/service">Service</Link>
           </Text>
           <Text color={"gray.800"}>
-            <Link to="/contact">Contact</Link>
+            <Link to="/contact-us">Contact</Link>
           </Text>
         </HStack>
 
