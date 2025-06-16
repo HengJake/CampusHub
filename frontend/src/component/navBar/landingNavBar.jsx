@@ -11,10 +11,19 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { MdAccountCircle } from "react-icons/md";
 import { CampusHubLogo } from "../campusHubLogo.jsx";
+import { useLocation } from "react-router-dom";
 
 function navBar() {
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
+
   return (
-    <Container maxWidth={"100vw"} px={4} className="navBar">
+    <Container
+      maxWidth={"100vw"}
+      px={4}
+      bg={isHomePage ? "transparent" : "white"}
+      position={isHomePage ? "absolute" : ""}
+    >
       <Flex
         h={16}
         align={"center"}
