@@ -106,8 +106,8 @@ function landing() {
         >
           <Box bgColor={"#6699CC"} height={"80%"}>
             <Image
-              objectFit={"fill"}
-              height={"100%"}
+              objectFit={"cover"}
+              height={"auto"}
               width={"100%"}
               src={NameImage}
               alt="Poster"
