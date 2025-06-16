@@ -34,42 +34,10 @@ function landing() {
           gap={5}
           color={"white"}
         >
-          {/* BackgroundDesign */}
-          <Box
-            position="absolute"
-            bottom="15%"
-            left="-300px"
-            width="900px"
-            height="900px"
-            borderRadius="full"
-            bgColor={"rgba(255, 255, 255, 0.1)"}
-            zIndex="1"
-          ></Box>
-          <Box
-            position="absolute"
-            bottom="20%"
-            right="70%"
-            width="800px"
-            height="800px"
-            borderRadius="full"
-            bgColor={"rgba(255, 255, 255, 0.1)"}
-            zIndex="1"
-          ></Box>
-          <Box
-            position="absolute"
-            bottom="30%"
-            right="80%"
-            width="600px"
-            height="600px"
-            borderRadius="full"
-            bgColor={"rgba(255, 255, 255, 0.1)"}
-            zIndex="1"
-          ></Box>
-
-          <Heading fontSize={"60px"} fontWeight={"light"}>
+          <Heading fontSize={"60px"} fontWeight={"light"} letterSpacing={5}>
             Where Student Life Meets
           </Heading>
-          <Text fontSize={"60px"} fontWeight={"bold"}>
+          <Text fontSize={"60px"} fontWeight={"bold"} letterSpacing={1}>
             Smart Management
           </Text>
           <Box
@@ -79,7 +47,17 @@ function landing() {
             flexDirection={"row"}
             alignItems={"center"}
           >
-            <Button width={"100%"} height={"60px"} borderRadius={"15px"}>
+            <Button
+              width={"100%"}
+              height={"60px"}
+              borderRadius={"15px"}
+              bgColor={"#FF5656"}
+              color={"white"}
+              fontSize={"24px"}
+              fontWeight={"bold"}
+              zIndex={100}
+              _hover={{ bgColor: "rgb(255, 255, 255)", color: "black" }}
+            >
               Join Now
             </Button>
             <Button
@@ -90,33 +68,173 @@ function landing() {
               border={"4px solid white"}
               color={"white"}
               fontWeight={"bold"}
+              fontSize={"24px"}
               _hover={{ bgColor: "rgb(255, 255, 255)", color: "black" }}
             >
               Log in
             </Button>
           </Box>
         </Box>
+
         <Box
           width={"100%"}
-          height={"100%"}
           p={"70px"}
-          border={"1px"}
-          bgColor={"white"}
           zIndex="100"
         >
-          <Box bgColor={"#6699CC"} height={"80%"}>
+          <Box height={"100%"}>
             <Image
+            
               objectFit={"cover"}
               height={"auto"}
               width={"100%"}
               src={NameImage}
               alt="Poster"
             />
+            <Box
+              display={"flex"}
+              justifyContent={"center"}
+              alignItems={"center"}
+              flexDirection={"column"}
+            >
+              <Box
+                p={8}
+                width={"100%"}
+                display={"flex"}
+                flexDirection={"row"}
+                justifyContent={"space-between"}
+              >
+                <Heading fontSize={"30px"}>Purchase Plans</Heading>
+                <Button
+                  bgColor="rgb(230, 230, 230, 0.50)"
+                  borderRadius={"10px"}
+                  position={"relative"}
+                  width={"10%"}
+                >
+                  View All
+                </Button>
+              </Box>
+
+              <Box
+                display={"flex"}
+                flexDirection={"row"}
+                gap={10}
+                minW={"96%"}
+                justifyContent={"center"}
+              >
+                <Box
+                  p={10}
+                  width={"40%"}
+                  border={"2px"}
+                  borderColor={"rgba(0, 0, 0, 0.10)"}
+                  borderRadius={"10"}
+                >
+                  <Text fontWeight={"bold"} fontSize={"30px"}>
+                    Basic
+                  </Text>
+                  <br />
+                  <Text fontWeight={"bold"} fontSize={"30px"}>
+                    $99{" "}
+                  </Text>
+                  <Text fontSize={"14px"}>
+                    small colleges or training centers
+                  </Text>
+                  <br />
+                  <Button
+                    bg={"transparent"}
+                    border={"1px"}
+                    borderColor={"rgba(0, 0, 0, 0.20)"}
+                    width={"100%"}
+                  >
+                    Get Started
+                  </Button>
+                </Box>
+                <Box
+                  p={10}
+                  width={"40%"}
+                  border={"2px"}
+                  borderColor={"rgba(0, 0, 0, 0.10)"}
+                  borderRadius={"10"}
+                >
+                  <Text fontWeight={"bold"} fontSize={"30px"}>
+                    Standard
+                  </Text>
+                  <br />
+                  <Text fontWeight={"bold"} fontSize={"30px"}>
+                    $249{" "}
+                  </Text>
+                  <Text fontSize={"14px"}>Includes Everything in Basic </Text>
+                  <br />
+                  <Button
+                    width={"100%"}
+                    bgColor={"rgba(102, 153, 204)"}
+                    boxShadow={"0px 4px 10px rgba(0, 0, 0, 0.3)"}
+                    color={"white"}
+                  >
+                    Get Started
+                  </Button>
+                </Box>
+                <Box
+                  p={10}
+                  width={"40%"}
+                  border={"2px"}
+                  borderColor={"rgba(0, 0, 0, 0.10)"}
+                  borderRadius={"10"}
+                >
+                  <Text fontWeight={"bold"} fontSize={"30px"}>
+                    Premium
+                  </Text>
+                  <br />
+                  <Text fontWeight={"bold"} fontSize={"30px"}>
+                    $499{" "}
+                  </Text>
+                  <Text fontSize={"14px"}>Large Universities or Campuses </Text>
+                  <br />
+                  <Button
+                    width={"100%"}
+                    bg={"transparent"}
+                    border={"1px"}
+                    borderColor={"rgba(0, 0, 0, 0.20)"}
+                  >
+                    Get Started
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
           </Box>
         </Box>
       </Box>
 
-      {/* Image Box */}
+      {/* BackgroundDesign */}
+      <Box
+        position="absolute"
+        bottom="15%"
+        left="-10%"
+        width="900px"
+        height="900px"
+        borderRadius="full"
+        bgColor={"rgba(255, 255, 255, 0.1)"}
+        zIndex="1"
+      ></Box>
+      <Box
+        position="absolute"
+        bottom="20%"
+        right="70%"
+        width="800px"
+        height="800px"
+        borderRadius="full"
+        bgColor={"rgba(255, 255, 255, 0.1)"}
+        zIndex="1"
+      ></Box>
+      <Box
+        position="absolute"
+        bottom="30%"
+        right="80%"
+        width="600px"
+        height="600px"
+        borderRadius="full"
+        bgColor={"rgba(255, 255, 255, 0.1)"}
+        zIndex="100"
+      ></Box>
     </Flex>
   );
 }
