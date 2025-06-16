@@ -37,7 +37,7 @@ function landing() {
           {/* BackgroundDesign */}
           <Box
             position="absolute"
-            bottom="150px"
+            bottom="15%"
             left="-300px"
             width="900px"
             height="900px"
@@ -47,8 +47,8 @@ function landing() {
           ></Box>
           <Box
             position="absolute"
-            bottom="200px"
-            left="-300px"
+            bottom="20%"
+            right="70%"
             width="800px"
             height="800px"
             borderRadius="full"
@@ -57,8 +57,8 @@ function landing() {
           ></Box>
           <Box
             position="absolute"
-            bottom="300px"
-            left="-300px"
+            bottom="30%"
+            right="80%"
             width="600px"
             height="600px"
             borderRadius="full"
