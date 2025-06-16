@@ -30,6 +30,7 @@ function contactUs() {
   return (
     <Flex w="100%" h="100vh" justify="center" align="center">
       <Box
+        className="ContactUs"
         w={"90%"}
         justifyContent={"center"}
         height={"100%"}
@@ -167,7 +168,7 @@ function contactUs() {
                 Contact Information
               </Heading>
 
-              <Text
+              <Box
                 display={"flex"}
                 flexDirection={"column"}
                 fontSize={"20px"}
@@ -182,7 +183,7 @@ function contactUs() {
                   alignItems={"center"}
                 >
                   <IoMail size={"25px"} />
-                  <Text fontSize={"16px"} fontWeight={"medium"}>
+                  <Box fontSize={"16px"} fontWeight={"medium"}>
                     Email Support
                     <Text
                       fontSize={"15px"}
@@ -191,7 +192,7 @@ function contactUs() {
                     >
                       support@campushub.com
                     </Text>
-                  </Text>
+                  </Box>
                 </Box>
                 <Box
                   display={"flex"}
@@ -200,7 +201,7 @@ function contactUs() {
                   alignItems={"center"}
                 >
                   <BsFillPhoneFill size={"25px"} />
-                  <Text fontSize={"16px"} fontWeight={"medium"}>
+                  <Box fontSize={"16px"} fontWeight={"medium"}>
                     Phone Support
                     <Text
                       fontSize={"15px"}
@@ -209,7 +210,7 @@ function contactUs() {
                     >
                       +60 1234 5678
                     </Text>
-                  </Text>
+                  </Box>
                 </Box>
                 <Box
                   display={"flex"}
@@ -218,7 +219,7 @@ function contactUs() {
                   alignItems={"center"}
                 >
                   <ImLocation2 size={"25px"} />
-                  <Text fontSize={"16px"} fontWeight={"medium"}>
+                  <Box fontSize={"16px"} fontWeight={"medium"}>
                     Office Address
                     <Text
                       fontSize={"15px"}
@@ -228,7 +229,7 @@ function contactUs() {
                       Shah Alam, Selangor, <br />
                       Malaysia
                     </Text>
-                  </Text>
+                  </Box>
                 </Box>
                 <br />
                 <Divider borderColor={"gray.300"} width={"95%"} />
@@ -252,7 +253,7 @@ function contactUs() {
                   </Box>
                   <Box bgColor={"white"} borderRadius={"8px"}>
                     <Box p={"20px"}>
-                      <Text
+                      <Box
                         fontSize={"16px"}
                         fontWeight={"medium"}
                         paddingTop={"25px"}
@@ -262,8 +263,8 @@ function contactUs() {
                         <Text fontWeight={"normal"}>
                           9:00 AM - 5:00 PM (GMT+8)
                         </Text>
-                      </Text>
-                      <Text
+                      </Box>
+                      <Box
                         fontSize={"16px"}
                         fontWeight={"medium"}
                         paddingTop={"25px"}
@@ -273,8 +274,8 @@ function contactUs() {
                         <Text fontWeight={"normal"}>
                           9:00 AM - 1:00 PM (GMT+8)
                         </Text>
-                      </Text>
-                      <Text
+                      </Box>
+                      <Box
                         fontSize={"16px"}
                         fontWeight={"medium"}
                         paddingTop={"25px"}
@@ -282,11 +283,11 @@ function contactUs() {
                       >
                         Sunday & Public Holidays <br />{" "}
                         <Text fontWeight={"normal"}>Closed</Text>
-                      </Text>
+                      </Box>
                     </Box>
                   </Box>
                 </Box>
-              </Text>
+              </Box>
             </Box>
           </Box>
         </Box>

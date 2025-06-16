@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   VStack,
@@ -20,6 +20,7 @@ import {
   ModalFooter,
   InputLeftAddon,
   Heading,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import { FaPhoneAlt } from "react-icons/fa";
 import { MdCheckBoxOutlineBlank } from "react-icons/md";
@@ -30,31 +31,131 @@ import { FaRegUserCircle } from "react-icons/fa";
 import { useState } from "react";
 import { useToast } from "@chakra-ui/react";
 import "./signup.scss";
+import { useUserStore } from "../../../../store/user";
+import { CookieUtils } from "../../../../../utility/cookie";
+import { useNavigate } from "react-router-dom";
 
 function signup() {
+  const { signupUser } = useUserStore();
+  const navigate = useNavigate();
+
   // declaring variable
+  // const [newSchool, setSchool] = useState({
+  //   firstName: "",
+  //   lastName: "",
+  //   phoneNumber: "",
+  //   email: "",
+  //   password: "",
+  //   confirmPassword: "",
+  // });
   const [newSchool, setSchool] = useState({
-    firstName: "",
-    lastName: "",
-    phoneNumber: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+    firstName: "John",
+    lastName: "Doe",
+    phoneNumber: "123456789",
+    email: "john.doe@example.com",
+    password: "Password@123",
+    confirmPassword: "Password@123",
   });
+
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  useEffect(() => {
+    onOpen();
+  }, []);
 
   // validation stuff
   const toast = useToast();
   const [emailError, setEmailError] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
+  const [cpasswordError, setCPasswordError] = useState(false);
+  const validatePassword = (password) => {
+    const isValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(
+      password
+    );
+    return isValid;
+  };
+
+  // format object key
+  const formatKey = (key) => {
+    const withSpaces = key.replace(/([A-Z])/g, " $1"); // insert space before uppercase letters
+    const lowercased = withSpaces.toLowerCase();
+    return lowercased.charAt(0).toUpperCase() + lowercased.slice(1); // capitalize first letter
+  };
 
   // handle method
   const handleSignup = async () => {
-    onOpen();
-    console.log(newSchool);
+    let success = true;
+
+    // loop with object
+    Object.entries(newSchool).forEach(([key, value]) => {
+      if (value == "") {
+        const toastId = key;
+        success = false;
+
+        if (!toast.isActive(toastId)) {
+          toast({
+            id: toastId,
+            title: "Empty field detected!",
+            description: `Please fill in the field : ${formatKey(key)}`,
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+        return;
+      }
+    });
+    if (
+      success &&
+      !emailError &&
+      !phoneError &&
+      !cpasswordError &&
+      !passwordError
+    ) {
+      onOpen();
+    }
+  };
+
+  const handleSignUp2 = async () => {
+    const { firstName, lastName, phoneNumber, email, password } = newSchool;
+
+    const userData = {
+      name: `${firstName} ${lastName}`,
+      password,
+      phoneNumber,
+      email,
+      role: "schoolAdmin",
+      twoFA_enabled: false,
+    };
+
+    console.log(userData);
+
+    const { success, message, data } = await signupUser(userData);
+    console.log(success, message, data);
+    if (!success) {
+      toast({
+        title: "Error Signing Up",
+        description: message,
+        position: "top",
+        status: "error",
+        isClosable: true,
+      });
+    } else {
+      toast({
+        title: "Sign Up successfully",
+        description: message,
+        position: "top",
+        status: "success",
+        isClosable: true,
+      });
+
+      setTimeout(() => {
+        navigate("/login-school"); // change to your target route
+      }, 1500);
+    }
   };
 
   return (
@@ -88,18 +189,52 @@ function signup() {
               placeholder="First Name"
               _placeholder={{ color: "gray.300" }}
               value={newSchool.firstName}
-              onChange={(e) =>
-                setSchool((prev) => ({ ...prev, firstName: e.target.value }))
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                const toastId = "no-digits-toast";
+
+                if (/\d/.test(value)) {
+                  if (!toast.isActive(toastId)) {
+                    toast({
+                      id: toastId,
+                      title: "Invalid input",
+                      description: "Numbers are not allowed in the name.",
+                      status: "warning",
+                      duration: 3000,
+                      isClosable: true,
+                    });
+                  }
+                  return;
+                }
+
+                setSchool((prev) => ({ ...prev, firstName: value }));
+              }}
             />
             <Input
               type="text"
               placeholder="Last Name"
               _placeholder={{ color: "gray.300" }}
               value={newSchool.lastName}
-              onChange={(e) =>
-                setSchool((prev) => ({ ...prev, lastName: e.target.value }))
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                const toastId = "no-digits-toast";
+
+                if (/\d/.test(value)) {
+                  if (!toast.isActive(toastId)) {
+                    toast({
+                      id: toastId,
+                      title: "Invalid input",
+                      description: "Numbers are not allowed in the name.",
+                      status: "warning",
+                      duration: 3000,
+                      isClosable: true,
+                    });
+                  }
+                  return;
+                }
+
+                setSchool((prev) => ({ ...prev, lastName: value }));
+              }}
             />
           </InputGroup>
 
@@ -119,6 +254,7 @@ function signup() {
                 setSchool((prev) => ({ ...prev, phoneNumber: e.target.value }))
               }
               onBlur={(e) => {
+                const toastId = "no-phone-toast";
                 let value = e.target.value;
 
                 if (value.startsWith("0")) {
@@ -129,8 +265,9 @@ function signup() {
 
                 setPhoneError(!isValid);
 
-                if (!isValid) {
+                if (!isValid && !toast.isActive(toastId)) {
                   toast({
+                    id: toastId,
                     title: "Invalid phone number",
                     description:
                       "Please enter a valid Malaysian phone number starting with 1 and 9 digits.",
@@ -165,13 +302,19 @@ function signup() {
                 setSchool((prev) => ({ ...prev, email: e.target.value }))
               }
               onBlur={() => {
+                const toastId = "no-email-toast";
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 const isValid = emailRegex.test(newSchool.email);
 
                 setEmailError(!isValid);
 
-                if (!isValid && newSchool.email !== "") {
+                if (
+                  !isValid &&
+                  newSchool.email !== "" &&
+                  !toast.isActive(toastId)
+                ) {
                   toast({
+                    id: toastId,
                     title: "Invalid email address",
                     description:
                       "Please enter a valid email like example@email.com",
@@ -194,9 +337,35 @@ function signup() {
               placeholder="Password"
               _placeholder={{ color: "gray.300" }}
               value={newSchool.password}
-              onChange={(e) =>
-                setSchool((prev) => ({ ...prev, password: e.target.value }))
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                setSchool((prev) => ({ ...prev, password: value }));
+              }}
+              onBlur={(e) => {
+                const value = e.target.value;
+                const toastId = "invalid-password";
+
+                const isValid = validatePassword(value);
+
+                setPasswordError(!isValid);
+
+                if (!isValid && value.length > 0) {
+                  if (!toast.isActive(toastId)) {
+                    toast({
+                      id: toastId,
+                      title: "Weak Password",
+                      description:
+                        "Must be 8+ characters with uppercase, lowercase, number, and symbol.",
+                      status: "warning",
+                      duration: 4000,
+                      isClosable: true,
+                    });
+                  }
+                }
+              }}
+              isInvalid={passwordError}
+              borderColor={passwordError ? "red.500" : "gray.200"}
+              focusBorderColor={passwordError ? "red.500" : "blue.300"}
             />
             <InputRightElement width="4.5rem">
               <Button h="1.75rem" size="sm" onClick={handleClick}>
@@ -212,12 +381,48 @@ function signup() {
               placeholder="Confirm password"
               _placeholder={{ color: "gray.300" }}
               value={newSchool.confirmPassword}
-              onChange={(e) =>
-                setSchool((prev) => ({
-                  ...prev,
-                  confirmPassword: e.target.value,
-                }))
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                setSchool((prev) => ({ ...prev, confirmPassword: value }));
+              }}
+              onBlur={(e) => {
+                const value = e.target.value;
+                const toastId = "invalid-cpassword";
+
+                const isValid = validatePassword(value);
+
+                setCPasswordError(!isValid);
+                if (newSchool.confirmPassword != newSchool.password) {
+                  if (!toast.isActive(toastId)) {
+                    toast({
+                      id: toastId,
+                      title: "Different Password",
+                      description:
+                        "Ensure your password and confirm password are identical",
+                      status: "warning",
+                      duration: 4000,
+                      isClosable: true,
+                    });
+                  }
+                }
+
+                if (!isValid && value.length > 0) {
+                  if (!toast.isActive(toastId)) {
+                    toast({
+                      id: toastId,
+                      title: "Weak Password",
+                      description:
+                        "Must be 8+ characters with uppercase, lowercase, number, and symbol.",
+                      status: "warning",
+                      duration: 4000,
+                      isClosable: true,
+                    });
+                  }
+                }
+              }}
+              isInvalid={cpasswordError}
+              borderColor={cpasswordError ? "red.500" : "gray.200"}
+              focusBorderColor={cpasswordError ? "red.500" : "blue.300"}
             />
             <InputRightElement width="4.5rem">
               <Button h="1.75rem" size="sm" onClick={handleClick}>
@@ -242,15 +447,26 @@ function signup() {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Modal Title</ModalHeader>
+          <ModalHeader>Creating new account...</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>stff</ModalBody>
+          <ModalBody>
+            <SimpleGrid columns={2} spacing={4} width="100%">
+              {Object.entries(newSchool).map(([key, value]) => (
+                <Box key={key}>
+                  <Text fontWeight={600}>{formatKey(key)}</Text>
+                  <Text>{value}</Text>
+                </Box>
+              ))}
+            </SimpleGrid>
+          </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={onClose}>
+            <Button variant="ghost" onClick={onClose}>
               Close
             </Button>
-            <Button variant="ghost">Secondary Action</Button>
+            <Button colorScheme="blue" mr={3} onClick={handleSignUp2}>
+              Confirm
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
