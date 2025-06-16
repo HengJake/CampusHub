@@ -33,7 +33,7 @@ function contactUs() {
         w={"90%"}
         justifyContent={"center"}
         height={"100%"}
-        p={"5"}
+        p={"4"}
         flexDirection={"column"}
       >
         <Box paddingTop={"8"}>

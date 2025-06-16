@@ -7,6 +7,7 @@ import { GiSatelliteCommunication } from "react-icons/gi";
 import { MdOutlineSecurity } from "react-icons/md";
 import { BsBuildingFillGear } from "react-icons/bs";
 import { HiAcademicCap } from "react-icons/hi2";
+import ServiceCard from "./ServiceCard.jsx";
 
 import {
   Stack,
@@ -55,7 +56,7 @@ function service() {
           width={"100%"}
           display={"flex"}
           flexDirection={"column"}
-          gap={"30px"}
+          gap={10}
           p={"20px"}
         >
           {/* 1stBox */}
@@ -66,123 +67,31 @@ function service() {
             flexDirection={"row"}
             gap={"30px"}
           >
-            {/* 1stContentBox */}
-            <Box
-              width={"100%"}
-              height={"100%"}
-              p={"20px"}
-              display={"flex"}
-              flexDirection={"column"}
-              alignContent={"center"}
-              bgColor={"#F8F9FA"}
-              boxShadow="0px 4px 10px rgba(0, 0, 0, 0.15)"
-            >
-              <Text paddingTop={"40px"} fontWeight={"medium"} fontSize={"20px"}>
-                <FaUserGear size={"40px"} />
-                <br />
-                User Management
-                <Text
-                  fontSize={"16px"}
-                  paddingTop={"5px"}
-                  fontWeight={"normal"}
-                  color={"rgba(0, 0, 0, 0.46)"}
-                >
-                  Comprehensive student and staff management system with
-                  role-based access control, profile management, and
-                  administrative oversight.
-                </Text>
-                <br />
-                <Box width={"100%"} marginTop={"10%"}>
-                  <Button
-                    width={"100%"}
-                    height={"40px"}
-                    fontSize={"16px"}
-                    fontWeight={"normal"}
-                    borderRadius={"0px"}
-                    bgColor={"#FF5656"}
-                    color={"white"}
-                    _hover={{ bg: "#D34949" }}
-                  >
-                    Learn More
-                  </Button>
-                </Box>
-              </Text>
-            </Box>
+            <ServiceCard
+              icon={<FaUserGear size="40px" />}
+              title="User Management"
+              description="Comprehensive student and staff management system with role-based access control, profile management, and administrative oversight."
+              buttonText="Learn More"
+              onButtonClick={() => console.log("Clicked Learn More")}
+            />
+
             {/* 2ndContentBox */}
-            <Box
-              width={"100%"}
-              p={"20px"}
-              bgColor={"#F8F9FA"}
-              boxShadow="0px 4px 10px rgba(0, 0, 0, 0.15)"
-            >
-              <Text paddingTop={"40px"} fontWeight={"medium"} fontSize={"20px"}>
-                <BsBuildingFillGear size={"40px"} />
-                <br />
-                Facility Management
-                <Text
-                  fontSize={"16px"}
-                  paddingTop={"5px"}
-                  fontWeight={"normal"}
-                  color={"rgba(0, 0, 0, 0.46)"}
-                >
-                  Smart booking system for courts, parking lots, gym lockers,
-                  and campus transportation with real-time availability
-                  tracking.
-                </Text>
-                <br />
-                <Box width={"100%"} marginTop={"10%"}>
-                  <Button
-                    width={"100%"}
-                    height={"40px"}
-                    fontSize={"16px"}
-                    fontWeight={"normal"}
-                    borderRadius={"0px"}
-                    bgColor={"#FF5656"}
-                    color={"white"}
-                    _hover={{ bg: "#D34949" }}
-                  >
-                    Learn More
-                  </Button>
-                </Box>
-              </Text>
-            </Box>
+            <ServiceCard
+              icon={<BsBuildingFillGear size="40px" />}
+              title="Facility Management"
+              description="Smart booking system for courts, parking lots, gym lockers, and campus transportation with real-time availability tracking."
+              buttonText="Learn More"
+              onButtonClick={() => console.log("Facility Management clicked")}
+            />
+
             {/* 3rdContentBox */}
-            <Box
-              width={"100%"}
-              p={"20px"}
-              bgColor={"#F8F9FA"}
-              boxShadow="0px 4px 10px rgba(0, 0, 0, 0.15)"
-            >
-              <Text paddingTop={"40px"} fontWeight={"medium"} fontSize={"20px"}>
-                <HiAcademicCap size={"40px"} />
-                <br />
-                Academic Data
-                <Text
-                  fontSize={"16px"}
-                  paddingTop={"5px"}
-                  fontWeight={"normal"}
-                  color={"rgba(0, 0, 0, 0.46)"}
-                >
-                  Complete academic information system including schedules,
-                  results, attendance tracking, and examination management.
-                </Text>
-              </Text>
-              <br />
-              <Box width={"100%"} marginTop={"11%"}>
-                <Button
-                  width={"100%"}
-                  height={"40px"}
-                  fontSize={"16px"}
-                  fontWeight={"normal"}
-                  borderRadius={"0px"}
-                  bgColor={"#FF5656"}
-                  color={"white"}
-                  _hover={{ bg: "#D34949" }}
-                >
-                  Learn More
-                </Button>
-              </Box>
-            </Box>
+            <ServiceCard
+              icon={<HiAcademicCap size="40px" />}
+              title="Academic Data"
+              description="Complete academic information system including schedules, results, attendance tracking, and examination management."
+              buttonText="Learn More"
+              onButtonClick={() => console.log("Academic Data clicked")}
+            />
           </Box>
 
           {/* 2ndMainBox */}
@@ -200,138 +109,29 @@ function service() {
               flexDirection={"row"}
               gap={"30px"}
             >
-              {/* 1stContentBox */}
-              <Box
-                width={"100%"}
-                height={"100%"}
-                p={"20px"}
-                display={"flex"}
-                flexDirection={"column"}
-                alignContent={"center"}
-                bgColor={"#F8F9FA"}
-                boxShadow="0px 4px 10px rgba(0, 0, 0, 0.15)"
-              >
-                <Text
-                  paddingTop={"40px"}
-                  fontWeight={"medium"}
-                  fontSize={"20px"}
-                >
-                  <BiSolidReport size={"40px"} />
-                  <br />
-                  Reports & Analytics
-                  <Text
-                    fontSize={"16px"}
-                    paddingTop={"5px"}
-                    fontWeight={"normal"}
-                    color={"rgba(0, 0, 0, 0.46)"}
-                  >
-                    Data-driven insights with facility usage statistics, booking
-                    patterns, and user engagement reports for informed decision
-                    making.
-                  </Text>
-                  <br />
-                  <Box width={"100%"} marginTop={"10%"}>
-                    <Button
-                      width={"100%"}
-                      height={"40px"}
-                      fontSize={"16px"}
-                      fontWeight={"normal"}
-                      borderRadius={"0px"}
-                      bgColor={"#FF5656"}
-                      color={"white"}
-                      _hover={{ bg: "#D34949" }}
-                    >
-                      Learn More
-                    </Button>
-                  </Box>
-                </Text>
+              <ServiceCard
+                icon={<BiSolidReport size="40px" />}
+                title="Reports & Analytics"
+                description="Data-driven insights with facility usage statistics, booking patterns, and user engagement reports for informed decision making."
+                buttonText="Learn More"
+                onButtonClick={() => console.log("Reports clicked")}
+              />
 
-                {/* 2ndContentBox */}
-              </Box>
-              <Box
-                width={"100%"}
-                p={"20px"}
-                bgColor={"#F8F9FA"}
-                boxShadow="0px 4px 10px rgba(0, 0, 0, 0.15)"
-              >
-                <Text
-                  paddingTop={"40px"}
-                  fontWeight={"medium"}
-                  fontSize={"20px"}
-                >
-                  <GiSatelliteCommunication size={"40px"} />
-                  <br />
-                  Campus Communication
-                  <Text
-                    fontSize={"16px"}
-                    paddingTop={"5px"}
-                    fontWeight={"normal"}
-                    color={"rgba(0, 0, 0, 0.46)"}
-                  >
-                    Streamlined announcement system and campus-wide
-                    communication tools to keep students and staff informed and
-                    engaged.
-                  </Text>
-                  <br />
-                  <Box width={"100%"} marginTop={"10%"}>
-                    <Button
-                      width={"100%"}
-                      height={"40px"}
-                      fontSize={"16px"}
-                      fontWeight={"normal"}
-                      borderRadius={"0px"}
-                      bgColor={"#FF5656"}
-                      color={"white"}
-                      _hover={{ bg: "#D34949" }}
-                    >
-                      Learn More
-                    </Button>
-                  </Box>
-                </Text>
+              <ServiceCard
+                icon={<GiSatelliteCommunication size="40px" />}
+                title="Campus Communication"
+                description="Streamlined announcement system and campus-wide communication tools to keep students and staff informed and engaged."
+                buttonText="Learn More"
+                onButtonClick={() => console.log("Communication clicked")}
+              />
 
-                {/* 3rdContentBox */}
-              </Box>
-              <Box
-                bgColor={"#F8F9FA"}
-                boxShadow="0px 4px 10px rgba(0, 0, 0, 0.15)"
-                width={"100%"}
-                p={"20px"}
-              >
-                <Text
-                  paddingTop={"40px"}
-                  fontWeight={"medium"}
-                  fontSize={"20px"}
-                >
-                  <MdOutlineSecurity size={"40px"} />
-                  <br />
-                  Security & Support
-                  <Text
-                    fontSize={"16px"}
-                    paddingTop={"5px"}
-                    fontWeight={"normal"}
-                    color={"rgba(0, 0, 0, 0.46)"}
-                  >
-                    Robust security features including two-factor
-                    authentication, role-based permissions, and comprehensive
-                    customer support.
-                  </Text>
-                  <br />
-                  <Box width={"100%"} marginTop={"10%"}>
-                    <Button
-                      width={"100%"}
-                      height={"40px"}
-                      fontSize={"16px"}
-                      fontWeight={"normal"}
-                      borderRadius={"0px"}
-                      bgColor={"#FF5656"}
-                      color={"white"}
-                      _hover={{ bg: "#D34949" }}
-                    >
-                      Learn More
-                    </Button>
-                  </Box>
-                </Text>
-              </Box>
+              <ServiceCard
+                icon={<MdOutlineSecurity size="40px" />}
+                title="Security & Support"
+                description="Robust security features including two-factor authentication, role-based permissions, and comprehensive customer support."
+                buttonText="Learn More"
+                onButtonClick={() => console.log("Security clicked")}
+              />
             </Box>
           </Box>
         </Box>
