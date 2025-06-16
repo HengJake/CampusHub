@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   VStack,
@@ -20,6 +20,7 @@ import {
   ModalFooter,
   InputLeftAddon,
   Heading,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import { FaPhoneAlt } from "react-icons/fa";
 import { MdCheckBoxOutlineBlank } from "react-icons/md";
@@ -30,8 +31,14 @@ import { FaRegUserCircle } from "react-icons/fa";
 import { useState } from "react";
 import { useToast } from "@chakra-ui/react";
 import "./signup.scss";
+import { useUserStore } from "../../../../store/user";
+import { CookieUtils } from "../../../../../utility/cookie";
+import { useNavigate } from "react-router-dom";
 
 function signup() {
+  const { signupUser } = useUserStore();
+  const navigate = useNavigate();
+
   // declaring variable
   // const [newSchool, setSchool] = useState({
   //   firstName: "",
@@ -42,7 +49,7 @@ function signup() {
   //   confirmPassword: "",
   // });
   const [newSchool, setSchool] = useState({
-    firstName: "",
+    firstName: "John",
     lastName: "Doe",
     phoneNumber: "123456789",
     email: "john.doe@example.com",
@@ -53,6 +60,10 @@ function signup() {
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  useEffect(() => {
+    onOpen();
+  }, []);
 
   // validation stuff
   const toast = useToast();
@@ -67,19 +78,84 @@ function signup() {
     return isValid;
   };
 
+  // format object key
+  const formatKey = (key) => {
+    const withSpaces = key.replace(/([A-Z])/g, " $1"); // insert space before uppercase letters
+    const lowercased = withSpaces.toLowerCase();
+    return lowercased.charAt(0).toUpperCase() + lowercased.slice(1); // capitalize first letter
+  };
+
   // handle method
   const handleSignup = async () => {
-    onOpen();
+    let success = true;
 
     // loop with object
     Object.entries(newSchool).forEach(([key, value]) => {
       if (value == "") {
-        console.log(`Please fill in ${key}`);
-        return
+        const toastId = key;
+        success = false;
+
+        if (!toast.isActive(toastId)) {
+          toast({
+            id: toastId,
+            title: "Empty field detected!",
+            description: `Please fill in the field : ${formatKey(key)}`,
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+        return;
       }
     });
+    if (
+      success &&
+      !emailError &&
+      !phoneError &&
+      !cpasswordError &&
+      !passwordError
+    ) {
+      onOpen();
+    }
+  };
 
+  const handleSignUp2 = async () => {
+    const { firstName, lastName, phoneNumber, email, password } = newSchool;
 
+    const userData = {
+      name: `${firstName} ${lastName}`,
+      password,
+      phoneNumber,
+      email,
+      role: "schoolAdmin",
+      twoFA_enabled: false,
+    };
+
+    console.log(userData);
+
+    const { success, message, data } = await signupUser(userData);
+    console.log(success, message, data);
+    if (!success) {
+      toast({
+        title: "Error Signing Up",
+        description: message,
+        position: "top",
+        status: "error",
+        isClosable: true,
+      });
+    } else {
+      toast({
+        title: "Sign Up successfully",
+        description: message,
+        position: "top",
+        status: "success",
+        isClosable: true,
+      });
+
+      setTimeout(() => {
+        navigate("/login-school"); // change to your target route
+      }, 1500);
+    }
   };
 
   return (
@@ -371,15 +447,26 @@ function signup() {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Modal Title</ModalHeader>
+          <ModalHeader>Creating new account...</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>stff</ModalBody>
+          <ModalBody>
+            <SimpleGrid columns={2} spacing={4} width="100%">
+              {Object.entries(newSchool).map(([key, value]) => (
+                <Box key={key}>
+                  <Text fontWeight={600}>{formatKey(key)}</Text>
+                  <Text>{value}</Text>
+                </Box>
+              ))}
+            </SimpleGrid>
+          </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={onClose}>
+            <Button variant="ghost" onClick={onClose}>
               Close
             </Button>
-            <Button variant="ghost">Secondary Action</Button>
+            <Button colorScheme="blue" mr={3} onClick={handleSignUp2}>
+              Confirm
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

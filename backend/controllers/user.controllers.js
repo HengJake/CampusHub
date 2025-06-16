@@ -26,7 +26,13 @@ export const createUser = async (req, res) => {
 
   try {
     await newUser.save();
-    res.status(201).json({ success: true, data: newUser });
+    res
+      .status(201)
+      .json({
+        success: true,
+        data: newUser,
+        message: "User created successfully",
+      });
   } catch (error) {
     console.error("Error in createUser:", error.message);
 
@@ -74,18 +80,47 @@ export const loginUser = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      data: user
     });
   } catch (error) {
     console.error("Login error:", error.message);
     return res.status(500).json({
       success: false,
       message: "Server error",
+    });
+  }
+};
+
+export const getUserById = async (req, res) => {
+  const { id } = req.params;
+
+  // Validate ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid user ID format",
+    });
+  }
+
+  try {
+    const user = await User.findById(id).select("-password"); // Exclude password
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    console.error("Error fetching user:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
 };
