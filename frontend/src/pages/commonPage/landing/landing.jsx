@@ -14,17 +14,18 @@ import { color } from "framer-motion";
 function landing() {
   return (
     <Flex
-      w="100%"
-      height={"100vh"}
+      w="100vw"
+      justifyContent={"center"}
       align="center"
-      bgColor={"white"}
+      // bgColor={"red"}
       display={"flex"}
       flexDirection={"column"}
+      zIndex={-1}
     >
       {/* 1stBox */}
-      <Box height={"75%"} width={"100%"} bgColor={"rgba(102, 153, 204, 0.50)"}>
+      <Box height={"fit-content"} width={"100%"} x>
         <Box
-          height={"100%"}
+          height={"800px"}
           width={"100%"}
           fontSize={"50px"}
           display={"flex"}
@@ -33,17 +34,53 @@ function landing() {
           flexDirection={"column"}
           gap={5}
           color={"white"}
+          bgColor={"rgba(102, 153, 204, 0.50)"}
+          border={"1px"}
+          overflowY={"hidden"}
+          position={"relative"}
         >
-          <Heading fontSize={"60px"} fontWeight={"light"} letterSpacing={5}>
+          <Box
+            position={"absolute"}
+            width="900px"
+            height="900px"
+            borderRadius="full"
+            bgColor={"rgba(27, 73, 101, 0.05)"}
+          ></Box>
+          <Box
+            position={"absolute"}
+            width="1000px"
+            height="1000px"
+            borderRadius="full"
+            bgColor={"rgba(27, 73, 101, 0.05)"}
+          ></Box>
+          <Box
+            position={"absolute"}
+            width="1200px"
+            height="1200px"
+            borderRadius="full"
+            bgColor={"rgba(27, 73, 101, 0.05)"}
+          ></Box>
+
+          <Heading
+            fontSize={"60px"}
+            fontWeight={"light"}
+            letterSpacing={5}
+            zIndex={100}
+          >
             Where Student Life Meets
           </Heading>
-          <Text fontSize={"60px"} fontWeight={"bold"} letterSpacing={1}>
+          <Text
+            fontSize={"60px"}
+            fontWeight={"bold"}
+            letterSpacing={1}
+            zIndex={100}
+          >
             Smart Management
           </Text>
           <Box
             display={"flex"}
             gap={5}
-            width={"30%"}
+            width={"35%"}
             flexDirection={"row"}
             alignItems={"center"}
           >
@@ -55,7 +92,6 @@ function landing() {
               color={"white"}
               fontSize={"24px"}
               fontWeight={"bold"}
-              zIndex={100}
               _hover={{ bgColor: "rgb(255, 255, 255)", color: "black" }}
             >
               Join Now
@@ -76,14 +112,9 @@ function landing() {
           </Box>
         </Box>
 
-        <Box
-          width={"100%"}
-          p={"70px"}
-          zIndex="100"
-        >
+        <Box width={"100%"} p={"70px"} zIndex="100">
           <Box height={"100%"}>
             <Image
-            
               objectFit={"cover"}
               height={"auto"}
               width={"100%"}
@@ -203,38 +234,6 @@ function landing() {
           </Box>
         </Box>
       </Box>
-
-      {/* BackgroundDesign */}
-      <Box
-        position="absolute"
-        bottom="15%"
-        left="-10%"
-        width="900px"
-        height="900px"
-        borderRadius="full"
-        bgColor={"rgba(255, 255, 255, 0.1)"}
-        zIndex="1"
-      ></Box>
-      <Box
-        position="absolute"
-        bottom="20%"
-        right="70%"
-        width="800px"
-        height="800px"
-        borderRadius="full"
-        bgColor={"rgba(255, 255, 255, 0.1)"}
-        zIndex="1"
-      ></Box>
-      <Box
-        position="absolute"
-        bottom="30%"
-        right="80%"
-        width="600px"
-        height="600px"
-        borderRadius="full"
-        bgColor={"rgba(255, 255, 255, 0.1)"}
-        zIndex="100"
-      ></Box>
     </Flex>
   );
 }
