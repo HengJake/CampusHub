@@ -7,10 +7,11 @@ import {
   Icon,
   InputGroup,
   InputRightElement,
+  Link as ChakraLink
 } from "@chakra-ui/react";
 import Sidebar from "../sidebar/schoolAdminSidebar.jsx";
 
-import { Link } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { MdAccountCircle } from "react-icons/md";
 import { CampusHubLogo } from "../campusHubLogo.jsx";
 import { FaSearch } from "react-icons/fa";
@@ -55,12 +56,14 @@ function navBar() {
             _hover={{ bg: "gray.100" }}
             role="group"
           >
-            <Icon
-              as={MdAccountCircle}
-              boxSize={6}
-              color="white"
-              _groupHover={{ color: "blue.800" }}
-            />
+            <ChakraLink as={RouterLink} to={"student-management"}>
+              <Icon
+                as={MdAccountCircle}
+                boxSize={6}
+                color="white"
+                _groupHover={{ color: "blue.800" }}
+              />
+            </ChakraLink>
           </Button>
           <Button
             bg="transparent"

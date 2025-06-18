@@ -47,13 +47,18 @@ function loginCampushub() {
             <InputRightElement pointerEvents="none">
               <HiOutlineMail size={25} color="gray.500" />
             </InputRightElement>
-            <Input type="tel" placeholder="Enter your email..." />
+            <Input
+              type="tel"
+              placeholder="Enter your email..."
+              _placeholder={{ color: "gray.300" }}
+            />
           </InputGroup>
           <InputGroup size="md">
             <Input
               pr="4.5rem"
               type={show ? "text" : "password"}
               placeholder="Enter your password..."
+              _placeholder={{ color: "gray.300" }}
             />
             <InputRightElement width="4.5rem">
               <Button h="1.75rem" size="sm" onClick={handleClick}>
@@ -71,9 +76,7 @@ function loginCampushub() {
               <Text textAlign={"left"}>Remember me</Text>
               <Checkbox colorScheme="orange"></Checkbox>
             </HStack>
-            <ChakraLink whiteSpace="nowrap">
-              Forget Password
-            </ChakraLink>
+            <ChakraLink whiteSpace="nowrap">Forget Password</ChakraLink>
           </HStack>
 
           <Button w={"100%"} bg={"#8b5e3c"} mt={5}>

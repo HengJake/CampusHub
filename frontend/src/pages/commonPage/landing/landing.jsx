@@ -8,7 +8,7 @@ import { MdOutlineSecurity } from "react-icons/md";
 import { BsBuildingFillGear } from "react-icons/bs";
 import { HiAcademicCap } from "react-icons/hi2";
 import { Image, Stack, Text, Heading, Button } from "@chakra-ui/react";
-import NameImage from "../../../../public/PosterImage.png";
+import NameImage from "/PosterImage.png";
 import { color } from "framer-motion";
 
 function landing() {
@@ -100,7 +100,6 @@ function landing() {
           width={"100%"}
           height={"100%"}
           p={"70px"}
-          border={"1px"}
           bgColor={"white"}
           zIndex="100"
         >

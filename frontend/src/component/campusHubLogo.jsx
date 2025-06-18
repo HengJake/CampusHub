@@ -13,7 +13,7 @@ import { getCookie } from "./cookieUtils";
 
 export const CampusHubLogo = () => {
   let logoLink;
-  const role = getCookie("userRole");
+  const role = getCookie("role");
   if (role === "user") {
     logoLink = "/user-dashboard";
   } else if (role === "admin") {

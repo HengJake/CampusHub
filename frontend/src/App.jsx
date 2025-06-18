@@ -49,6 +49,7 @@ import { Box, Button } from "@chakra-ui/react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Cookies from "js-cookie";
 import { useState } from "react";
+import { useEffect } from "react";
 import "./general.scss";
 import "./component/generalComponent.scss";
 
@@ -61,69 +62,101 @@ import RNavBar from "./component/navBar/registrationNavBar";
 import SNavBar from "./component/navBar/studentNavBar";
 
 function App() {
-  // Set the cookie
-  function setCookie(name, value, days) {
-    let expires = "";
-    if (days) {
-      const date = new Date();
-      date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-      expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie =
-      name + "=" + encodeURIComponent(value) + expires + "; path=/";
-    setUserRole(value);
-  }
-
-  // Delete a cookie
-  function deleteCookie(name) {
-    document.cookie =
-      name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    setUserRole(null);
-  }
-
   const path = useLocation().pathname;
-  const [userRole, setUserRole] = useState(Cookies.get("userRole") || null);
+  const [RenderedNavbar, setRenderedNavbar] = useState(null);
+  const [margin, setMargin] = useState("0");
+  const [bgColor, setBgColor] = useState("brand.defaultBg");
 
-  let RenderedNavbar;
-  let margin;
+  const [userRole, setUserRole] = useState(Cookies.get("role") || null);
 
-  if (
-    path === "/login" ||
-    path === "/signup" ||
-    path === "/login-campushub" ||
-    path === "/login-school"
-  ) {
-    RenderedNavbar = <RNavBar />;
-    margin = 0;
-  } else if (userRole === "user") {
-    RenderedNavbar = <SNavBar />;
-    margin = "125px";
-  } else if (userRole === "company") {
-    RenderedNavbar = <CANavbar />;
-    margin = "125px";
-  } else if (userRole === "admin") {
-    RenderedNavbar = <SANavbar />;
-    margin = "125px";
-  } else {
-    RenderedNavbar = <LNavbar />;
-    margin = "0";
-  }
-
-  const getBgColor = () => {
-    switch (userRole) {
-      case "user":
-        return "brand.userBg";
-      case "company":
-        return "brand.companyBg";
-      case "admin":
-        return "brand.adminBg";
-      default:
-        return "brand.defaultBg";
+  // Determine role from path
+  const detectRoleFromPath = (path) => {
+    if (
+      path === "/login" ||
+      path === "/signup" ||
+      path === "/login-campushub" ||
+      path === "/login-school"
+    ) {
+      return "register";
+    } else if (
+      path === "/" ||
+      path === "/service" ||
+      path === "/contact-us" ||
+      path === "/pricing" ||
+      path === "/about"
+    ) {
+      return "landing";
+    } else if (
+      path.startsWith("/user-") ||
+      path.startsWith("/book") ||
+      path === "/parking-lot" ||
+      path === "/class-schedule" ||
+      path === "/classroom-finder" ||
+      path === "/result" ||
+      path === "/attendance" ||
+      path === "/bus-schedule" ||
+      path === "/campus-ride" ||
+      path === "/feedback"
+    ) {
+      return "user";
+    } else if (
+      path.startsWith("/admin-") ||
+      path.includes("-management") ||
+      path === "/announcement-management"
+    ) {
+      return "admin";
+    } else if (
+      path.startsWith("/campushub-") ||
+      path === "/subscription" ||
+      path === "/client-management" ||
+      path === "/analytical-report" ||
+      path === "/user-oversight"
+    ) {
+      return "company";
+    } else {
+      return "landing"; // fallback
     }
   };
 
+  useEffect(() => {
+    const role = detectRoleFromPath(path);
+
+    switch (role) {
+      case "register":
+        setRenderedNavbar(<RNavBar />);
+        setMargin("0");
+        setBgColor("brand.defaultBg");
+        break;
+      case "landing":
+        setRenderedNavbar(<LNavbar />);
+        setMargin("0");
+        setBgColor("brand.defaultBg");
+        break;
+      case "user":
+        setRenderedNavbar(<SNavBar />);
+        setMargin("80px");
+        setBgColor("brand.userBg");
+        break;
+      case "admin":
+        setRenderedNavbar(<SANavbar />);
+        setMargin("80px");
+        setBgColor("brand.adminBg");
+        break;
+      case "company":
+        setRenderedNavbar(<CANavbar />);
+        setMargin("80px");
+        setBgColor("brand.companyBg");
+        break;
+      default:
+        setRenderedNavbar(<LNavbar />);
+        setMargin("0");
+        setBgColor("brand.defaultBg");
+        break;
+    }
+  }, [path]);
+
   return (
-    <Box minH="100vh" display="flex" flexDirection="column" bg={getBgColor()}>
+    <Box minH="100vh" display="flex" flexDirection="column" bg={bgColor}>
       <Box display="flex">
         <Box height={"fit-content"} width={"100%"}>
           {RenderedNavbar}

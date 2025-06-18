@@ -34,36 +34,25 @@ import "./signup.scss";
 import { useUserStore } from "../../../../store/user";
 import { CookieUtils } from "../../../../../utility/cookie";
 import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 
 function signup() {
   const { signupUser } = useUserStore();
   const navigate = useNavigate();
 
   // declaring variable
-  // const [newSchool, setSchool] = useState({
-  //   firstName: "",
-  //   lastName: "",
-  //   phoneNumber: "",
-  //   email: "",
-  //   password: "",
-  //   confirmPassword: "",
-  // });
   const [newSchool, setSchool] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    phoneNumber: "123456789",
-    email: "john.doe@example.com",
-    password: "Password@123",
-    confirmPassword: "Password@123",
+    firstName: "",
+    lastName: "",
+    phoneNumber: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
   const { isOpen, onOpen, onClose } = useDisclosure();
-
-  useEffect(() => {
-    onOpen();
-  }, []);
 
   // validation stuff
   const toast = useToast();
@@ -88,26 +77,29 @@ function signup() {
   // handle method
   const handleSignup = async () => {
     let success = true;
+    const toastId = "sign-up";
 
-    // loop with object
-    Object.entries(newSchool).forEach(([key, value]) => {
-      if (value == "") {
-        const toastId = key;
-        success = false;
-
-        if (!toast.isActive(toastId)) {
-          toast({
-            id: toastId,
-            title: "Empty field detected!",
-            description: `Please fill in the field : ${formatKey(key)}`,
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
-        }
-        return;
+    if (
+      !newSchool.firstName ||
+      !newSchool.lastName ||
+      !newSchool.phoneNumber ||
+      !newSchool.email ||
+      !newSchool.password ||
+      !newSchool.confirmPassword
+    ) {
+      if (!toast.isActive(toastId)) {
+        toast({
+          id: toastId,
+          title: "Empty field detected!",
+          description: `Please fill all the field`,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       }
-    });
+      success = false;
+    }
+
     if (
       success &&
       !emailError &&
@@ -168,7 +160,7 @@ function signup() {
       overflow={"hidden"}
     >
       <Heading color={"#344E41"} mb={10}>
-        Sign Up
+        School Administrator Sign Up
       </Heading>
       {/*School Admin Login Form */}
       <Box
@@ -183,6 +175,18 @@ function signup() {
         zIndex={100}
       >
         <VStack>
+          <Box display={"flex"} justifyContent={"start"} w={"100%"} gap={3}>
+            <Text>Have an acount? </Text>
+            <ChakraLink
+              as={RouterLink}
+              to={"/login-school"}
+              textDecor={"underline"}
+              color={"blue.200"}
+            >
+              Login
+            </ChakraLink>
+          </Box>
+
           <InputGroup gap={2}>
             <Input
               type="text"

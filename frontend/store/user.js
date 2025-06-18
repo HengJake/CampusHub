@@ -5,7 +5,7 @@ export const useUserStore = create((set) => ({
   setUser: (users) => set({ users }),
   loginUser: async (userDetails, role) => {
     try {
-      const res = await fetch("/api/users/login", {
+      const res = await fetch("/api/user/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -26,7 +26,9 @@ export const useUserStore = create((set) => ({
       // Set the logged in user (you can change to `set({ currentUser: data.user })`)
       set({ users: [data.data] });
 
-      return { success: true, data: data.data };
+      console.log(data);
+
+      return { success: true, message: data.message, data: data.data };
     } catch (error) {
       console.error("Login error:", error.message);
       return { success: false, message: error.message };
