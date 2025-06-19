@@ -1,5 +1,7 @@
 Postman - to test the API endpoints
 
+npm i to install all the dependencies 
+
 // install in main folder
 npm install express mongoose dotenv nodemon
 

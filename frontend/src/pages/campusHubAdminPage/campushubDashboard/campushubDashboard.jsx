@@ -1,8 +1,8 @@
-import React from 'react';
-import './campushubDashboard.scss';
+import React from "react";
+import { Box } from "@chakra-ui/react";
 
 function campushubDashboard() {
-  return <div className="campushubDashboard">campushubDashboard Page</div>;
+  return <Box></Box>;
 }
 
 export default campushubDashboard;

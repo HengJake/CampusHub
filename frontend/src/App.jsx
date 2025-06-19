@@ -6,6 +6,7 @@ import Pricing from "./pages/commonPage/pricing/pricing.jsx";
 import Login from "./pages/commonPage/login/login.jsx";
 import Signup from "./pages/commonPage/signup/signup.jsx";
 import LoginCampushub from "./pages/commonPage/loginCampushub/loginCampushub.jsx";
+import LoginSchool from "./pages/commonPage/loginSchool/loginSchool.jsx";
 import About from "./pages/commonPage/about/about.jsx";
 
 // User Pages
@@ -48,6 +49,7 @@ import { Box, Button } from "@chakra-ui/react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Cookies from "js-cookie";
 import { useState } from "react";
+import { useEffect } from "react";
 import "./general.scss";
 import "./component/generalComponent.scss";
 
@@ -60,66 +62,109 @@ import RNavBar from "./component/navBar/registrationNavBar";
 import SNavBar from "./component/navBar/studentNavBar";
 
 function App() {
-  // Set the cookie
-  function setCookie(name, value, days) {
-    let expires = "";
-    if (days) {
-      const date = new Date();
-      date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-      expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie =
-      name + "=" + encodeURIComponent(value) + expires + "; path=/";
-    setUserRole(value);
-  }
-
-  // Delete a cookie
-  function deleteCookie(name) {
-    document.cookie =
-      name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    setUserRole(null);
-  }
-
   const path = useLocation().pathname;
-  const [userRole, setUserRole] = useState(Cookies.get("userRole") || null);
+  const [RenderedNavbar, setRenderedNavbar] = useState(null);
+  const [margin, setMargin] = useState("0");
+  const [bgColor, setBgColor] = useState("brand.defaultBg");
 
-  let RenderedNavbar;
+  const [userRole, setUserRole] = useState(Cookies.get("role") || null);
 
-  if (path === "/login" || path === "/signup") {
-    RenderedNavbar = <RNavBar />;
-  } else if (userRole === "user") {
-    RenderedNavbar = <SNavBar />;
-  } else if (userRole === "company") {
-    RenderedNavbar = <CANavbar />;
-  } else if (userRole === "admin") {
-    RenderedNavbar = <SANavbar />;
-  } else {
-    RenderedNavbar = <LNavbar />;
-  }
-
-  const getBgColor = () => {
-    switch (userRole) {
-      case "user":
-        return "blue.50";
-      case "company":
-        return "#DAD7CD";
-      case "admin":
-        return "green.50";
-      default:
-        return "gray.200";
+  // Determine role from path
+  const detectRoleFromPath = (path) => {
+    if (
+      path === "/login" ||
+      path === "/signup" ||
+      path === "/login-campushub" ||
+      path === "/login-school"
+    ) {
+      return "register";
+    } else if (
+      path === "/" ||
+      path === "/service" ||
+      path === "/contact-us" ||
+      path === "/pricing" ||
+      path === "/about"
+    ) {
+      return "landing";
+    } else if (
+      path.startsWith("/user-") ||
+      path.startsWith("/book") ||
+      path === "/parking-lot" ||
+      path === "/class-schedule" ||
+      path === "/classroom-finder" ||
+      path === "/result" ||
+      path === "/attendance" ||
+      path === "/bus-schedule" ||
+      path === "/campus-ride" ||
+      path === "/feedback"
+    ) {
+      return "user";
+    } else if (
+      path.startsWith("/admin-") ||
+      path.includes("-management") ||
+      path === "/announcement-management"
+    ) {
+      return "admin";
+    } else if (
+      path.startsWith("/campushub-") ||
+      path === "/subscription" ||
+      path === "/client-management" ||
+      path === "/analytical-report" ||
+      path === "/user-oversight"
+    ) {
+      return "company";
+    } else {
+      return "landing"; // fallback
     }
   };
 
+  useEffect(() => {
+    const role = detectRoleFromPath(path);
+
+    switch (role) {
+      case "register":
+        setRenderedNavbar(<RNavBar />);
+        setMargin("0");
+        setBgColor("brand.defaultBg");
+        break;
+      case "landing":
+        setRenderedNavbar(<LNavbar />);
+        setMargin("0");
+        setBgColor("brand.defaultBg");
+        break;
+      case "user":
+        setRenderedNavbar(<SNavBar />);
+        setMargin("80px");
+        setBgColor("brand.userBg");
+        break;
+      case "admin":
+        setRenderedNavbar(<SANavbar />);
+        setMargin("80px");
+        setBgColor("brand.adminBg");
+        break;
+      case "company":
+        setRenderedNavbar(<CANavbar />);
+        setMargin("80px");
+        setBgColor("brand.companyBg");
+        break;
+      default:
+        setRenderedNavbar(<LNavbar />);
+        setMargin("0");
+        setBgColor("brand.defaultBg");
+        break;
+    }
+  }, [path]);
+
   return (
-    <Box minH="100vh" display="flex" flexDirection="column" bg={getBgColor()}>
-      <Box display="flex" flex="1">
+    <Box minH="100vh" display="flex" flexDirection="column" bg={bgColor}>
+      <Box display="flex">
         <Box height={"fit-content"} width={"100%"}>
           {RenderedNavbar}
         </Box>
       </Box>
 
-      <Box ml={"125px"} flex="1">
-        <Button
+      <Box ml={margin} flex="1" display={"flex"}>
+        {/* <Button
           bg={"gray.900"}
           onClick={() => setCookie("userRole", "admin", 7)}
         >
@@ -142,7 +187,7 @@ function App() {
         </Button>
         <Button bg={"gray.900"} onClick={() => alert(Cookies.get("userRole"))}>
           Log Cookies
-        </Button>
+        </Button>  */}
 
         <Routes>
           {/* Common Pages */}
@@ -153,6 +198,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login-campushub" element={<LoginCampushub />} />
+          <Route path="/login-school" element={<LoginSchool />} />
           <Route path="/about" element={<About />} />
 
           {/* User Pages */}
