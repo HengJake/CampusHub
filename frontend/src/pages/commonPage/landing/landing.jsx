@@ -111,14 +111,8 @@ function landing() {
             </Button>
           </Box>
         </Box>
-        <Box
-          width={"100%"}
-          height={"100%"}
-          p={"70px"}
-          bgColor={"white"}
-          zIndex="100"
-        >
-          <Box bgColor={"#6699CC"} height={"80%"}>
+        <Box width={"100%"} p={"70px"} bgColor={"white"} zIndex="100">
+          <Box>
             <Image
               objectFit={"cover"}
               height={"auto"}
