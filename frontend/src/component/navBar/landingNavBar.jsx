@@ -23,6 +23,7 @@ function navBar() {
       px={4}
       bg={isHomePage ? "transparent" : "white"}
       position={isHomePage ? "absolute" : ""}
+      zIndex={1000}
     >
       <Flex
         h={16}
