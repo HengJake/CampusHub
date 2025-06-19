@@ -1,6 +1,6 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 
-const vehiclesSchema = new Schema(
+const vehiclesSchema = new mongoose.Schema(
   {
     plateNumber: {
       type: String,
