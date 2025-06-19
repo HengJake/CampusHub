@@ -1,4 +1,4 @@
-import Facility from "../models/facility.model.js";
+import Facility from "../models/resource.model.js";
 import mongoose from "mongoose";
 
 export const createFacility = async (req, res) => {
