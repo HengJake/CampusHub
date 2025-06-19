@@ -23,6 +23,7 @@ function navBar() {
       px={4}
       bg={isHomePage ? "transparent" : "white"}
       position={isHomePage ? "absolute" : ""}
+      zIndex={1000}
     >
       <Flex
         h={16}
@@ -32,7 +33,12 @@ function navBar() {
       >
         <CampusHubLogo />
 
-        <HStack spacing={4} display={{ base: "none", md: "flex" }} position={"absolute"} transform={"translateX(50%)"}>
+        <HStack
+          spacing={4}
+          display={{ base: "none", md: "flex" }}
+          position={"absolute"}
+          transform={"translateX(50%)"}
+        >
           <Text color={"gray.800"} textDecor={"underline"}>
             <Link to="/">Home</Link>
           </Text>

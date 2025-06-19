@@ -20,7 +20,7 @@ function landing() {
       // bgColor={"red"}
       display={"flex"}
       flexDirection={"column"}
-      zIndex={-1}
+      // zIndex={-1}
     >
       {/* 1stBox */}
       <Box height={"fit-content"} width={"100%"} x>
