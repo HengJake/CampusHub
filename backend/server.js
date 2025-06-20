@@ -1,9 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
-// import userRoutes from "./routes/users.route.js";
-import facilityRoutes from "./routes/facility.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import stopRoutes from "./routes/Transportation/stop.routes.js";
 
 dotenv.config();
 
@@ -13,9 +12,9 @@ const app = express();
 // allow json in requests
 app.use(express.json());
 
-// manage Facility routes
-app.use("/api/facility", facilityRoutes);
 app.use("/api/user", userRoutes);
+
+app.use("/api/stop", stopRoutes);
 
 app.listen(PORT, () => {
   connectDB();
