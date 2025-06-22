@@ -8,7 +8,7 @@ import { MdOutlineSecurity } from "react-icons/md";
 import { BsBuildingFillGear } from "react-icons/bs";
 import { HiAcademicCap } from "react-icons/hi2";
 import { Image, Stack, Text, Heading, Button } from "@chakra-ui/react";
-import NameImage from "/PosterImage.png";
+import PosterImage from "/PosterImage.png";
 import { color } from "framer-motion";
 
 function landing() {
@@ -117,7 +117,7 @@ function landing() {
               objectFit={"cover"}
               height={"auto"}
               width={"100%"}
-              src={NameImage}
+              src={PosterImage}
               alt="Poster"
             />
             <Box
