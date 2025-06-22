@@ -35,9 +35,9 @@ function landing() {
           gap={5}
           color={"white"}
           bgColor={"rgba(102, 153, 204, 0.50)"}
-          border={"1px"}
           overflowY={"hidden"}
           position={"relative"}
+          boxShadow={"0px 10px 5px rgba(0, 0, 0, 0.3)"}
         >
           <Box
             position={"absolute"}

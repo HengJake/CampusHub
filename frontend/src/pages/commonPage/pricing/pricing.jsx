@@ -58,10 +58,14 @@ function pricing() {
         width={"100%"}
         justifyContent={"center"}
         alignItems={"center"}
-        // border={"1px"}
         height={"100%"}
+        flexDirection={"column"}
+        gap={"50px"}
       >
-        <Box display={"flex"} flexDirection={"row"} gap={10} height={"800px"}>
+        <Switch colorScheme="teal" size="lg" />
+
+        <Box display={"flex"} gap={10} height={"800px"}>
+          {/* First */}
           <Box
             border={"2px"}
             borderColor={"rgba(0, 0, 0, 0.10)"}
@@ -128,6 +132,8 @@ function pricing() {
               </Box>
             </Box>
           </Box>
+
+          {/* Second */}
           <Box
             border={"2px"}
             borderColor={"rgba(0, 0, 0, 0.10)"}
@@ -204,6 +210,8 @@ function pricing() {
               </Box>
             </Box>
           </Box>
+
+          {/* Third */}
           <Box
             border={"2px"}
             borderColor={"rgba(0, 0, 0, 0.10)"}
@@ -221,7 +229,12 @@ function pricing() {
             </Text>
             <br />
             <Box width={"100%"}>
-              <Button bgColor={"#6699CC"} width={"100%"} color={"white"} _hover={{bgColor:"#4E759D"}}>
+              <Button
+                bgColor={"#6699CC"}
+                width={"100%"}
+                color={"white"}
+                _hover={{ bgColor: "#4E759D" }}
+              >
                 Get Started
               </Button>
               <Box>
