@@ -14,7 +14,7 @@ import {
 import React from "react";
 import Sidebar from "../sidebar/studentSidebar.jsx";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaMoon } from "react-icons/fa";
 import { IoSunny } from "react-icons/io5";
 import { MdAccountCircle } from "react-icons/md";
@@ -27,6 +27,13 @@ import "../generalComponent.scss";
 
 function navBar() {
   // const { colorMode, toggleColorMode } = useColorMode();
+  const navigate = useNavigate();
+
+  const handleLogOut = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    navigate("/login");
+  };
 
   return (
     <Box display={"flex"} flexDir={"column"}>
@@ -95,6 +102,7 @@ function navBar() {
                 _groupHover={{ color: "blue.800" }}
               />
             </Button>
+            <Button onClick={handleLogOut}>Log Out</Button>
           </HStack>
         </Flex>
       </Container>

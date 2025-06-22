@@ -23,7 +23,7 @@ function landing() {
       // zIndex={-1}
     >
       {/* 1stBox */}
-      <Box height={"fit-content"} width={"100%"} x>
+      <Box height={"fit-content"} width={"100%"}>
         <Box
           height={"800px"}
           width={"100%"}

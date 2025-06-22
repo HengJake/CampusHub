@@ -31,7 +31,7 @@ import { FaRegUserCircle } from "react-icons/fa";
 import { useState } from "react";
 import { useToast } from "@chakra-ui/react";
 import "./signup.scss";
-import { useUserStore } from "../../../../store/user";
+import { useUserStore } from "../../../store/user";
 import { CookieUtils } from "../../../../../utility/cookie";
 import { useNavigate } from "react-router-dom";
 import { Link as RouterLink } from "react-router-dom";

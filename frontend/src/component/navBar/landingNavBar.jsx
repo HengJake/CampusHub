@@ -34,24 +34,24 @@ function navBar() {
         <CampusHubLogo />
 
         <HStack
-          spacing={4}
+          spacing={8}
           display={{ base: "none", md: "flex" }}
           position={"absolute"}
           transform={"translateX(50%)"}
         >
-          <Text color={"gray.800"} textDecor={"underline"}>
+          <Text color={"gray.800"}>
             <Link to="/">Home</Link>
           </Text>
-          <Text color={"gray.800"} textDecor={"underline"}>
+          <Text color={"gray.800"}>
             <Link to="/about">About</Link>
           </Text>
-          <Text color={"gray.800"} textDecor={"underline"}>
+          <Text color={"gray.800"}>
             <Link to="/pricing">Pricing</Link>
           </Text>
-          <Text color={"gray.800"} textDecor={"underline"}>
+          <Text color={"gray.800"}>
             <Link to="/service">Service</Link>
           </Text>
-          <Text color={"gray.800"} textDecor={"underline"}>
+          <Text color={"gray.800"}>
             <Link to="/contact-us">Contact</Link>
           </Text>
         </HStack>
@@ -60,7 +60,7 @@ function navBar() {
           <Button
             bg={"transparent"}
             _hover={{ bg: "blue.200" }}
-            color={"white"}
+            color={"blue.800"}
           >
             <Link to="/login-school">Login</Link>
           </Button>
