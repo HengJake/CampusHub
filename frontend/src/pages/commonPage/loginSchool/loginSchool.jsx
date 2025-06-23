@@ -25,7 +25,7 @@ import {
 import { HiOutlineMail } from "react-icons/hi";
 import { useDisclosure } from "@chakra-ui/react";
 import { useState } from "react";
-import { useUserStore } from "../../../../store/user";
+import { useUserStore } from "../../../store/user";
 import { Link as RouterLink } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { CookieUtils } from "../../../../../utility/cookie";
@@ -98,7 +98,7 @@ function LoginSchool() {
         });
 
         CookieUtils.setCookie("role", "admin");
-        
+
         setTimeout(() => {
           navigate("/admin-dashboard");
         }, 1000);

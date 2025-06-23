@@ -1,5 +1,8 @@
 import User from "../models/user.model.js";
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+import generateToken from "../utils/jwtUtils.js";
+import { verifyToken } from "../utils/authMiddleware.js";
 
 export const createUser = async (req, res) => {
   const { name, password, phoneNumber, email, role, twoFA_enabled } = req.body;
@@ -11,13 +14,15 @@ export const createUser = async (req, res) => {
       .json({ success: false, message: "Please provide all required fields" });
   }
 
+  const hashedPassword = await bcrypt.hash(password, 10);
+
   // validate phone number
   // validate password
   // validate email
 
   const newUser = new User({
     name,
-    password,
+    password: hashedPassword,
     phoneNumber,
     email,
     role,
@@ -26,13 +31,11 @@ export const createUser = async (req, res) => {
 
   try {
     await newUser.save();
-    res
-      .status(201)
-      .json({
-        success: true,
-        data: newUser,
-        message: "User created successfully",
-      });
+    res.status(201).json({
+      success: true,
+      data: newUser,
+      message: "User created successfully",
+    });
   } catch (error) {
     console.error("Error in createUser:", error.message);
 
@@ -66,21 +69,51 @@ export const loginUser = async (req, res) => {
   }
 
   try {
-    // Find user by email
     const user = await User.findOne({ email });
 
-    if (!user || user.password !== password) {
+    // Check if user exists first
+    if (!user) {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
     }
 
+    // Now it's safe to compare passwords
+    const matchPassword = await bcrypt.compare(password, user.password);
+
+    if (!matchPassword) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    const token = generateToken(user);
+
     // Login success
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      data: user
+      data: user,
+      token: token,
+    });
+  } catch (error) {
+    console.error("Login error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+export const getUsers = async (req, res) => {
+  try {
+    const users = await User.find({});
+
+    return res.status(200).json({
+      success: true,
+      data: users,
     });
   } catch (error) {
     console.error("Login error:", error.message);
@@ -124,3 +157,4 @@ export const getUserById = async (req, res) => {
     });
   }
 };
+

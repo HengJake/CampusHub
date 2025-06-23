@@ -29,6 +29,25 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    jwtToken: {
+      type: String,
+    },
+    verifyOtp: {
+      type: String,
+      default: "",
+    },
+    verifyOtpExpiresAt: {
+      type: Number,
+      default: 0,
+    },
+    resetOtp: {
+      type: String,
+      default: "",
+    },
+    resetOtpExpiresAt: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
