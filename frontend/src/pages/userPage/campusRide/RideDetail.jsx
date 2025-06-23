@@ -37,15 +37,14 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
   AlertDialogCloseButton,
-} from '@chakra-ui/react'
+} from "@chakra-ui/react";
 
 function RideDetail() {
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
-    const cancelRef = React.useRef()
+  const cancelRef = React.useRef();
 
   const handleCancel = async () => {
-    navigate("/login");
   };
 
   return (

@@ -10,8 +10,29 @@ import { HiAcademicCap } from "react-icons/hi2";
 import { Image, Stack, Text, Heading, Button } from "@chakra-ui/react";
 import PosterImage from "/PosterImage.png";
 import { color } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useDisclosure } from "@chakra-ui/react";
+import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  AlertDialogCloseButton,
+} from "@chakra-ui/react";
 
 function landing() {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const navigate = useNavigate();
+
+  const handleviewall = () => {
+    navigate("/pricing");
+  };
+  const handlesignup = () => {
+    navigate("/signup");
+  };
+
   return (
     <Flex
       w="100vw"
@@ -93,6 +114,7 @@ function landing() {
               fontSize={"24px"}
               fontWeight={"bold"}
               _hover={{ bgColor: "rgb(255, 255, 255)", color: "black" }}
+              onClick={handlesignup}
             >
               Join Now
             </Button>
@@ -139,6 +161,7 @@ function landing() {
                   borderRadius={"10px"}
                   position={"relative"}
                   width={"10%"}
+                  onClick={handleviewall}
                 >
                   View All
                 </Button>
@@ -174,6 +197,7 @@ function landing() {
                     border={"1px"}
                     borderColor={"rgba(0, 0, 0, 0.20)"}
                     width={"100%"}
+                    onClick={handleviewall}
                   >
                     Get Started
                   </Button>
@@ -199,6 +223,7 @@ function landing() {
                     bgColor={"rgba(102, 153, 204)"}
                     boxShadow={"0px 4px 10px rgba(0, 0, 0, 0.3)"}
                     color={"white"}
+                    onClick={handleviewall}
                   >
                     Get Started
                   </Button>
@@ -224,6 +249,7 @@ function landing() {
                     bg={"transparent"}
                     border={"1px"}
                     borderColor={"rgba(0, 0, 0, 0.20)"}
+                    onClick={handleviewall}
                   >
                     Get Started
                   </Button>
