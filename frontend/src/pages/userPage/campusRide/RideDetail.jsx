@@ -5,6 +5,7 @@ import { FaPhone } from "react-icons/fa6";
 import { RiMessage3Fill } from "react-icons/ri";
 import { RiSunCloudyFill } from "react-icons/ri";
 import { Divider } from "@chakra-ui/react";
+import { MdCall } from "react-icons/md";
 
 import {
   Box,
@@ -25,9 +26,28 @@ import {
   Flex,
   Image,
 } from "@chakra-ui/react";
-import { rgba } from "framer-motion";
+import { color, rgba } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useDisclosure } from "@chakra-ui/react";
+import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  AlertDialogCloseButton,
+} from '@chakra-ui/react'
 
 function RideDetail() {
+  const navigate = useNavigate();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+    const cancelRef = React.useRef()
+
+  const handleCancel = async () => {
+    navigate("/login");
+  };
+
   return (
     <Flex
       flexDirection="column"
@@ -163,7 +183,7 @@ function RideDetail() {
                 gap={"50px"}
                 justifyContent={"right"}
               >
-                <FaPhone size={"30px"} />
+                <MdCall size={"30px"} />
                 <RiMessage3Fill size={"30px"} />
               </Box>
 
@@ -185,6 +205,7 @@ function RideDetail() {
                   bgColor={"#FF5656"}
                   color={"white"}
                   _hover={{ bg: "#D34949" }}
+                  onClick={onOpen}
                 >
                   Cancel Booking
                 </Button>
@@ -192,6 +213,47 @@ function RideDetail() {
             </Box>
           </Box>
         </Box>
+
+        <Modal isOpen={isOpen} onClose={onClose}>
+          <ModalOverlay />
+
+          <ModalContent w="100%" p={"10px"} borderRadius={"0px"}>
+            <ModalHeader>Cancel Booking</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Text>Are you sure you want to cancel this booking?</Text>
+              <br />
+            </ModalBody>
+
+            <ModalFooter gap={"10px"}>
+              <Button
+                color={"#FF5656"}
+                border={"2px"}
+                borderColor={"#FF5656"}
+                bg="rgba(0, 0, 0, 0.0)"
+                width={"100%"}
+                _hover={{ bg: "#FF5656", color: "white" }}
+                variant="solid"
+                borderRadius={"3px"}
+                ref={cancelRef}
+                onClick={onClose}
+              >
+                Keep this booking
+              </Button>
+              <Button
+                color={"white"}
+                width={"100%"}
+                bg={"#FF5656"}
+                _hover={{ bg: "#D34949" }}
+                variant="solid"
+                borderRadius={"3px"}
+              >
+                Cancel this booking
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
         <Box
           width={"100%"}
           display={"flex"}
