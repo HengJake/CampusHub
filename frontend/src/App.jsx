@@ -4,7 +4,7 @@ import Service from "./pages/commonPage/service/service.jsx";
 import ContactUs from "./pages/commonPage/contactUs/contactUs.jsx";
 import Pricing from "./pages/commonPage/pricing/pricing.jsx";
 import Login from "./pages/commonPage/login/login.jsx";
-import Signup from "./pages/commonPage/signup/signup.jsx";
+import Signup from "./pages/commonPage/signup/signupProcess/signup.jsx";
 import LoginCampushub from "./pages/commonPage/loginCampushub/loginCampushub.jsx";
 import LoginSchool from "./pages/commonPage/loginSchool/loginSchool.jsx";
 import About from "./pages/commonPage/about/about.jsx";

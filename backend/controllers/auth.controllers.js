@@ -6,6 +6,7 @@ import { text } from "express";
 import transporter from "../config/nodemailer.js";
 
 export const register = async (req, res) => {
+
   const { name, password, phoneNumber, email, role, twoFA_enabled } = req.body;
 
   // Validate required fields
@@ -291,4 +292,48 @@ export const sendResetOtp = async (req, res) => {
   }
 };
 
-export const resetPassword = async ( req, res)
+export const resetPassword = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+
+  if (!email || !otp || !newPassword) {
+    return res.status(400).json({
+      success: false,
+      message: "Email, OTP and new password is required",
+    });
+  }
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    if (user.resetOtp === "" || user.resetOtp !== otp) {
+      return res.status(404).json({ success: false, message: "Invalid OTP" });
+    }
+
+    if (user.resetOtpExpiresAt < Date.now()) {
+      return res
+        .status(404)
+        .json({ success: false, message: "OTP has expired" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+    user.resetOtp = "";
+    user.resetOtpExpiresAt = 0;
+
+    await user.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Password has been reset successfully",
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
