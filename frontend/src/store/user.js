@@ -33,8 +33,7 @@ export const useUserStore = create((set) => ({
         token: data.token,
       };
     } catch (error) {
-      console.error("Login error:", error.message);
-      return { success: false, message: error.message };
+ c
     }
   },
   signupUser: async (userDetails) => {

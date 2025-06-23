@@ -30,24 +30,33 @@ import { useDisclosure } from "@chakra-ui/react";
 import { FaRegUserCircle } from "react-icons/fa";
 import { useState } from "react";
 import { useToast } from "@chakra-ui/react";
-import "./signup.scss";
-import { useUserStore } from "../../../store/user";
-import { CookieUtils } from "../../../../../utility/cookie";
+// import { useUserStore } from "../../../../store/user";
+import { useAuthStore } from "../../../../store/auth.js";
+import { CookieUtils } from "../../../../../../utility/cookie";
 import { useNavigate } from "react-router-dom";
 import { Link as RouterLink } from "react-router-dom";
 
 function signup() {
-  const { signupUser } = useUserStore();
+  // ====== registration steps =====
+  const [step, setStep] = useState(1);
+  const nextStep = () => setStep((prev) => prev + 1);
+  const prevStep = () => setStep((prev) => prev - 1);
+  const handleData = (data) => {
+    setFormData((prev) => ({ ...prev, ...data }));
+    nextStep();
+  };
+
+  const { signUp } = useAuthStore();
   const navigate = useNavigate();
 
   // declaring variable
   const [newSchool, setSchool] = useState({
-    firstName: "",
-    lastName: "",
-    phoneNumber: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+    firstName: "test",
+    lastName: "test",
+    phoneNumber: "0193314886",
+    email: "schooltestacc818@gmail.com",
+    password: "asd123",
+    confirmPassword: "asd123",
   });
 
   const [show, setShow] = React.useState(false);
@@ -76,39 +85,39 @@ function signup() {
 
   // handle method
   const handleSignup = async () => {
-    let success = true;
-    const toastId = "sign-up";
+    // let success = true;
+    // const toastId = "sign-up";
 
-    if (
-      !newSchool.firstName ||
-      !newSchool.lastName ||
-      !newSchool.phoneNumber ||
-      !newSchool.email ||
-      !newSchool.password ||
-      !newSchool.confirmPassword
-    ) {
-      if (!toast.isActive(toastId)) {
-        toast({
-          id: toastId,
-          title: "Empty field detected!",
-          description: `Please fill all the field`,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-      success = false;
-    }
+    // if (
+    //   !newSchool.firstName ||
+    //   !newSchool.lastName ||
+    //   !newSchool.phoneNumber ||
+    //   !newSchool.email ||
+    //   !newSchool.password ||
+    //   !newSchool.confirmPassword
+    // ) {
+    //   if (!toast.isActive(toastId)) {
+    //     toast({
+    //       id: toastId,
+    //       title: "Empty field detected!",
+    //       description: `Please fill all the field`,
+    //       status: "error",
+    //       duration: 3000,
+    //       isClosable: true,
+    //     });
+    //   }
+    //   success = false;
+    // }
 
-    if (
-      success &&
-      !emailError &&
-      !phoneError &&
-      !cpasswordError &&
-      !passwordError
-    ) {
-      onOpen();
-    }
+    // if (
+    //   success &&
+    //   !emailError &&
+    //   !phoneError &&
+    //   !cpasswordError &&
+    //   !passwordError
+    // ) {
+    onOpen();
+    // }
   };
 
   const handleSignUp2 = async () => {
@@ -123,9 +132,7 @@ function signup() {
       twoFA_enabled: false,
     };
 
-    console.log(userData);
-
-    const { success, message, data } = await signupUser(userData);
+    const { success, message, data } = await signUp(userData);
     console.log(success, message, data);
     if (!success) {
       toast({
@@ -144,9 +151,9 @@ function signup() {
         isClosable: true,
       });
 
-      setTimeout(() => {
-        navigate("/login-school"); // change to your target route
-      }, 1500);
+      //   setTimeout(() => {
+      //     navigate("/login-school"); // change to your target route
+      //   }, 1500);
     }
   };
 
@@ -163,6 +170,7 @@ function signup() {
         School Administrator Sign Up
       </Heading>
       {/*School Admin Login Form */}
+
       <Box
         p={3}
         align={"left"}
@@ -474,71 +482,6 @@ function signup() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-
-      {/*Background box */}
-      {/*First layer */}
-      <Box
-        position="fixed"
-        bottom="-20%"
-        left="-10%"
-        width="300px"
-        height="600px"
-        borderRadius="full"
-        bgGradient="linear(to-br, #A3B18A, #588157)"
-        zIndex="0"
-      ></Box>
-      <Box
-        position="fixed"
-        bottom="-20%"
-        right="-10%"
-        width="300px"
-        height="600px"
-        borderRadius="full"
-        bgGradient="linear(to-br, #A3B18A, #588157)"
-        zIndex="0"
-      ></Box>
-      {/*Second layer */}
-      <Box
-        position="fixed"
-        bottom="-40%"
-        left="10%"
-        width="300px"
-        height="600px"
-        borderRadius="full"
-        bgGradient="linear(to-br, #A3B18A, #588157)"
-        zIndex="0"
-      ></Box>
-      <Box
-        position="fixed"
-        bottom="-40%"
-        right="10%"
-        width="300px"
-        height="600px"
-        borderRadius="full"
-        bgGradient="linear(to-br, #A3B18A, #588157)"
-        zIndex="0"
-      ></Box>
-      {/*Third layer */}
-      <Box
-        position="fixed"
-        bottom="-60%"
-        right="20%"
-        width="300px"
-        height="600px"
-        borderRadius="full"
-        bgGradient="linear(to-br, #A3B18A, #588157)"
-        zIndex="0"
-      ></Box>
-      <Box
-        position="fixed"
-        bottom="-60%"
-        left="20%"
-        width="300px"
-        height="600px"
-        borderRadius="full"
-        bgGradient="linear(to-br, #A3B18A, #588157)"
-        zIndex="0"
-      ></Box>
     </Box>
   );
 }
