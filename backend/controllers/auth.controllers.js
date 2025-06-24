@@ -1,8 +1,6 @@
 import User from "../models/user.model.js";
-import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import generateToken from "../utils/jwtUtils.js";
-import { text } from "express";
 import transporter from "../config/nodemailer.js";
 
 export const register = async (req, res) => {

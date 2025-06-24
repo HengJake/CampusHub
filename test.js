@@ -104,4 +104,3 @@ console.log("Malaysia Date:", malaysiaDate);
 const utcAgain = malaysiaToUTC(malaysiaDate);
 console.log("Converted back to UTC:", utcAgain);
 
-// testhjhjhjhjhjhjh

@@ -2,8 +2,6 @@ import { create } from "zustand";
 
 export const useAuthStore = create((set) => ({
   user: null,
-  loggedIn: (user) => set({ user }),
-  loggedOut: () => set({ user: null }),
   logIn: async (loginCredential, role) => {
     try {
       const res = await fetch("/auth/login", {
@@ -47,9 +45,51 @@ export const useAuthStore = create((set) => ({
         throw new Error(data.message || "Sign Up failed");
       }
 
-      loggedIn(data.data);
+      set({ user: [data.data] });
 
       return { success: true, message: data.message, data: data.data };
+    } catch (error) {
+      console.error("Login error:", error.message);
+      return { success: false, message: error.message };
+    }
+  },
+  sendVerifyOtp: async () => {
+    try {
+      const res = await fetch("/auth/send-verify-otp", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.message || "Verification failed");
+      }
+
+      return { success: true, message: data.message };
+    } catch (error) {
+      console.error("Login error:", error.message);
+      return { success: false, message: error.message };
+    }
+  },
+  verifyAccount: async (otp) => {
+    try {
+      const res = await fetch("/auth/send-verify-otp", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.message || "Verification failed");
+      }
+
+      return { success: true, message: data.message };
     } catch (error) {
       console.error("Login error:", error.message);
       return { success: false, message: error.message };
