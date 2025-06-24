@@ -13,6 +13,12 @@ const courseSchema = new mongoose.Schema({
         min: 1 // Duration in months
     },
 
+    ModuleID:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Module",
+        required: true
+    }
+
 });
 
 const Course = mongoose.model("Course", courseSchema);
