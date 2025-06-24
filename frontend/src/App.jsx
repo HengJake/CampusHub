@@ -20,6 +20,7 @@ import Result from "./pages/userPage/result/result.jsx";
 import Attendance from "./pages/userPage/attendance/attendance.jsx";
 import BusSchedule from "./pages/userPage/busSchedule/busSchedule.jsx";
 import CampusRide from "./pages/userPage/campusRide/campusRide.jsx";
+import RideDetail from "./pages/userPage/campusRide/RideDetail.jsx";
 import Feedback from "./pages/userPage/feedback/feedback.jsx";
 import UserSetting from "./pages/userPage/userSetting/userSetting.jsx";
 import UserProfile from "./pages/userPage/userProfile/userProfile.jsx";
@@ -96,6 +97,7 @@ function App() {
       path === "/attendance" ||
       path === "/bus-schedule" ||
       path === "/campus-ride" ||
+      path === "/ride-detail" ||
       path === "/feedback"
     ) {
       return "user";
@@ -212,6 +214,7 @@ function App() {
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/bus-schedule" element={<BusSchedule />} />
           <Route path="/campus-ride" element={<CampusRide />} />
+          <Route path="/ride-detail" element={<RideDetail />} />
           <Route path="/feedback" element={<Feedback />} />
           <Route path="/user-setting" element={<UserSetting />} />
           <Route path="/user-profile" element={<UserProfile />} />
