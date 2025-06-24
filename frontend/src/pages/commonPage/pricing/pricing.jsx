@@ -107,27 +107,27 @@ function pricing() {
               >
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Student & Faculty Management</Text>
+                  <Text>Secure User Authentication</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Attendance Tracking</Text>
+                  <Text> Course Catalog Browse</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Attendance Tracking</Text>
+                  <Text>Course Registration </Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Basic Reporting</Text>
+                  <Text>Personal Academic Timetable Viewing</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Email Support</Text>
+                  <Text>Examination Schedule and Venue Viewing</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Up to 500 active users</Text>
+                  <Text>Access to Transcripts and Grade Reports</Text>
                 </Box>
               </Box>
             </Box>
@@ -181,31 +181,31 @@ function pricing() {
               >
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Course Registration & Grade Management</Text>
+                  <Text> Appointment Booking with Lecturers/Tutors</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Library Management System</Text>
+                  <Text>Personalized Academic Dashboard </Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Hostel/Facility Management</Text>
+                  <Text>Digital Portfolio & Skills Showcase</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Role-Based Access Control</Text>
+                  <Text>Access to General Financial Info</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Custom Branding</Text>
+                  <Text>Limited Library Integration</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Chat & Ticket Support</Text>
+                  <Text> Structured Feedback & Grievance Redressal</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Up to 2,000 active users</Text>
+                  <Text>Waitlisting & Automated Check in Registration</Text>
                 </Box>
               </Box>
             </Box>
@@ -259,35 +259,31 @@ function pricing() {
               >
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Online Exam Module</Text>
+                  <Text> Interactive Degree Audit & Graduation Planner</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Learning Management System (LMS)</Text>
+                  <Text> Research & Thesis Management Portal</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Fee Management & Payment Integration</Text>
+                  <Text>Career Services Hub</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Real-time Analytics Dashboard</Text>
+                  <Text>Student Life Portal</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>API Access</Text>
+                  <Text> Comprehensive Financial Account Management </Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Mobile App Integration</Text>
+                  <Text> Full Integrated Library Services</Text>
                 </Box>
                 <Box display={"flex"} flexDirection={"row"} gap={7}>
                   <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Priority Support</Text>
-                </Box>
-                <Box display={"flex"} flexDirection={"row"} gap={7}>
-                  <FaSquareCheck color="#14C800" size={24} />
-                  <Text>Unlimited Users</Text>
+                  <Text>Enhanced LMS Integration</Text>
                 </Box>
               </Box>
             </Box>
