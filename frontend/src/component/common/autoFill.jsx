@@ -100,38 +100,46 @@ function autoFill({ isOpen, onClose, setFormData, formData, step }) {
     onClose();
   };
 
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalOverlay />
-      <ModalContent position={"absolute"} right={"0"} top={"0"} margin={4}>
-        <ModalHeader>
-          <Text>Auto Fill Info?</Text>
-          <Text fontSize={"13"}>This will be strictly for demo only</Text>
-        </ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <SimpleGrid columns={2} spacing={4} width="100%">
-            {Object.entries(getAutoFillPreview( ))
-              .slice(0, 6)
-              .map(([key, value]) => (
-                <Box key={key}>
-                  <Text fontWeight={600}>{formatKey(key)}</Text>
-                  <Text>{value}</Text>
-                </Box>
-              ))}
-          </SimpleGrid>
-        </ModalBody>
+  let showOrNot = true;
 
-        <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={onClose}>
-            Close
-          </Button>
-          <Button variant="ghost" onClick={handleAutoFill}>
-            Auto Fill
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+  if (step === 2) {
+    showOrNot = false;
+  }
+
+  return (
+    showOrNot && (
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent position={"absolute"} right={"0"} top={"0"} margin={4}>
+          <ModalHeader>
+            <Text>Auto Fill Info?</Text>
+            <Text fontSize={"13"}>This will be strictly for demo only</Text>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <SimpleGrid columns={2} spacing={4} width="100%">
+              {Object.entries(getAutoFillPreview())
+                .slice(0, 6)
+                .map(([key, value]) => (
+                  <Box key={key}>
+                    <Text fontWeight={600}>{formatKey(key)}</Text>
+                    <Text>{value}</Text>
+                  </Box>
+                ))}
+            </SimpleGrid>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={onClose}>
+              Close
+            </Button>
+            <Button variant="ghost" onClick={handleAutoFill}>
+              Auto Fill
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    )
   );
 }
 

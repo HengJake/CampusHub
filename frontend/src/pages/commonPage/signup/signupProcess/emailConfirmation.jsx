@@ -31,7 +31,7 @@ function emailConfirmation({ formData, setFormData, onNext, onBack }) {
       }
     };
 
-    fetchOtp();
+    // fetchOtp();
   }, []);
 
   const handleVerify = async () => {
