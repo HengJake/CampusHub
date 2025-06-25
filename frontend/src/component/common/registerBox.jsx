@@ -9,6 +9,7 @@ const RegisterBox = ({
   buttonText = "Next",
   buttonClick = null,
   footer = null,
+  isWaiting,
   ...props
 }) => {
   return (
@@ -60,6 +61,7 @@ const RegisterBox = ({
           boxShadow: "lg",
         }}
         onClick={buttonClick}
+        isDisabled={isWaiting}
       >
         {buttonText}
       </Button>

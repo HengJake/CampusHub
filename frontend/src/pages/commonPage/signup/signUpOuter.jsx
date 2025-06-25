@@ -6,19 +6,38 @@ import Otp from "./signupProcess/emailConfirmation.jsx";
 import SelectPlan from "./signupProcess/selectPlan.jsx";
 import Payment from "./signupProcess/payment.jsx";
 import SchoolDetails from "./signupProcess/schoolDetails.jsx";
+import AutoFill from "../../../component/common/autoFill.jsx";
+import { useEffect } from "react";
+import { useDisclosure } from "@chakra-ui/react";
 
 function signUpOuter() {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   // ====== registration steps =====
   const [step, setStep] = useState(2);
   const nextStep = () => {
-    console.log(step);
+    // console.log(step);
     setStep((prev) => prev + 1);
   };
   const prevStep = () => {
     setStep((prev) => prev - 1);
-    console.log(step);
+    // console.log(step);
   };
 
+
+  useEffect(() => {
+    onOpen();
+    // console.log(formData);
+  }, []);
+
+  // firstName: "School",
+  // lastName: "Admin1",
+  // phoneNumber: "0103314886",
+  // email: "schooltestacc818@gmail.com",
+  // password: "P@ssw0rd",
+  // confirmPassword: "P@ssw0rd",
+
+  // add data
   const handleData = (data) => {
     setFormData((prev) => ({ ...prev, ...data }));
     nextStep();
@@ -26,12 +45,12 @@ function signUpOuter() {
 
   const [formData, setFormData] = useState({
     // Step 1
-    firstName: "School",
-    lastName: "Admin1",
-    phoneNumber: "0103314886",
-    email: "schooltestacc818@gmail.com",
-    password: "P@ssw0rd",
-    confirmPassword: "P@ssw0rd",
+    firstName: "",
+    lastName: "",
+    phoneNumber: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
 
     // Step 2: Plan
     selectedPlan: "",
@@ -50,6 +69,19 @@ function signUpOuter() {
     country: "",
   });
 
+  // disable user from spamming (if spam will skip to next 2 or more)
+  const [isWaiting, setIsWaiting] = useState(false);
+
+  const handleNextClick = () => {
+    if (isWaiting) return;
+
+    setIsWaiting(true);
+
+    setTimeout(() => {
+      setIsWaiting(false);
+    }, 2000);
+  };
+
   return (
     <Box m={"auto auto"} maxW={"md"}>
       {step === 1 && (
@@ -57,6 +89,8 @@ function signUpOuter() {
           formData={formData}
           setFormData={setFormData}
           onNext={nextStep}
+          isWaiting={isWaiting}
+          handleNextClick={handleNextClick}
         />
       )}
       {step === 2 && (
@@ -85,6 +119,14 @@ function signUpOuter() {
           onBack={prevStep}
         />
       )}
+
+      <AutoFill
+        isOpen={isOpen}
+        onClose={onClose}
+        setFormData={setFormData}
+        step={step}
+        formData={formData}
+      ></AutoFill>
     </Box>
   );
 }

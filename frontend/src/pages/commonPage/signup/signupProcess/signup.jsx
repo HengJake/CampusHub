@@ -36,9 +36,12 @@ import { CookieUtils } from "../../../../../../utility/cookie";
 import { useNavigate } from "react-router-dom";
 import { Link as RouterLink } from "react-router-dom";
 import RegisterBox from "../../../../component/common/registerBox.jsx";
+import { useUserStore } from "../../../../store/user.js";
 
-function signup({ formData, setFormData, onNext }) {
+// add in outer, button in MODAL
+function signup({ formData, setFormData, onNext, isWaiting, handleNextClick }) {
   const { signUp } = useAuthStore();
+  const { checkUser } = useUserStore();
   const navigate = useNavigate();
 
   const [show, setShow] = React.useState(false);
@@ -60,9 +63,13 @@ function signup({ formData, setFormData, onNext }) {
 
   // format object key
   const formatKey = (key) => {
+    if (!Array.isArray(key.split(" "))) {
+      return key.toUpperCase();
+    }
+
     const withSpaces = key.replace(/([A-Z])/g, " $1"); // insert space before uppercase letters
-    const lowercased = withSpaces.toLowerCase();
-    return lowercased.charAt(0).toUpperCase() + lowercased.slice(1); // capitalize first letter
+    // const lowercased = withSpaces.toLowerCase();
+    return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1); // capitalize first letter
   };
 
   // handle method
@@ -84,7 +91,7 @@ function signup({ formData, setFormData, onNext }) {
           title: "Empty field detected!",
           description: `Please fill all the field`,
           status: "error",
-          duration: 3000,
+          duration: 2000,
           isClosable: true,
         });
       }
@@ -99,7 +106,7 @@ function signup({ formData, setFormData, onNext }) {
           description:
             "Ensure your password and confirm password are identical",
           status: "warning",
-          duration: 4000,
+          duration: 2000,
           isClosable: true,
         });
       }
@@ -129,7 +136,31 @@ function signup({ formData, setFormData, onNext }) {
       twoFA_enabled: false,
     };
 
-    const { success, message, data } = await signUp(userData);
+    // const { exist, takenFields } = await checkUser(userData);
+    const { success, message } = await signUp(userData);
+
+    // console.log(exist, takenFields);
+
+    // const takenKeys = Object.keys(takenFields).filter(
+    //   (key) => takenFields[key]
+    // );
+
+    // let message = "";
+    // if (takenKeys.length === 1) {
+    //   message = `${formatKey(takenKeys[0])} is taken.`;
+    // } else if (takenKeys.length === 2) {
+    //   message = `${formatKey(takenKeys[0])} and ${formatKey(
+    //     takenKeys[1]
+    //   )} are taken.`;
+    // } else if (takenKeys.length > 2) {
+    //   const last = takenKeys.pop();
+    //   const formattedKeys = takenKeys.map(formatKey);
+    //   message = `${formattedKeys.join(", ")}, and ${formatKey(
+    //     last
+    //   )} are taken.`;
+    // } else {
+    //   message = "All details are available.";
+    // }
 
     if (!success) {
       toast({
@@ -137,25 +168,31 @@ function signup({ formData, setFormData, onNext }) {
         description: message,
         position: "top",
         status: "error",
+        duration: 1500,
         isClosable: true,
       });
     } else {
       toast({
-        title: "Sign Up successfully",
-        description: message,
+        title: "Account succesfully created",
+        description: "Proceeding to email verification...",
         position: "top",
         status: "success",
+        duration: 1500,
         isClosable: true,
       });
 
       setTimeout(() => {
         onNext();
-      }, 1500);
+      }, 500);
     }
   };
 
   return (
-    <RegisterBox heading={"Sign Up"} buttonClick={handleSignup}>
+    <RegisterBox
+      heading={"Sign Up"}
+      buttonClick={handleSignup}
+      isWaiting={isWaiting}
+    >
       <VStack>
         <Box display={"flex"} justifyContent={"start"} w={"100%"} gap={1}>
           <Text color={"white"}>Have an acount? </Text>
@@ -431,7 +468,15 @@ function signup({ formData, setFormData, onNext }) {
             <Button variant="ghost" onClick={onClose}>
               Close
             </Button>
-            <Button colorScheme="blue" mr={3} onClick={handleSignUp2}>
+            <Button
+              isDisabled={isWaiting}
+              colorScheme="blue"
+              mr={3}
+              onClick={() => {
+                handleNextClick();
+                handleSignUp2();
+              }}
+            >
               Confirm
             </Button>
           </ModalFooter>

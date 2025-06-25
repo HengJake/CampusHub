@@ -158,3 +158,49 @@ export const getUserById = async (req, res) => {
   }
 };
 
+export const checkExistedUserDetails = async (req, res) => {
+  try {
+    const { name, email, phoneNumber } = req.body;
+
+    if (!name && !email && !phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide username, email, or phoneNumber to check.",
+      });
+    }
+
+    const takenFields = {};
+
+    if (name) {
+      const userByUsername = await User.findOne({ name }).select("_id");
+      if (userByUsername) takenFields.name = true;
+    }
+
+    if (email) {
+      const userByEmail = await User.findOne({ email }).select("_id");
+      if (userByEmail) takenFields.email = true;
+    }
+
+    if (phoneNumber) {
+      const userByPhone = await User.findOne({ phoneNumber }).select("_id");
+      if (userByPhone) takenFields.phoneNumber = true;
+    }
+
+    const anyTaken = Object.keys(takenFields).length > 0;
+
+    return res.status(200).json({
+      success: true,
+      exist: anyTaken,
+      takenFields,
+      message: anyTaken
+        ? "User details are already taken."
+        : "All provided details are available.",
+    });
+  } catch (error) {
+    console.error("Error checking user existence:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};

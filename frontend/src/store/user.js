@@ -33,7 +33,7 @@ export const useUserStore = create((set) => ({
         token: data.token,
       };
     } catch (error) {
- c
+      c;
     }
   },
   signupUser: async (userDetails) => {
@@ -97,6 +97,33 @@ export const useUserStore = create((set) => ({
       }
 
       return { success: true, message: data.message, data: data.data };
+    } catch (error) {
+      console.error("Error fetching user:", error.message);
+      return { success: false, message: error.message };
+    }
+  },
+  checkUser: async (userDetails) => {
+    try {
+      const res = await fetch(`/api/user/check-user`, {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify(userDetails),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to fetch check user details");
+      }
+
+      return {
+        success: true,
+        message: data.message,
+        exist: data.exist,
+        takenFields: data.takenFields,
+      };
     } catch (error) {
       console.error("Error fetching user:", error.message);
       return { success: false, message: error.message };
