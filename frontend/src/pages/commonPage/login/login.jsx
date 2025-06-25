@@ -27,6 +27,8 @@ import { Checkbox, CheckboxGroup } from "@chakra-ui/react";
 import { useUserStore } from "../../../store/user";
 import { useNavigate } from "react-router-dom";
 import RegisterBox from "../../../component/common/registerBox";
+import LoginBackground from "/LoginBackground.png";
+import { Image } from "@chakra-ui/react";
 
 function login() {
   const [isCoolingDown, setIsCoolingDown] = useState(false);
@@ -122,7 +124,20 @@ function login() {
 
   return (
     <Box m={"auto auto"} maxW={"md"}>
-      <RegisterBox heading={"anything bro"} buttonText="anything bro">
+      <Image
+        objectFit={"cover"}
+        position={"absolute"}
+        display={"flex"}
+        height={"100%"}
+        width={"100%"}
+        src={LoginBackground}
+        alt="Login Background"
+      />
+      <RegisterBox
+        heading={"Login"}
+        buttonText="Login"
+        buttonClick={handleLogin}
+      >
         <Text
           justifyContent={"center"}
           alignItems={"center"}
