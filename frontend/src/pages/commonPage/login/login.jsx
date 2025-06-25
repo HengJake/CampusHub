@@ -26,6 +26,7 @@ import { useDisclosure } from "@chakra-ui/react";
 import { Checkbox, CheckboxGroup } from "@chakra-ui/react";
 import { useUserStore } from "../../../store/user";
 import { useNavigate } from "react-router-dom";
+import RegisterBox from "../../../component/common/registerBox";
 
 function login() {
   const [isCoolingDown, setIsCoolingDown] = useState(false);
@@ -121,33 +122,7 @@ function login() {
   };
 
   return (
-    <Box flex={1} display={"flex"} justifyContent="center" alignItems="center">
-      {/* LoginBox */}
-      <Box
-        position="fixed"
-        height={"470px"}
-        width={"450px"}
-        borderRadius={"20px"}
-        zIndex={100}
-        p={3}
-        backdropFilter="blur(15px)"
-        bg="rgba(0, 0, 0, 0.24)" // translucent glass
-        boxShadow="lg"
-        color={"black"}
-      >
-        <Heading
-          padding={"5"}
-          marginTop="50px"
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"Center"}
-          color={"white"}
-          fontSize={"30"}
-        >
-          Login
-        </Heading>
-
-        <Text
+    <RegisterBox>        <Text
           justifyContent={"center"}
           alignItems={"center"}
           display={"flex"}
@@ -230,7 +205,6 @@ function login() {
             </ChakraLink>
           </Box>
         </Stack>
-      </Box>
 
       {/* Pop Up */}
 
@@ -259,39 +233,11 @@ function login() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+     </RegisterBox>
 
-      {/* Background Design */}
-      <Box
-        position="fixed"
-        bottom="-350px"
-        right="-200px"
-        width="600px"
-        height="600px"
-        borderRadius="full"
-        bgGradient="linear(to-br, #1B4965, #3693CB)"
-        zIndex="1"
-      ></Box>
-      <Box
-        position="fixed"
-        bottom="-100px"
-        left="-400px"
-        width="810px"
-        height="810px"
-        borderRadius="full"
-        bgGradient="linear(to-br, #1B4965, #3693CB)"
-        zIndex="1"
-      ></Box>
-      <Box
-        position="fixed"
-        bottom="-900px"
-        left="75px"
-        width="1600px"
-        height="1600px"
-        borderRadius="full"
-        bgGradient="linear(to-br, #1B4965, #3693CB)"
-        zIndex="0"
-      ></Box>
-    </Box>
+
+
+
   );
 }
 
