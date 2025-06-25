@@ -106,7 +106,6 @@ function login() {
       setTimeout(() => {
         setIsCoolingDown(false);
       }, 3000);
-
     } catch (error) {
       console.error("Unexpected error:", error);
       toast({
@@ -122,7 +121,9 @@ function login() {
   };
 
   return (
-    <RegisterBox>        <Text
+    <Box m={"auto auto"} maxW={"md"}>
+      <RegisterBox heading={"anything bro"} buttonText="anything bro">
+        <Text
           justifyContent={"center"}
           alignItems={"center"}
           display={"flex"}
@@ -130,7 +131,6 @@ function login() {
         >
           Enter your email and password
         </Text>
-
         <Stack
           display={"flex"}
           justifyContent="center"
@@ -205,39 +205,34 @@ function login() {
             </ChakraLink>
           </Box>
         </Stack>
+        {/* Pop Up */}
+        <Modal isOpen={isOpen} onClose={onClose} width="100%">
+          <ModalOverlay />
 
-      {/* Pop Up */}
+          <ModalContent w={"100%"} bgColor="white">
+            <ModalHeader>Forget Password</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Text>Enter your email to reset your password</Text>
+              <br />
+              <Input
+                p={3}
+                _placeholder={{ color: "rgba(0, 0, 0, 0.37)" }}
+                placeholder="Email"
+                size="lg"
+                color={"black"}
+              />
+            </ModalBody>
 
-      <Modal isOpen={isOpen} onClose={onClose} width="100%">
-        <ModalOverlay />
-
-        <ModalContent w={"100%"} bgColor="white">
-          <ModalHeader>Forget Password</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Text>Enter your email to reset your password</Text>
-            <br />
-            <Input
-              p={3}
-              _placeholder={{ color: "rgba(0, 0, 0, 0.37)" }}
-              placeholder="Email"
-              size="lg"
-              color={"black"}
-            />
-          </ModalBody>
-
-          <ModalFooter>
-            <Button color={"white"} bg={"#FF5656"} variant="solid">
-              Submit
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-     </RegisterBox>
-
-
-
-
+            <ModalFooter>
+              <Button color={"white"} bg={"#FF5656"} variant="solid">
+                Submit
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </RegisterBox>
+    </Box>
   );
 }
 
