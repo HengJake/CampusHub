@@ -23,7 +23,7 @@ const attendanceSchema = new mongoose.Schema({
         type: Date,
         required: true
     }
-})
+});
 
 const Attendace = mongoose.model('Attendance',attendanceSchema);
 export default Attendace;
