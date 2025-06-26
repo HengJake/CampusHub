@@ -27,6 +27,8 @@ import { Checkbox, CheckboxGroup } from "@chakra-ui/react";
 import { useUserStore } from "../../../store/user";
 import { useNavigate } from "react-router-dom";
 import RegisterBox from "../../../component/common/registerBox";
+import LoginBackground from "/LoginBackground.png";
+import { Image } from "@chakra-ui/react";
 
 function login() {
   const [isCoolingDown, setIsCoolingDown] = useState(false);
@@ -121,8 +123,43 @@ function login() {
   };
 
   return (
-    <Box m={"auto auto"} maxW={"md"}>
-      <RegisterBox heading={"anything bro"} buttonText="anything bro">
+    <Box m={"auto auto"} maxW={"md"} width={"100%"} bgColor={"#1A202C"} borderRadius={"md"}>
+      {/* <Image
+        objectFit={"cover"}
+        position={"absolute"}
+        display={"flex"}
+        height={"100%"}
+        width={"100%"}
+        src={LoginBackground}
+        alt="Login Background"
+      /> */}
+
+      <RegisterBox
+        heading={"Login"}
+        buttonText="Login"
+        buttonClick={handleLogin}
+        footer={
+          <Box
+            width={"100%"}
+            display="flex"
+            flexDirection={"row"}
+            paddingTop={5}
+          >
+            <Checkbox width={"100%"} color={"white"} defaultChecked>
+              Remember me
+            </Checkbox>
+            <ChakraLink
+              width={"100%"}
+              display={"flex"}
+              justifyContent={"right"}
+              color="White"
+              onClick={onOpen}
+            >
+              Forget passsword ?
+            </ChakraLink>
+          </Box>
+        }
+      >
         <Text
           justifyContent={"center"}
           alignItems={"center"}
@@ -131,13 +168,14 @@ function login() {
         >
           Enter your email and password
         </Text>
-        <Stack
+        <br />
+
+        <Box
           display={"flex"}
-          justifyContent="center"
-          alignItems="center"
-          spacing={3}
-          zIndex={100}
-          p={5}
+          flexDirection={"column"}
+          gap={5}
+          height={"100%"}
+          width={"100%"}
         >
           <Input
             name="email"
@@ -155,6 +193,7 @@ function login() {
               }
             }}
           />
+
           <Input
             name="password"
             type="password"
@@ -172,39 +211,16 @@ function login() {
               }
             }}
           />
-          <Button
-            display={"flex"}
-            justifyContent="center"
-            alignItems="center"
-            width="100%"
-            bgColor="#FF5656"
-            color="white"
-            _hover={{ bg: "#D34949", color: "white" }}
-            onClick={handleLogin}
-          >
-            LOGIN
-          </Button>
+        </Box>
 
-          <Box
-            width={"100%"}
-            display="flex"
-            alignContent={"space-between"}
-            flexDirection={"row"}
-          >
-            <Checkbox width={"100%"} color={"white"} defaultChecked>
-              Remember me
-            </Checkbox>
-            <ChakraLink
-              width={"100%"}
-              display={"flex"}
-              justifyContent={"right"}
-              color="White"
-              onClick={onOpen}
-            >
-              Forget passsword ?
-            </ChakraLink>
-          </Box>
-        </Stack>
+        <Stack
+          display={"flex"}
+          justifyContent="center"
+          alignItems="center"
+          spacing={3}
+          zIndex={100}
+          p={5}
+        ></Stack>
         {/* Pop Up */}
         <Modal isOpen={isOpen} onClose={onClose} width="100%">
           <ModalOverlay />
