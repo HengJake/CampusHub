@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Button } from "@chakra-ui/react";
+import { Box, Button, Image } from "@chakra-ui/react";
 import { useState } from "react";
 import UserDetails from "./signupProcess/signup.jsx";
 import Otp from "./signupProcess/emailConfirmation.jsx";
@@ -9,6 +9,7 @@ import SchoolDetails from "./signupProcess/schoolDetails.jsx";
 import AutoFill from "../../../component/common/autoFill.jsx";
 import { useEffect } from "react";
 import { useDisclosure } from "@chakra-ui/react";
+import LoginBackground from "/LoginBackground.png";
 
 function signUpOuter() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -23,7 +24,6 @@ function signUpOuter() {
     setStep((prev) => prev - 1);
     // console.log(step);
   };
-
 
   useEffect(() => {
     onOpen();
@@ -127,6 +127,18 @@ function signUpOuter() {
         step={step}
         formData={formData}
       ></AutoFill>
+
+      <Image
+        objectFit={"cover"}
+        position={"fixed"}
+        top={0}
+        right={0}
+        display={"flex"}
+        height={"100%"}
+        width={"100%"}
+        src={LoginBackground}
+        alt="Login Background"
+      />
     </Box>
   );
 }

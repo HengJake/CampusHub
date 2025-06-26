@@ -25,7 +25,6 @@ const RegisterBox = ({
       position="relative"
       {...props}
     >
-    
       {onBack ? (
         <Button
           position={"absolute"}
@@ -51,13 +50,13 @@ const RegisterBox = ({
       {children}
       <Button
         w="100%"
-        bgGradient="linear(to-r, blue.300, blue.400, blue.300)"
+        bgGradient="linear(to-r, blue.400,  red.400)"
         bgSize="200% 200%" // Make the gradient large enough to animate
         color="white"
         mt={5}
         transition="all 0.3s ease-in-out"
         _hover={{
-          bgGradient: "linear(to-r, blue.300, blue.400, blue.300)",
+          bgGradient: "linear(to-r, blue.400,red.400)",
           backgroundPosition: "100% 50%",
           boxShadow: "lg",
         }}

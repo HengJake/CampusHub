@@ -76,11 +76,12 @@ export const useAuthStore = create((set) => ({
   },
   verifyAccount: async (otp) => {
     try {
-      const res = await fetch("/auth/send-verify-otp", {
+      const res = await fetch("/auth/verify-account", {
         method: "POST",
         headers: {
           "Content-type": "application/json",
         },
+        body: JSON.stringify(otp),
       });
 
       const data = await res.json();

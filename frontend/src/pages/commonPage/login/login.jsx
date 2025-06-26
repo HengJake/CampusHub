@@ -18,6 +18,7 @@ import {
   ModalFooter,
   Link as ChakraLink,
   useToast,
+  Link,
 } from "@chakra-ui/react";
 
 import { redirect } from "react-router-dom";
@@ -168,17 +169,12 @@ function login() {
           </Box>
         }
       >
-        <Text
-          justifyContent={"center"}
-          alignItems={"center"}
-          display={"flex"}
-          color={"White"}
-        >
-          Enter your email and password
+        <Text as={"span"} mr={1} textAlign={"left"} >
+          Don't have an account?
         </Text>
-        <br />
-
+        <Link  color={"blue.400"} textDecor={"underline"}>Sign Up</Link>
         <Box
+        mt={2}
           display={"flex"}
           flexDirection={"column"}
           gap={5}
@@ -221,14 +217,6 @@ function login() {
           />
         </Box>
 
-        <Stack
-          display={"flex"}
-          justifyContent="center"
-          alignItems="center"
-          spacing={3}
-          zIndex={100}
-          p={5}
-        ></Stack>
         {/* Pop Up */}
         <Modal isOpen={isOpen} onClose={onClose} width="100%">
           <ModalOverlay />

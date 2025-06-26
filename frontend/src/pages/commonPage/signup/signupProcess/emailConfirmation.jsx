@@ -10,39 +10,76 @@ import {
   Text,
   Link,
   useToast,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalOverlay,
+  ModalHeader,
+  ModalFooter,
 } from "@chakra-ui/react";
 import RegisterBox from "../../../../component/common/registerBox";
 import { useAuthStore } from "../../../../store/auth";
 import { useState } from "react";
+import { useDisclosure } from "@chakra-ui/react";
 
 function emailConfirmation({ formData, setFormData, onNext, onBack }) {
   const toast = useToast();
 
+  const { isOpen, onOpen, onClose } = useDisclosure()
+
+
   const { verifyAccount, sendVerifyOtp } = useAuthStore();
   const [otpCode, setOtpCode] = useState(0);
 
-  useEffect(() => {
-    const fetchOtp = async () => {
-      try {
-        const res = await sendVerifyOtp();
-        console.log("OTP sent:", res.message);
-      } catch (err) {
-        console.error("Failed to send OTP:", err);
-      }
-    };
+  const [cooldownTime, setCooldownTime] = useState(0);
+  const [isCooldown, setIsCooldown] = useState(false);
 
-    // fetchOtp();
-  }, []);
+  const handleSendOtp = async () => {
+    try {
+      const res = await sendVerifyOtp(); // Call to server
+      toast({
+        title: "OTP sent",
+        description: res.message,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Start cooldown
+      setIsCooldown(true);
+      setCooldownTime(60);
+
+      const interval = setInterval(() => {
+        setCooldownTime((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setIsCooldown(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to send OTP",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   const handleVerify = async () => {
     const toastId = "verify";
-    const { success, message } = await sendVerifyOtp();
+    const { success, message } = await verifyAccount(otpCode);
 
     if (!success) {
       if (!toast.isActive(toastId)) {
         toast({
           toastId: toastId,
-          title: "Error Signing Up",
+          title: "Invalid OTP Code",
           description: message,
           position: "top",
           status: "error",
@@ -53,7 +90,7 @@ function emailConfirmation({ formData, setFormData, onNext, onBack }) {
       if (!toast.isActive(toastId)) {
         toast({
           toastId: toastId,
-          title: "Sign Up successfully",
+          title: "Verification successful",
           description: message,
           position: "top",
           status: "success",
@@ -80,7 +117,7 @@ function emailConfirmation({ formData, setFormData, onNext, onBack }) {
           <Text as={"span"} mr={3}>
             Didn't receive code?
           </Text>
-          <Link color={"blue.100"} textDecor={"underline"}>
+          <Link color={"blue.100"} textDecor={"underline"} onClick={onOpen}>
             Resend Code
           </Link>
         </Box>
@@ -99,6 +136,28 @@ function emailConfirmation({ formData, setFormData, onNext, onBack }) {
           }}
         />
       </VStack>
+
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Modal Title</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Button onClick={handleSendOtp} isDisabled={isCooldown}>
+              {isCooldown ? `Resend OTP in ${cooldownTime}s` : "Resend OTP"}
+            </Button>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={onClose}>
+              Close
+            </Button>
+            <Button variant="ghost">Secondary Action</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+
     </RegisterBox>
   );
 }
