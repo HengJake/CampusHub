@@ -5,7 +5,7 @@ import {
   getUserById,
   getUsers,
   checkExistedUserDetails
-} from "../controllers/user.controllers.js";
+} from "../controllers/Academic/user.controllers.js";
 
 const router = e.Router();
 

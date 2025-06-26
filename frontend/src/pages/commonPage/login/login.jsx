@@ -123,16 +123,24 @@ function login() {
   };
 
   return (
-    <Box m={"auto auto"} maxW={"md"} width={"100%"} bgColor={"#1A202C"} borderRadius={"md"}>
-      {/* <Image
+    <Box
+      m={"auto auto"}
+      maxW={"md"}
+      width={"100%"}
+      bgColor={"#1A202C"}
+      borderRadius={"md"}
+    >
+      <Image
         objectFit={"cover"}
-        position={"absolute"}
+        position={"fixed"}
+        top={0}
+        right={0}
         display={"flex"}
         height={"100%"}
         width={"100%"}
         src={LoginBackground}
         alt="Login Background"
-      /> */}
+      />
 
       <RegisterBox
         heading={"Login"}

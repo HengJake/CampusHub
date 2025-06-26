@@ -1,4 +1,4 @@
-import User from "../models/user.model.js";
+import User from "../../models/Academic/user.model.js";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import generateToken from "../../utils/jwtUtils.js";
