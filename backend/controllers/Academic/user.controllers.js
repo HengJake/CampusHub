@@ -1,8 +1,8 @@
 import User from "../models/user.model.js";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import generateToken from "../utils/jwtUtils.js";
-import { verifyToken } from "../utils/authMiddleware.js";
+import generateToken from "../../utils/jwtUtils.js";
+import { verifyToken } from "../../utils/authMiddleware.js";
 
 export const createUser = async (req, res) => {
   const { name, password, phoneNumber, email, role, twoFA_enabled } = req.body;
