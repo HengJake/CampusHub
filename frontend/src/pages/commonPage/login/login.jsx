@@ -244,7 +244,15 @@ function login() {
             </ModalBody>
 
             <ModalFooter>
-              <Button color={"white"} bg={"#FF5656"} variant="solid" width={"100%"} onClick={onClose} size={"sm"}>
+              <Button
+                color={"white"}
+                bg={"#FF5656"}
+                variant="solid"
+                width={"100%"}
+                onClick={onClose}
+                size={"sm"}
+                _hover={{ bg: "#FF0000" }}
+              >
                 Submit
               </Button>
             </ModalFooter>
