@@ -169,12 +169,14 @@ function login() {
           </Box>
         }
       >
-        <Text as={"span"} mr={1} textAlign={"left"} >
+        <Text as={"span"} mr={1} textAlign={"left"}>
           Don't have an account?
         </Text>
-        <Link  color={"blue.400"} textDecor={"underline"}>Sign Up</Link>
+        <Link color={"blue.400"} textDecor={"underline"}>
+          Sign Up
+        </Link>
         <Box
-        mt={2}
+          mt={2}
           display={"flex"}
           flexDirection={"column"}
           gap={5}
@@ -221,23 +223,28 @@ function login() {
         <Modal isOpen={isOpen} onClose={onClose} width="100%">
           <ModalOverlay />
 
-          <ModalContent w={"100%"} bgColor="white">
+          <ModalContent
+            w={"100%"}
+            bg="rgba(0, 0, 0, 0.5)"
+            backdropFilter="blur(10px)"
+            color="white"
+          >
             <ModalHeader>Forget Password</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
               <Text>Enter your email to reset your password</Text>
               <br />
               <Input
-                p={3}
-                _placeholder={{ color: "rgba(0, 0, 0, 0.37)" }}
+                p={5}
+                _placeholder={{ color: "rgba(255, 255, 255, 0.37)" }}
                 placeholder="Email"
                 size="lg"
-                color={"black"}
+                color={"white"}
               />
             </ModalBody>
 
             <ModalFooter>
-              <Button color={"white"} bg={"#FF5656"} variant="solid">
+              <Button color={"white"} bg={"#FF5656"} variant="solid" width={"100%"} onClick={onClose} size={"sm"}>
                 Submit
               </Button>
             </ModalFooter>
