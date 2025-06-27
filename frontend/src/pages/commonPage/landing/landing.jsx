@@ -9,6 +9,7 @@ import { BsBuildingFillGear } from "react-icons/bs";
 import { HiAcademicCap } from "react-icons/hi2";
 import { Image, Stack, Text, Heading, Button } from "@chakra-ui/react";
 import PosterImage from "/PosterImage.png";
+import LoginBackground from "/LoginBackground.png";
 import { color } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useDisclosure } from "@chakra-ui/react";
@@ -21,6 +22,7 @@ import {
   AlertDialogOverlay,
   AlertDialogCloseButton,
 } from "@chakra-ui/react";
+import RegisterBox from "../../../component/common/registerBox";
 
 function landing() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -31,6 +33,9 @@ function landing() {
   };
   const handlesignup = () => {
     navigate("/signup");
+  };
+  const handleLogin = () => {
+    navigate("/login");
   };
 
   return (
@@ -55,12 +60,19 @@ function landing() {
           flexDirection={"column"}
           gap={5}
           color={"white"}
-          bgColor={"rgba(102, 153, 204, 0.50)"}
           overflowY={"hidden"}
+          overflowX={"hidden"}
           position={"relative"}
-          boxShadow={"0px 10px 5px rgba(0, 0, 0, 0.3)"}
+          boxShadow={"0px 10px 5px rgba(0, 0, 0, 0.2)"}
         >
-          <Box
+          <Image
+            position={"absolute"}
+            objectFit={"cover"}
+            height={"1400px"}
+            width={"100%"}
+            src={LoginBackground}
+          ></Image>
+          {/* <Box
             position={"absolute"}
             width="900px"
             height="900px"
@@ -80,7 +92,7 @@ function landing() {
             height="1200px"
             borderRadius="full"
             bgColor={"rgba(27, 73, 101, 0.05)"}
-          ></Box>
+          ></Box> */}
 
           <Heading
             fontSize={"60px"}
@@ -109,25 +121,49 @@ function landing() {
               width={"100%"}
               height={"60px"}
               borderRadius={"15px"}
-              bgColor={"#FF5656"}
-              color={"white"}
-              fontSize={"24px"}
+              bgcolor={"rgba(102, 153, 204)"}
+              bgSize="200% 200%"
+              transition="all 0.1s ease-in-out"
+              _hover={{ transform: "scale(1.05)" }}
+              color={"black"}
+              fontSize={"20px"}
               fontWeight={"bold"}
-              _hover={{ bgColor: "rgb(255, 255, 255)", color: "black" }}
               onClick={handlesignup}
             >
               Join Now
             </Button>
             <Button
-              width={"100%"}
-              height={"60px"}
-              borderRadius={"15px"}
-              bgColor="rgba(255, 255, 255, 0)"
-              border={"4px solid white"}
-              color={"white"}
-              fontWeight={"bold"}
-              fontSize={"24px"}
-              _hover={{ bgColor: "rgb(255, 255, 255)", color: "black" }}
+              width="100%"
+              height="60px"
+              borderRadius="15px"
+              border="2px solid white"
+              color="white"
+              fontWeight="bold"
+              fontSize="20px"
+              bg="transparent"
+              position="relative"
+              overflow="hidden" 
+              transition="all 0.3s ease-in-out"
+              zIndex={1} 
+              _before={{
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "0%", 
+                height: "100%",
+                bg: "white", 
+                zIndex: -1, 
+                transition: "width 0.2s ease-in-out", 
+              }}
+              _hover={{
+                color: "black",
+                transform: "scale(1.05)",
+                _before: {
+                  width: "100%", 
+                },
+              }}
+              onClick={handleLogin}
             >
               Log in
             </Button>
@@ -197,6 +233,7 @@ function landing() {
                     border={"1px"}
                     borderColor={"rgba(0, 0, 0, 0.20)"}
                     width={"100%"}
+                    _hover={{ transform: "scale(1.05)" }}
                     onClick={handleviewall}
                   >
                     Get Started
@@ -222,6 +259,10 @@ function landing() {
                     width={"100%"}
                     bgColor={"rgba(102, 153, 204)"}
                     boxShadow={"0px 4px 10px rgba(0, 0, 0, 0.3)"}
+                    _hover={{
+                      bgColor: "rgb(89, 131, 174)",
+                      transform: "scale(1.05)",
+                    }}
                     color={"white"}
                     onClick={handleviewall}
                   >
@@ -249,6 +290,7 @@ function landing() {
                     bg={"transparent"}
                     border={"1px"}
                     borderColor={"rgba(0, 0, 0, 0.20)"}
+                    _hover={{ transform: "scale(1.05)" }}
                     onClick={handleviewall}
                   >
                     Get Started
