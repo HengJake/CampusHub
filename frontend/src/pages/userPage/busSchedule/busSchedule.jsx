@@ -5,6 +5,8 @@ import { IoMdArrowDropright } from "react-icons/io";
 import { useState, useEffect } from "react";
 
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
+
 
 import {
   Menu,
@@ -51,6 +53,15 @@ import {
 } from "@chakra-ui/icons";
 
 function busSchedule() {
+  const handleReturnHome = () => {
+    navigate("/user-dashboard");
+  };
+  const handleAbout = () => {
+    navigate("/about");
+  };
+  const handleFeedback = () => {
+    navigate("/feedback");
+  };
   const [currentTime, setCurrentTime] = useState(new Date());
   const currentDate = format(new Date(), "MMMM d, yyyy");
 
@@ -107,6 +118,7 @@ function busSchedule() {
             <Menu>
               <MenuButton
                 as={Button}
+                size={"sm"}
                 bgColor={"#DBDBDB"}
                 color={"rgba(0, 0, 0, 0.3)"}
                 _hover={{ bgColor: "#4E759D", color: "white" }}
@@ -138,7 +150,6 @@ function busSchedule() {
 
         <Divider />
 
-        {/* Navigation Links */}
         <Flex display={"flex"} flexDirection={"row"} w={"100%"} gap={"100px"}>
           <Box
             py={4}
@@ -329,13 +340,201 @@ function busSchedule() {
 
         <Divider />
 
+        <Flex display={"flex"} flexDirection={"row"} w={"100%"} gap={"100px"}>
+          <Box
+            py={4}
+            width={"100%"}
+            display={"flex"}
+            flexDirection={"column"}
+            alignItems={"center"}
+          >
+            <Heading
+              as="h1"
+              size="xl"
+              mb={6}
+              textAlign="left"
+              width={"100%"}
+              color="blue.600"
+            >
+              APU
+            </Heading>
+
+            <VStack spacing={8} width={"100%"} divider={<Divider />}>
+              {routes.map((route, index) => (
+                <Box key={index} w="full">
+                  <Heading
+                    as="h2"
+                    size="lg"
+                    mb={4}
+                    color="blue.600"
+                    display={"flex"}
+                    flexDirection={"row"}
+                    alignItems={"center"}
+                    gap={2}
+                  >
+                    {route.name}
+                    <icon as={IoMdArrowDropright} color="gray.500" />
+                    {route.destination && (
+                      <Text
+                        as="span"
+                        color="gray.500"
+                        fontSize={"xl"}
+                        fontWeight="bold"
+                      >
+                        {" "}
+                        {route.destination}
+                      </Text>
+                    )}
+                  </Heading>
+
+                  <VStack spacing={3} align="stretch">
+                    {route.times.map((time, i) => {
+                      const timeDifference = calculateTimeDifference(time);
+                      const isPast =
+                        timeDifference === "Now" ||
+                        timeDifference.includes("IN -");
+
+                      return (
+                        <HStack
+                          key={`${time}-${i}`}
+                          justify="space-between"
+                          px={2}
+                        >
+                          <Text fontSize="xl" fontWeight="bold">
+                            {time}
+                          </Text>
+                          <Badge
+                            display={"flex"}
+                            justifyContent={"center"}
+                            bgColor={
+                              isPast
+                                ? "rgba(255, 0, 0, 0.03)"
+                                : timeDifference === "Now"
+                                ? "green.50"
+                                : "rgba(0, 0, 0, 0.03)"
+                            }
+                            color={
+                              isPast
+                                ? "rgba(255, 0, 0, 0.3)"
+                                : timeDifference === "Now"
+                                ? "green.600"
+                                : "rgba(0, 0, 0, 0.3)"
+                            }
+                            width={"150px"}
+                            fontWeight={"medium"}
+                            fontSize="sm"
+                            px={3}
+                            py={1}
+                          >
+                            {timeDifference}
+                          </Badge>
+                        </HStack>
+                      );
+                    })}
+                  </VStack>
+                </Box>
+              ))}
+            </VStack>
+          </Box>
+          <Box
+            py={4}
+            width={"100%"}
+            display={"flex"}
+            flexDirection={"column"}
+            alignItems={"center"}
+          >
+            <Heading
+              as="h1"
+              size="xl"
+              mb={6}
+              textAlign="left"
+              width={"100%"}
+              color="blue.600"
+            >
+              APU
+            </Heading>
+
+            <VStack spacing={8} width={"100%"} divider={<Divider />}>
+              {routes.map((route, index) => (
+                <Box key={index} w="full">
+                  <Heading
+                    as="h2"
+                    size="lg"
+                    mb={4}
+                    color="blue.600"
+                    display={"flex"}
+                    flexDirection={"row"}
+                    alignItems={"center"}
+                    gap={2}
+                  >
+                    {route.name}
+                    <icon as={IoMdArrowDropright} color="gray.500" />
+                    {route.destination && (
+                      <Text
+                        as="span"
+                        color="gray.500"
+                        fontSize={"xl"}
+                        fontWeight="bold"
+                      >
+                        {" "}
+                        {route.destination}
+                      </Text>
+                    )}
+                  </Heading>
+
+                  <VStack spacing={3} align="stretch">
+                    {route.times.map((time, i) => {
+                      const timeDifference = calculateTimeDifference(time);
+                      const isPast =
+                        timeDifference === "Now" ||
+                        timeDifference.includes("IN -");
+                      return (
+                        <HStack
+                          key={`${time}-${i}`}
+                          justify="space-between"
+                          px={2}
+                        >
+                          <Text fontSize="xl" fontWeight="bold">
+                            {time}
+                          </Text>
+                          <Badge
+                            display={"flex"}
+                            justifyContent={"center"}
+                            bgColor={
+                              timeDifference === "Now"
+                                ? "green.50"
+                                : "rgba(0, 0, 0, 0.03)"
+                            }
+                            color={
+                              timeDifference === "Now"
+                                ? "green.600"
+                                : "rgba(0, 0, 0, 0.3)"
+                            }
+                            width={"150px"}
+                            fontWeight={"medium"}
+                            fontSize="sm"
+                            px={3}
+                            py={1}
+                          >
+                            {timeDifference}
+                          </Badge>
+                        </HStack>
+                      );
+                    })}
+                  </VStack>
+                </Box>
+              ))}
+            </VStack>
+          </Box>
+        </Flex>
+
         {/* Footer Links */}
         <HStack spacing={4} fontSize="sm" color="gray.600">
-          <Link href="#">
+          <Link href="/user-dashboard">
             <ArrowBackIcon mr={1} /> Return to home
           </Link>
-          <Link href="#">About us</Link>
-          <Link href="#">Give us a feedback</Link>
+          <Link href="/about">About us</Link>
+          <Link href="/feedback">Give us a feedback</Link>
         </HStack>
       </VStack>
     </Box>
