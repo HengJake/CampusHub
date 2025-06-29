@@ -1,11 +1,12 @@
 import React from "react";
 import "./campusRide.scss";
-import CarImage from "/CarImg.png";
+import sideViewCar from "/sideViewCar.png";
 import { FaPhone } from "react-icons/fa6";
 import { RiMessage3Fill } from "react-icons/ri";
 import { RiSunCloudyFill } from "react-icons/ri";
 import { Divider } from "@chakra-ui/react";
 import { MdCall } from "react-icons/md";
+
 
 import {
   Box,
@@ -44,8 +45,11 @@ function RideDetail() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = React.useRef();
 
-  const handleCancel = async () => {
+    const handleCancel = () => {
+    navigate("/campus-ride");
   };
+
+  // const handleCancel = async () => {};
 
   return (
     <Flex
@@ -93,7 +97,7 @@ function RideDetail() {
             >
               CEB9119
             </Heading>
-            <Image src={CarImage} />
+            <Image src={sideViewCar} />
           </Box>
           <Box
             p={"50px"}
@@ -196,6 +200,8 @@ function RideDetail() {
                   width={"100%"}
                   bgColor={"#DBDBDB"}
                   color={"rgba(0, 0, 0, 0.3)"}
+                  transition="all 0.1s ease-in-out"
+                  _hover={{ transform: "scale(1.02)" }}
                 >
                   Change Booking
                 </Button>
@@ -203,7 +209,8 @@ function RideDetail() {
                   width={"100%"}
                   bgColor={"#FF5656"}
                   color={"white"}
-                  _hover={{ bg: "#D34949" }}
+                  transition="all 0.1s ease-in-out"
+                  _hover={{ bg: "#FC3939", transform: "scale(1.02)" }}
                   onClick={onOpen}
                 >
                   Cancel Booking
@@ -246,6 +253,7 @@ function RideDetail() {
                 _hover={{ bg: "#D34949" }}
                 variant="solid"
                 borderRadius={"3px"}
+                onClick={handleCancel}
               >
                 Cancel this booking
               </Button>

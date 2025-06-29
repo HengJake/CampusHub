@@ -1,6 +1,7 @@
 import React from "react";
 import "./campusRide.scss";
 import RegisterBox from "../../../component/common/registerBox";
+
 import {
   Card,
   CardHeader,
@@ -9,6 +10,16 @@ import {
   Image,
 } from "@chakra-ui/react";
 import sideViewCar from "/sideViewCar.png";
+import {
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuItemOption,
+  MenuGroup,
+  MenuOptionGroup,
+  MenuDivider,
+} from "@chakra-ui/react";
 
 import {
   SimpleGrid,
@@ -72,11 +83,54 @@ function campusRide() {
         flexDirection={"column"}
         justifyContent={"center"}
         alignContent={"center"}
-        bottom="30px"
+        bottom={10}
         zIndex={1}
         width={"100%"}
         gap={10}
       >
+        <Box
+          display={"flex"}
+          alignItems={"center"}
+          height={"100%"}
+          // border={"1px"}
+          flexDirection={"column"}
+          gap={1}
+          position={"relative"}
+        >
+          <Box
+            bgColor={"white"}
+            width={"65%"}
+            height={"100%"}
+            borderRadius={"xl"}
+            display={"flex"}
+            boxShadow={"sm"}
+            flexDirection={"column"}
+            position="relative" 
+          >
+            <Menu isLazy>
+              <MenuButton textAlign={"left"} width={"100%"} p={5}>
+                From
+              </MenuButton>
+              <MenuList width="440%">
+                <MenuItem>New Window</MenuItem>
+                <MenuItem>Open Closed Tab</MenuItem>
+                <MenuItem>Open File</MenuItem>
+              </MenuList>
+            </Menu>
+            <hr />
+            <Menu isLazy>
+              <MenuButton textAlign={"left"}  width={"100%"}  p={5}>
+                To
+              </MenuButton>
+              <MenuList width="440%">
+                <MenuItem>New Window</MenuItem>
+                <MenuItem>Open Closed Tab</MenuItem>
+                <MenuItem>Open File</MenuItem>
+              </MenuList>
+            </Menu>
+          </Box>
+        </Box>
+
         <Box
           display={"flex"}
           flexDirection={"row"}
@@ -131,6 +185,7 @@ function campusRide() {
             </Box>
           ))}
         </Box>
+
         <Box display={"flex"} justifyContent={"center"}>
           <Button
             fontWeight={"medium"}
