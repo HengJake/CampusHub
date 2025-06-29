@@ -72,27 +72,6 @@ function landing() {
             width={"100%"}
             src={LoginBackground}
           ></Image>
-          {/* <Box
-            position={"absolute"}
-            width="900px"
-            height="900px"
-            borderRadius="full"
-            bgColor={"rgba(27, 73, 101, 0.05)"}
-          ></Box>
-          <Box
-            position={"absolute"}
-            width="1000px"
-            height="1000px"
-            borderRadius="full"
-            bgColor={"rgba(27, 73, 101, 0.05)"}
-          ></Box>
-          <Box
-            position={"absolute"}
-            width="1200px"
-            height="1200px"
-            borderRadius="full"
-            bgColor={"rgba(27, 73, 101, 0.05)"}
-          ></Box> */}
 
           <Heading
             fontSize={"60px"}
