@@ -112,9 +112,9 @@ function campusRide() {
                 From
               </MenuButton>
               <MenuList width="440%">
-                <MenuItem>New Window</MenuItem>
-                <MenuItem>Open Closed Tab</MenuItem>
-                <MenuItem>Open File</MenuItem>
+                <MenuItem>Location 1</MenuItem>
+                <MenuItem>Location 2</MenuItem>
+                <MenuItem>Location 3</MenuItem>
               </MenuList>
             </Menu>
             <hr />
@@ -123,9 +123,9 @@ function campusRide() {
                 To
               </MenuButton>
               <MenuList width="440%">
-                <MenuItem>New Window</MenuItem>
-                <MenuItem>Open Closed Tab</MenuItem>
-                <MenuItem>Open File</MenuItem>
+                <MenuItem>Location 1</MenuItem>
+                <MenuItem>Location 2</MenuItem>
+                <MenuItem>Location 3</MenuItem>
               </MenuList>
             </Menu>
           </Box>
