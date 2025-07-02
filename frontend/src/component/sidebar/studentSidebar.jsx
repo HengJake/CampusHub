@@ -129,7 +129,7 @@ function Sidebar() {
             </Button>
           </Link>
 
-          <Link to="/ride">
+          <Link to="/campus-ride">
             <Button sx={sidebarButtonStyle(true, "Campus Ride")}>
               <Icon as={IoCarSharp} boxSize={6} color="white" zIndex={2} />
             </Button>
