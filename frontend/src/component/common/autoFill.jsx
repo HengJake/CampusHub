@@ -12,8 +12,25 @@ import {
   SimpleGrid,
   Box,
 } from "@chakra-ui/react";
+import { useEffect } from "react";
 
-function autoFill({ isOpen, onClose, setFormData, formData, step }) {
+function autoFill({
+  onOpen,
+  isOpen,
+  onClose,
+  setFormData,
+  step,
+  setUserDetails,
+  setUserPayment,
+  setUserSchoolDetails,
+}) {
+  // reopen the auto fill modal
+  useEffect(() => {
+    if ((step === 4 || step === 5) && !isOpen) {
+      onOpen();
+    }
+  }, []);
+
   const getAutoFillPreview = () => {
     switch (step) {
       case 1:
@@ -25,17 +42,14 @@ function autoFill({ isOpen, onClose, setFormData, formData, step }) {
           password: "P@ssw0rd",
           confirmPassword: "P@ssw0rd",
         };
-      case 3:
-        return {
-          selectedPlan: "standard",
-          billingInterval: "monthly",
-        };
       case 4:
         return {
-          last4Digit: "1234",
+          cardNumber: "1234567890123456",
+          last4Digit: "3456",
           expiryDate: "12/26",
           cardHoldername: "School Admin",
-          bank: "Maybank",
+          bank: "MasterCard",
+          cvv: "123",
         };
       case 5:
         return {
@@ -58,7 +72,7 @@ function autoFill({ isOpen, onClose, setFormData, formData, step }) {
   const handleAutoFill = () => {
     switch (step) {
       case 1:
-        setFormData((prev) => ({
+        setUserDetails((prev) => ({
           ...prev,
           firstName: "School",
           lastName: "Admin1",
@@ -68,24 +82,19 @@ function autoFill({ isOpen, onClose, setFormData, formData, step }) {
           confirmPassword: "P@ssw0rd",
         }));
         break;
-      case 3:
-        setFormData((prev) => ({
-          ...prev,
-          selectedPlan: "standard",
-          billingInterval: "monthly",
-        }));
-        break;
       case 4:
-        setFormData((prev) => ({
+        setUserPayment((prev) => ({
           ...prev,
-          last4Digit: "1234",
+          cardNumber: "1234567890123456",
+          last4Digit: "3456",
           expiryDate: "12/26",
           cardHoldername: "School Admin",
-          bank: "Maybank",
+          bank: "MasterCard",
+          cvv: "123",
         }));
         break;
       case 5:
-        setFormData((prev) => ({
+        setUserSchoolDetails((prev) => ({
           ...prev,
           schoolName: "Sekolah Demo",
           address: "123 Jalan Sekolah",
@@ -102,7 +111,7 @@ function autoFill({ isOpen, onClose, setFormData, formData, step }) {
 
   let showOrNot = true;
 
-  if (step === 2) {
+  if (step === 2 || step === 3) {
     showOrNot = false;
   }
 

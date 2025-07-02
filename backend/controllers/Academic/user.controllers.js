@@ -55,58 +55,6 @@ export const createUser = async (req, res) => {
   }
 };
 
-export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
-
-  // validate email
-
-  // Basic input check
-  if (!email || !password) {
-    return res.status(400).json({
-      success: false,
-      message: "Please provide both email and password",
-    });
-  }
-
-  try {
-    const user = await User.findOne({ email });
-
-    // Check if user exists first
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
-    }
-
-    // Now it's safe to compare passwords
-    const matchPassword = await bcrypt.compare(password, user.password);
-
-    if (!matchPassword) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
-    }
-
-    const token = generateToken(user);
-
-    // Login success
-    return res.status(200).json({
-      success: true,
-      message: "Login successful",
-      data: user,
-      token: token,
-    });
-  } catch (error) {
-    console.error("Login error:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-};
-
 export const getUsers = async (req, res) => {
   try {
     const users = await User.find({});
@@ -198,6 +146,104 @@ export const checkExistedUserDetails = async (req, res) => {
     });
   } catch (error) {
     console.error("Error checking user existence:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const modifyUser = async (req, res) => {
+  const { id } = req.params;
+  const userDetails = req.body;
+
+  // Validate ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid user ID format",
+    });
+  }
+
+  // Check for duplicate email or phoneNumber
+  try {
+    if (userDetails.email) {
+      const emailExists = await User.findOne({
+        email: userDetails.email,
+        _id: { $ne: id },
+      });
+      if (emailExists) {
+        return res.status(409).json({
+          success: false,
+          message: "Email is already in use by another user.",
+        });
+      }
+    }
+    if (userDetails.phoneNumber) {
+      const phoneExists = await User.findOne({
+        phoneNumber: userDetails.phoneNumber,
+        _id: { $ne: id },
+      });
+      if (phoneExists) {
+        return res.status(409).json({
+          success: false,
+          message: "Phone number is already in use by another user.",
+        });
+      }
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(id, userDetails, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: updatedUser,
+      message: "User updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating user:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid user ID format",
+    });
+  }
+
+  try {
+    const deletedUser = await User.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting user:", error.message);
     return res.status(500).json({
       success: false,
       message: "Internal server error",

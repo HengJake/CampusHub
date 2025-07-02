@@ -10,38 +10,72 @@ import AutoFill from "../../../component/common/autoFill.jsx";
 import { useEffect } from "react";
 import { useDisclosure } from "@chakra-ui/react";
 import LoginBackground from "/LoginBackground.png";
+import { useAuthStore } from "../../../store/auth.js";
+import { useUserStore } from "../../../store/user.js";
 
 function signUpOuter() {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { authorizeUser, logout } = useAuthStore();
+  const { deleteUser } = useUserStore();
+
+  const skipOtpFromStorage = localStorage.getItem("skipOtp");
+  const [skipOtp, setSkipOtp] = useState(
+    skipOtpFromStorage ? skipOtpFromStorage : false
+  );
 
   // ====== registration steps =====
-  const [step, setStep] = useState(2);
+  const storedStep = localStorage.getItem("signupStep");
+
+  const [step, setStep] = useState(storedStep ? parseInt(storedStep) : 1);
   const nextStep = () => {
-    // console.log(step);
-    setStep((prev) => prev + 1);
+    if (step === 1 && skipOtp) {
+      setStep(3);
+      localStorage.setItem("signupStep", 3);
+    } else {
+      setStep((prev) => prev + 1);
+      localStorage.setItem("signupStep", step + 1);
+    }
   };
   const prevStep = () => {
-    setStep((prev) => prev - 1);
-    // console.log(step);
+    if (step === 3 && skipOtp) {
+      setStep(1);
+      localStorage.setItem("signupStep", 1);
+    } else {
+      setStep((prev) => prev - 1);
+      localStorage.setItem("signupStep", step - 1);
+    }
   };
 
-  useEffect(() => {
-    onOpen();
-    // console.log(formData);
-  }, []);
+  // ====== user data =====
+  const [userDetails, setUserDetails] = useState({
+    firstName: "",
+    lastName: "",
+    phoneNumber: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
 
-  // firstName: "School",
-  // lastName: "Admin1",
-  // phoneNumber: "0103314886",
-  // email: "schooltestacc818@gmail.com",
-  // password: "P@ssw0rd",
-  // confirmPassword: "P@ssw0rd",
+  const [userPlan, setUserPlan] = useState({
+    selectedPlan: "",
+    billingInterval: "",
+  });
 
-  // add data
-  const handleData = (data) => {
-    setFormData((prev) => ({ ...prev, ...data }));
-    nextStep();
-  };
+  const [userPayment, setUserPayment] = useState({
+    cardHoldername: "",
+    cardNumber: "",
+    last4Digit: "",
+    cvv: "",
+    expiryDate: "",
+    bank: "",
+  });
+
+  const [userSchoolDetails, setUserSchoolDetails] = useState({
+    schoolName: "",
+    address: "",
+    city: "",
+    country: "",
+  });
 
   const [formData, setFormData] = useState({
     // Step 1
@@ -61,6 +95,9 @@ function signUpOuter() {
     expiryDate: "",
     cardHoldername: "",
     bank: "",
+    // does not store in DB
+    cvv: "",
+    cardNumber: "",
 
     // Step 4: School Details
     schoolName: "",
@@ -68,6 +105,82 @@ function signUpOuter() {
     city: "",
     country: "",
   });
+
+  useEffect(() => {
+    const storedData = localStorage.getItem("signupFormData");
+
+    if (storedData) {
+      const parsed = JSON.parse(storedData);
+
+      setFormData(parsed);
+
+      setUserDetails({
+        firstName: parsed.firstName || "",
+        lastName: parsed.lastName || "",
+        phoneNumber: parsed.phoneNumber || "",
+        email: parsed.email || "",
+        password: parsed.password || "",
+        confirmPassword: parsed.confirmPassword || "",
+      });
+
+      setUserPlan({
+        selectedPlan: parsed.selectedPlan || "",
+        billingInterval: parsed.billingInterval || "",
+      });
+
+      setUserPayment({
+        cardHoldername: parsed.cardHoldername || "",
+        cardNumber: parsed.cardNumber || "",
+        last4Digit: parsed.last4Digit || "",
+        cvv: parsed.cvv || "",
+        expiryDate: parsed.expiryDate || "",
+        bank: parsed.bank || "",
+      });
+
+      setUserSchoolDetails({
+        schoolName: parsed.schoolName || "",
+        address: parsed.address || "",
+        city: parsed.city || "",
+        country: parsed.country || "",
+      });
+    } else {
+      onOpen();
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("signupStep", step.toString());
+  }, [step]);
+
+  // add data
+  const handleData = (data) => {
+    const updated = { ...formData, ...data };
+    setFormData(updated);
+    localStorage.setItem("signupFormData", JSON.stringify(updated));
+    nextStep();
+  };
+
+  const cancelSignup = async () => {
+    const accountCreated = localStorage.getItem("accountCreated");
+
+    if (accountCreated) {
+      const { id } = await authorizeUser();
+      deleteUser(id);
+    }
+
+    localStorage.removeItem("accountCreated");
+    localStorage.removeItem("signupFormData");
+    localStorage.removeItem("signupStep");
+    localStorage.removeItem("otpCooldownEnd");
+    localStorage.removeItem("skipOtp");
+
+    logout();
+    window.location.href = "/";
+  };
+
+  useEffect(() => {
+    console.log(formData);
+  }, [formData]);
 
   // disable user from spamming (if spam will skip to next 2 or more)
   const [isWaiting, setIsWaiting] = useState(false);
@@ -84,50 +197,79 @@ function signUpOuter() {
 
   return (
     <Box m={"auto auto"} maxW={"md"}>
+      <Button
+        onClick={cancelSignup}
+        position={"fixed"}
+        top={0}
+        right={0}
+        zIndex={1000}
+      >
+        Cancel
+      </Button>
       {step === 1 && (
         <UserDetails
-          formData={formData}
-          setFormData={setFormData}
+          handleData={handleData}
           onNext={nextStep}
           isWaiting={isWaiting}
           handleNextClick={handleNextClick}
+          skipOtp={skipOtp}
+          userDetails={userDetails}
+          setUserDetails={setUserDetails}
         />
       )}
+
       {step === 2 && (
-        <Otp userData={formData} onBack={prevStep} onNext={nextStep} />
+        <Otp
+          userData={formData}
+          onBack={prevStep}
+          onNext={nextStep}
+          setSkipOtp={setSkipOtp}
+        />
       )}
+
       {step === 3 && (
         <SelectPlan
           formData={formData}
-          setFormData={setFormData}
+          handleData={handleData}
           onNext={nextStep}
           onBack={prevStep}
+          skipOtp={skipOtp}
+          userPlan={userPlan}
+          setUserPlan={setUserPlan}
         />
       )}
+
       {step === 4 && (
         <Payment
           formData={formData}
-          setFormData={setFormData}
+          handleData={handleData}
           onNext={nextStep}
           onBack={prevStep}
+          userPayment={userPayment}
+          setUserPayment={setUserPayment}
         />
       )}
+
       {step === 5 && (
         <SchoolDetails
           formData={formData}
-          setFormData={setFormData}
+          handleData={handleData}
           onBack={prevStep}
+          userSchoolDetails={userSchoolDetails}
+          setUserSchoolDetails={setUserSchoolDetails}
         />
       )}
 
       <AutoFill
+        onOpen={onOpen}
         isOpen={isOpen}
         onClose={onClose}
-        setFormData={setFormData}
         step={step}
-        formData={formData}
+        userDetails={userDetails}
+        setUserDetails={setUserDetails}
+        setUserPayment={setUserPayment}
+        setUserSchoolDetails={setUserSchoolDetails}
       ></AutoFill>
-
       <Image
         objectFit={"cover"}
         position={"fixed"}

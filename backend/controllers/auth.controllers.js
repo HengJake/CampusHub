@@ -2,9 +2,9 @@ import User from "../models/Academic/user.model.js";
 import bcrypt from "bcrypt";
 import generateToken from "../utils/jwtUtils.js";
 import transporter from "../config/nodemailer.js";
+import mongoose from "mongoose";
 
 export const register = async (req, res) => {
-
   const { name, password, phoneNumber, email, role, twoFA_enabled } = req.body;
 
   // Validate required fields
@@ -242,12 +242,32 @@ export const verifyEmail = async (req, res) => {
   }
 };
 
-// TF is this
 export const isAuthenticated = async (req, res) => {
   try {
+    const { id } = req.body;
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID format",
+      });
+    }
+
+    const user = await User.findById(id).select("-password"); // Exclude password
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
     return res.status(201).json({
       success: true,
       message: "",
+      id: req.body.id,
+      twoFA_enabled: user.twoFA_enabled,
     });
   } catch (error) {
     console.error(error.message);

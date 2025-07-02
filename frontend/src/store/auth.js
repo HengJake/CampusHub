@@ -81,7 +81,7 @@ export const useAuthStore = create((set) => ({
         headers: {
           "Content-type": "application/json",
         },
-        body: JSON.stringify(otp),
+        body: JSON.stringify({ otp }),
       });
 
       const data = await res.json();
@@ -93,6 +93,54 @@ export const useAuthStore = create((set) => ({
       return { success: true, message: data.message };
     } catch (error) {
       console.error("Login error:", error.message);
+      return { success: false, message: error.message };
+    }
+  },
+  authorizeUser: async () => {
+    try {
+      const res = await fetch(`/auth/is-auth`, {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.message || "Authorization failed");
+      }
+
+      return {
+        success: true,
+        message: data.message,
+        id: data.id,
+        twoFA_enabled: data.twoFA_enabled,
+      };
+    } catch (error) {
+      console.error("Authorization error:", error.message);
+      return { success: false, message: error.message };
+    }
+  },
+  logout: async () => {
+    try {
+      const res = await fetch("/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.message || "Logout failed");
+      }
+
+      set({ user: null });
+      return { success: true, message: data.message };
+    } catch (error) {
+      console.error("Logout error:", error.message);
       return { success: false, message: error.message };
     }
   },

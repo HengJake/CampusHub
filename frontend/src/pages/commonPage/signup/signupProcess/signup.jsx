@@ -37,9 +37,18 @@ import { useNavigate } from "react-router-dom";
 import { Link as RouterLink } from "react-router-dom";
 import RegisterBox from "../../../../component/common/registerBox.jsx";
 import { useUserStore } from "../../../../store/user.js";
+import { create } from "zustand";
+import Tooltips from "../../../../component/common/toolTips.jsx";
 
 // add in outer, button in MODAL
-function signup({ formData, setFormData, onNext, isWaiting, handleNextClick }) {
+function signup({
+  onNext,
+  handleData,
+  isWaiting,
+  handleNextClick,
+  userDetails,
+  setUserDetails,
+}) {
   const { signUp } = useAuthStore();
   const { checkUser } = useUserStore();
   const navigate = useNavigate();
@@ -61,6 +70,9 @@ function signup({ formData, setFormData, onNext, isWaiting, handleNextClick }) {
     return isValid;
   };
 
+  // check user proceeded to step 2 already; meaning account has been created
+  const accountCreated = localStorage.getItem("accountCreated") || false;
+
   // format object key
   const formatKey = (key) => {
     if (!Array.isArray(key.split(" "))) {
@@ -78,12 +90,12 @@ function signup({ formData, setFormData, onNext, isWaiting, handleNextClick }) {
     const toastId = "sign-up";
 
     if (
-      !formData.firstName ||
-      !formData.lastName ||
-      !formData.phoneNumber ||
-      !formData.email ||
-      !formData.password ||
-      !formData.confirmPassword
+      !userDetails.firstName ||
+      !userDetails.lastName ||
+      !userDetails.phoneNumber ||
+      !userDetails.email ||
+      !userDetails.password ||
+      !userDetails.confirmPassword
     ) {
       if (!toast.isActive(toastId)) {
         toast({
@@ -98,7 +110,7 @@ function signup({ formData, setFormData, onNext, isWaiting, handleNextClick }) {
       success = false;
     }
 
-    if (formData.confirmPassword != formData.password) {
+    if (userDetails.confirmPassword != userDetails.password) {
       if (!toast.isActive(toastId)) {
         toast({
           id: toastId,
@@ -125,7 +137,7 @@ function signup({ formData, setFormData, onNext, isWaiting, handleNextClick }) {
   };
 
   const handleSignUp2 = async () => {
-    const { firstName, lastName, phoneNumber, email, password } = formData;
+    const { firstName, lastName, phoneNumber, email, password } = userDetails;
 
     const userData = {
       name: `${firstName} ${lastName}`,
@@ -137,7 +149,7 @@ function signup({ formData, setFormData, onNext, isWaiting, handleNextClick }) {
     };
 
     // const { exist, takenFields } = await checkUser(userData);
-    const { success, message } = await signUp(userData);
+    const { success, message, data } = await signUp(userData);
 
     // console.log(exist, takenFields);
 
@@ -181,21 +193,26 @@ function signup({ formData, setFormData, onNext, isWaiting, handleNextClick }) {
         isClosable: true,
       });
 
-      setTimeout(() => {
-        onNext();
-      }, 500);
+      localStorage.setItem("accountCreated", true);
+      handleData(userDetails);
     }
   };
 
   return (
     <RegisterBox
       heading={"Sign Up"}
-      buttonClick={handleSignup}
+      buttonClick={() => {
+        if (accountCreated) {
+          onNext();
+        } else {
+          handleSignup();
+        }
+      }}
       isWaiting={isWaiting}
     >
       <VStack>
         <Box display={"flex"} justifyContent={"start"} w={"100%"} gap={1}>
-          <Text color={"white"}>Have an acount? </Text>
+          <Text color={"white"}>Have an account? </Text>
           <ChakraLink
             as={RouterLink}
             to={"/login-school"}
@@ -207,58 +224,64 @@ function signup({ formData, setFormData, onNext, isWaiting, handleNextClick }) {
         </Box>
 
         <InputGroup gap={2}>
-          <Input
-            type="text"
-            placeholder="First Name"
-            _placeholder={{ color: "gray.300" }}
-            value={formData.firstName}
-            onChange={(e) => {
-              const value = e.target.value;
-              const toastId = "no-digits-toast";
+          <Tooltips createdAccount={accountCreated}>
+            <Input
+              type="text"
+              placeholder="First Name"
+              _placeholder={{ color: "gray.300" }}
+              value={userDetails.firstName}
+              onChange={(e) => {
+                const value = e.target.value;
+                const toastId = "no-digits-toast";
 
-              if (/\d/.test(value)) {
-                if (!toast.isActive(toastId)) {
-                  toast({
-                    id: toastId,
-                    title: "Invalid input",
-                    description: "Numbers are not allowed in the name.",
-                    status: "warning",
-                    duration: 3000,
-                    isClosable: true,
-                  });
+                if (/\d/.test(value)) {
+                  if (!toast.isActive(toastId)) {
+                    toast({
+                      id: toastId,
+                      title: "Invalid input",
+                      description: "Numbers are not allowed in the name.",
+                      status: "warning",
+                      duration: 3000,
+                      isClosable: true,
+                    });
+                  }
+                  return;
                 }
-                return;
-              }
 
-              setFormData((prev) => ({ ...prev, firstName: value }));
-            }}
-          />
-          <Input
-            type="text"
-            placeholder="Last Name"
-            _placeholder={{ color: "gray.300" }}
-            value={formData.lastName}
-            onChange={(e) => {
-              const value = e.target.value;
-              const toastId = "no-digits-toast";
+                setUserDetails((prev) => ({ ...prev, firstName: value }));
+              }}
+              isReadOnly={accountCreated}
+            />
+          </Tooltips>
+          <Tooltips createdAccount={accountCreated}>
+            <Input
+              type="text"
+              placeholder="Last Name"
+              _placeholder={{ color: "gray.300" }}
+              value={userDetails.lastName}
+              onChange={(e) => {
+                const value = e.target.value;
+                const toastId = "no-digits-toast";
 
-              if (/\d/.test(value)) {
-                if (!toast.isActive(toastId)) {
-                  toast({
-                    id: toastId,
-                    title: "Invalid input",
-                    description: "Numbers are not allowed in the name.",
-                    status: "warning",
-                    duration: 3000,
-                    isClosable: true,
-                  });
+                if (/\d/.test(value)) {
+                  if (!toast.isActive(toastId)) {
+                    toast({
+                      id: toastId,
+                      title: "Invalid input",
+                      description: "Numbers are not allowed in the name.",
+                      status: "warning",
+                      duration: 3000,
+                      isClosable: true,
+                    });
+                  }
+                  return;
                 }
-                return;
-              }
 
-              setFormData((prev) => ({ ...prev, lastName: value }));
-            }}
-          />
+                setUserDetails((prev) => ({ ...prev, lastName: value }));
+              }}
+              isReadOnly={accountCreated}
+            />
+          </Tooltips>
         </InputGroup>
 
         <InputGroup>
@@ -268,131 +291,142 @@ function signup({ formData, setFormData, onNext, isWaiting, handleNextClick }) {
           <InputRightElement pointerEvents="none">
             <FaPhoneAlt size={15} color="gray.500" />
           </InputRightElement>
-          <Input
-            type="tel"
-            placeholder="Phone Number"
-            _placeholder={{ color: "gray.300" }}
-            value={formData.phoneNumber}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                phoneNumber: e.target.value,
-              }))
-            }
-            onBlur={(e) => {
-              const toastId = "no-phone-toast";
-              let value = e.target.value;
 
-              if (value.startsWith("0")) {
-                value = value.slice(1);
+          <Tooltips createdAccount={accountCreated}>
+            <Input
+              type="tel"
+              placeholder="Phone Number"
+              _placeholder={{ color: "gray.300" }}
+              value={userDetails.phoneNumber}
+              onChange={(e) =>
+                setUserDetails((prev) => ({
+                  ...prev,
+                  phoneNumber: e.target.value,
+                }))
               }
+              onBlur={(e) => {
+                const toastId = "no-phone-toast";
+                let value = e.target.value;
 
-              const isValid = /^1\d{8,9}$/.test(value);
+                if (value.startsWith("0")) {
+                  value = value.slice(1);
+                }
 
-              setPhoneError(!isValid);
+                const isValid = /^1\d{8,9}$/.test(value);
 
-              if (!isValid && !toast.isActive(toastId)) {
-                toast({
-                  id: toastId,
-                  title: "Invalid phone number",
-                  description:
-                    "Please enter a valid Malaysian phone number starting with 1 and 9 digits.",
-                  status: "error",
-                  duration: 3000,
+                setPhoneError(!isValid);
 
-                  isClosable: true,
-                });
-              }
+                if (!isValid && !toast.isActive(toastId)) {
+                  toast({
+                    id: toastId,
+                    title: "Invalid phone number",
+                    description:
+                      "Please enter a valid Malaysian phone number starting with 1 and 9 digits.",
+                    status: "error",
+                    duration: 3000,
 
-              if (value === "" || isValid) {
-                setFormData((prev) => ({ ...prev, phoneNumber: value }));
-              }
-            }}
-            maxLength={10} // Only 9 digits after +60
-            isInvalid={phoneError}
-            borderColor={phoneError ? "red.500" : "gray.200"}
-            focusBorderColor={phoneError ? "red.500" : "blue.300"}
-          />
+                    isClosable: true,
+                  });
+                }
+
+                if (value === "" || isValid) {
+                  setUserDetails((prev) => ({ ...prev, phoneNumber: value }));
+                }
+              }}
+              maxLength={10} // Only 9 digits after +60
+              isInvalid={phoneError}
+              borderColor={phoneError ? "red.500" : "gray.200"}
+              focusBorderColor={phoneError ? "red.500" : "blue.300"}
+              isReadOnly={accountCreated}
+            />
+          </Tooltips>
         </InputGroup>
 
         <InputGroup>
           <InputRightElement pointerEvents="none">
             <HiOutlineMail size={25} color="gray.500" />
           </InputRightElement>
-          <Input
-            type="email"
-            placeholder="Email"
-            _placeholder={{ color: "gray.300" }}
-            value={formData.email}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, email: e.target.value }))
-            }
-            onBlur={() => {
-              const toastId = "no-email-toast";
-              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-              const isValid = emailRegex.test(formData.email);
 
-              setEmailError(!isValid);
-
-              if (
-                !isValid &&
-                formData.email !== "" &&
-                !toast.isActive(toastId)
-              ) {
-                toast({
-                  id: toastId,
-                  title: "Invalid email address",
-                  description:
-                    "Please enter a valid email like example@email.com",
-                  status: "error",
-                  duration: 3000,
-                  isClosable: true,
-                });
+          <Tooltips createdAccount={accountCreated}>
+            <Input
+              type="email"
+              placeholder="Email"
+              _placeholder={{ color: "gray.300" }}
+              value={userDetails.email}
+              onChange={(e) =>
+                setUserDetails((prev) => ({ ...prev, email: e.target.value }))
               }
-            }}
-            isInvalid={emailError}
-            borderColor={emailError ? "red.500" : "gray.200"}
-            focusBorderColor={emailError ? "red.500" : "blue.300"}
-          />
-        </InputGroup>
+              onBlur={() => {
+                const toastId = "no-email-toast";
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                const isValid = emailRegex.test(userDetails.email);
 
-        <InputGroup size="md">
-          <Input
-            pr="4.5rem"
-            type={show ? "text" : "password"}
-            placeholder="Password"
-            _placeholder={{ color: "gray.300" }}
-            value={formData.password}
-            onChange={(e) => {
-              const value = e.target.value;
-              setFormData((prev) => ({ ...prev, password: value }));
-            }}
-            onBlur={(e) => {
-              const value = e.target.value;
-              const toastId = "invalid-password";
+                setEmailError(!isValid);
 
-              const isValid = validatePassword(value);
-
-              setPasswordError(!isValid);
-
-              if (!isValid && value.length > 0) {
-                if (!toast.isActive(toastId)) {
+                if (
+                  !isValid &&
+                  userDetails.email !== "" &&
+                  !toast.isActive(toastId)
+                ) {
                   toast({
                     id: toastId,
-                    title: "Weak Password",
+                    title: "Invalid email address",
                     description:
-                      "Must be 8+ characters with uppercase, lowercase, number, and symbol.",
-                    status: "warning",
-                    duration: 4000,
+                      "Please enter a valid email like example@email.com",
+                    status: "error",
+                    duration: 3000,
                     isClosable: true,
                   });
                 }
-              }
-            }}
-            isInvalid={passwordError}
-            borderColor={passwordError ? "red.500" : "gray.200"}
-            focusBorderColor={passwordError ? "red.500" : "blue.300"}
-          />
+              }}
+              isInvalid={emailError}
+              borderColor={emailError ? "red.500" : "gray.200"}
+              focusBorderColor={emailError ? "red.500" : "blue.300"}
+              isReadOnly={accountCreated}
+            />
+          </Tooltips>
+        </InputGroup>
+
+        <InputGroup size="md">
+          <Tooltips createdAccount={accountCreated}>
+            <Input
+              pr="4.5rem"
+              type={show ? "text" : "password"}
+              placeholder="Password"
+              _placeholder={{ color: "gray.300" }}
+              value={userDetails.password}
+              onChange={(e) => {
+                const value = e.target.value;
+                setUserDetails((prev) => ({ ...prev, password: value }));
+              }}
+              onBlur={(e) => {
+                const value = e.target.value;
+                const toastId = "invalid-password";
+
+                const isValid = validatePassword(value);
+
+                setPasswordError(!isValid);
+
+                if (!isValid && value.length > 0) {
+                  if (!toast.isActive(toastId)) {
+                    toast({
+                      id: toastId,
+                      title: "Weak Password",
+                      description:
+                        "Must be 8+ characters with uppercase, lowercase, number, and symbol.",
+                      status: "warning",
+                      duration: 4000,
+                      isClosable: true,
+                    });
+                  }
+                }
+              }}
+              isInvalid={passwordError}
+              borderColor={passwordError ? "red.500" : "gray.200"}
+              focusBorderColor={passwordError ? "red.500" : "blue.300"}
+              isReadOnly={accountCreated}
+            />
+          </Tooltips>
           <InputRightElement width="4.5rem">
             <Button h="1.75rem" size="sm" onClick={handleClick}>
               {show ? "Hide" : "Show"}
@@ -401,42 +435,45 @@ function signup({ formData, setFormData, onNext, isWaiting, handleNextClick }) {
         </InputGroup>
 
         <InputGroup size="md">
-          <Input
-            pr="4.5rem"
-            type={show ? "text" : "password"}
-            placeholder="Confirm password"
-            _placeholder={{ color: "gray.300" }}
-            value={formData.confirmPassword}
-            onChange={(e) => {
-              const value = e.target.value;
-              setFormData((prev) => ({ ...prev, confirmPassword: value }));
-            }}
-            onBlur={(e) => {
-              const value = e.target.value;
-              const toastId = "invalid-password";
+          <Tooltips createdAccount={accountCreated}>
+            <Input
+              pr="4.5rem"
+              type={show ? "text" : "password"}
+              placeholder="Confirm password"
+              _placeholder={{ color: "gray.300" }}
+              value={userDetails.confirmPassword}
+              onChange={(e) => {
+                const value = e.target.value;
+                setUserDetails((prev) => ({ ...prev, confirmPassword: value }));
+              }}
+              onBlur={(e) => {
+                const value = e.target.value;
+                const toastId = "invalid-password";
 
-              const isValid = validatePassword(value);
+                const isValid = validatePassword(value);
 
-              setCPasswordError(!isValid);
+                setCPasswordError(!isValid);
 
-              if (!isValid && value.length > 0) {
-                if (!toast.isActive(toastId)) {
-                  toast({
-                    id: toastId,
-                    title: "Weak Password",
-                    description:
-                      "Must be 8+ characters with uppercase, lowercase, number, and symbol.",
-                    status: "warning",
-                    duration: 4000,
-                    isClosable: true,
-                  });
+                if (!isValid && value.length > 0) {
+                  if (!toast.isActive(toastId)) {
+                    toast({
+                      id: toastId,
+                      title: "Weak Password",
+                      description:
+                        "Must be 8+ characters with uppercase, lowercase, number, and symbol.",
+                      status: "warning",
+                      duration: 4000,
+                      isClosable: true,
+                    });
+                  }
                 }
-              }
-            }}
-            isInvalid={cpasswordError}
-            borderColor={cpasswordError ? "red.500" : "gray.200"}
-            focusBorderColor={cpasswordError ? "red.500" : "blue.300"}
-          />
+              }}
+              isInvalid={cpasswordError}
+              borderColor={cpasswordError ? "red.500" : "gray.200"}
+              focusBorderColor={cpasswordError ? "red.500" : "blue.300"}
+              isReadOnly={accountCreated}
+            />
+          </Tooltips>
           <InputRightElement width="4.5rem">
             <Button h="1.75rem" size="sm" onClick={handleClick}>
               {show ? "Hide" : "Show"}
@@ -453,7 +490,7 @@ function signup({ formData, setFormData, onNext, isWaiting, handleNextClick }) {
           <ModalCloseButton />
           <ModalBody>
             <SimpleGrid columns={2} spacing={4} width="100%">
-              {Object.entries(formData)
+              {Object.entries(userDetails)
                 .slice(0, 6)
                 .map(([key, value]) => (
                   <Box key={key}>

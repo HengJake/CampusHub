@@ -10,8 +10,10 @@ const RegisterBox = ({
   buttonClick = null,
   footer = null,
   isWaiting,
+  skipOtp = false,
   ...props
 }) => {
+
   return (
     <Box
       p={5}
@@ -25,7 +27,7 @@ const RegisterBox = ({
       position="relative"
       {...props}
     >
-      {onBack ? (
+      {onBack != null ? (
         <Button
           position={"absolute"}
           top={0}
@@ -44,7 +46,15 @@ const RegisterBox = ({
       ) : (
         ""
       )}
-      <Heading color={"white"} textAlign={"center"} mb={5}>
+      <Heading
+        color="white"
+        as="h2"
+        display="inline-block"
+        px={{ base: 4, md: 8 }} // Responsive horizontal padding
+        textAlign="center"
+        width="auto"
+        maxW="100%"
+      >
         {heading}
       </Heading>
       {children}
