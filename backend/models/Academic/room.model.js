@@ -31,6 +31,5 @@ const roomSchema = new mongoose.Schema({
 
 });
 
-const Lecturer = mongoose.model('Lecturer', lecturerSchema);
-export default Lecturer;
-
+const Room = mongoose.model('Room', roomSchema);
+export default Room;
