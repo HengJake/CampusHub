@@ -57,7 +57,7 @@ function Sidebar() {
           justifyContent={"center"}
           p={2}
         >
-          <Link to="/bookings">
+          <Link to="/book-facility">
             <Button sx={sidebarButtonStyle(false, "Book Court")}>
               <Icon
                 as={PiCourtBasketballBold}
@@ -68,13 +68,13 @@ function Sidebar() {
             </Button>
           </Link>
 
-          <Link to="/gym-locker-booking">
+          <Link to="/book-locker">
             <Button sx={sidebarButtonStyle(false, "Book Locker")}>
               <Icon as={PiLockersFill} boxSize={6} color="white" zIndex={2} />
             </Button>
           </Link>
 
-          <Link to="/parking-map">
+          <Link to="/parking-lot">
             <Button sx={sidebarButtonStyle(true, "Parking Lot")}>
               <Icon as={FaParking} boxSize={6} color="white" zIndex={2} />
             </Button>
@@ -87,7 +87,7 @@ function Sidebar() {
           justifyContent={"center"}
           p={2}
         >
-          <Link to="/class-finder">
+          <Link to="/classroom-finder">
             <Button sx={sidebarButtonStyle(false, "Classroom Finder", true)}>
               <Icon
                 as={SiGoogleclassroom}
@@ -98,19 +98,19 @@ function Sidebar() {
             </Button>
           </Link>
 
-          <Link to="/timetable">
+          <Link to="/class-schedule">
             <Button sx={sidebarButtonStyle(false, "Class Schedule")}>
               <Icon as={FaCalendarAlt} boxSize={6} color="white" zIndex={2} />
             </Button>
           </Link>
 
-          <Link to="/results">
+          <Link to="/result">
             <Button sx={sidebarButtonStyle(false, "MyResult")}>
               <Icon as={GoGraph} boxSize={6} color="white" zIndex={2} />
             </Button>
           </Link>
 
-          <Link to="/sign-attendance">
+          <Link to="/attendance">
             <Button sx={sidebarButtonStyle(true, "Attendance")}>
               <Icon as={FaUserCheck} boxSize={6} color="white" zIndex={2} />
             </Button>
