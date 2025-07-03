@@ -50,7 +50,7 @@ export const createAttendance = async (req, res) => {
             message: "Server error",
         });
     }
-}
+};
 
 //Read Attendance Record
 export const getAttendance = async (req, res) => {
@@ -71,7 +71,7 @@ export const getAttendance = async (req, res) => {
             message: "Server error",
         });
     }
-}
+};
 
 //Update Attendance Record
 export const updateAttendance = async (req, res) => {
