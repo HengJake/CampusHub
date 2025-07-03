@@ -29,9 +29,6 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    jwtToken: {
-      type: String,
-    },
     verifyOtp: {
       type: String,
       default: "",
