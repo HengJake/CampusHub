@@ -62,7 +62,7 @@ function signUpOuter() {
   });
 
   const [userPayment, setUserPayment] = useState({
-    cardHoldername: "",
+    cardHolderName: "",
     cardNumber: "",
     last4Digit: "",
     cvv: "",
@@ -87,13 +87,14 @@ function signUpOuter() {
     confirmPassword: "",
 
     // Step 2: Plan
+    planId: "",
     selectedPlan: "",
     billingInterval: "",
 
     // Step 3 : Payment
     last4Digit: "",
     expiryDate: "",
-    cardHoldername: "",
+    cardHolderName: "",
     bank: "",
     // does not store in DB
     cvv: "",
@@ -124,12 +125,13 @@ function signUpOuter() {
       });
 
       setUserPlan({
+        planId: parsed.planId || "",
         selectedPlan: parsed.selectedPlan || "",
         billingInterval: parsed.billingInterval || "",
       });
 
       setUserPayment({
-        cardHoldername: parsed.cardHoldername || "",
+        cardHolderName: parsed.cardHolderName || "",
         cardNumber: parsed.cardNumber || "",
         last4Digit: parsed.last4Digit || "",
         cvv: parsed.cvv || "",
@@ -247,6 +249,7 @@ function signUpOuter() {
           onBack={prevStep}
           userPayment={userPayment}
           setUserPayment={setUserPayment}
+          isWaiting={isWaiting}
         />
       )}
 

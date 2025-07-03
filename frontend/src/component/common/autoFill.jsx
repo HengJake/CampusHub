@@ -47,7 +47,7 @@ function autoFill({
           cardNumber: "1234567890123456",
           last4Digit: "3456",
           expiryDate: "12/26",
-          cardHoldername: "School Admin",
+          cardHolderName: "School Admin",
           bank: "MasterCard",
           cvv: "123",
         };
@@ -88,7 +88,7 @@ function autoFill({
           cardNumber: "1234567890123456",
           last4Digit: "3456",
           expiryDate: "12/26",
-          cardHoldername: "School Admin",
+          cardHolderName: "School Admin",
           bank: "MasterCard",
           cvv: "123",
         }));

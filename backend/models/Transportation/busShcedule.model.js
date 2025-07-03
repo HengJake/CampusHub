@@ -2,32 +2,32 @@ import mongoose from "mongoose";
 
 const busScheduleSchema = new mongoose.Schema(
   {
-    routeID: [
+    RouteID: [
       {
         type: Schema.Types.ObjectId,
         ref: "Route",
         required: true,
       },
     ],
-    vehiclesID: {
+    VehicleID: {
       type: Schema.Types.ObjectId,
       ref: "Vehicles",
       required: true,
     },
-    departureTime: {
+    DepartureTime: {
       type: Date,
       required: true,
     },
-    arrivalTime: {
+    ArrivalTime: {
       type: Date,
       required: true,
     },
-    dayActive: {
+    DayActive: {
       type: Number,
       enum: [1, 2, 3, 4, 5, 6, 7], // 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday, 7=Sunday
       required: true,
     },
-    active: {
+    Active: {
       type: Boolean,
       default: true,
     },

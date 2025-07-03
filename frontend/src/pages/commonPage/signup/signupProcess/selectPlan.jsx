@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   Button,
@@ -11,10 +11,13 @@ import {
   RadioGroup,
   Radio,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import RegisterBox from "../../../../component/common/registerBox";
 import { Link as RouterLink } from "react-router-dom";
 import { useState } from "react";
+import { useBillingStore } from "../../../../store/billing.js";
+import { useShowToast } from "../../../../store/utils/toast.js";
 
 function selectPlan({
   userData,
@@ -26,28 +29,46 @@ function selectPlan({
   setUserPlan,
 }) {
 
+  const showToast = useShowToast();
+  const { getAllSubscription } = useBillingStore();
+  const [subscriptionList, setSubscriptionList] = useState({});
 
-  const priceList = {
-    basic: {
-      month: "$99",
-    },
-    standard: {
-      month: "$199",
-    },
-    premium: {
-      month: "$499",
-    },
-  };
+  useEffect(() => {
+    async function getSubs() {
+      const { success, data } = await getAllSubscription();
+      if (!success) return;
+      const list = {};
+      data.forEach((sub) => {
+        const interval = sub.BillingInterval;
+        if (!list[interval]) list[interval] = [];
+        list[interval].push({ _id: sub._id, price: sub.Price, plan: sub.Plan });
+      });
+      setSubscriptionList(list);
+    }
+    getSubs();
+  }, []);
+
+  function getPrice(plan) {
+    const interval = userPlan.billingInterval;
+    if (!interval) return "-";
+    const arr = subscriptionList[interval];
+    if (!arr) return "-";
+    const found = arr.find(item => item.plan === plan);
+    return found ? `RM${found.price}` : "-";
+  }
+
 
   const handlePlan = async () => {
-    // onNext();
+    setUserPlan((prev) => ({ ...prev, planId: subscriptionList[userPlan.billingInterval].find((item) => item.plan === userPlan.selectedPlan)._id }))
+    showToast.success("Plan selected", "", "plan")
+    handleData(userPlan);
   };
 
   return (
     <RegisterBox
       heading={"Select a Plan"}
       onBack={onBack}
-      buttonClick={() => handleData(userPlan)}
+      buttonClick={handlePlan}
       skipOtp={skipOtp}
     >
       <VStack>
@@ -67,9 +88,9 @@ function selectPlan({
           <Button
             w="100%"
             mb={2}
-            colorScheme={userPlan.selectedPlan === "basic" ? "blue" : "gray"}
-            variant={userPlan.selectedPlan === "basic" ? "solid" : "outline"}
-            onClick={() => setUserPlan({ ...userPlan, selectedPlan: "basic" })}
+            colorScheme={userPlan.selectedPlan === "Basic" ? "blue" : "gray"}
+            variant={userPlan.selectedPlan === "Basic" ? "solid" : "outline"}
+            onClick={() => setUserPlan({ ...userPlan, selectedPlan: "Basic" })}
             justifyContent="space-between"
             display="flex"
             color={"white"}
@@ -77,14 +98,14 @@ function selectPlan({
             <Text fontSize="xl" flex="1" textAlign={"left"}>
               Basic
             </Text>
-            <Text>{priceList.basic.month}</Text>
+            <Text>{getPrice("Basic")}</Text>
           </Button>
           <Button
             w="100%"
             mb={2}
-            colorScheme={userPlan.selectedPlan === "standard" ? "blue" : "gray"}
-            variant={userPlan.selectedPlan === "standard" ? "solid" : "outline"}
-            onClick={() => setUserPlan({ ...userPlan, selectedPlan: "standard" })}
+            colorScheme={userPlan.selectedPlan === "Standard" ? "blue" : "gray"}
+            variant={userPlan.selectedPlan === "Standard" ? "solid" : "outline"}
+            onClick={() => setUserPlan({ ...userPlan, selectedPlan: "Standard" })}
             justifyContent="space-between"
             display="flex"
             color={"white"}
@@ -92,13 +113,13 @@ function selectPlan({
             <Text fontSize="xl" flex="1" fontWeight={700} textAlign={"left"}>
               Standard
             </Text>
-            <Text>{priceList.standard.month}</Text>
+            <Text>{getPrice("Standard")}</Text>
           </Button>
           <Button
             w="100%"
-            colorScheme={userPlan.selectedPlan === "premium" ? "blue" : "gray"}
-            variant={userPlan.selectedPlan === "premium" ? "solid" : "outline"}
-            onClick={() => setUserPlan({ ...userPlan, selectedPlan: "premium" })}
+            colorScheme={userPlan.selectedPlan === "Premium" ? "blue" : "gray"}
+            variant={userPlan.selectedPlan === "Premium" ? "solid" : "outline"}
+            onClick={() => setUserPlan({ ...userPlan, selectedPlan: "Premium" })}
             justifyContent="space-between"
             display="flex"
             color={"white"}
@@ -106,7 +127,7 @@ function selectPlan({
             <Text fontSize="xl" flex="1" textAlign={"left"}>
               Premium
             </Text>
-            <Text>{priceList.premium.month}</Text>
+            <Text>{getPrice("Premium")}</Text>
           </Button>
         </Box>
 
@@ -122,18 +143,18 @@ function selectPlan({
         >
           <Button
             flex={1}
-            colorScheme={userPlan.billingInterval === "monthly" ? "blue" : "gray"}
-            variant={userPlan.billingInterval === "monthly" ? "solid" : "outline"}
-            onClick={() => setUserPlan({ ...userPlan, billingInterval: "monthly" })}
+            colorScheme={userPlan.billingInterval === "Monthly" ? "blue" : "gray"}
+            variant={userPlan.billingInterval === "Monthly" ? "solid" : "outline"}
+            onClick={() => setUserPlan({ ...userPlan, billingInterval: "Monthly" })}
             color={"white"}
           >
             <Text fontSize="xl">Monthly Billing</Text>
           </Button>
           <Button
             flex={1}
-            colorScheme={userPlan.billingInterval === "yearly" ? "blue" : "gray"}
-            variant={userPlan.billingInterval === "yearly" ? "solid" : "outline"}
-            onClick={() => setUserPlan({ ...userPlan, billingInterval: "yearly" })}
+            colorScheme={userPlan.billingInterval === "Yearly" ? "blue" : "gray"}
+            variant={userPlan.billingInterval === "Yearly" ? "solid" : "outline"}
+            onClick={() => setUserPlan({ ...userPlan, billingInterval: "Yearly" })}
             color={"white"}
           >
             <Text fontSize="xl">Yearly Billing</Text>

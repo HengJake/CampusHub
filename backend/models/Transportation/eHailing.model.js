@@ -2,36 +2,36 @@ import mongoose from "mongoose";
 
 const eHailingSchema = new mongoose.Schema(
   {
-    studentID: {
+    StudentID: {
       type: Schema.Types.ObjectId,
       ref: "Student",
       required: true,
     },
-    routeID: {
+    RouteID: {
       type: Schema.Types.ObjectId,
       ref: "Route",
       required: true,
     },
-    pickupLocation: {
+    PickupLocation: {
       type: Schema.Types.ObjectId,
       ref: "Stop",
       required: true,
     },
-    dropOffLocation: {
+    DropOffLocation: {
       type: Schema.Types.ObjectId,
       ref: "Stop",
       required: true,
     },
-    status: {
+    Status: {
       type: String,
       enum: ["pending", "confirmed", "in_progress", "completed", "cancelled"],
       default: "pending",
     },
-    requestAt: {
+    RequestAt: {
       type: Date,
       default: Date.now,
     },
-    vehiclesID: {
+    VehicleID: {
       type: Schema.Types.ObjectId,
       ref: "Vehicle",
     },

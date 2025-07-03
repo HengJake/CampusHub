@@ -2,28 +2,18 @@ import mongoose from "mongoose";
 
 const paymentSchema = new mongoose.Schema(
   {
-    UserID: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
     SchoolID: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "School",
       required: true,
     },
-    SubscriptionID: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Subscription",
+    CardHolderName: {
+      type: String,
       required: true,
     },
-    Amount: {
+    Last4Digit: {
       type: Number,
       required: true,
-    },
-    PaymentDate: {
-      type: Date,
-      default: Date.now,
     },
     PaymentMethod: {
       type: String,

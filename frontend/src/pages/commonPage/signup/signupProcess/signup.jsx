@@ -50,8 +50,6 @@ function signup({
   setUserDetails,
 }) {
   const { signUp } = useAuthStore();
-  const { checkUser } = useUserStore();
-  const navigate = useNavigate();
 
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
@@ -71,7 +69,7 @@ function signup({
   };
 
   // check user proceeded to step 2 already; meaning account has been created
-  const accountCreated = localStorage.getItem("accountCreated") || false;
+  const accountCreated = localStorage.getItem("accountCreated") === "true";
 
   // format object key
   const formatKey = (key) => {
@@ -482,7 +480,7 @@ function signup({
         </InputGroup>
       </VStack>
 
-      {/*Pop up for email confirmation */}
+      {/*Pop up for confirmation */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>

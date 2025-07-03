@@ -91,16 +91,16 @@
 // });
 
 
-const utcNow = new Date();
-const [day, time] = utcToTimeString(utcNow);
-console.log("Malaysia time string:", day, time); // e.g., 5 "16:00"
+// const utcNow = new Date();
+// const [day, time] = utcToTimeString(utcNow);
+// console.log("Malaysia time string:", day, time); // e.g., 5 "16:00"
 
-const utcFromString = timeStringToUTC([5, "16:00"]);
-console.log("UTC Date from string:", utcFromString);
+// const utcFromString = timeStringToUTC([5, "16:00"]);
+// console.log("UTC Date from string:", utcFromString);
 
-const malaysiaDate = utcToMalaysiaDate(utcNow);
-console.log("Malaysia Date:", malaysiaDate);
+// const malaysiaDate = utcToMalaysiaDate(utcNow);
+// console.log("Malaysia Date:", malaysiaDate);
 
-const utcAgain = malaysiaToUTC(malaysiaDate);
-console.log("Converted back to UTC:", utcAgain);
+// const utcAgain = malaysiaToUTC(malaysiaDate);
+// console.log("Converted back to UTC:", utcAgain);
 
