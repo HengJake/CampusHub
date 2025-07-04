@@ -1,11 +1,8 @@
-import React, { useEffect } from "react";
-import { CiLock } from "react-icons/ci";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Heading,
   Input,
-  InputGroup,
   VStack,
   Text,
   Link,
@@ -17,16 +14,14 @@ import {
   ModalOverlay,
   ModalHeader,
   ModalFooter,
+  useDisclosure,
 } from "@chakra-ui/react";
-import RegisterBox from "../../../../component/common/registerBox";
 import { useAuthStore } from "../../../../store/auth";
-import { useState } from "react";
-import { useDisclosure } from "@chakra-ui/react";
+import { useShowToast } from "../../../../store/utils/toast";
 
-function emailConfirmation({ onNext, onBack, setSkipOtp }) {
-  const toast = useToast();
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+function emailConfirmation({ setSkipOtp, isOpen, onClose }) {
+  const showToast = useShowToast();
 
   const { verifyAccount, sendVerifyOtp, authorizeUser } = useAuthStore();
   const [otpCode, setOtpCode] = useState(0);
@@ -56,84 +51,41 @@ function emailConfirmation({ onNext, onBack, setSkipOtp }) {
 
   useEffect(() => {
     setTimeout(async () => {
-      const res = await authorizeUser();
+      const cooldownEnd = localStorage.getItem("otpCooldownEnd");
+      if (cooldownEnd) {
+        const remaining = Math.floor(
+          (parseInt(cooldownEnd) - Date.now()) / 1000
+        );
 
-      // Handle if no account first
-      if (!res.success) {
-        toast({
-          title: "Please create an account at sign up page",
-          description: res.message,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        setTimeout(() => {
-          onBack(); // go to Step 1
-        }, 1000);
-        return;
-      }
-
-      // if verified, skip OTP
-      if (res.twoFA_enabled) {
-        setSkipOtp(true); // skip OTP verification if already verified
-        localStorage.setItem("skipOtp", "true");
-        const toastId = "accountVerified";
-        if (!toast.isActive(toastId)) {
-          toast({
-            id: toastId,
-            title: "Account already verified",
-            description: "Proceeding to next step",
-            status: "info",
-            duration: 3000,
-            isClosable: true,
-          });
-          setTimeout(() => {
-            onNext();
-          }, 1500);
+        if (remaining > 0) {
+          setIsCooldown(true);
+          setCooldownTime(remaining);
+          startCooldownInterval(remaining);
           return;
         }
       } else {
-        const cooldownEnd = localStorage.getItem("otpCooldownEnd");
-        if (cooldownEnd) {
-          const remaining = Math.floor(
-            (parseInt(cooldownEnd) - Date.now()) / 1000
-          );
-
-          if (remaining > 0) {
-            setIsCooldown(true);
-            setCooldownTime(remaining);
-            startCooldownInterval(remaining);
-            return;
-          }
-        } else {
-          handleSendOtp();
-          const toastId = "otpCooldown";
-          if (!toast.isActive(toastId)) {
-            toast({
-              id: toastId,
-              title: "OTP have been sent",
-              description: "Please check your email for the OTP",
-              status: "info",
-              duration: 3000,
-              isClosable: true,
-            });
-          }
-        }
+        handleSendOtp();
+        const toastId = "otpCooldown";
+        showToast.info(
+          "OTP have been sent",
+          "Please check your email for the OTP",
+          toastId
+        );
       }
 
-      if (!res.success) {
-        toast({
-          title: "Please create an account at sign up page",
-          description: res.message,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        setTimeout(() => {
-          onBack(); // go to Step 1
-        }, 1000);
-        return;
-      }
+
+      // If you have a response from authorizeUser, handle error
+      // if (!res.success) {
+      //   showToast.error(
+      //     "Please create an account at sign up page",
+      //     res.message,
+      //     "no-account"
+      //   );
+      //   setTimeout(() => {
+      //     onBack(); // go to Step 1
+      //   }, 1000);
+      //   return;
+      // }
     }, 1000);
   }, []);
 
@@ -147,45 +99,30 @@ function emailConfirmation({ onNext, onBack, setSkipOtp }) {
       const res = await sendVerifyOtp(); // Call to server
 
       if (res.success) {
-        toast({
-          title: "OTP sent",
-          description: res.message,
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
+        showToast.success(
+          "OTP sent",
+          res.message,
+          "otp-sent"
+        );
       } else {
-        toast({
-          title: "Failed to send OTP",
-          description: res.message,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        showToast.error(
+          "Failed to send OTP",
+          res.message,
+          "otp-fail"
+        );
 
         timeout(() => {
           onNext();
         }, 1500);
       }
 
-      const interval = setInterval(() => {
-        setCooldownTime((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            setIsCooldown(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+
     } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to send OTP",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      showToast.error(
+        "Error",
+        "Failed to send OTP",
+        "otp-error"
+      );
     }
   };
 
@@ -194,30 +131,21 @@ function emailConfirmation({ onNext, onBack, setSkipOtp }) {
     const { success, message } = await verifyAccount(otpCode);
 
     if (!success) {
-      if (!toast.isActive(toastId)) {
-        toast({
-          toastId: toastId,
-          title: "Invalid OTP Code",
-          description: message,
-          position: "top",
-          status: "error",
-          isClosable: true,
-        });
-      }
+      showToast.error(
+        "Invalid OTP Code",
+        message,
+        toastId
+      );
     } else {
-      if (!toast.isActive(toastId)) {
-        toast({
-          toastId: toastId,
-          title: "Verification successful",
-          description: message,
-          position: "top",
-          status: "success",
-          isClosable: true,
-        });
-        setSkipOtp(true); // skip OTP verification if already verified
-        localStorage.setItem("skipOtp", "true");
-        localStorage.removeItem("otpCooldownEnd");
-      }
+      showToast.success(
+        "Verification successful",
+        message,
+        toastId
+      );
+      setSkipOtp(true); // skip OTP verification if already verified
+      localStorage.setItem("skipOtp", "true");
+      localStorage.removeItem("otpCooldownEnd");
+
 
       setTimeout(() => {
         onNext();
@@ -226,58 +154,44 @@ function emailConfirmation({ onNext, onBack, setSkipOtp }) {
   };
 
   return (
-    <RegisterBox
-      heading={"Two-Factor Authentication"}
-      onBack={onBack}
-      buttonClick={handleVerify}
-      buttonText="Verify Code"
-      footer={
-        <Box w="100%" textAlign="left">
-          <Text as={"span"} mr={3}>
-            Didn't receive code?
-          </Text>
-          <Link color={"blue.100"} textDecor={"underline"} onClick={onOpen}>
-            Send Code
-          </Link>
-        </Box>
-      }
-    >
-      <VStack>
-        <Text textAlign={"center"}>
-          Please enter the 6-digit verification code that was sent to your
-          registered email address.
-        </Text>
-        <Input
-          placeholder="XXXXXX"
-          _placeholder={{ color: "gray.300" }}
-          onChange={(e) => {
-            setOtpCode(e.target.value);
-          }}
-        />
-      </VStack>
-
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent margin={"auto auto"}>
-          <ModalCloseButton />
-          <Box
-            padding={2}
-            width={"100%"}
-            display={"flex"}
-            justifyContent={"center"}
-          >
-            <Button
-              colorScheme="blue"
-              mr={3}
-              onClick={handleSendOtp}
-              isDisabled={isCooldown}
-            >
-              {isCooldown ? `Resend OTP in ${cooldownTime}s` : "Resend OTP"}
-            </Button>
+    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>Two-Factor Authentication</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          <VStack>
+            <Text textAlign={"center"}>
+              Please enter the 6-digit verification code that was sent to your
+              registered email address.
+            </Text>
+            <Input
+              placeholder="XXXXXX"
+              _placeholder={{ color: "gray.300" }}
+              onChange={(e) => {
+                setOtpCode(e.target.value);
+              }}
+            />
+          </VStack>
+          <Box w="100%" textAlign="left" mt={4}>
+            <Text as={"span"} mr={3}>
+              Didn't receive code?
+            </Text>
+            <Link color={"blue.300"} textDecor={"underline"} onClick={isCooldown ? undefined : handleSendOtp} style={{ pointerEvents: isCooldown ? "disable" : "auto", opacity: isCooldown ? 0.5 : 1 }}>
+              {isCooldown ? `Resend OTP in ${cooldownTime}s` : "Send Code"}
+            </Link>
           </Box>
-        </ModalContent>
-      </Modal>
-    </RegisterBox>
+        </ModalBody>
+        <ModalFooter>
+          <Button colorScheme="blue" mr={3} onClick={handleVerify}>
+            Verify Code
+          </Button>
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 

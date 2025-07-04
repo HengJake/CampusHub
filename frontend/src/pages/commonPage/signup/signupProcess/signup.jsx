@@ -22,51 +22,37 @@ import {
   Heading,
   SimpleGrid,
 } from "@chakra-ui/react";
-import { FaPhoneAlt } from "react-icons/fa";
-import { MdCheckBoxOutlineBlank } from "react-icons/md";
-import { MdOutlineCheckBox } from "react-icons/md";
-import { HiOutlineMail } from "react-icons/hi";
 import { useDisclosure } from "@chakra-ui/react";
-import { FaRegUserCircle } from "react-icons/fa";
 import { useState } from "react";
-import { useToast } from "@chakra-ui/react";
 // import { useUserStore } from "../../../../store/user";
 import { useAuthStore } from "../../../../store/auth.js";
-import { CookieUtils } from "../../../../../../utility/cookie";
-import { useNavigate } from "react-router-dom";
 import { Link as RouterLink } from "react-router-dom";
 import RegisterBox from "../../../../component/common/registerBox.jsx";
-import { useUserStore } from "../../../../store/user.js";
-import { create } from "zustand";
-import Tooltips from "../../../../component/common/toolTips.jsx";
+import SignUpInput from "../../../../component/common/signUpInput.jsx";
+import EmailConfirmation from "./emailConfirmation.jsx";
+import { useShowToast } from "../../../../store/utils/toast.js";
 
 // add in outer, button in MODAL
 function signup({
   onNext,
   handleData,
+  skipOtp,
+  setSkipOtp,
   isWaiting,
   handleNextClick,
   userDetails,
   setUserDetails,
 }) {
   const { signUp } = useAuthStore();
-
-  const [show, setShow] = React.useState(false);
-  const handleClick = () => setShow(!show);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
+  const accountModal = useDisclosure();
+  const emailModal = useDisclosure();
   // validation stuff
-  const toast = useToast();
+  const showToast = useShowToast();
   const [emailError, setEmailError] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
   const [cpasswordError, setCPasswordError] = useState(false);
-  const validatePassword = (password) => {
-    const isValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(
-      password
-    );
-    return isValid;
-  };
+
 
   // check user proceeded to step 2 already; meaning account has been created
   const accountCreated = localStorage.getItem("accountCreated") === "true";
@@ -85,7 +71,7 @@ function signup({
   // handle method
   const handleSignup = async () => {
     let success = true;
-    const toastId = "sign-up";
+    let toastId = "sign-up";
 
     if (
       !userDetails.firstName ||
@@ -95,31 +81,21 @@ function signup({
       !userDetails.password ||
       !userDetails.confirmPassword
     ) {
-      if (!toast.isActive(toastId)) {
-        toast({
-          id: toastId,
-          title: "Empty field detected!",
-          description: `Please fill all the field`,
-          status: "error",
-          duration: 2000,
-          isClosable: true,
-        });
-      }
+      showToast.error(
+        "Empty field detected!",
+        "Please fill all the field",
+        toastId
+      );
       success = false;
     }
 
     if (userDetails.confirmPassword != userDetails.password) {
-      if (!toast.isActive(toastId)) {
-        toast({
-          id: toastId,
-          title: "Different Password",
-          description:
-            "Ensure your password and confirm password are identical",
-          status: "warning",
-          duration: 2000,
-          isClosable: true,
-        });
-      }
+      toastId = "password";
+      showToast.error(
+        "Different Password",
+        "Ensure your password and confirm password are identical",
+        toastId
+      );
       success = false;
     }
 
@@ -130,70 +106,56 @@ function signup({
       !cpasswordError &&
       !passwordError
     ) {
-      onOpen();
+      accountModal.onOpen();
+    } else {
+      toastId = "empty";
+      showToast.error(
+        "Error field detected!",
+        "Please correct all the field",
+        toastId
+      );
     }
   };
 
   const handleSignUp2 = async () => {
-    const { firstName, lastName, phoneNumber, email, password } = userDetails;
+    // const { firstName, lastName, phoneNumber, email, password } = userDetails;
 
-    const userData = {
-      name: `${firstName} ${lastName}`,
-      password,
-      phoneNumber,
-      email,
-      role: "schoolAdmin",
-      twoFA_enabled: false,
-    };
+    // const userData = {
+    //   name: `${firstName} ${lastName}`,
+    //   password,
+    //   phoneNumber,
+    //   email,
+    //   role: "schoolAdmin",
+    //   twoFA_enabled: false,
+    // };
 
-    // const { exist, takenFields } = await checkUser(userData);
-    const { success, message, data } = await signUp(userData);
+    // const { success, message, data } = await signUp(userData);
 
-    // console.log(exist, takenFields);
-
-    // const takenKeys = Object.keys(takenFields).filter(
-    //   (key) => takenFields[key]
-    // );
-
-    // let message = "";
-    // if (takenKeys.length === 1) {
-    //   message = `${formatKey(takenKeys[0])} is taken.`;
-    // } else if (takenKeys.length === 2) {
-    //   message = `${formatKey(takenKeys[0])} and ${formatKey(
-    //     takenKeys[1]
-    //   )} are taken.`;
-    // } else if (takenKeys.length > 2) {
-    //   const last = takenKeys.pop();
-    //   const formattedKeys = takenKeys.map(formatKey);
-    //   message = `${formattedKeys.join(", ")}, and ${formatKey(
-    //     last
-    //   )} are taken.`;
+    // if (!success) {
+    //   toast({
+    //     title: "Error Signing Up",
+    //     description: message,
+    //     position: "top",
+    //     status: "error",
+    //     duration: 1500,
+    //     isClosable: true,
+    //   });
     // } else {
-    //   message = "All details are available.";
+    //   toast({
+    //     title: "Account succesfully created",
+    //     description: "Proceeding to email verification...",
+    //     position: "top",
+    //     status: "success",
+    //     duration: 1500,
+    //     isClosable: true,
+    //   });
+
+    //   localStorage.setItem("accountCreated", true);
+    //   handleData(userDetails);
     // }
 
-    if (!success) {
-      toast({
-        title: "Error Signing Up",
-        description: message,
-        position: "top",
-        status: "error",
-        duration: 1500,
-        isClosable: true,
-      });
-    } else {
-      toast({
-        title: "Account succesfully created",
-        description: "Proceeding to email verification...",
-        position: "top",
-        status: "success",
-        duration: 1500,
-        isClosable: true,
-      });
-
-      localStorage.setItem("accountCreated", true);
-      handleData(userDetails);
-    }
+    accountModal.onClose();
+    emailModal.onOpen();
   };
 
   return (
@@ -208,6 +170,7 @@ function signup({
       }}
       isWaiting={isWaiting}
     >
+
       <VStack>
         <Box display={"flex"} justifyContent={"start"} w={"100%"} gap={1}>
           <Text color={"white"}>Have an account? </Text>
@@ -221,267 +184,24 @@ function signup({
           </ChakraLink>
         </Box>
 
-        <InputGroup gap={2}>
-          <Tooltips createdAccount={accountCreated}>
-            <Input
-              type="text"
-              placeholder="First Name"
-              _placeholder={{ color: "gray.300" }}
-              value={userDetails.firstName}
-              onChange={(e) => {
-                const value = e.target.value;
-                const toastId = "no-digits-toast";
+        <SignUpInput
+          accountCreated={accountCreated}
+          userDetails={userDetails}
+          setUserDetails={setUserDetails}
+          emailError={emailError}
+          setEmailError={setEmailError}
+          phoneError={phoneError}
+          setPhoneError={setPhoneError}
+          passwordError={passwordError}
+          setPasswordError={setPasswordError}
+          cpasswordError={cpasswordError}
+          setCPasswordError={setCPasswordError}
+        />
 
-                if (/\d/.test(value)) {
-                  if (!toast.isActive(toastId)) {
-                    toast({
-                      id: toastId,
-                      title: "Invalid input",
-                      description: "Numbers are not allowed in the name.",
-                      status: "warning",
-                      duration: 3000,
-                      isClosable: true,
-                    });
-                  }
-                  return;
-                }
-
-                setUserDetails((prev) => ({ ...prev, firstName: value }));
-              }}
-              isReadOnly={accountCreated}
-            />
-          </Tooltips>
-          <Tooltips createdAccount={accountCreated}>
-            <Input
-              type="text"
-              placeholder="Last Name"
-              _placeholder={{ color: "gray.300" }}
-              value={userDetails.lastName}
-              onChange={(e) => {
-                const value = e.target.value;
-                const toastId = "no-digits-toast";
-
-                if (/\d/.test(value)) {
-                  if (!toast.isActive(toastId)) {
-                    toast({
-                      id: toastId,
-                      title: "Invalid input",
-                      description: "Numbers are not allowed in the name.",
-                      status: "warning",
-                      duration: 3000,
-                      isClosable: true,
-                    });
-                  }
-                  return;
-                }
-
-                setUserDetails((prev) => ({ ...prev, lastName: value }));
-              }}
-              isReadOnly={accountCreated}
-            />
-          </Tooltips>
-        </InputGroup>
-
-        <InputGroup>
-          <InputLeftAddon bg={"gray.300"} color={"black"}>
-            +60
-          </InputLeftAddon>
-          <InputRightElement pointerEvents="none">
-            <FaPhoneAlt size={15} color="gray.500" />
-          </InputRightElement>
-
-          <Tooltips createdAccount={accountCreated}>
-            <Input
-              type="tel"
-              placeholder="Phone Number"
-              _placeholder={{ color: "gray.300" }}
-              value={userDetails.phoneNumber}
-              onChange={(e) =>
-                setUserDetails((prev) => ({
-                  ...prev,
-                  phoneNumber: e.target.value,
-                }))
-              }
-              onBlur={(e) => {
-                const toastId = "no-phone-toast";
-                let value = e.target.value;
-
-                if (value.startsWith("0")) {
-                  value = value.slice(1);
-                }
-
-                const isValid = /^1\d{8,9}$/.test(value);
-
-                setPhoneError(!isValid);
-
-                if (!isValid && !toast.isActive(toastId)) {
-                  toast({
-                    id: toastId,
-                    title: "Invalid phone number",
-                    description:
-                      "Please enter a valid Malaysian phone number starting with 1 and 9 digits.",
-                    status: "error",
-                    duration: 3000,
-
-                    isClosable: true,
-                  });
-                }
-
-                if (value === "" || isValid) {
-                  setUserDetails((prev) => ({ ...prev, phoneNumber: value }));
-                }
-              }}
-              maxLength={10} // Only 9 digits after +60
-              isInvalid={phoneError}
-              borderColor={phoneError ? "red.500" : "gray.200"}
-              focusBorderColor={phoneError ? "red.500" : "blue.300"}
-              isReadOnly={accountCreated}
-            />
-          </Tooltips>
-        </InputGroup>
-
-        <InputGroup>
-          <InputRightElement pointerEvents="none">
-            <HiOutlineMail size={25} color="gray.500" />
-          </InputRightElement>
-
-          <Tooltips createdAccount={accountCreated}>
-            <Input
-              type="email"
-              placeholder="Email"
-              _placeholder={{ color: "gray.300" }}
-              value={userDetails.email}
-              onChange={(e) =>
-                setUserDetails((prev) => ({ ...prev, email: e.target.value }))
-              }
-              onBlur={() => {
-                const toastId = "no-email-toast";
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                const isValid = emailRegex.test(userDetails.email);
-
-                setEmailError(!isValid);
-
-                if (
-                  !isValid &&
-                  userDetails.email !== "" &&
-                  !toast.isActive(toastId)
-                ) {
-                  toast({
-                    id: toastId,
-                    title: "Invalid email address",
-                    description:
-                      "Please enter a valid email like example@email.com",
-                    status: "error",
-                    duration: 3000,
-                    isClosable: true,
-                  });
-                }
-              }}
-              isInvalid={emailError}
-              borderColor={emailError ? "red.500" : "gray.200"}
-              focusBorderColor={emailError ? "red.500" : "blue.300"}
-              isReadOnly={accountCreated}
-            />
-          </Tooltips>
-        </InputGroup>
-
-        <InputGroup size="md">
-          <Tooltips createdAccount={accountCreated}>
-            <Input
-              pr="4.5rem"
-              type={show ? "text" : "password"}
-              placeholder="Password"
-              _placeholder={{ color: "gray.300" }}
-              value={userDetails.password}
-              onChange={(e) => {
-                const value = e.target.value;
-                setUserDetails((prev) => ({ ...prev, password: value }));
-              }}
-              onBlur={(e) => {
-                const value = e.target.value;
-                const toastId = "invalid-password";
-
-                const isValid = validatePassword(value);
-
-                setPasswordError(!isValid);
-
-                if (!isValid && value.length > 0) {
-                  if (!toast.isActive(toastId)) {
-                    toast({
-                      id: toastId,
-                      title: "Weak Password",
-                      description:
-                        "Must be 8+ characters with uppercase, lowercase, number, and symbol.",
-                      status: "warning",
-                      duration: 4000,
-                      isClosable: true,
-                    });
-                  }
-                }
-              }}
-              isInvalid={passwordError}
-              borderColor={passwordError ? "red.500" : "gray.200"}
-              focusBorderColor={passwordError ? "red.500" : "blue.300"}
-              isReadOnly={accountCreated}
-            />
-          </Tooltips>
-          <InputRightElement width="4.5rem">
-            <Button h="1.75rem" size="sm" onClick={handleClick}>
-              {show ? "Hide" : "Show"}
-            </Button>
-          </InputRightElement>
-        </InputGroup>
-
-        <InputGroup size="md">
-          <Tooltips createdAccount={accountCreated}>
-            <Input
-              pr="4.5rem"
-              type={show ? "text" : "password"}
-              placeholder="Confirm password"
-              _placeholder={{ color: "gray.300" }}
-              value={userDetails.confirmPassword}
-              onChange={(e) => {
-                const value = e.target.value;
-                setUserDetails((prev) => ({ ...prev, confirmPassword: value }));
-              }}
-              onBlur={(e) => {
-                const value = e.target.value;
-                const toastId = "invalid-password";
-
-                const isValid = validatePassword(value);
-
-                setCPasswordError(!isValid);
-
-                if (!isValid && value.length > 0) {
-                  if (!toast.isActive(toastId)) {
-                    toast({
-                      id: toastId,
-                      title: "Weak Password",
-                      description:
-                        "Must be 8+ characters with uppercase, lowercase, number, and symbol.",
-                      status: "warning",
-                      duration: 4000,
-                      isClosable: true,
-                    });
-                  }
-                }
-              }}
-              isInvalid={cpasswordError}
-              borderColor={cpasswordError ? "red.500" : "gray.200"}
-              focusBorderColor={cpasswordError ? "red.500" : "blue.300"}
-              isReadOnly={accountCreated}
-            />
-          </Tooltips>
-          <InputRightElement width="4.5rem">
-            <Button h="1.75rem" size="sm" onClick={handleClick}>
-              {show ? "Hide" : "Show"}
-            </Button>
-          </InputRightElement>
-        </InputGroup>
       </VStack>
 
       {/*Pop up for confirmation */}
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={accountModal.isOpen} onClose={accountModal.onClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Creating new account...</ModalHeader>
@@ -500,7 +220,7 @@ function signup({
           </ModalBody>
 
           <ModalFooter>
-            <Button variant="ghost" onClick={onClose}>
+            <Button variant="ghost" onClick={accountModal.onClose}>
               Close
             </Button>
             <Button
@@ -517,6 +237,15 @@ function signup({
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/*Show email confirmation */}
+      <Box pos={"fixed"} top={"50%"} left={"50%"} >
+        {emailModal.isOpen && (<EmailConfirmation
+          setSkipOtp={setSkipOtp}
+          isOpen={emailModal.isOpen}
+          onClose={emailModal.onClose}
+        />)}
+      </Box>
     </RegisterBox>
   );
 }

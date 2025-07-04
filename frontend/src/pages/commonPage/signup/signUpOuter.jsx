@@ -27,6 +27,7 @@ function signUpOuter() {
   const storedStep = localStorage.getItem("signupStep");
 
   const [step, setStep] = useState(storedStep ? parseInt(storedStep) : 1);
+
   const nextStep = () => {
     if (step === 1 && skipOtp) {
       setStep(3);
@@ -217,15 +218,17 @@ function signUpOuter() {
           skipOtp={skipOtp}
           userDetails={userDetails}
           setUserDetails={setUserDetails}
+          setSkipOtp={setSkipOtp}
         />
       )}
 
       {step === 2 && (
-        <Otp
-          userData={formData}
+        <SchoolDetails
+          formData={formData}
+          handleData={handleData}
           onBack={prevStep}
-          onNext={nextStep}
-          setSkipOtp={setSkipOtp}
+          userSchoolDetails={userSchoolDetails}
+          setUserSchoolDetails={setUserSchoolDetails}
         />
       )}
 
@@ -253,15 +256,6 @@ function signUpOuter() {
         />
       )}
 
-      {step === 5 && (
-        <SchoolDetails
-          formData={formData}
-          handleData={handleData}
-          onBack={prevStep}
-          userSchoolDetails={userSchoolDetails}
-          setUserSchoolDetails={setUserSchoolDetails}
-        />
-      )}
 
       <AutoFill
         onOpen={onOpen}

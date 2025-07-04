@@ -23,6 +23,31 @@ export const useBillingStore = create((set) => ({
             return { success: false, message: error.message };
         }
     },
+    // school
+    createSchool: async (schoolDetails) => {
+        try {
+
+            const res = await fetch("/api/school", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(schoolDetails)
+            })
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to create School");
+            }
+
+            return { success: true, message: data.message, data: data.data };
+
+        } catch (error) {
+            console.error("Error fetching all subscription:", error.message);
+            return { success: false, message: error.message };
+        }
+    },
     // payment
     createPayment: async (paymentDetails) => {
         try {
@@ -45,5 +70,6 @@ export const useBillingStore = create((set) => ({
             console.error("Error fetching all subscription:", error.message);
             return { success: false, message: error.message };
         }
-    }
+    },
+
 }))
