@@ -98,6 +98,8 @@ function emailConfirmation({ setSkipOtp, isOpen, onClose }) {
     try {
       const res = await sendVerifyOtp(); // Call to server
 
+      setOtpCode(res.otp);
+
       if (res.success) {
         showToast.success(
           "OTP sent",
@@ -145,16 +147,12 @@ function emailConfirmation({ setSkipOtp, isOpen, onClose }) {
       setSkipOtp(true); // skip OTP verification if already verified
       localStorage.setItem("skipOtp", "true");
       localStorage.removeItem("otpCooldownEnd");
-
-
-      setTimeout(() => {
-        onNext();
-      }, 1500);
+      onClose();
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+    <Modal isOpen={isOpen} onClose={onClose} isCentered closeOnOverlayClick={false}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Two-Factor Authentication</ModalHeader>
@@ -171,6 +169,7 @@ function emailConfirmation({ setSkipOtp, isOpen, onClose }) {
               onChange={(e) => {
                 setOtpCode(e.target.value);
               }}
+              value={otpCode}
             />
           </VStack>
           <Box w="100%" textAlign="left" mt={4}>

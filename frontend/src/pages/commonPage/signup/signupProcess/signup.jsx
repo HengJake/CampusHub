@@ -118,57 +118,65 @@ function signup({
   };
 
   const handleSignUp2 = async () => {
-    // const { firstName, lastName, phoneNumber, email, password } = userDetails;
 
-    // const userData = {
-    //   name: `${firstName} ${lastName}`,
-    //   password,
-    //   phoneNumber,
-    //   email,
-    //   role: "schoolAdmin",
-    //   twoFA_enabled: false,
-    // };
+    const { firstName, lastName, phoneNumber, email, password } = userDetails;
 
-    // const { success, message, data } = await signUp(userData);
+    const userData = {
+      name: `${firstName} ${lastName}`,
+      password,
+      phoneNumber,
+      email,
+      role: "schoolAdmin",
+      twoFA_enabled: false,
+    };
 
-    // if (!success) {
-    //   toast({
-    //     title: "Error Signing Up",
-    //     description: message,
-    //     position: "top",
-    //     status: "error",
-    //     duration: 1500,
-    //     isClosable: true,
-    //   });
-    // } else {
-    //   toast({
-    //     title: "Account succesfully created",
-    //     description: "Proceeding to email verification...",
-    //     position: "top",
-    //     status: "success",
-    //     duration: 1500,
-    //     isClosable: true,
-    //   });
+    const { success, message, data } = await signUp(userData);
 
-    //   localStorage.setItem("accountCreated", true);
-    //   handleData(userDetails);
-    // }
+    if (!success) {
+      showToast.error(
+        "Error Signing Up",
+        message,
+        "sign-up-error"
+      );
+      accountModal.onClose();
+    } else {
+      showToast.success(
+        "Account successfully created",
+        "You are able to log in now, proceeding to email verification...",
+        "sign-up-success"
+      );
 
-    accountModal.onClose();
-    emailModal.onOpen();
+      localStorage.setItem("accountCreated", true);
+      handleData(userDetails, false);
+      accountModal.onClose();
+      emailModal.onOpen();
+    }
   };
+
+  let buttonText = "";
+
+  if (!accountCreated) {
+    buttonText = "Sign Up";
+  } else if (!skipOtp) {
+    buttonText = "Verify";
+  } else {
+    buttonText = "Next";
+  }
 
   return (
     <RegisterBox
       heading={"Sign Up"}
       buttonClick={() => {
-        if (accountCreated) {
-          onNext();
-        } else {
+        if (!accountCreated) {
           handleSignup();
+        } else if (!skipOtp) {
+          emailModal.onOpen();
+        } else {
+          onNext();
         }
       }}
       isWaiting={isWaiting}
+      buttonText={buttonText}
     >
 
       <VStack>

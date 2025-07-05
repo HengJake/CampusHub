@@ -41,10 +41,31 @@ export const useBillingStore = create((set) => ({
                 throw new Error(data.message || "Failed to create School");
             }
 
-            return { success: true, message: data.message, data: data.data };
+            return { success: true, message: data.message, id: data.data._id};
 
         } catch (error) {
             console.error("Error fetching all subscription:", error.message);
+            return { success: false, message: error.message };
+        }
+    },
+    deleteSchool: async (schoolId) => {
+        try {
+            const res = await fetch(`/api/school/${schoolId}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to delete School");
+            }
+
+            return { success: true, message: data.message, data: data.data };
+        } catch (error) {
+            console.error("Error deleting school:", error.message);
             return { success: false, message: error.message };
         }
     },

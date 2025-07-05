@@ -14,6 +14,20 @@ export const createSchool = async (req, res) => {
             });
         }
 
+        const existingSchool = await School.findOne({
+            Name: schoolDetails.Name,
+            Address: schoolDetails.Address,
+            City: schoolDetails.City,
+            Country: schoolDetails.Country,
+        });
+
+        if (existingSchool) {
+            return res.status(409).json({
+                success: false,
+                message: "A school with the same details already exists.",
+            });
+        }
+
         const newSchool = new School({
             UserID: schoolDetails.UserID,
             Name: schoolDetails.Name,

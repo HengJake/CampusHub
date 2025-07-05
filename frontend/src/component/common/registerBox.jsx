@@ -1,6 +1,12 @@
 import React from "react";
 import { Box, Heading, Button } from "@chakra-ui/react";
 import { IoArrowBackCircle } from "react-icons/io5";
+import { MdCancel } from "react-icons/md";
+import { Tooltip } from "@chakra-ui/react";
+import { useAuthStore } from "../../store/auth";
+import { useUserStore } from "../../store/user";
+import { useBillingStore } from "../../store/billing";
+
 
 const RegisterBox = ({
   heading,
@@ -13,6 +19,35 @@ const RegisterBox = ({
   skipOtp = false,
   ...props
 }) => {
+  const { authorizeUser, logout } = useAuthStore();
+  const { deleteUser } = useUserStore();
+  const { deleteSchool } = useBillingStore();
+
+  const cancelSignup = async () => {
+    const accountCreated = localStorage.getItem("accountCreated");
+    const schoolCreated = localStorage.getItem("schoolCreated");
+
+    if (schoolCreated) {
+      console.log("delete")
+      let schoolId = "686614c9bca8dac3af49b183"
+      deleteSchool(schoolId);
+    }
+
+    if (accountCreated) {
+      const { id } = await authorizeUser();
+      deleteUser(id);
+    }
+
+    localStorage.removeItem("accountCreated");
+    localStorage.removeItem("schoolCreated");
+    localStorage.removeItem("signupFormData");
+    localStorage.removeItem("signupStep");
+    localStorage.removeItem("otpCooldownEnd");
+    localStorage.removeItem("skipOtp");
+
+    logout();
+    window.location.href = "/";
+  };
 
   return (
     <Box
@@ -46,6 +81,24 @@ const RegisterBox = ({
       ) : (
         ""
       )}
+      <Tooltip label="Cancel" hasArrow placement="top">
+        <Button
+          onClick={cancelSignup}
+          position={"absolute"}
+          top={0}
+          right={0}
+          zIndex={1000}
+          _hover={{ bg: "transparent", color: "blue.500" }}
+          bg={"transparent"}
+          color={"white"}
+          p={0}
+          m={0}
+          fontSize={"30px"}
+        >
+          <MdCancel />
+        </Button>
+      </Tooltip>
+
       <Heading
         color="white"
         as="h2"

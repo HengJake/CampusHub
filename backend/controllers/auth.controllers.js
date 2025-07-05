@@ -66,9 +66,8 @@ export const register = async (req, res) => {
 
       return res.status(409).json({
         success: false,
-        message: `${
-          duplicateKey.charAt(0).toUpperCase() + duplicateKey.slice(1)
-        } already exists`,
+        message: `${duplicateKey.charAt(0).toUpperCase() + duplicateKey.slice(1)
+          } already exists`,
       });
     }
 
@@ -187,6 +186,7 @@ export const sendVerifyOtp = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: `Verification OTP send to ${user.email}`,
+      otp: otp,
     });
   } catch (error) {
     console.error(error.message);

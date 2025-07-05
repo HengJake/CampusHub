@@ -1,0 +1,278 @@
+import mongoose from "mongoose";
+
+
+export const isValidObjectId = (id) => {
+    return mongoose.Types.ObjectId.isValid(id);
+};
+
+
+export const validateObjectId = (id, entityName = "record") => {
+    if (!isValidObjectId(id)) {
+        return {
+            success: false,
+            message: `Invalid ${entityName} ID format`,
+            statusCode: 400
+        };
+    }
+    return null;
+};
+
+// validate reference ID
+export const validateReferenceExists = async (id, Model, fieldName) => {
+    if (!id) return null; // Skip validation if field is not provided
+
+    const validationError = validateObjectId(id, fieldName);
+    if (validationError) return validationError;
+
+    try {
+        // for to repeating record
+        const exists = await Model.findById(id);
+        if (!exists) {
+            return {
+                success: false,
+                message: `Invalid ${fieldName}: ${fieldName.replace('ID', '')} not found`,
+                statusCode: 400
+            };
+        }
+        return null;
+    } catch (error) {
+        console.error(`Error validating ${fieldName}:`, error.message);
+        return {
+            success: false,
+            message: `Error validating ${fieldName}`,
+            statusCode: 500
+        };
+    }
+};
+
+export const validateMultipleReferences = async (references) => {
+    for (const [fieldName, { id, Model }] of Object.entries(references)) {
+        if (id) { // Only validate if field is provided
+            const validationError = await validateReferenceExists(id, Model, fieldName);
+            if (validationError) {
+                return validationError;
+            }
+        }
+    }
+    return null;
+};
+
+export const createRecord = async (Model, data, entityName = "record", validationFn = null) => {
+    try {
+        // Custom validation if provided
+        if (validationFn) {
+            const validationResult = await validationFn(data);
+            if (validationResult && !validationResult.isValid) {
+                return {
+                    success: false,
+                    message: validationResult.message,
+                    statusCode: 400
+                };
+            }
+        }
+
+        const newRecord = new Model(data);
+        await newRecord.save();
+
+        return {
+            success: true,
+            data: newRecord,
+            message: `${entityName} created successfully`,
+            statusCode: 201
+        };
+    } catch (error) {
+        console.error(`Error creating ${entityName}:`, error.message);
+
+        if (error.code === 11000) {
+            return {
+                success: false,
+                message: `${entityName} already exists`,
+                statusCode: 409
+            };
+        }
+
+        return {
+            success: false,
+            message: "Server error",
+            statusCode: 500
+        };
+    }
+};
+
+
+export const getAllRecords = async (Model, entityName = "records", populateFields = [], filter = {}) => {
+    try {
+        let query = Model.find(filter);
+
+        // Populate fields if provided
+        if (populateFields.length > 0) {
+            populateFields.forEach(field => {
+                query = query.populate(field);
+            });
+        }
+
+        const records = await query;
+
+        return {
+            success: true,
+            data: records,
+            message: `${entityName} retrieved successfully`,
+            statusCode: 200
+        };
+    } catch (error) {
+        console.error(`Error retrieving ${entityName}:`, error.message);
+        return {
+            success: false,
+            message: "Server error",
+            statusCode: 500
+        };
+    }
+};
+
+
+export const getRecordById = async (Model, id, entityName = "record", populateFields = []) => {
+    // Validate ObjectId
+    const validationError = validateObjectId(id, entityName);
+    if (validationError) {
+        return validationError;
+    }
+
+    try {
+        let query = Model.findById(id);
+
+        // Populate fields if provided
+        if (populateFields.length > 0) {
+            populateFields.forEach(field => {
+                query = query.populate(field);
+            });
+        }
+
+        const record = await query;
+
+        if (!record) {
+            return {
+                success: false,
+                message: `${entityName} not found`,
+                statusCode: 404
+            };
+        }
+
+        return {
+            success: true,
+            data: record,
+            message: `${entityName} retrieved successfully`,
+            statusCode: 200
+        };
+    } catch (error) {
+        console.error(`Error retrieving ${entityName}:`, error.message);
+        return {
+            success: false,
+            message: "Server error",
+            statusCode: 500
+        };
+    }
+};
+
+
+export const updateRecord = async (Model, id, updates, entityName = "record", validationFn = null) => {
+    // Validate ObjectId
+    const validationError = validateObjectId(id, entityName);
+    if (validationError) {
+        return validationError;
+    }
+
+    try {
+        // Custom validation if provided
+        if (validationFn) {
+            const validationResult = await validationFn(updates);
+            if (validationResult && !validationResult.isValid) {
+                return {
+                    success: false,
+                    message: validationResult.message,
+                    statusCode: 400
+                };
+            }
+        }
+
+        const updatedRecord = await Model.findByIdAndUpdate(id, updates, {
+            new: true,
+            runValidators: true
+        });
+
+        if (!updatedRecord) {
+            return {
+                success: false,
+                message: `${entityName} not found`,
+                statusCode: 404
+            };
+        }
+
+        return {
+            success: true,
+            data: updatedRecord,
+            message: `${entityName} updated successfully`,
+            statusCode: 200
+        };
+    } catch (error) {
+        console.error(`Error updating ${entityName}:`, error.message);
+        return {
+            success: false,
+            message: "Server error",
+            statusCode: 500
+        };
+    }
+};
+
+
+export const deleteRecord = async (Model, id, entityName = "record") => {
+    // Validate ObjectId
+    const validationError = validateObjectId(id, entityName);
+    if (validationError) {
+        return validationError;
+    }
+
+    try {
+        const deletedRecord = await Model.findByIdAndDelete(id);
+
+        if (!deletedRecord) {
+            return {
+                success: false,
+                message: `${entityName} not found`,
+                statusCode: 404
+            };
+        }
+
+        return {
+            success: true,
+            message: `${entityName} deleted successfully`,
+            statusCode: 200
+        };
+    } catch (error) {
+        console.error(`Error deleting ${entityName}:`, error.message);
+        return {
+            success: false,
+            message: "Server error",
+            statusCode: 500
+        };
+    }
+};
+
+
+export const controllerWrapper = (controllerFn) => {
+    return async (req, res) => {
+        try {
+            const result = await controllerFn(req, res);
+            return res.status(result.statusCode).json({
+                success: result.success,
+                data: result.data,
+                message: result.message
+            });
+        } catch (error) {
+            console.error("Controller wrapper error:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Server error"
+            });
+        }
+    };
+};

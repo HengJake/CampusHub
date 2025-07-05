@@ -24,12 +24,6 @@ function autoFill({
   setUserPayment,
   setUserSchoolDetails,
 }) {
-  // reopen the auto fill modal
-  useEffect(() => {
-    if ((step === 4 || step === 5) && !isOpen) {
-      onOpen();
-    }
-  }, []);
 
   const getAutoFillPreview = () => {
     switch (step) {
@@ -42,6 +36,13 @@ function autoFill({
           password: "P@ssw0rd",
           confirmPassword: "P@ssw0rd",
         };
+      case 2:
+        return {
+          schoolName: "Sekolah Demo",
+          address: "123 Jalan Sekolah",
+          city: "Kuala Lumpur",
+          country: "Malaysia",
+        };
       case 4:
         return {
           cardNumber: "1234567890123456",
@@ -50,13 +51,6 @@ function autoFill({
           cardHolderName: "School Admin",
           bank: "MasterCard",
           cvv: "123",
-        };
-      case 5:
-        return {
-          schoolName: "Sekolah Demo",
-          address: "123 Jalan Sekolah",
-          city: "Kuala Lumpur",
-          country: "Malaysia",
         };
       default:
         return {};
@@ -82,6 +76,15 @@ function autoFill({
           confirmPassword: "P@ssw0rd",
         }));
         break;
+      case 2:
+        setUserSchoolDetails((prev) => ({
+          ...prev,
+          schoolName: "Sekolah Demo",
+          address: "123 Jalan Sekolah",
+          city: "Kuala Lumpur",
+          country: "Malaysia",
+        }));
+        break;
       case 4:
         setUserPayment((prev) => ({
           ...prev,
@@ -93,15 +96,6 @@ function autoFill({
           cvv: "123",
         }));
         break;
-      case 5:
-        setUserSchoolDetails((prev) => ({
-          ...prev,
-          schoolName: "Sekolah Demo",
-          address: "123 Jalan Sekolah",
-          city: "Kuala Lumpur",
-          country: "Malaysia",
-        }));
-        break;
       default:
         break;
     }
@@ -109,46 +103,41 @@ function autoFill({
     onClose();
   };
 
-  let showOrNot = true;
-
-  if (step === 2 || step === 3) {
-    showOrNot = false;
-  }
 
   return (
-    showOrNot && (
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent position={"absolute"} right={"0"} top={"0"} margin={4}>
-          <ModalHeader>
-            <Text>Auto Fill Info?</Text>
-            <Text fontSize={"13"}>This will be strictly for demo only</Text>
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <SimpleGrid columns={2} spacing={4} width="100%">
-              {Object.entries(getAutoFillPreview())
-                .slice(0, 6)
-                .map(([key, value]) => (
-                  <Box key={key}>
-                    <Text fontWeight={600}>{formatKey(key)}</Text>
-                    <Text>{value}</Text>
-                  </Box>
-                ))}
-            </SimpleGrid>
-          </ModalBody>
 
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={onClose}>
-              Close
-            </Button>
-            <Button variant="ghost" onClick={handleAutoFill}>
-              Auto Fill
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    )
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <ModalOverlay />
+      <ModalContent position={"absolute"} right={"0"} top={"0"} margin={4}>
+        <ModalHeader>
+          <Text>Auto Fill Info?</Text>
+          <Text fontSize={"13"}>This will be strictly for demo only</Text>
+        </ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          <SimpleGrid columns={2} spacing={4} width="100%">
+            {Object.entries(getAutoFillPreview())
+              .slice(0, 6)
+              .map(([key, value]) => (
+                <Box key={key}>
+                  <Text fontWeight={600}>{formatKey(key)}</Text>
+                  <Text>{value}</Text>
+                </Box>
+              ))}
+          </SimpleGrid>
+        </ModalBody>
+
+        <ModalFooter>
+          <Button colorScheme="blue" mr={3} onClick={onClose}>
+            Close
+          </Button>
+          <Button variant="ghost" onClick={handleAutoFill}>
+            Auto Fill
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+
   );
 }
 

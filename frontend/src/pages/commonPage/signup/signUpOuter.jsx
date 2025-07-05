@@ -15,8 +15,7 @@ import { useUserStore } from "../../../store/user.js";
 
 function signUpOuter() {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { authorizeUser, logout } = useAuthStore();
-  const { deleteUser } = useUserStore();
+
 
   const skipOtpFromStorage = localStorage.getItem("skipOtp");
   const [skipOtp, setSkipOtp] = useState(
@@ -25,27 +24,29 @@ function signUpOuter() {
 
   // ====== registration steps =====
   const storedStep = localStorage.getItem("signupStep");
+  const accountCreated = localStorage.getItem("accountCreated") === "true";
+  const schoolCreated = localStorage.getItem("schoolCreated") === "true";
 
   const [step, setStep] = useState(storedStep ? parseInt(storedStep) : 1);
 
   const nextStep = () => {
-    if (step === 1 && skipOtp) {
-      setStep(3);
-      localStorage.setItem("signupStep", 3);
-    } else {
-      setStep((prev) => prev + 1);
-      localStorage.setItem("signupStep", step + 1);
-    }
+    setStep((prev) => prev + 1);
+    localStorage.setItem("signupStep", step + 1);
   };
   const prevStep = () => {
-    if (step === 3 && skipOtp) {
-      setStep(1);
-      localStorage.setItem("signupStep", 1);
-    } else {
-      setStep((prev) => prev - 1);
-      localStorage.setItem("signupStep", step - 1);
-    }
+    setStep((prev) => prev - 1);
+    localStorage.setItem("signupStep", step - 1);
   };
+
+  useEffect(() => {
+    if ((!schoolCreated && step == 2)) {
+      onOpen();
+    }
+
+    if ((!accountCreated && step == 1)) {
+      onOpen();
+    }
+  }, [step]);
 
   // ====== user data =====
   const [userDetails, setUserDetails] = useState({
@@ -75,7 +76,7 @@ function signUpOuter() {
     schoolName: "",
     address: "",
     city: "",
-    country: "",
+    country: "Malaysia",
   });
 
   const [formData, setFormData] = useState({
@@ -102,10 +103,11 @@ function signUpOuter() {
     cardNumber: "",
 
     // Step 4: School Details
+    schoolId: "",
     schoolName: "",
     address: "",
     city: "",
-    country: "",
+    country: "Malaysia",
   });
 
   useEffect(() => {
@@ -144,9 +146,11 @@ function signUpOuter() {
         schoolName: parsed.schoolName || "",
         address: parsed.address || "",
         city: parsed.city || "",
-        country: parsed.country || "",
+        country: parsed.country || "Malaysia",
       });
-    } else {
+    }
+
+    if ((!schoolCreated && step == 2) || (!accountCreated && step == 1)) {
       onOpen();
     }
   }, []);
@@ -156,29 +160,20 @@ function signUpOuter() {
   }, [step]);
 
   // add data
-  const handleData = (data) => {
+  const handleData = (data, proceed = true) => {
+
     const updated = { ...formData, ...data };
+
+    console.log("asd", updated);
+
     setFormData(updated);
     localStorage.setItem("signupFormData", JSON.stringify(updated));
-    nextStep();
-  };
 
-  const cancelSignup = async () => {
-    const accountCreated = localStorage.getItem("accountCreated");
+    console.log(JSON.stringify(updated));
 
-    if (accountCreated) {
-      const { id } = await authorizeUser();
-      deleteUser(id);
+    if (proceed) {
+      nextStep();
     }
-
-    localStorage.removeItem("accountCreated");
-    localStorage.removeItem("signupFormData");
-    localStorage.removeItem("signupStep");
-    localStorage.removeItem("otpCooldownEnd");
-    localStorage.removeItem("skipOtp");
-
-    logout();
-    window.location.href = "/";
   };
 
   useEffect(() => {
@@ -200,15 +195,6 @@ function signUpOuter() {
 
   return (
     <Box m={"auto auto"} maxW={"md"}>
-      <Button
-        onClick={cancelSignup}
-        position={"fixed"}
-        top={0}
-        right={0}
-        zIndex={1000}
-      >
-        Cancel
-      </Button>
       {step === 1 && (
         <UserDetails
           handleData={handleData}
@@ -224,11 +210,14 @@ function signUpOuter() {
 
       {step === 2 && (
         <SchoolDetails
+          isWaiting={isWaiting}
+          handleNextClick={handleNextClick}
           formData={formData}
           handleData={handleData}
           onBack={prevStep}
           userSchoolDetails={userSchoolDetails}
           setUserSchoolDetails={setUserSchoolDetails}
+          onNext={nextStep}
         />
       )}
 

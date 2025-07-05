@@ -11,10 +11,10 @@ function userDashboard() {
   const { getAllUsers } = useUserStore();
 
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+    // if (!token) {
+    //   navigate("/login");
+    //   return;
+    // }
 
     const fetchUsers = async () => {
       try {

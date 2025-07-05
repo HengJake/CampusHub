@@ -68,7 +68,7 @@ export const useAuthStore = create((set) => ({
         throw new Error(data.message || "Verification failed");
       }
 
-      return { success: true, message: data.message };
+      return { success: true, message: data.message, otp: data.otp };
     } catch (error) {
       console.error("Login error:", error.message);
       return { success: false, message: error.message };

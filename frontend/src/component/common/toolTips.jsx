@@ -4,7 +4,7 @@ import { Tooltip } from "@chakra-ui/react";
 function toolTips({ createdAccount, children }) {
   return (
     <Tooltip
-      label="You can change account details after logging in. Please proceed to verification."
+      label="You can change account details after logging in."
       isDisabled={!createdAccount}
       hasArrow
       placement="top"

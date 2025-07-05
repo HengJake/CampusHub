@@ -12,15 +12,26 @@ import {
 } from "@chakra-ui/react";
 import { IoArrowBackCircle } from "react-icons/io5";
 import RegisterBox from "../../../../component/common/registerBox";
+import { useEffect } from "react";
+import { useBillingStore } from "../../../../store/billing";
+import { useAuthStore } from "../../../../store/auth";
+import { useShowToast } from "../../../../store/utils/toast";
+import ToolTips from "../../../../component/common/toolTips.jsx";
 
 function schoolDetails({
   handleData,
   onBack,
   userSchoolDetails,
   setUserSchoolDetails,
+  onNext
 }) {
-
+  const useToast = useShowToast();
+  const schoolCreated = localStorage.getItem("schoolCreated") === "true";
+  const { createSchool } = useBillingStore();
+  const { authorizeUser } = useAuthStore();
   const handleInputChange = (e) => {
+    console.log(e);
+    if (schoolCreated) return;
     const { name, value } = e.target;
     setUserSchoolDetails((prev) => ({
       ...prev,
@@ -28,21 +39,70 @@ function schoolDetails({
     }));
   };
 
+  const handleSchool = async () => {
+    if (schoolCreated) {
+      onNext();
+      return;
+    } else {
+
+      const res = await authorizeUser();
+
+      if (!res.success) {
+        useToast.error("Invalid User", "Please create an account", "create-acc")
+        onBack();
+      }
+
+      const structSchool = {
+        UserID: res.id,
+        Name: userSchoolDetails.schoolName,
+        Address: userSchoolDetails.address,
+        City: userSchoolDetails.city,
+        Country: userSchoolDetails.country
+      }
+
+      const res2 = await createSchool(structSchool);
+      handleData({
+        schoolId: res2.id,
+        schoolName: userSchoolDetails.schoolNam,
+        address: userSchoolDetails.address,
+        city: userSchoolDetails.city,
+        country: userSchoolDetails.country,
+      });
+      if (!res2.success) {
+        useToast.error("Error creating school", res2.message, "create-sch")
+      } else {
+        useToast.success("School Created", res2.message, "create-sch2")
+        localStorage.setItem("schoolCreated", true);
+      }
+    }
+  }
+
+
+  let buttonText;
+  if (!schoolCreated) {
+    buttonText = "Enter School";
+  } else {
+    buttonText = "Next";
+  }
+
   return (
     <RegisterBox
       heading={"School Information"}
       onBack={onBack}
-      buttonClick={() => handleData(userSchoolDetails)}
-      buttonText="Complete Registration"
+      buttonClick={handleSchool}
+      buttonText={buttonText}
     >
       <VStack>
-        <Input
-          name="schoolName"
-          placeholder="School Name"
-          _placeholder={{ color: "gray.300" }}
-          value={userSchoolDetails.schoolName}
-          onChange={handleInputChange}
-        />
+        <ToolTips createdAccount={schoolCreated}>
+          <Input
+            name="schoolName"
+            placeholder="School Name"
+            _placeholder={{ color: "gray.300" }}
+            value={userSchoolDetails.schoolName}
+            onChange={handleInputChange}
+            isReadOnly={schoolCreated}
+          />
+        </ToolTips>
         <HStack>
           {/* Locked country input */}
           <Tooltip
@@ -68,6 +128,7 @@ function schoolDetails({
             _placeholder={{ color: "gray.300" }}
             value={userSchoolDetails.city}
             onChange={handleInputChange}
+            isDisabled={schoolCreated}
           >
             <option value="Johor" style={{ color: "black" }}>
               Johor
@@ -125,6 +186,7 @@ function schoolDetails({
           _placeholder={{ color: "gray.300" }}
           value={userSchoolDetails.address}
           onChange={handleInputChange}
+          isReadOnly={schoolCreated}
         />
       </VStack>
     </RegisterBox>
