@@ -136,7 +136,7 @@ function userDashboard() {
                 borderRadius={"10px"}
                 onClick={handleAttendance}
               >
-                Attendance
+                Sign Attendance
               </Button>
               <Button
                 transition="all 0.1s ease-in-out"
@@ -180,7 +180,7 @@ function userDashboard() {
                 borderRadius={"10px"}
                 onClick={""}
               >
-                Help
+                Help Centre
               </Button>
             </Grid>
           </Box>
