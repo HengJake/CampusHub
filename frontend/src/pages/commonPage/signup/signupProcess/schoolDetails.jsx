@@ -53,11 +53,11 @@ function schoolDetails({
       }
 
       const structSchool = {
-        UserID: res.id,
-        Name: userSchoolDetails.schoolName,
-        Address: userSchoolDetails.address,
-        City: userSchoolDetails.city,
-        Country: userSchoolDetails.country
+        userID: res.id,
+        name: userSchoolDetails.schoolName,
+        address: userSchoolDetails.address,
+        city: userSchoolDetails.city,
+        country: userSchoolDetails.country
       }
 
       const res2 = await createSchool(structSchool);

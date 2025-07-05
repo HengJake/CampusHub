@@ -50,7 +50,6 @@ export const useBillingStore = create((set) => ({
     // school
     createSchool: async (schoolDetails) => {
         try {
-
             const res = await fetch("/api/school", {
                 method: "POST",
                 headers: {

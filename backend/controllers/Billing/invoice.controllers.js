@@ -14,26 +14,26 @@ import {
 } from "../../utils/reusable.js";
 
 const validateInvoiceData = async (data) => {
-    const { PaymentID, SubscriptionID } = data;
+    const { paymentID, subscriptionID } = data;
 
     // Check required fields
-    if (!PaymentID) {
+    if (!paymentID) {
         return {
             isValid: false,
-            message: "PaymentID is required"
+            message: "paymentID is required"
         };
     }
-    if (!SubscriptionID) {
+    if (!subscriptionID) {
         return {
             isValid: false,
-            message: "SubscriptionID is required"
+            message: "subscriptionID is required"
         };
     }
 
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
-        PaymentID: { id: PaymentID, Model: Payment },
-        SubscriptionID: { id: SubscriptionID, Model: Subscription }
+        paymentID: { id: paymentID, Model: Payment },
+        subscriptionID: { id: subscriptionID, Model: Subscription }
     });
 
     if (referenceValidation) {

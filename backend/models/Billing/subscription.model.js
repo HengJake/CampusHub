@@ -1,16 +1,16 @@
 import mongoose from "mongoose";
 
 const subscriptionSchema = new mongoose.Schema({
-  Plan: {
+  plan: {
     type: String,
     enum: ["Basic", "Standard", "Premium"],
     required: true,
   },
-  Price: {
+  price: {
     type: Number,
     required: true,
   },
-  BillingInterval: {
+  billingInterval: {
     type: String,
     enum: ["Monthly", "Yearly"],
     required: true,

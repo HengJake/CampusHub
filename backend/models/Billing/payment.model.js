@@ -2,24 +2,24 @@ import mongoose from "mongoose";
 
 const paymentSchema = new mongoose.Schema(
   {
-    SchoolID: {
+    schoolID: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "School",
       required: true,
     },
-    CardHolderName: {
+    cardHolderName: {
       type: String,
       required: true,
     },
-    Last4Digit: {
+    last4Digit: {
       type: Number,
       required: true,
     },
-    ExpiryDate: {
+    expiryDate: {
       type: String,
       required: true,
     },
-    PaymentMethod: {
+    paymentMethod: {
       type: String,
       enum: ["VISA", "MasterCard", "PayPal"],
       required: true,

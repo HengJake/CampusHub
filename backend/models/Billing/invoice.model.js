@@ -1,25 +1,25 @@
 import mongoose from "mongoose";
 
 const invoiceSchema = new mongoose.Schema({
-    PaymentID: {
+    paymentID: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Payment",
         required: true,
     },
-    SubscriptionID: {
+    subscriptionID: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Subscription",
         required: true,
     },
-    Amount: {
+    amount: {
         type: Number,
         required: true,
     },
-    Date: {
+    date: {
         type: Date,
         default: Date.now,
     },
-    Status: {
+    status: {
         type: String,
         enum: ["pending", "paid", "overdue"],
         default: "paid",

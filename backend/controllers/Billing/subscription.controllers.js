@@ -5,10 +5,10 @@ export const createSubscription = async (req, res) => {
 
   try {
     const newSubscription = new Subscription({
-      SchoolID: paymentDetails.SchoolID,
-      Plan: paymentDetails.Plan,
-      Price: paymentDetails.Price,
-      BillingInterval: paymentDetails.BillingInterval,
+      schoolID: paymentDetails.SchoolID,
+      plan: paymentDetails.Plan,
+      price: paymentDetails.Price,
+      billingInterval: paymentDetails.BillingInterval,
     });
 
     const savedSubscription = await newSubscription.save();

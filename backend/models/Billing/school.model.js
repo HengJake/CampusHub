@@ -1,28 +1,28 @@
 import mongoose from 'mongoose';
 
 const schoolSchema = new mongoose.Schema({
-  UserID: {
+  userID: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
-  Name: {
+  name: {
     type: String,
     required: true,
   },
-  Address: {
+  address: {
     type: String,
     required: true,
   },
-  City: {
+  city: {
     type: String,
     required: true,
   },
-  Country: {
+  country: {
     type: String,
     required: true,
   },
-  Status: {
+  status: {
     type: String,
     enum: ['Active', 'Inactive'],
     default: 'Active',

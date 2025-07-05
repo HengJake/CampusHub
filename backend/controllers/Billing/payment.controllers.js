@@ -27,9 +27,9 @@ const validatePaymentData = async (data) => {
 
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
-        SchoolID: { id: SchoolID, Model: School },
-        UserID: { id: UserID, Model: User },
-        SubscriptionID: { id: SubscriptionID, Model: Subscription }
+        schoolID: { id: SchoolID, Model: School },
+        userID: { id: UserID, Model: User },
+        subscriptionID: { id: SubscriptionID, Model: Subscription }
     });
 
     if (referenceValidation) {

@@ -112,7 +112,13 @@ function payment({
     // Step 4: Redirecting to dashboard
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-
+    localStorage.removeItem("accountCreated");
+    localStorage.removeItem("schoolCreated");
+    localStorage.removeItem("paymentCreated");
+    localStorage.removeItem("signupFormData");
+    localStorage.removeItem("signupStep");
+    localStorage.removeItem("otpCooldownEnd");
+    localStorage.removeItem("skipOtp");
     // Navigate to admin dashboard
     navigate("/admin-dashboard");
   };
@@ -120,11 +126,11 @@ function payment({
   const handlePayment = async () => {
 
     const structPayment = {
-      SchoolID: userPayment.schoolId,
-      CardHolderName: userPayment.cardHolderName,
-      Last4Digit: userPayment.last4Digit,
-      ExpiryDate: userPayment.expiryDate,
-      PaymentMethod: userPayment.bank,
+      schoolID: userPayment.schoolId,
+      cardHolderName: userPayment.cardHolderName,
+      last4Digit: userPayment.last4Digit,
+      expiryDate: userPayment.expiryDate,
+      paymentMethod: userPayment.bank,
     }
     // create invoice
     const res = await createPayment(structPayment);
@@ -132,15 +138,15 @@ function payment({
     const subRes = await getSubscription(formData.planId)
 
     const structInvoice = {
-      PaymentID: res.id,
-      SubscriptionID: formData.planId,
-      Amount: subRes.data.Price,
+      paymentID: res.id,
+      subscriptionID: formData.planId,
+      amount: subRes.data.Price,
     }
 
     await createInvoice(structInvoice);
 
     if (res.success) {
-      const updatedUserPayment = {...userPayment, paymentId: res.id};
+      const updatedUserPayment = { ...userPayment, paymentId: res.id };
 
       setUserPayment(updatedUserPayment);
 

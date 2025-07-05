@@ -25,10 +25,10 @@ export const createSchool = async (req, res) => {
         }
 
         const existingSchool = await School.findOne({
-            Name: schoolDetails.Name,
-            Address: schoolDetails.Address,
-            City: schoolDetails.City,
-            Country: schoolDetails.Country,
+            name: schoolDetails.Name,
+            address: schoolDetails.Address,
+            city: schoolDetails.City,
+            country: schoolDetails.Country,
         });
 
         if (existingSchool) {
