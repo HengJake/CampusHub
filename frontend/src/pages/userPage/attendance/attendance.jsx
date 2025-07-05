@@ -52,6 +52,8 @@ import { he } from "date-fns/locale";
 import { color } from "framer-motion";
 
 function attendance() {
+
+
   return (
     <Flex
       display={"flex"}
@@ -72,7 +74,6 @@ function attendance() {
         justifyContent={"space-between"}
       >
         <Box>
-          {" "}
           <Heading>Attendance</Heading>
           <Text fontSize={"20px"}>Intake - asdfasdfasd</Text>
           <br />
@@ -129,6 +130,7 @@ function attendance() {
           >
             Today Class
           </Text>
+          <hr />
 
           <Box
             bgColor={"white"}
