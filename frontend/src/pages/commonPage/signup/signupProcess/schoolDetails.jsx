@@ -19,6 +19,7 @@ import { useShowToast } from "../../../../store/utils/toast";
 import ToolTips from "../../../../component/common/toolTips.jsx";
 
 function schoolDetails({
+  formData,
   handleData,
   onBack,
   userSchoolDetails,
@@ -30,7 +31,6 @@ function schoolDetails({
   const { createSchool } = useBillingStore();
   const { authorizeUser } = useAuthStore();
   const handleInputChange = (e) => {
-    console.log(e);
     if (schoolCreated) return;
     const { name, value } = e.target;
     setUserSchoolDetails((prev) => ({
@@ -63,15 +63,16 @@ function schoolDetails({
       const res2 = await createSchool(structSchool);
       handleData({
         schoolId: res2.id,
-        schoolName: userSchoolDetails.schoolNam,
+        schoolName: userSchoolDetails.schoolName,
         address: userSchoolDetails.address,
         city: userSchoolDetails.city,
         country: userSchoolDetails.country,
-      });
+      }, false);
       if (!res2.success) {
         useToast.error("Error creating school", res2.message, "create-sch")
       } else {
         useToast.success("School Created", res2.message, "create-sch2")
+        onNext();
         localStorage.setItem("schoolCreated", true);
       }
     }
@@ -87,6 +88,7 @@ function schoolDetails({
 
   return (
     <RegisterBox
+      formData={formData}
       heading={"School Information"}
       onBack={onBack}
       buttonClick={handleSchool}

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 export const useBillingStore = create((set) => ({
+
     // subscription
     getAllSubscription: async () => {
         try {
@@ -11,10 +12,33 @@ export const useBillingStore = create((set) => ({
                 },
             });
 
+
             const data = await res.json();
 
             if (!res.ok || !data.success) {
                 throw new Error(data.message || "Failed to fetch all subscription");
+            }
+
+            return { success: true, message: data.message, data: data.data };
+        } catch (error) {
+            console.error("Error fetching all subscription:", error.message);
+            return { success: false, message: error.message };
+        }
+    },
+    getSubscription: async (id) => {
+        try {
+            const res = await fetch(`/api/subscription/${id}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch subscription");
             }
 
             return { success: true, message: data.message, data: data.data };
@@ -41,7 +65,7 @@ export const useBillingStore = create((set) => ({
                 throw new Error(data.message || "Failed to create School");
             }
 
-            return { success: true, message: data.message, id: data.data._id};
+            return { success: true, message: data.message, id: data.data._id };
 
         } catch (error) {
             console.error("Error fetching all subscription:", error.message);
@@ -71,6 +95,7 @@ export const useBillingStore = create((set) => ({
     },
     // payment
     createPayment: async (paymentDetails) => {
+
         try {
             const res = await fetch(`/api/payment`, {
                 method: "POST",
@@ -86,11 +111,56 @@ export const useBillingStore = create((set) => ({
                 throw new Error(data.message || "Failed to log payment");
             }
 
-            return { success: true, message: data.message, data: data.data };
+            return { success: true, message: data.message, data: data.data, id: data.data._id };
         } catch (error) {
             console.error("Error fetching all subscription:", error.message);
             return { success: false, message: error.message };
         }
     },
+    deletePayment: async (paymentId) => {
+        try {
+            const res = await fetch(`/api/payment/${paymentId}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to delete payment");
+            }
+
+            return { success: true, message: data.message, data: data.data };
+        } catch (error) {
+            console.error("Error creating payment:", error.message);
+            return { success: false, message: error.message };
+        }
+    },
+    // invoice
+    createInvoice: async (invoice) => {
+        try {
+            const res = await fetch(`/api/invoice`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(invoice),
+            });
+    
+            const data = await res.json();
+    
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to create invoice");
+            }
+    
+            return { success: true, message: data.message, data: data.data, id: data.data._id };
+    
+        } catch (error) {
+            console.error("Error creating invoice:", error.message);
+            return { success: false, message: error.message };
+        }
+    }
 
 }))

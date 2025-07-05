@@ -5,8 +5,6 @@ import ContactUs from "./pages/commonPage/contactUs/contactUs.jsx";
 import Pricing from "./pages/commonPage/pricing/pricing.jsx";
 import Login from "./pages/commonPage/login/login.jsx";
 import Signup from "./pages/commonPage/signup/signUpOuter.jsx";
-import LoginCampushub from "./pages/commonPage/loginCampushub/loginCampushub.jsx";
-import LoginSchool from "./pages/commonPage/loginSchool/loginSchool.jsx";
 import About from "./pages/commonPage/about/about.jsx";
 
 // User Pages
@@ -74,9 +72,7 @@ function App() {
   const detectRoleFromPath = (path) => {
     if (
       path === "/login" ||
-      path === "/signup" ||
-      path === "/login-campushub" ||
-      path === "/login-school"
+      path === "/signup"
     ) {
       return "register";
     } else if (
@@ -199,8 +195,6 @@ function App() {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/login-campushub" element={<LoginCampushub />} />
-          <Route path="/login-school" element={<LoginSchool />} />
           <Route path="/about" element={<About />} />
 
           {/* User Pages */}

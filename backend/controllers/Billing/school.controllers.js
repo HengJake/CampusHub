@@ -1,5 +1,15 @@
 import User from "../../models/Academic/user.model.js";
 import School from "../../models/Billing/school.model.js";
+import {
+    createRecord,
+    getAllRecords,
+    getRecordById,
+    updateRecord,
+    deleteRecord,
+    validateReferenceExists,
+    validateMultipleReferences,
+    controllerWrapper
+} from "../../utils/reusable.js";
 
 export const createSchool = async (req, res) => {
     const schoolDetails = req.body;
@@ -53,3 +63,34 @@ export const createSchool = async (req, res) => {
         });
     }
 };
+
+
+// =========NEW ERA==================
+const validatePaymentData = async (data) => {
+    const { UserID } = data;
+
+    // Check required fields
+    if (!UserID) {
+        return {
+            isValid: false,
+            message: "UserID is required"
+        };
+    }
+
+    // Validate references exist
+    const referenceValidation = await validateReferenceExists(UserID, User, "UserID");
+
+    if (referenceValidation) {
+        return {
+            isValid: false,
+            message: referenceValidation.message
+        };
+    }
+
+    return { isValid: true };
+};
+
+export const deleteSchool = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await deleteRecord(School, id, "school");
+})

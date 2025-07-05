@@ -14,6 +14,9 @@ import {
   ModalBody,
   SimpleGrid,
   ModalFooter,
+  Spinner,
+  Text,
+  Center,
 } from "@chakra-ui/react";
 import { Radio, RadioGroup, Stack } from "@chakra-ui/react";
 import React, { useEffect } from "react";
@@ -25,6 +28,12 @@ import { IoArrowBackCircle } from "react-icons/io5";
 import RegisterBox from "../../../../component/common/registerBox";
 import { useDisclosure } from "@chakra-ui/react";
 import { useToast } from "@chakra-ui/react";
+import { useBillingStore } from "../../../../store/billing.js";
+import { useShowToast } from "../../../../store/utils/toast.js";
+import ToolTips from "../../../../component/common/toolTips.jsx";
+import { useNavigate } from "react-router-dom";
+import { createInvoice } from "../../../../../../backend/controllers/Billing/invoice.controllers.js";
+
 
 // main
 function payment({
@@ -49,203 +58,323 @@ function payment({
   };
 
   // for modal
+  const navigate = useNavigate();
+
+  // State for payment processing modal
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStep, setProcessingStep] = useState(0);
   const toast = useToast();
   const { onOpen, onClose, isOpen } = useDisclosure();
 
   // change payment details in useState
   useEffect(() => {
-    const { cardHolderName, last4Digit, expiryDate, bank, cardNumber, cvv } =
+    const { cardHolderName, last4Digit, expiryDate, bank, cardNumber, cvv, schoolId, paymentId } =
       formData;
-    if (
-      cardHolderName &&
-      last4Digit &&
-      expiryDate &&
-      bank &&
-      cardNumber &&
-      cvv
-    ) {
-      setUserPayment({
-        cardHolderName,
-        last4Digit,
-        expiryDate,
-        bank,
-        cardNumber,
-        cvv,
-      });
-    }
+
+    // Always update userPayment with available data
+    setUserPayment(prev => ({
+      ...prev,
+      paymentId: paymentId || prev.paymentId || "",
+      schoolId: schoolId || prev.schoolId || "",
+      cardHolderName: cardHolderName || prev.cardHolderName || "",
+      last4Digit: last4Digit || prev.last4Digit || "",
+      expiryDate: expiryDate || prev.expiryDate || "",
+      bank: bank || prev.bank || "",
+      cardNumber: cardNumber || prev.cardNumber || "",
+      cvv: cvv || prev.cvv || "",
+    }));
   }, [formData]);
 
+
+  const showToast = useShowToast();
+  const { createPayment, getSubscription, createInvoice } = useBillingStore();
   // validate data
   const [cardNumberError, setCardNumberError] = useState(false);
   const [expiryError, setExpiryError] = useState(false);
   const [cvvError, setCvvError] = useState(false);
 
-  const handlePayment = async () => {
-    
-    console.log(userPayment)
+  const simulatePaymentProcessing = async () => {
+    setIsProcessing(true);
+    setProcessingStep(1);
 
-    // handleData(userPayment);
-    // localStorage.setItem("paymentCreated", true)
+    // Step 1: Validating payment details
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setProcessingStep(2);
+
+    // Step 2: Processing payment
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setProcessingStep(3);
+
+    // Step 3: Confirming payment
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setProcessingStep(4);
+
+    // Step 4: Redirecting to dashboard
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+
+    // Navigate to admin dashboard
+    navigate("/admin-dashboard");
+  };
+
+  const handlePayment = async () => {
+
+    const structPayment = {
+      SchoolID: userPayment.schoolId,
+      CardHolderName: userPayment.cardHolderName,
+      Last4Digit: userPayment.last4Digit,
+      ExpiryDate: userPayment.expiryDate,
+      PaymentMethod: userPayment.bank,
+    }
+    // create invoice
+    const res = await createPayment(structPayment);
+
+    const subRes = await getSubscription(formData.planId)
+
+    const structInvoice = {
+      PaymentID: res.id,
+      SubscriptionID: formData.planId,
+      Amount: subRes.data.Price,
+    }
+
+    await createInvoice(structInvoice);
+
+    if (res.success) {
+      const updatedUserPayment = {...userPayment, paymentId: res.id};
+
+      setUserPayment(updatedUserPayment);
+
+      // Pass only the paymentId to formData
+      handleData(updatedUserPayment, false);
+
+      showToast.success("Payment created", "", "payment")
+      localStorage.setItem("paymentCreated", true);
+      simulatePaymentProcessing();
+    } else {
+      showToast.error(res.message, "", "payment")
+    }
   }
 
-  const paymentCreated = localStorage.getItem("paymentCreated") === "true";
+  const payCreated = localStorage.getItem("paymentCreated") === "true";
+
+  const getProcessingMessage = () => {
+    switch (processingStep) {
+      case 1:
+        return "Validating payment details...";
+      case 2:
+        return "Processing payment...";
+      case 3:
+        return "Confirming payment...";
+      case 4:
+        return "Redirecting to dashboard...";
+      default:
+        return "Initializing payment...";
+    }
+  };
 
   return (
     <RegisterBox
       heading={"Payment Information"}
       onBack={onBack}
-      buttonClick={handlePayment}
-      buttonText="Pay"
+      buttonClick={payCreated ? simulatePaymentProcessing : handlePayment}
+      buttonText={payCreated ? "Confirm" : "Pay"}
+      formData={formData}
+      paymentId={formData.paymentId}
     >
       <VStack mt={3}>
-        <HStack w="full" justify="space-between">
-          <Button
-            color={"white"}
-            flex={1}
-            colorScheme={userPayment.bank === "MasterCard" ? "blue" : "gray"}
-            variant={userPayment.bank === "MasterCard" ? "solid" : "outline"}
-            onClick={() =>
-              setUserPayment({ ...userPayment, bank: "MasterCard" })
-            }
-          >
-            MasterCard
-          </Button>
-          <Button
-            color={"white"}
-            flex={1}
-            colorScheme={userPayment.bank === "PayPal" ? "blue" : "gray"}
-            variant={userPayment.bank === "PayPal" ? "solid" : "outline"}
-            onClick={() => setUserPayment({ ...userPayment, bank: "PayPal" })}
-          >
-            PayPal
-          </Button>
-          <Button
-            color={"white"}
-            flex={1}
-            colorScheme={userPayment.bank === "VISA" ? "blue" : "gray"}
-            variant={userPayment.bank === "VISA" ? "solid" : "outline"}
-            onClick={() => setUserPayment({ ...userPayment, bank: "VISA" })}
-          >
-            VISA
-          </Button>
-        </HStack>
+        <ToolTips createdAccount={payCreated}>
+          <HStack w="full" justify="space-between">
+            <Button
+              color={"white"}
+              flex={1}
+              colorScheme={userPayment.bank === "MasterCard" ? "blue" : "gray"}
+              variant={userPayment.bank === "MasterCard" ? "solid" : "outline"}
+              onClick={() =>
+                setUserPayment({ ...userPayment, bank: "MasterCard" })
+              }
+              isDisabled={payCreated}
+            >
+              MasterCard
+            </Button>
 
-        <Input
-          placeholder="Cardholder name"
-          _placeholder={{ color: "gray.300" }}
-          value={userPayment.cardHolderName}
-          onChange={(e) => {
-            setUserPayment({ ...userPayment, cardHolderName: e.target.value });
-          }}
-        />
+            <Button
+              color={"white"}
+              flex={1}
+              colorScheme={userPayment.bank === "PayPal" ? "blue" : "gray"}
+              variant={userPayment.bank === "PayPal" ? "solid" : "outline"}
+              onClick={() => setUserPayment({ ...userPayment, bank: "PayPal" })}
+              isDisabled={payCreated}
+            >
+              PayPal
+            </Button>
+            <Button
+              color={"white"}
+              flex={1}
+              colorScheme={userPayment.bank === "VISA" ? "blue" : "gray"}
+              variant={userPayment.bank === "VISA" ? "solid" : "outline"}
+              onClick={() => setUserPayment({ ...userPayment, bank: "VISA" })}
+              isDisabled={payCreated}
+            >
+              VISA
+            </Button>
+          </HStack>
+        </ToolTips>
 
-        <Input
-          placeholder="Card Number"
-          _placeholder={{ color: "gray.300" }}
-          value={userPayment.cardNumber}
-          onChange={(e) => {
-            setUserPayment({ ...userPayment, cardNumber: e.target.value });
-            setCardNumberError(false);
-          }}
-          onBlur={(e) => {
-            const value = e.target.value;
-            const isValid = /^\d{16}$/.test(value);
-            setCardNumberError(!isValid);
-            if (!isValid) {
-              toast({
-                title: "Invalid Card Number",
-                description: "Card number must be 16 digits.",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-              });
-            }
-          }}
-          isInvalid={cardNumberError}
-          borderColor={cardNumberError ? "red.500" : "gray.200"}
-          focusBorderColor={cardNumberError ? "red.500" : "blue.300"}
-        />
-
-        <HStack>
+        <ToolTips createdAccount={payCreated}>
           <Input
-            placeholder="Expiry Date"
+            placeholder="Cardholder name"
             _placeholder={{ color: "gray.300" }}
-            value={userPayment.expiryDate}
+            value={userPayment.cardHolderName}
             onChange={(e) => {
-              // Only allow numbers and slash, and max length 5 (MM/YY)
-              let value = e.target.value.replace(/[^0-9/]/g, "");
-              if (value.length === 2 && userPayment.expiryDate.length === 1) {
-                value += "/";
-              }
-              if (value.length > 5) value = value.slice(0, 5);
-              setUserPayment({ ...userPayment, expiryDate: value });
-              setExpiryError(false);
+              setUserPayment({ ...userPayment, cardHolderName: e.target.value });
             }}
-            onBlur={(e) => {
-              const value = e.target.value;
-              // MM/YY format only
-              const isValidFormat = /^(0[1-9]|1[0-2])\/\d{2}$/.test(value);
-              let isFuture = false;
-              if (isValidFormat) {
-                const [mm, yy] = value.split("/");
-                const expMonth = parseInt(mm, 10);
-                const expYear = 2000 + parseInt(yy, 10); // 2-digit year to 4-digit
-                const now = new Date();
-                const thisMonth = now.getMonth() + 1;
-                const thisYear = now.getFullYear();
-                isFuture = expYear > thisYear || (expYear === thisYear && expMonth >= thisMonth);
-              }
-              setExpiryError(!(isValidFormat && isFuture));
-              if (!isValidFormat) {
-                toast({
-                  title: "Invalid Expiry Date",
-                  description: "Expiry date must be in MM/YY format.",
-                  status: "error",
-                  duration: 3000,
-                  isClosable: true,
-                });
-              } else if (!isFuture) {
-                toast({
-                  title: "Invalid Expiry Date",
-                  description: "Expiry date must be in the future.",
-                  status: "error",
-                  duration: 3000,
-                  isClosable: true,
-                });
-              }
-            }}
-            isInvalid={expiryError}
-            borderColor={expiryError ? "red.500" : "gray.200"}
-            focusBorderColor={expiryError ? "red.500" : "blue.300"}
+            isReadOnly={payCreated}
           />
+        </ToolTips>
+
+        <ToolTips createdAccount={payCreated}>
           <Input
-            placeholder="CVV/CVC Code"
+            placeholder="Card Number"
             _placeholder={{ color: "gray.300" }}
-            value={userPayment.cvv}
+            value={userPayment.cardNumber}
             onChange={(e) => {
-              setUserPayment({ ...userPayment, cvv: e.target.value });
-              setCvvError(false);
+              setUserPayment({ ...userPayment, cardNumber: e.target.value });
+              setCardNumberError(false);
             }}
             onBlur={(e) => {
               const value = e.target.value;
-              const isValid = /^\d{3,4}$/.test(value);
-              setCvvError(!isValid);
+              const isValid = /^\d{16}$/.test(value);
+              setCardNumberError(!isValid);
               if (!isValid) {
                 toast({
-                  title: "Invalid CVV",
-                  description: "CVV must be 3 or 4 digits.",
+                  title: "Invalid Card Number",
+                  description: "Card number must be 16 digits.",
                   status: "error",
                   duration: 3000,
                   isClosable: true,
                 });
               }
             }}
-            isInvalid={cvvError}
-            borderColor={cvvError ? "red.500" : "gray.200"}
-            focusBorderColor={cvvError ? "red.500" : "blue.300"}
+            isInvalid={cardNumberError}
+            borderColor={cardNumberError ? "red.500" : "gray.200"}
+            focusBorderColor={cardNumberError ? "red.500" : "blue.300"}
+            isReadOnly={payCreated}
           />
+        </ToolTips>
+
+        <HStack w="full" justify="space-between">
+          <ToolTips createdAccount={payCreated}>
+            <Input
+              placeholder="Expiry Date"
+              _placeholder={{ color: "gray.300" }}
+              value={userPayment.expiryDate}
+              onChange={(e) => {
+                // Only allow numbers and slash, and max length 5 (MM/YY)
+                let value = e.target.value.replace(/[^0-9/]/g, "");
+                if (value.length === 2 && userPayment.expiryDate.length === 1) {
+                  value += "/";
+                }
+                if (value.length > 5) value = value.slice(0, 5);
+                setUserPayment({ ...userPayment, expiryDate: value });
+                setExpiryError(false);
+              }}
+              onBlur={(e) => {
+                const value = e.target.value;
+                // MM/YY format only
+                const isValidFormat = /^(0[1-9]|1[0-2])\/\d{2}$/.test(value);
+                let isFuture = false;
+                if (isValidFormat) {
+                  const [mm, yy] = value.split("/");
+                  const expMonth = parseInt(mm, 10);
+                  const expYear = 2000 + parseInt(yy, 10); // 2-digit year to 4-digit
+                  const now = new Date();
+                  const thisMonth = now.getMonth() + 1;
+                  const thisYear = now.getFullYear();
+                  isFuture = expYear > thisYear || (expYear === thisYear && expMonth >= thisMonth);
+                }
+                setExpiryError(!(isValidFormat && isFuture));
+                if (!isValidFormat) {
+                  toast({
+                    title: "Invalid Expiry Date",
+                    description: "Expiry date must be in MM/YY format.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                  });
+                } else if (!isFuture) {
+                  toast({
+                    title: "Invalid Expiry Date",
+                    description: "Expiry date must be in the future.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                  });
+                }
+              }}
+              isInvalid={expiryError}
+              borderColor={expiryError ? "red.500" : "gray.200"}
+              focusBorderColor={expiryError ? "red.500" : "blue.300"}
+              isReadOnly={payCreated}
+            />
+          </ToolTips>
+          <ToolTips createdAccount={payCreated}>
+            <Input
+              placeholder="CVV/CVC Code"
+              _placeholder={{ color: "gray.300" }}
+              value={userPayment.cvv}
+              onChange={(e) => {
+                setUserPayment({ ...userPayment, cvv: e.target.value });
+                setCvvError(false);
+              }}
+              onBlur={(e) => {
+                const value = e.target.value;
+                const isValid = /^\d{3,4}$/.test(value);
+                setCvvError(!isValid);
+                if (!isValid) {
+                  toast({
+                    title: "Invalid CVV",
+                    description: "CVV must be 3 or 4 digits.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                  });
+                }
+              }}
+              isInvalid={cvvError}
+              borderColor={cvvError ? "red.500" : "gray.200"}
+              focusBorderColor={cvvError ? "red.500" : "blue.300"}
+              isReadOnly={payCreated}
+            />
+          </ToolTips>
         </HStack>
-      </VStack>
+
+      </VStack >
+
+      {/* Payment Processing Modal */}
+      <Modal isOpen={isProcessing} onClose={() => { }} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader textAlign="center">Processing Payment</ModalHeader>
+          <ModalBody>
+            <Center flexDirection="column" py={8}>
+              <Spinner
+                thickness="4px"
+                speed="0.65s"
+                emptyColor="gray.200"
+                color="blue.500"
+                size="xl"
+                mb={4}
+              />
+              <Text fontSize="lg" fontWeight="medium" mb={2}>
+                {getProcessingMessage()}
+              </Text>
+              <Text fontSize="sm" color="gray.500" textAlign="center">
+                Please wait while we process your payment...
+              </Text>
+            </Center>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
@@ -282,7 +411,7 @@ function payment({
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </RegisterBox>
+    </RegisterBox >
   );
 }
 

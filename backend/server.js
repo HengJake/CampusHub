@@ -11,6 +11,7 @@ import authRoutes from "./routes/auth.routes.js";
 import subscriptionRoutes from "./routes/Billing/subscription.routes.js";
 import paymentRoutes from "./routes/Billing/payment.routes.js"
 import schoolRoutes from "./routes/Billing/school.routes.js"
+import invoiceRoutes from "./routes/Billing/invoice.routes.js"
 
 // 3 Transportation
 import stopRoutes from "./routes/Transportation/stop.routes.js";
@@ -34,6 +35,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/school", schoolRoutes);
+app.use("/api/invoice", invoiceRoutes);
 
 // 3 Transportation
 app.use("/api/stop", stopRoutes);

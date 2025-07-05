@@ -30,6 +30,7 @@ import { useNavigate } from "react-router-dom";
 import RegisterBox from "../../../component/common/registerBox";
 import LoginBackground from "/LoginBackground.png";
 import { Image } from "@chakra-ui/react";
+import { useAuthStore } from "../../../store/auth";
 
 function login() {
   const [isCoolingDown, setIsCoolingDown] = useState(false);
@@ -41,7 +42,8 @@ function login() {
     password: "",
   });
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { loginUser } = useUserStore();
+  // fix login user
+  const { loginUser } = useAuthStore();
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -172,7 +174,7 @@ function login() {
         <Text as={"span"} mr={1} textAlign={"left"}>
           Don't have an account?
         </Text>
-        <Link color={"blue.400"} textDecor={"underline"}>
+        <Link color={"blue.400"} textDecor={"underline"} onClick={() => navigate("/signup")}>
           Sign Up
         </Link>
         <Box

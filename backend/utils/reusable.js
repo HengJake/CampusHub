@@ -39,7 +39,7 @@ export const validateReferenceExists = async (id, Model, fieldName) => {
         console.error(`Error validating ${fieldName}:`, error.message);
         return {
             success: false,
-            message: `Error validating ${fieldName}`,
+            message: `Error validating ${fieldName} - validateReferenceExists method`,
             statusCode: 500
         };
     }
@@ -93,7 +93,7 @@ export const createRecord = async (Model, data, entityName = "record", validatio
 
         return {
             success: false,
-            message: "Server error",
+            message: "Server error - createRecord method",
             statusCode: 500
         };
     }
@@ -123,7 +123,7 @@ export const getAllRecords = async (Model, entityName = "records", populateField
         console.error(`Error retrieving ${entityName}:`, error.message);
         return {
             success: false,
-            message: "Server error",
+            message: "Server error - getAllRecords method",
             statusCode: 500
         };
     }
@@ -167,7 +167,7 @@ export const getRecordById = async (Model, id, entityName = "record", populateFi
         console.error(`Error retrieving ${entityName}:`, error.message);
         return {
             success: false,
-            message: "Server error",
+            message: "Server error - getRecordById method",
             statusCode: 500
         };
     }
@@ -217,7 +217,7 @@ export const updateRecord = async (Model, id, updates, entityName = "record", va
         console.error(`Error updating ${entityName}:`, error.message);
         return {
             success: false,
-            message: "Server error",
+            message: "Server error - updateRecord method",
             statusCode: 500
         };
     }
@@ -251,7 +251,7 @@ export const deleteRecord = async (Model, id, entityName = "record") => {
         console.error(`Error deleting ${entityName}:`, error.message);
         return {
             success: false,
-            message: "Server error",
+            message: "Server error - deleteRecord method",
             statusCode: 500
         };
     }
@@ -271,7 +271,7 @@ export const controllerWrapper = (controllerFn) => {
             console.error("Controller wrapper error:", error);
             return res.status(500).json({
                 success: false,
-                message: "Server error"
+                message: "Server error - controllerWrapper method"
             });
         }
     };

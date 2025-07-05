@@ -26,6 +26,7 @@ function signUpOuter() {
   const storedStep = localStorage.getItem("signupStep");
   const accountCreated = localStorage.getItem("accountCreated") === "true";
   const schoolCreated = localStorage.getItem("schoolCreated") === "true";
+  const paCreated = localStorage.getItem("paymentCreated") === "true";
 
   const [step, setStep] = useState(storedStep ? parseInt(storedStep) : 1);
 
@@ -46,6 +47,10 @@ function signUpOuter() {
     if ((!accountCreated && step == 1)) {
       onOpen();
     }
+
+    if ((!paCreated && step == 4)) {
+      onOpen();
+    }
   }, [step]);
 
   // ====== user data =====
@@ -59,11 +64,14 @@ function signUpOuter() {
   });
 
   const [userPlan, setUserPlan] = useState({
+    planId: "",
     selectedPlan: "",
     billingInterval: "",
   });
 
   const [userPayment, setUserPayment] = useState({
+    paymentId: "",
+    schoolId: "",
     cardHolderName: "",
     cardNumber: "",
     last4Digit: "",
@@ -94,6 +102,7 @@ function signUpOuter() {
     billingInterval: "",
 
     // Step 3 : Payment
+    paymentId: "",
     last4Digit: "",
     expiryDate: "",
     cardHolderName: "",
@@ -134,6 +143,8 @@ function signUpOuter() {
       });
 
       setUserPayment({
+        paymentId: parsed.paymentId || "",
+        schoolId: parsed.schoolId || "",
         cardHolderName: parsed.cardHolderName || "",
         cardNumber: parsed.cardNumber || "",
         last4Digit: parsed.last4Digit || "",
@@ -150,7 +161,7 @@ function signUpOuter() {
       });
     }
 
-    if ((!schoolCreated && step == 2) || (!accountCreated && step == 1)) {
+    if ((!schoolCreated && step == 2) || (!accountCreated && step == 1) || (!paCreated && step == 4)) {
       onOpen();
     }
   }, []);
@@ -164,21 +175,13 @@ function signUpOuter() {
 
     const updated = { ...formData, ...data };
 
-    console.log("asd", updated);
-
     setFormData(updated);
     localStorage.setItem("signupFormData", JSON.stringify(updated));
-
-    console.log(JSON.stringify(updated));
 
     if (proceed) {
       nextStep();
     }
   };
-
-  useEffect(() => {
-    console.log(formData);
-  }, [formData]);
 
   // disable user from spamming (if spam will skip to next 2 or more)
   const [isWaiting, setIsWaiting] = useState(false);
@@ -197,6 +200,7 @@ function signUpOuter() {
     <Box m={"auto auto"} maxW={"md"}>
       {step === 1 && (
         <UserDetails
+          formData={formData}
           handleData={handleData}
           onNext={nextStep}
           isWaiting={isWaiting}

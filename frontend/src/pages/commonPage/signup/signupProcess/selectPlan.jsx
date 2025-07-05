@@ -27,6 +27,7 @@ function selectPlan({
   skipOtp,
   userPlan,
   setUserPlan,
+  formData
 }) {
 
   const showToast = useShowToast();
@@ -59,13 +60,23 @@ function selectPlan({
 
 
   const handlePlan = async () => {
-    setUserPlan((prev) => ({ ...prev, planId: subscriptionList[userPlan.billingInterval].find((item) => item.plan === userPlan.selectedPlan)._id }))
-    showToast.success("Plan selected", "", "plan")
-    handleData(userPlan);
+    let id = subscriptionList[userPlan.billingInterval].find((item) => item.plan === userPlan.selectedPlan)._id;
+
+    // Create the updated userPlan with planId
+    const updatedUserPlan = { ...userPlan, planId: id };
+
+    // Update the state
+    setUserPlan(updatedUserPlan);
+
+    // Pass the updated data to formData
+    handleData(updatedUserPlan);
+
+    showToast.success("Plan selected", "", "plan");
   };
 
   return (
     <RegisterBox
+      formData={formData}
       heading={"Select a Plan"}
       onBack={onBack}
       buttonClick={handlePlan}

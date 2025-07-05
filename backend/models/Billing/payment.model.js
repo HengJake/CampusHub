@@ -15,6 +15,10 @@ const paymentSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    ExpiryDate: {
+      type: String,
+      required: true,
+    },
     PaymentMethod: {
       type: String,
       enum: ["VISA", "MasterCard", "PayPal"],

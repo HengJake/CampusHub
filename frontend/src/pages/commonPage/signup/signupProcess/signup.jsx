@@ -34,6 +34,7 @@ import { useShowToast } from "../../../../store/utils/toast.js";
 
 // add in outer, button in MODAL
 function signup({
+  formData,
   onNext,
   handleData,
   skipOtp,
@@ -165,6 +166,7 @@ function signup({
 
   return (
     <RegisterBox
+      formData={formData}
       heading={"Sign Up"}
       buttonClick={() => {
         if (!accountCreated) {

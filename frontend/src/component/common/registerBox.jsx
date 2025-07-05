@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Box, Heading, Button } from "@chakra-ui/react";
 import { IoArrowBackCircle } from "react-icons/io5";
 import { MdCancel } from "react-icons/md";
@@ -17,29 +17,36 @@ const RegisterBox = ({
   footer = null,
   isWaiting,
   skipOtp = false,
+  formData,
+  paymentId = "",
   ...props
 }) => {
   const { authorizeUser, logout } = useAuthStore();
   const { deleteUser } = useUserStore();
-  const { deleteSchool } = useBillingStore();
+  const { deleteSchool, deletePayment } = useBillingStore();
 
   const cancelSignup = async () => {
-    const accountCreated = localStorage.getItem("accountCreated");
-    const schoolCreated = localStorage.getItem("schoolCreated");
 
-    if (schoolCreated) {
-      console.log("delete")
-      let schoolId = "686614c9bca8dac3af49b183"
-      deleteSchool(schoolId);
-    }
+    const accountCreated = localStorage.getItem("accountCreated") === "true";
+    const schoolCreated = localStorage.getItem("schoolCreated") === "true";
+    const paymentCreated = localStorage.getItem("paymentCreated") === "true";
 
     if (accountCreated) {
       const { id } = await authorizeUser();
       deleteUser(id);
     }
 
+    if (schoolCreated) {
+      await deleteSchool(formData.schoolId);
+    }
+
+    if (paymentCreated) {
+      await deletePayment(formData.paymentId);
+    }
+
     localStorage.removeItem("accountCreated");
     localStorage.removeItem("schoolCreated");
+    localStorage.removeItem("paymentCreated");
     localStorage.removeItem("signupFormData");
     localStorage.removeItem("signupStep");
     localStorage.removeItem("otpCooldownEnd");
@@ -48,6 +55,7 @@ const RegisterBox = ({
     logout();
     window.location.href = "/";
   };
+
 
   return (
     <Box
