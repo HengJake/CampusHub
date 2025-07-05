@@ -57,7 +57,7 @@ export const getAllPayments = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Payment,
         "payments",
-        ['SchoolID', 'UserID', 'SubscriptionID']
+        ['schoolID']
     );
 });
 
@@ -68,7 +68,7 @@ export const getPaymentById = controllerWrapper(async (req, res) => {
         Payment,
         id,
         "payment",
-        ['SchoolID', 'UserID', 'SubscriptionID']
+        ['schoolID']
     );
 });
 

@@ -47,9 +47,9 @@ export const createLockerUnit = controllerWrapper(async (req, res) => {
         validateLockerUnitData
     )
 })
-export const getAllLockerUnit = controllerWrapper()
-export const getLockerUnitById = controllerWrapper()
-
-export const deleteLockerUnit = controllerWrapper();
+export const getAllLockerUnit = controllerWrapper(async (req, res) => { })
+export const getLockerUnitById = controllerWrapper(async (req, res) => { })
+export const updateLockerUnit = controllerWrapper(async (req, res) => { })
+export const deleteLockerUnit = controllerWrapper(async (req, res) => { });
 
 

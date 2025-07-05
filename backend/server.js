@@ -18,6 +18,9 @@ import stopRoutes from "./routes/Transportation/stop.routes.js";
 // import busSchedule from "./routes/Transportation/busSchedule.routes.js";
 import vehicleRoutes from "./routes/Transportation/vehicle.routes.js";
 
+// 4 
+
+
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
@@ -41,6 +44,9 @@ app.use("/api/invoice", invoiceRoutes);
 app.use("/api/stop", stopRoutes);
 // app.use("/api/bus-schedule", busSchedule);
 app.use("/api/vehicle", vehicleRoutes);
+
+//  4 Facility
+
 
 app.listen(PORT, () => {
   connectDB();
