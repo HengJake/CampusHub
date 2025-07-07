@@ -3,10 +3,10 @@ import "./userDashboard.scss";
 import { useEffect, useState } from "react";
 import { useUserStore } from "../../../store/user";
 import { useNavigate } from "react-router-dom";
-import { Box } from "@chakra-ui/react";
 import { MdAccountCircle } from "react-icons/md";
 
 import {
+  Box,
   Grid,
   Flex,
   Stack,
@@ -25,6 +25,7 @@ import {
   ModalFooter,
   Link as ChakraLink,
 } from "@chakra-ui/react";
+import classSchedule from "../classSchedule/classSchedule";
 
 function userDashboard() {
   const navigate = useNavigate();
@@ -47,6 +48,10 @@ function userDashboard() {
   };
   const handleHelp = () => {
     navigate("/attendance");
+  };
+
+  const handleProfile = () => {
+    navigate("/user-profile");
   };
 
   useEffect(() => {
@@ -80,7 +85,7 @@ function userDashboard() {
       p={10}
     >
       <Box
-        bgColor={"#1B4965"}
+        bgColor={"blue.800"}
         color={"white"}
         borderRadius={"25px"}
         height={"300px"}
@@ -90,6 +95,7 @@ function userDashboard() {
         flexDirection={"row"}
         justifyContent={"space-between"}
         boxShadow={"lg"}
+        gap={50}
       >
         <Box w={"100%"}>
           <Text fontWeight={"bold"} fontSize={"30px"}>
@@ -105,14 +111,30 @@ function userDashboard() {
             alignItems={"center"}
             gap={5}
           >
-            <MdAccountCircle size={"150px"} />
+            <Button
+              w={"auto"}
+              h={"auto"}
+              bgColor={"transparent"}
+              borderRadius={"full"}
+              onClick={handleProfile}
+              _hover={{ bgColor: "transparent" }}
+            >
+              {/* UserProfile */}
+              <MdAccountCircle color="white" size={"150px"} />
+            </Button>
             <Box display={"flex"} flexDirection={"column"}>
               <Text fontSize={"20px"}>Coursename</Text>
               <Text fontSize={"20px"}>username@gmail.com</Text>
             </Box>
           </Box>
         </Box>
-        <Box display={"flex"} flexDirection={"column"} w={"100%"} gap={5}>
+        <Box
+          display={"flex"}
+          flexDirection={"column"}
+          w={"100%"}
+          h={"fit-content"}
+          gap={5}
+        >
           <Heading fontSize={"24px"}>Quick Access</Heading>
           <Box
             display={"flex"}
@@ -122,7 +144,7 @@ function userDashboard() {
             w={"100%"}
           >
             <Grid
-              templateColumns="repeat(4, 1fr)"
+              templateColumns="repeat(2, 1fr)"
               gap={5}
               position={"relative"}
               width={"100%"}
@@ -204,6 +226,8 @@ function userDashboard() {
           flexDirection={"row"}
           justifyContent={"space-between"}
           boxShadow={"lg"}
+          transition="all 0.05s ease-in-out"
+          _hover={{ transform: "scale(1.01)" }}
         >
           <Box w={"50%"}>
             <Heading fontWeight={"bold"} fontSize={"30px"}>
@@ -231,6 +255,8 @@ function userDashboard() {
           flexDirection={"row"}
           justifyContent={"space-between"}
           boxShadow={"lg"}
+          transition="all 0.05s ease-in-out"
+          _hover={{ transform: "scale(1.01)" }}
         >
           {" "}
           <Box w={"50%"}>

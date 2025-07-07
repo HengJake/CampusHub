@@ -36,7 +36,7 @@ function navBar() {
   };
 
   return (
-    <Box display={"flex"} flexDir={"column"}>
+    <Box display={"flex"} flexDir={"column"} position={"fixed"} width={"100%"} zIndex={100}>
       <Container maxWidth={"100vw"} px={4} bgColor={"blue.800"}>
         <Flex
           h={16}
