@@ -1,18 +1,42 @@
 import mongoose from "mongoose";
 
 const courseSchema = new mongoose.Schema({
-    courseName: { type: String, required: true },
+    courseName: {
+        type: String,
+        required: true,
+        trim: true,
+        // Full name of the course (e.g., "Bachelor of Computer Science (Hons)")
+    },
+
+    courseCode: {
+        type: String,
+        required: true,
+        trim: true,
+        // Short code for the course (e.g., "BCS", "BBA", "BENG")
+    },
+
     courseDescription: {
         type: String,
         required: true,
         trim: true,
-        // Detailed course description
+        // Detailed description of the course content and objectives
     },
-    // 1 for 1 month
-    duration: { type: Number, required: true },
-    // 2024/2025
-    academicYear: { type: String, required: true },
-    semester: { type: String, enum: ['Fall', 'Spring', 'Summer'], required: true },
+
+    courseLevel: {
+        type: String,
+        enum: ['Diploma', 'Bachelor', 'Master', 'PhD'],
+        required: true,
+        // Academic level of the course
+    },
+
+    courseType: {
+        type: String,
+        enum: ['Full Time', 'Part Time', 'Distance Learning'],
+        required: true,
+        default: 'Full Time',
+        // Mode of study for the course
+    },
+
     totalCreditHours: {
         type: Number,
         required: true,
@@ -27,18 +51,47 @@ const courseSchema = new mongoose.Schema({
         default: 2.0,
         // Minimum CGPA required for graduation
     },
+
     departmentId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Department',
         required: true,
+        // Department offering the course
     },
+
+    duration: {
+        type: Number,
+        required: true,
+        min: 1,
+        // Duration in months (e.g., 36 for 3-year degree)
+    },
+
+    entryRequirements: {
+        type: [String],
+        default: [],
+        // Array of entry requirements for the course
+    },
+
+    careerProspects: {
+        type: [String],
+        default: [],
+        // Array of potential career paths after graduation
+    },
+
     isActive: {
         type: Boolean,
         default: true,
-        // To soft delete/archive courses
-    },
+        // Soft delete flag for course status
+    }
+}, {
+    timestamps: true
 });
 
-const Course = mongoose.model("Course", courseSchema);
+// Indexes
+courseSchema.index({ courseCode: 1 }, { unique: true });
+courseSchema.index({ departmentId: 1 });
+courseSchema.index({ courseLevel: 1 });
+courseSchema.index({ isActive: 1 });
 
+const Course = mongoose.model("Course", courseSchema);
 export default Course;

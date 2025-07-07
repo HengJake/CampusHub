@@ -3,11 +3,10 @@ import {
     createStudent,
     getAllStudents,
     getStudentById,
-    updateStudentById,
-    deleteStudentById,
+    updateStudent,
+    deleteStudent,
     getStudentsBySchoolId,
-    getStudentsByIntakeID,
-    getStudentsByCourseId,
+    getStudentsByIntakeCourseId,
     getStudentsByYear
 } from "../../controllers/Academic/student.controllers.js";
 
@@ -20,22 +19,19 @@ router.post("/", createStudent);
 router.get("/", getAllStudents);
 
 // Get student by ID
-router.get("/:UserID", getStudentById);
+router.get("/:id", getStudentById);
 
 // Update student by ID
-router.put("/:UserID", updateStudentById);
+router.put("/:id", updateStudent);
 
 // Delete student by ID
-router.delete("/:UserID", deleteStudentById);
+router.delete("/:id", deleteStudent);
 
 // Get students by school ID
-router.get("/school/:SchoolID", getStudentsBySchoolId);
+router.get("/school/:schoolId", getStudentsBySchoolId);
 
-// Get students by intake ID
-router.get("/intake/:IntakeID", getStudentsByIntakeID);
-
-// Get students by course ID
-router.get("/course/:CourseID", getStudentsByCourseId);
+// Get students by intakeCourseId (main filter for course+intake)
+router.get("/intake-course/:intakeCourseId", getStudentsByIntakeCourseId);
 
 // Get students by year
 router.get("/year/:year", getStudentsByYear);

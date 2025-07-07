@@ -2,11 +2,7 @@ import mongoose from 'mongoose';
 import Course from './course.model.js';
 
 const examScheduleSchema = new mongoose.Schema({
-    intakeId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Intake",
-        required: true
-    },
+    intakeCourseId: { type: mongoose.Schema.Types.ObjectId, ref: 'IntakeCourse', required: true }, // Add this
 
     courseId: {
         type: mongoose.Schema.Types.ObjectId,

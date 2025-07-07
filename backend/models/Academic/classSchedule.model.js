@@ -46,12 +46,8 @@ const classScheduleSchema = new mongoose.Schema({
             message: props => `${props.value} is not a valid time format!`
         }
     },
+    intakeCourseId: { type: mongoose.Schema.Types.ObjectId, ref: 'IntakeCourse', required: true }, // Add this
 
-    intakeId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Intake",
-        required: true
-    },
 
 });
 
