@@ -61,7 +61,7 @@ import RNavBar from "./component/navBar/registrationNavBar";
 import SNavBar from "./component/navBar/studentNavBar";
 
 // CL testing animation
-import Test from "./pages/test.jsx";
+import Test from "./component/common/AddToCartcomponent/AddToCart.jsx";
 
 function App() {
   const path = useLocation().pathname;
