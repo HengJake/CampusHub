@@ -1,24 +1,27 @@
-import express from 'express';
+import e from "express";
 import {
-  createAttendance,
-  getattendance,
-  updateAttendance,
-  deleteAttendance,
-} from '../../controllers/Academic/attendance.controllers.js';  
-import { get } from 'mongoose';
+    createAttendance,
+    getAllAttendance,
+    getAttendanceById,
+    updateAttendance,
+    deleteAttendance
+} from "../../controllers/Academic/attendance.controllers.js";
 
-const router = express.Router();
+const router = e.Router();
 
-// Create Attendance Record
-router.post('/', createAttendance);
+// Create a new attendance record
+router.post("/", createAttendance);
 
 // Get all attendance records
-router.get('/', getattendance);
+router.get("/", getAllAttendance);
 
-// Update Attendance Record
-router.put('/:id', updateAttendance);
+// Get attendance record by ID
+router.get("/:id", getAttendanceById);
 
-// Delete Attendance Record     
-router.delete('/:id', deleteAttendance);
+// Update attendance record by ID
+router.put("/:id", updateAttendance);
+
+// Delete attendance record by ID
+router.delete("/:id", deleteAttendance);
 
 export default router;

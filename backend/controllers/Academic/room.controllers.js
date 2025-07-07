@@ -1,131 +1,87 @@
 import Room from '../../models/Academic/room.model.js';
-import mongoose from 'mongoose';
+import {
+    createRecord,
+    getAllRecords,
+    getRecordById,
+    updateRecord,
+    deleteRecord,
+    controllerWrapper
+} from "../../utils/reusable.js";
 
-// Create Room
-export const createRoom = async (req, res) => {
-    const { RoomName, RoomDescription, Capacity } = req.body;
+const validateRoomData = async (data) => {
+    const { RoomName, RoomDescription, Capacity } = data;
 
-    // Validation
-    if (!RoomName || !RoomDescription || !Capacity) {
-        return res.status(400).json({
-            success: false,
-            message: "Please provide all required fields (RoomName, RoomDescription, Capacity)",
-        });
+    // Check required fields
+    if (!RoomName) {
+        return {
+            isValid: false,
+            message: "RoomName is required"
+        };
+    }
+    if (!RoomDescription) {
+        return {
+            isValid: false,
+            message: "RoomDescription is required"
+        };
+    }
+    if (!Capacity) {
+        return {
+            isValid: false,
+            message: "Capacity is required"
+        };
     }
 
-    try {
-        const newRoom = new Room({
-            RoomName,
-            RoomDescription,
-            Capacity
-        });
-
-        await newRoom.save();
-
-        return res.status(201).json({
-            success: true,
-            data: newRoom,
-            message: "Room created successfully",
-        });
-    } catch (error) {
-        console.error("Error creating room:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
+    // Validate RoomName is not empty
+    if (RoomName.trim().length === 0) {
+        return {
+            isValid: false,
+            message: "RoomName cannot be empty"
+        };
     }
+
+    // Validate RoomDescription is not empty
+    if (RoomDescription.trim().length === 0) {
+        return {
+            isValid: false,
+            message: "RoomDescription cannot be empty"
+        };
+    }
+
+    // Validate Capacity is a positive number
+    if (typeof Capacity !== 'number' || Capacity <= 0) {
+        return {
+            isValid: false,
+            message: "Capacity must be a positive number"
+        };
+    }
+
+    return { isValid: true };
 };
 
-// Read Rooms
-export const getRooms = async (req, res) => {
-    try {
-        const rooms = await Room.find();
+export const createRoom = controllerWrapper(async (req, res) => {
+    return await createRecord(
+        Room,
+        req.body,
+        "room",
+        validateRoomData
+    );
+});
 
-        return res.status(200).json({
-            success: true,
-            data: rooms,
-        });
-    } catch (error) {
-        console.error("Error fetching rooms:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }
-};
+export const getAllRooms = controllerWrapper(async (req, res) => {
+    return await getAllRecords(Room, "room");
+});
 
-// Update Room
-export const updateRoom = async (req, res) => {
+export const getRoomById = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    const { RoomName, RoomDescription, Capacity } = req.body;
+    return await getRecordById(Room, id, "room");
+});
 
-    // Validation
-    if (!RoomName || !RoomDescription || !Capacity) {
-        return res.status(400).json({
-            success: false,
-            message: "Please provide all required fields (RoomName, RoomDescription, Capacity)",
-        });
-    }
-
-    try {
-        const updatedRoom = await Room.findByIdAndUpdate(id, {
-            RoomName,
-            RoomDescription,
-            Capacity
-        }, { new: true });
-
-        if (!updatedRoom) {
-            return res.status(404).json({
-                success: false,
-                message: "Room not found",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            data: updatedRoom,
-            message: "Room updated successfully",
-        });
-    } catch (error) {
-        console.error("Error updating room:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }
-};
-
-// Delete Room
-export const deleteRoom = async (req, res) => {
+export const updateRoom = controllerWrapper(async (req, res) => {
     const { id } = req.params;
+    return await updateRecord(Room, id, req.body, "room", validateRoomData);
+});
 
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid room ID format",
-        });
-    }
-
-    try {
-        const deletedRoom = await Room.findByIdAndDelete(id);
-
-        if (!deletedRoom) {
-            return res.status(404).json({
-                success: false,
-                message: "Room not found",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Room deleted successfully",
-        });
-    } catch (error) {
-        console.error("Error deleting room:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }
-};
+export const deleteRoom = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await deleteRecord(Room, id, "room");
+});

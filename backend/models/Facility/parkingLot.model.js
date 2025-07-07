@@ -11,4 +11,4 @@ const ParkingLotSchema = new mongoose.Schema({
     active: { type: Boolean, default: true },
 }, { timestamps: true });
 
-module.exports = mongoose.model('ParkingLot', ParkingLotSchema);
+export default mongoose.model('ParkingLot', ParkingLotSchema);

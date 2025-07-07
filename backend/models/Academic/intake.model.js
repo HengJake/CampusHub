@@ -1,39 +1,37 @@
 import mongoose from "mongoose";
 
 const intakeSchema = new mongoose.Schema({
-    CourseID: {
-        type: Schema.Types.ObjectId,
+    courseId: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Course",
         required: true
     },
 
-    IntakeName: {
+    intakeName: {
         type: String,
         required: true,
         trim: true,
-        unique: true
     },
-
-    StartDate: {
-        type: Date,
+    intakeMonth: {
+        type: String,
+        enum: ['January', 'May', 'September'],
+        required: true
+    },
+    academicYear: {
+        type: String,
         required: true,
+        // e.g., "2024/2025"
         validate: {
-            validator: function(v) {
-                return /^\d{4}-\d{2}-\d{2}$/.test(v);
+            validator: function (v) {
+                return /^\d{4}\/\d{4}$/.test(v);
             },
-            message: props => `${props.value} is not a valid date format!`
+            message: props => `${props.value} is not a valid academic year format (YYYY/YYYY)!`
         }
     },
-
-    EndDate: {
-        type: Date,
+    duration: {
+        // 1 = week
+        type: Number,
         required: true,
-        validate: {
-            validator: function(v) {
-                return /^\d{4}-\d{2}-\d{2}$/.test(v);
-            },
-            message: props => `${props.value} is not a valid date format!`  
-        }
     },
 });
 

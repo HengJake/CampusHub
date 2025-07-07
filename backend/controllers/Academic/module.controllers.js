@@ -1,132 +1,71 @@
 import Module from "../../models/Academic/module.model.js";
-import mongoose from "mongoose";
+import {
+    createRecord,
+    getAllRecords,
+    getRecordById,
+    updateRecord,
+    deleteRecord,
+    controllerWrapper
+} from "../../utils/reusable.js";
+
+// Custom validation function for module data
+const validateModuleData = async (data) => {
+    const { ModuleName, ModuleCode, ModuleDescription, CreditHours } = data;
+
+    // Check required fields
+    if (!ModuleName || !ModuleCode || !ModuleDescription || !CreditHours) {
+        return {
+            isValid: false,
+            message: "Please provide all required fields (ModuleName, ModuleCode, ModuleDescription, CreditHours)"
+        };
+    }
+
+    // Validate CreditHours is a positive number
+    if (CreditHours <= 0) {
+        return {
+            isValid: false,
+            message: "CreditHours must be a positive number"
+        };
+    }
+
+    return { isValid: true };
+};
 
 // Create Module
-export const createModule = async (req, res) => {
-    const { ModuleName, ModuleCode, ModuleDescription, CreditHours } = req.body;
+export const createModule = controllerWrapper(async (req, res) => {
+    return await createRecord(
+        Module,
+        req.body,
+        "module",
+        validateModuleData
+    );
+});
 
-    // Validate required fields
-    if (!ModuleName || !ModuleCode || !ModuleDescription || !CreditHours) {
-        return res.status(400).json({
-            success: false,
-            message: "Please provide all required fields (ModuleName, ModuleCode, ModuleDescription, CreditHours)",
-        });
-    }
+// Get All Modules
+export const getModules = controllerWrapper(async (req, res) => {
+    return await getAllRecords(Module, "modules");
+});
 
-    try {
-        const newModule = new Module({
-            ModuleName,
-            ModuleCode,
-            ModuleDescription,
-            CreditHours
-        });
-
-        await newModule.save();
-
-        return res.status(201).json({
-            success: true,
-            data: newModule,
-            message: "Module created successfully"
-        });
-    } catch (error) {
-        console.error("Error creating module:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
-    }
-};
-
-// Read Modules
-export const getModules = async (req, res) => {
-    try {
-        const modules = await Module.find();
-
-        return res.status(200).json({
-            success: true,
-            data: modules,
-        });
-    } catch (error) {
-        console.error("Error fetching modules:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }
-};
+// Get Module by ID
+export const getModuleById = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await getRecordById(Module, id, "module");
+});
 
 // Update Module
-export const updateModule = async (req, res) => {
+export const updateModule = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    const { ModuleName, ModuleCode, ModuleDescription, CreditHours } = req.body;
-
-    // Validate required fields
-    if (!ModuleName || !ModuleCode || !ModuleDescription || !CreditHours) {
-        return res.status(400).json({
-            success: false,
-            message: "Please provide all required fields (ModuleName, ModuleCode, ModuleDescription, CreditHours)",
-        });
-    }
-
-    try {
-        const updatedModule = await Module.findByIdAndUpdate(
-            id,
-            { ModuleName, ModuleCode, ModuleDescription, CreditHours },
-            { new: true }
-        );
-
-        if (!updatedModule) {
-            return res.status(404).json({
-                success: false,
-                message: "Module not found",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            data: updatedModule,
-            message: "Module updated successfully"
-        });
-    } catch (error) {
-        console.error("Error updating module:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
-    }
-};
+    return await updateRecord(
+        Module,
+        id,
+        req.body,
+        "module",
+        validateModuleData
+    );
+});
 
 // Delete Module
-export const deleteModule = async (req, res) => {
+export const deleteModule = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid module ID format"
-        });
-    }
-
-    try {
-        const deletedModule = await Module.findByIdAndDelete(id);
-
-        if (!deletedModule) {
-            return res.status(404).json({
-                success: false,
-                message: "Module not found"
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Module deleted successfully"
-        });
-    } catch (error) {
-        console.error("Error deleting module:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
-    }
-};
+    return await deleteRecord(Module, id, "module");
+});

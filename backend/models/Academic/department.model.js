@@ -8,14 +8,14 @@ const departmentSchema = new mongoose.Schema({
         unique: true
     },
 
-    DepartmentDescription: {
-        type: String,   
+    departmentDescription: {
+        type: String,
         required: true,
         trim: true
-    },  
+    },
 
-    RoomID: {
-        type: Schema.Types.ObjectId,
+    roomId: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Room",
         required: true
     },

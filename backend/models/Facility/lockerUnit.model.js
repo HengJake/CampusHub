@@ -12,4 +12,4 @@ const LockerUnitSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-module.exports = mongoose.model('LockerUnit', LockerUnitSchema);
+export default mongoose.model('LockerUnit', LockerUnitSchema);

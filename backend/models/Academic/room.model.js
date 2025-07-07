@@ -1,26 +1,26 @@
 import mongoose from 'mongoose';
 const roomSchema = new mongoose.Schema({
-    Block: {
+    block: {
         type: String,
         required: true,
         trim: true
     },
 
-    Floor: {
+    floor: {
         type: String,
         required: true,
         trim: true
     },
 
-    room_number: {
+    roomNumber: {
         type: Number,
         required: true,
         min: 1,
         max: 1000 // Assuming room numbers are between 1 and 1000
     },
 
-    RoomStatus: {
-        type: String,   
+    roomStatus: {
+        type: String,
         enum: ['available', 'unavailable'],
         required: true
     },

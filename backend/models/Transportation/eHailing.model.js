@@ -41,5 +41,5 @@ const eHailingSchema = new mongoose.Schema(
   }
 );
 
-const EHailing = mongoose.Schema("EHailing", eHailingSchema);
+const EHailing = mongoose.model("EHailing", eHailingSchema);
 export default EHailing;

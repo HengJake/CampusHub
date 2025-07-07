@@ -1,25 +1,31 @@
 import e from "express";
 import {
-  createUser,
-  getUserById,
-  getUsers,
-  checkExistedUserDetails,
-  modifyUser,
-  deleteUser,
+    createUser,
+    getAllUsers,
+    getUserById,
+    updateUser,
+    deleteUser,
+    checkExistedUserDetails
 } from "../../controllers/Academic/user.controllers.js";
 
 const router = e.Router();
 
-router.get("/", getUsers);
-
+// Create a new user
 router.post("/", createUser);
 
+// Get all users
+router.get("/", getAllUsers);
+
+// Get user by ID
 router.get("/:id", getUserById);
 
-router.post("/check-user", checkExistedUserDetails);
+// Update user by ID
+router.put("/:id", updateUser);
 
-router.put("/:id", modifyUser);
-
+// Delete user by ID
 router.delete("/:id", deleteUser);
+
+// Check if user details exist
+router.post("/check-user", checkExistedUserDetails);
 
 export default router;

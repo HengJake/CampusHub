@@ -1,25 +1,30 @@
-import mongoose from "mongoose"; 
+import mongoose from "mongoose";
 
 const moduleSchema = new mongoose.Schema({
-    ModuleName: {
+    moduleName: {
         type: String,
         required: true,
         trim: true
     },
 
-    Code: {
+    code: {
         type: String,
         required: true,
         unique: true,
         trim: true
     },
 
-    CreditHour: {
+    totalCreditHour: {
         type: Number,
         required: true,
         min: 1 // Minimum credit hour
-    },  
-
+    },
+    courseId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course",
+        required: true
+    },
+    prerequisites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Module' }]
 });
 
 const Module = mongoose.model("Module", moduleSchema);

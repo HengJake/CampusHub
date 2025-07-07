@@ -1,57 +1,57 @@
-import mongoose from "mongoose";        
+import mongoose from "mongoose";
 
 const classScheduleSchema = new mongoose.Schema({
-    RoomID: {
-        type: Schema.Types.ObjectId,
+    roomId: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Room",
         required: true
     },
 
-    ModuleID: {
-        type: Schema.Types.ObjectId,
+    moduleId: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Module",
         required: true
     },
 
-    LecturerID: {
-        type: Schema.Types.ObjectId,   
+    lecturerId: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Lecturer",
         required: true
     },
 
-    DayOfWeek: {
-        type: String,   
+    dayOfWeek: {
+        type: String,
         enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-        required: true 
-    },  
+        required: true
+    },
 
-    StartTime: {
+    startTime: {
         type: String,
         required: true,
         validate: {
-            validator: function(v) {
-                return /^([01]\d|2[0-3]):([0-5]\d)$/.test(v);
-            },
-            message: props => `${props.value} is not a valid time format!`
-        }
-    },  
-
-    EndTime: {
-        type: String,   
-        required: true,
-        validate: {
-            validator: function(v) {
+            validator: function (v) {
                 return /^([01]\d|2[0-3]):([0-5]\d)$/.test(v);
             },
             message: props => `${props.value} is not a valid time format!`
         }
     },
 
-    IntakeID: {
-        type: Schema.Types.ObjectId,    
+    endTime: {
+        type: String,
+        required: true,
+        validate: {
+            validator: function (v) {
+                return /^([01]\d|2[0-3]):([0-5]\d)$/.test(v);
+            },
+            message: props => `${props.value} is not a valid time format!`
+        }
+    },
+
+    intakeId: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Intake",
-        required: true  
-    },  
+        required: true
+    },
 
 });
 

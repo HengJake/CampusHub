@@ -1,145 +1,93 @@
-import ExamSchedule from "../../models/Academic/examSchedule.model";
-import mongoose from "mongoose";
+import ExamSchedule from "../../models/Academic/examSchedule.model.js";
+import Room from "../../models/Academic/room.model.js";
+import Module from "../../models/Academic/module.model.js";
+import Lecturer from "../../models/Academic/lecturer.model.js";
+import Intake from "../../models/Academic/intake.model.js";
+import {
+    createRecord,
+    getAllRecords,
+    getRecordById,
+    updateRecord,
+    deleteRecord,
+    validateReferenceExists,
+    validateMultipleReferences,
+    controllerWrapper
+} from "../../utils/reusable.js";
+
+// Custom validation function for exam schedule data
+const validateExamScheduleData = async (data) => {
+    const { RoomID, ModuleID, LecturerID, DayOfWeek, StartTime, EndTime, IntakeID } = data;
+
+    // Check required fields
+    if (!RoomID || !ModuleID || !LecturerID || !DayOfWeek || !StartTime || !EndTime || !IntakeID) {
+        return {
+            isValid: false,
+            message: "Please provide all required fields (RoomID, ModuleID, LecturerID, DayOfWeek, StartTime, EndTime, IntakeID)"
+        };
+    }
+
+    // Validate references exist
+    const referenceValidation = await validateMultipleReferences({
+        roomID: { id: RoomID, Model: Room },
+        moduleID: { id: ModuleID, Model: Module },
+        lecturerID: { id: LecturerID, Model: Lecturer },
+        intakeID: { id: IntakeID, Model: Intake }
+    });
+
+    if (referenceValidation) {
+        return {
+            isValid: false,
+            message: referenceValidation.message
+        };
+    }
+
+    return { isValid: true };
+};
 
 // Create Exam Schedule
-export const createExamSchedule = async (req, res) => {
-    const { RoomID, ModuleID, LecturerID, DayOfWeek, StartTime, EndTime, IntakeID } = req.body;
+export const createExamSchedule = controllerWrapper(async (req, res) => {
+    return await createRecord(
+        ExamSchedule,
+        req.body,
+        "exam schedule",
+        validateExamScheduleData
+    );
+});
 
-    // Validation
-    if (!RoomID || !ModuleID || !LecturerID || !DayOfWeek || !StartTime || !EndTime || !IntakeID) {
-        return res.status(400).json({
-            success: false,
-            message: "Please provide all required fields (RoomID, ModuleID, LecturerID, DayOfWeek, StartTime, EndTime, IntakeID)",
-        });
-    }
+// Get All Exam Schedules
+export const getExamSchedules = controllerWrapper(async (req, res) => {
+    return await getAllRecords(
+        ExamSchedule,
+        "exam schedules",
+        ['RoomID', 'ModuleID', 'LecturerID', 'IntakeID']
+    );
+});
 
-    if (!mongoose.Types.ObjectId.isValid(RoomID) || !mongoose.Types.ObjectId.isValid(ModuleID) ||
-        !mongoose.Types.ObjectId.isValid(LecturerID) || !mongoose.Types.ObjectId.isValid(IntakeID)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid Object ID format",
-        });
-    }
-
-    try {
-        const newExamSchedule = new ExamSchedule({
-            RoomID,
-            ModuleID,
-            LecturerID,
-            DayOfWeek,
-            StartTime,
-            EndTime,
-            IntakeID
-        });
-
-        await newExamSchedule.save();
-
-        return res.status(201).json({
-            success: true,
-            data: newExamSchedule,
-            message: "Exam schedule created successfully",
-        });
-    } catch (error) {
-        console.error("Error creating exam schedule:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
-};
-
-// Read Exam Schedule
-export const getExamSchedules = async (req, res) => {
-    try {
-        const examSchedules = await ExamSchedule.find()
-            .populate('RoomID')
-            .populate('ModuleID')
-            .populate('LecturerID')
-            .populate('IntakeID');
-
-        return res.status(200).json({
-            success: true,
-            data: examSchedules,
-        });
-    } catch (error) {
-        console.error("Error fetching exam schedules:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }
-};
+// Get Exam Schedule by ID
+export const getExamScheduleById = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await getRecordById(
+        ExamSchedule,
+        id,
+        "exam schedule",
+        ['RoomID', 'ModuleID', 'LecturerID', 'IntakeID']
+    );
+});
 
 // Update Exam Schedule
-export const updateExamSchedule = async (req, res) => {
+export const updateExamSchedule = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    const updates = req.body;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid exam schedule ID format",
-        });
-    }
-
-    try {
-        const updatedExamSchedule = await ExamSchedule.findByIdAndUpdate(id, updates, { new: true })
-            .populate('RoomID')
-            .populate('ModuleID')
-            .populate('LecturerID')
-            .populate('IntakeID');
-
-        if (!updatedExamSchedule) {
-            return res.status(404).json({
-                success: false,
-                message: "Exam schedule not found",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            data: updatedExamSchedule,
-            message: "Exam schedule updated successfully",
-        });
-    } catch (error) {
-        console.error("Error updating exam schedule:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }
-};
+    return await updateRecord(
+        ExamSchedule,
+        id,
+        req.body,
+        "exam schedule",
+        validateExamScheduleData
+    );
+});
 
 // Delete Exam Schedule
-export const deleteExamSchedule = async (req, res) => {
+export const deleteExamSchedule = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid exam schedule ID format",
-        });
-    }
-
-    try {
-        const deletedExamSchedule = await ExamSchedule.findByIdAndDelete(id);
-
-        if (!deletedExamSchedule) {
-            return res.status(404).json({
-                success: false,
-                message: "Exam schedule not found",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Exam schedule deleted successfully",
-        });
-    } catch (error) {
-        console.error("Error deleting exam schedule:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }
-};
-                                                                                                                                                                
+    return await deleteRecord(ExamSchedule, id, "exam schedule");
+});

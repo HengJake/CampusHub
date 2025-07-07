@@ -1,65 +1,20 @@
 import mongoose from 'mongoose';
-import Intake from './intake.model';
+import Intake from './intake.model.js';
 
+// Remove redundant courseId
 const studentSchema = new mongoose.Schema({
-    UserID: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-
-    SchoolID: {
-        type: Schema.Types.ObjectId,
-        ref: 'School',
-        required: true,
-        validate: {
-            validator: async function(v) {
-                const schoolExists = await mongoose.model('School').exists({ _id: v });
-                return schoolExists;
-            },
-            message: props => 'School does not exist!'
-        }
-    },
-
-    IntakeID: {
-        type: Schema.Types.ObjectId,    
-        ref: 'Intake',
-        required: true,
-        validate: {
-            validator: async function(v) {
-                const intakeExists = await Intake.exists({ _id: v });
-                return intakeExists;
-            },
-            message: props => 'Intake does not exist!'      
-        }
-    },
-
-    CourseID: {
-        type: Schema.Types.ObjectId,
-        ref: 'Course',
-        required: true,
-        validate: {
-            validator: async function(v) {
-                const courseExists = await mongoose.model('Course').exists({ _id: v });
-                return courseExists;
-            },
-            message: props => 'Course does not exist!'
-        }   
-    },
-
-    Year: {
-        type: Number,
-        required: true,
-        min: 1,
-        max: 5, // Assuming a maximum of 5 years for a course
-        validate: {
-            validator: function(v) {
-                return Number.isInteger(v);
-            },
-            message: props => `${props.value} is not a valid year!`
-        }
-    },  
-
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    schoolId: { type: mongoose.Schema.Types.ObjectId, ref: 'School', required: true },
+    intakeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Intake', required: true },
+    // Remove courseId - get it from intake
+    year: { type: Number, required: true, min: 1, max: 5 },
+    currentSemester: { type: Number, required: true, min: 1 },
+    cgpa: { type: Number, min: 0, max: 4, default: 0 },
+    status: { 
+        type: String, 
+        enum: ['enrolled', 'active', 'graduated', 'dropped'], 
+        default: 'enrolled' 
+    }
 });
 
 const Student = mongoose.model('Student', studentSchema);

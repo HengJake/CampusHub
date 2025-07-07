@@ -1,125 +1,81 @@
 import Intake from "../../models/Academic/intake.model.js";
-import mongoose from "mongoose";
+import {
+    createRecord,
+    getAllRecords,
+    getRecordById,
+    updateRecord,
+    deleteRecord,
+    controllerWrapper
+} from "../../utils/reusable.js";
+
+// Custom validation function for intake data
+const validateIntakeData = async (data) => {
+    const { IntakeName, IntakeDescription, IntakeStartDate, IntakeEndDate } = data;
+
+    // Check required fields
+    if (!IntakeName || !IntakeDescription || !IntakeStartDate || !IntakeEndDate) {
+        return {
+            isValid: false,
+            message: "Please provide all required fields (IntakeName, IntakeDescription, IntakeStartDate, IntakeEndDate)"
+        };
+    }
+
+    // Validate dates
+    const startDate = new Date(IntakeStartDate);
+    const endDate = new Date(IntakeEndDate);
+    
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return {
+            isValid: false,
+            message: "Please provide valid dates"
+        };
+    }
+
+    if (startDate >= endDate) {
+        return {
+            isValid: false,
+            message: "Start date must be before end date"
+        };
+    }
+
+    return { isValid: true };
+};
 
 // Create Intake
-export const createIntake = async (req, res) => {
-    const { IntakeName, IntakeDescription, IntakeStartDate, IntakeEndDate } = req.body;
+export const createIntake = controllerWrapper(async (req, res) => {
+    return await createRecord(
+        Intake,
+        req.body,
+        "intake",
+        validateIntakeData
+    );
+});
 
-    // Validation
-    if (!IntakeName || !IntakeDescription || !IntakeStartDate || !IntakeEndDate) {
-        return res.status(400).json({
-            success: false,
-            message: "Please provide all required fields (IntakeName, IntakeDescription, IntakeStartDate, IntakeEndDate)",
-        });
-    }
+// Get All Intakes
+export const getIntakes = controllerWrapper(async (req, res) => {
+    return await getAllRecords(Intake, "intakes");
+});
 
-    try {
-        const newIntake = new Intake({
-            IntakeName,
-            IntakeDescription,
-            IntakeStartDate,
-            IntakeEndDate
-        });
-
-        await newIntake.save();
-
-        return res.status(201).json({
-            success: true,
-            data: newIntake,
-            message: "Intake created successfully",
-        });
-    } catch (error) {
-        console.error("Error creating intake:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
-}
-
-// Read Intakes
-export const getIntakes = async (req, res) => {
-    try {
-        const intakes = await Intake.find();
-
-        return res.status(200).json({
-            success: true,
-            data: intakes,
-        });
-    } catch (error) {
-        console.error("Error fetching intakes:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }
-};
+// Get Intake by ID
+export const getIntakeById = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await getRecordById(Intake, id, "intake");
+});
 
 // Update Intake
-export const updateIntake = async (req, res) => {
+export const updateIntake = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    const { IntakeName, IntakeDescription, IntakeStartDate, IntakeEndDate } = req.body;
-
-    // Validation
-    if (!IntakeName || !IntakeDescription || !IntakeStartDate || !IntakeEndDate) {
-        return res.status(400).json({
-            success: false,
-            message: "Please provide all required fields (IntakeName, IntakeDescription, IntakeStartDate, IntakeEndDate)",
-        });
-    }
-
-    try {
-        const updatedIntake = await Intake.findByIdAndUpdate(id, {
-            IntakeName,
-            IntakeDescription,
-            IntakeStartDate,
-            IntakeEndDate
-        }, { new: true });
-
-        if (!updatedIntake) {
-            return res.status(404).json({
-                success: false,
-                message: "Intake not found",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            data: updatedIntake,
-            message: "Intake updated successfully",
-        });
-    } catch (error) {
-        console.error("Error updating intake:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
-};
+    return await updateRecord(
+        Intake,
+        id,
+        req.body,
+        "intake",
+        validateIntakeData
+    );
+});
 
 // Delete Intake
-export const deleteIntake = async (req, res) => {
+export const deleteIntake = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid intake ID format",
-        });
-    }
-
-    try {
-        const deletedIntake = await Intake.findByIdAndDelete(id);
-
-        if (!deletedIntake) {
-            return res.status(404).json({
-                success: false,
-                message: "Intake not found",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Intake deleted successfully",
-        });
-    } catch (error) {
-        console.error("Error deleting intake:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
-};
-
+    return await deleteRecord(Intake, id, "intake");
+});

@@ -1,136 +1,87 @@
 import Department from "../../models/Academic/department.model.js";
-import mongoose from "mongoose";    
+import Room from "../../models/Academic/room.model.js";
+import {
+    createRecord,
+    getAllRecords,
+    getRecordById,
+    updateRecord,
+    deleteRecord,
+    validateReferenceExists,
+    validateMultipleReferences,
+    controllerWrapper
+} from "../../utils/reusable.js";
+
+// Custom validation function for department data
+const validateDepartmentData = async (data) => {
+    const { departmentName, DepartmentDescription, RoomID } = data;
+
+    // Check required fields
+    if (!departmentName || !DepartmentDescription || !RoomID) {
+        return {
+            isValid: false,
+            message: "Please provide all required fields (departmentName, DepartmentDescription, RoomID)"
+        };
+    }
+
+    // Validate references exist
+    const referenceValidation = await validateMultipleReferences({
+        roomID: { id: RoomID, Model: Room }
+    });
+
+    if (referenceValidation) {
+        return {
+            isValid: false,
+            message: referenceValidation.message
+        };
+    }
+
+    return { isValid: true };
+};
 
 // Create Department
-export const createDepartment = async (req, res) => {
-    const { departmentName, DepartmentDescription, RoomID } = req.body;
+export const createDepartment = controllerWrapper(async (req, res) => {
+    return await createRecord(
+        Department,
+        req.body,
+        "department",
+        validateDepartmentData
+    );
+});
 
-    // Validation
-    if (!departmentName || !DepartmentDescription || !RoomID) {
-        return res.status(400).json({
-            success: false,
-            message: "Please provide all required fields (departmentName, DepartmentDescription, RoomID)",
-        });
-    }
+// Get All Departments
+export const getDepartments = controllerWrapper(async (req, res) => {
+    return await getAllRecords(
+        Department,
+        "departments",
+        ['RoomID']
+    );
+});
 
-    if (!mongoose.Types.ObjectId.isValid(RoomID)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid RoomID format",
-        });
-    }
-
-    try {
-        const newDepartment = new Department({
-            departmentName,
-            DepartmentDescription,
-            RoomID
-        });
-
-        await newDepartment.save();
-
-        return res.status(201).json({
-            success: true,
-            data: newDepartment,
-            message: "Department created successfully",
-        });
-    } catch (error) {
-        console.error("Error creating department:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }
-};
-
-// Read Departments
-export const getDepartments = async (req, res) => {
-    try {
-        const departments = await Department.find()
-            .populate('RoomID');
-
-        return res.status(200).json({
-            success: true,
-            data: departments,
-        });
-    } catch (error) {
-        console.error("Error fetching departments:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }
-};
+// Get Department by ID
+export const getDepartmentById = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await getRecordById(
+        Department,
+        id,
+        "department",
+        ['RoomID']
+    );
+});
 
 // Update Department
-export const updateDepartment = async (req, res) => {
+export const updateDepartment = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    const updates = req.body;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid department ID format",
-        });
-    }
-
-    try {
-        const updatedDepartment = await Department.findByIdAndUpdate(id, updates, { new: true });
-
-        if (!updatedDepartment) {
-            return res.status(404).json({
-                success: false,
-                message: "Department not found",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            data: updatedDepartment,
-            message: "Department updated successfully",
-        });
-    } catch (error) {
-        console.error("Error updating department:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }
-};
+    return await updateRecord(
+        Department,
+        id,
+        req.body,
+        "department",
+        validateDepartmentData
+    );
+});
 
 // Delete Department
-export const deleteDepartment = async (req, res) => {
+export const deleteDepartment = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid department ID format",
-        });
-    }
-
-    try {
-        const deletedDepartment = await Department.findByIdAndDelete(id);
-
-        if (!deletedDepartment) {
-            return res.status(404).json({
-                success: false,
-                message: "Department not found",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Department deleted successfully",
-        });
-    } catch (error) {
-        console.error("Error deleting department:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }
-};
-
+    return await deleteRecord(Department, id, "department");
+});

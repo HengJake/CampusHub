@@ -15,4 +15,4 @@ const TimeslotSchema = new mongoose.Schema({
     ],
 });
 
-module.exports = mongoose.model('Timeslot', TimeslotSchema);
+export default mongoose.model('Timeslot', TimeslotSchema);
