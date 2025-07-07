@@ -84,7 +84,14 @@ const lecturerSchema = new mongoose.Schema({
         }],
         default: [],
         // Lecturer's office hours for student consultation
-    }
+    },
+
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true,
+        // Each lecturer belongs to a specific school
+    },
 }, {
     timestamps: true
 });

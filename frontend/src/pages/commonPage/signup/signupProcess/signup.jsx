@@ -31,7 +31,7 @@ import RegisterBox from "../../../../component/common/registerBox.jsx";
 import SignUpInput from "../../../../component/common/signUpInput.jsx";
 import EmailConfirmation from "./emailConfirmation.jsx";
 import { useShowToast } from "../../../../store/utils/toast.js";
-
+import { useUserStore } from "../../../../store/user.js";
 // add in outer, button in MODAL
 function signup({
   formData,
@@ -44,7 +44,8 @@ function signup({
   userDetails,
   setUserDetails,
 }) {
-  const { signUp } = useAuthStore();
+  const { deleteUser } = useUserStore();
+  const { signUp, authorizeUser, logout } = useAuthStore();
   const accountModal = useDisclosure();
   const emailModal = useDisclosure();
   // validation stuff
@@ -164,6 +165,36 @@ function signup({
     buttonText = "Next";
   }
 
+  const handleToLogin = async () => {
+    const accountCreated = localStorage.getItem("accountCreated") === "true";
+    const schoolCreated = localStorage.getItem("schoolCreated") === "true";
+    const paymentCreated = localStorage.getItem("paymentCreated") === "true";
+
+    if (accountCreated) {
+      const { id } = await authorizeUser();
+      deleteUser(id);
+    }
+
+    if (schoolCreated) {
+      await deleteSchool(formData.schoolId);
+    }
+
+    if (paymentCreated) {
+      await deletePayment(formData.paymentId);
+    }
+
+    localStorage.removeItem("accountCreated");
+    localStorage.removeItem("schoolCreated");
+    localStorage.removeItem("paymentCreated");
+    localStorage.removeItem("signupFormData");
+    localStorage.removeItem("signupStep");
+    localStorage.removeItem("otpCooldownEnd");
+    localStorage.removeItem("skipOtp");
+
+    logout();
+    window.location.href = "/login";
+  }
+
   return (
     <RegisterBox
       formData={formData}
@@ -186,7 +217,7 @@ function signup({
           <Text color={"white"}>Have an account? </Text>
           <ChakraLink
             as={RouterLink}
-            to={"/login-school"}
+            onClick={handleToLogin}
             textDecor={"underline"}
             color={"blue.200"}
           >

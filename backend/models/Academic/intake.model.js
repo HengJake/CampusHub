@@ -98,6 +98,13 @@ const intakeSchema = new mongoose.Schema({
         enum: ['planning', 'registration_open', 'registration_closed', 'in_progress', 'completed'],
         default: 'planning',
         // Current status of the intake period
+    },
+
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true,
+        // Each intake belongs to a specific school
     }
 }, {
     timestamps: true

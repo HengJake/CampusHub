@@ -59,6 +59,8 @@ const RegisterBox = ({
 
   return (
     <Box
+      display={"flex"}
+      flexDir={"column"}
       p={5}
       backdropFilter="blur(10px)"
       bg="rgba(0, 0, 0, 0.5)"

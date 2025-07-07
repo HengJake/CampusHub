@@ -48,6 +48,12 @@ const classScheduleSchema = new mongoose.Schema({
     },
     intakeCourseId: { type: mongoose.Schema.Types.ObjectId, ref: 'IntakeCourse', required: true }, // Add this
 
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true,
+        // Each schedule belongs to a specific school
+    },
 
 });
 

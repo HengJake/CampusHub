@@ -55,6 +55,13 @@ const roomSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
         // Soft delete flag for room status
+    },
+
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true,
+        // Each room belongs to a specific school
     }
 }, {
     timestamps: true

@@ -75,6 +75,13 @@ const intakeCourseSchema = new mongoose.Schema({
         enum: ['available', 'full', 'closed', 'cancelled'],
         default: 'available',
         // Status of this course offering in this intake
+    },
+
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true,
+        // Each intake-course combination belongs to a specific school
     }
 }, {
     timestamps: true

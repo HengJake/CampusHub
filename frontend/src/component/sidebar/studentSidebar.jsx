@@ -21,6 +21,7 @@ function Sidebar() {
       background: "none",
     },
     "&::after": {
+      pointerEvents: "none",
       content: `"${label}"`,
       opacity: 0,
       position: "absolute",

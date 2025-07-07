@@ -171,12 +171,12 @@ function login() {
           </Box>
         }
       >
-        <Text as={"span"} mr={1} textAlign={"left"}>
-          Don't have an account?
+        <Text textAlign={"left"}>
+          Don't have an account?{" "}
+          <Link color={"blue.400"} textDecor={"underline"} onClick={() => navigate("/signup")}>
+            Sign Up
+          </Link>
         </Text>
-        <Link color={"blue.400"} textDecor={"underline"} onClick={() => navigate("/signup")}>
-          Sign Up
-        </Link>
         <Box
           mt={2}
           display={"flex"}

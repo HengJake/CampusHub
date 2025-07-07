@@ -60,6 +60,13 @@ const moduleSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
         // Soft delete flag for module status
+    },
+
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true,
+        // Each module belongs to a specific school
     }
 }, {
     timestamps: true

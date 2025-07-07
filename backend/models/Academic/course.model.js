@@ -82,6 +82,13 @@ const courseSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
         // Soft delete flag for course status
+    },
+
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true,
+        // Each course belongs to a specific school
     }
 }, {
     timestamps: true

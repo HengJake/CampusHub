@@ -44,6 +44,13 @@ const departmentSchema = new mongoose.Schema({
         type: String,
         required: true,
         // Department contact phone number
+    },
+
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true,
+        // Each department belongs to a specific school
     }
 }, {
     timestamps: true

@@ -55,6 +55,13 @@ const examScheduleSchema = new mongoose.Schema({
         required: true,
         min: 1 // Duration in minutes
     },
+
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true,
+        // Each exam schedule belongs to a specific school
+    },
 });
 
 const ExamSchedule = mongoose.model('ExamSchedule', examScheduleSchema);

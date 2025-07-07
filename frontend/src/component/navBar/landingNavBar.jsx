@@ -62,7 +62,7 @@ function navBar() {
             _hover={{ bg: "blue.200" }}
             color={"blue.800"}
           >
-            <Link to="/login-school">Login</Link>
+            <Link to="/login">Login</Link>
           </Button>
           <Button backgroundColor={"blue.600"} color={"white"}>
             <Link to="/signup">Join Now</Link>
