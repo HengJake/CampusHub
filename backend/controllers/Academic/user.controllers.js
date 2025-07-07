@@ -1,252 +1,215 @@
 import User from "../../models/Academic/user.model.js";
-import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import generateToken from "../../utils/jwtUtils.js";
-import { verifyToken } from "../../utils/authMiddleware.js";
+import {
+    createRecord,
+    getAllRecords,
+    getRecordById,
+    updateRecord,
+    deleteRecord,
+    controllerWrapper
+} from "../../utils/reusable.js";
 
-export const createUser = async (req, res) => {
-  const { name, password, phoneNumber, email, role, twoFA_enabled } = req.body;
+const validateUserData = async (data) => {
+    const { name, password, phoneNumber, email, role, twoFA_enabled } = data;
 
-  // Validate required fields
-  if (!name || !password || !phoneNumber || !email || !role) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Please provide all required fields" });
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  // validate phone number
-  // validate password
-  // validate email
-
-  const newUser = new User({
-    name,
-    password: hashedPassword,
-    phoneNumber,
-    email,
-    role,
-    twoFA_enabled: twoFA_enabled || false,
-  });
-
-  try {
-    await newUser.save();
-    res.status(201).json({
-      success: true,
-      data: newUser,
-      message: "User created successfully",
-    });
-  } catch (error) {
-    console.error("Error in createUser:", error.message);
-
-    // Handle duplicate email/phone error
-    if (error.code === 11000) {
-      const duplicateKey = Object.keys(error.keyPattern)[0]; // e.g., 'email' or 'phoneNumber'
-
-      return res.status(409).json({
-        success: false,
-        message: `${
-          duplicateKey.charAt(0).toUpperCase() + duplicateKey.slice(1)
-        } already exists`,
-      });
+    // Check required fields
+    if (!name) {
+        return {
+            isValid: false,
+            message: "name is required"
+        };
+    }
+    if (!password) {
+        return {
+            isValid: false,
+            message: "password is required"
+        };
+    }
+    if (!phoneNumber) {
+        return {
+            isValid: false,
+            message: "phoneNumber is required"
+        };
+    }
+    if (!email) {
+        return {
+            isValid: false,
+            message: "email is required"
+        };
+    }
+    if (!role) {
+        return {
+            isValid: false,
+            message: "role is required"
+        };
     }
 
-    res.status(500).json({ success: false, message: "Server Error" });
-  }
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return {
+            isValid: false,
+            message: "Invalid email format"
+        };
+    }
+
+    // Validate phone number format (basic validation)
+    const phoneRegex = /^\+?[\d\s\-\(\)]+$/;
+    if (!phoneRegex.test(phoneNumber)) {
+        return {
+            isValid: false,
+            message: "Invalid phone number format"
+        };
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+        return {
+            isValid: false,
+            message: "Password must be at least 6 characters long"
+        };
+    }
+
+    // Validate role enum values
+    const validRoles = ["student", "lecturer", "schoolAdmin", "campusHubAdmin"];
+    if (!validRoles.includes(role)) {
+        return {
+            isValid: false,
+            message: "role must be one of: student, lecturer, schoolAdmin, campusHubAdmin"
+        };
+    }
+
+    return { isValid: true };
 };
 
-export const getUsers = async (req, res) => {
-  try {
-    const users = await User.find({});
+const validateUserUpdateData = async (data) => {
+    const { name, phoneNumber, email, role, twoFA_enabled } = data;
 
-    return res.status(200).json({
-      success: true,
-      data: users,
-    });
-  } catch (error) {
-    console.error("Login error:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-};
-
-export const getUserById = async (req, res) => {
-  const { id } = req.params;
-
-  // Validate ObjectId format
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid user ID format",
-    });
-  }
-
-  try {
-    const user = await User.findById(id).select("-password"); // Exclude password
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: user,
-    });
-  } catch (error) {
-    console.error("Error fetching user:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
-
-export const checkExistedUserDetails = async (req, res) => {
-  try {
-    const { name, email, phoneNumber } = req.body;
-
-    if (!name && !email && !phoneNumber) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide username, email, or phoneNumber to check.",
-      });
-    }
-
-    const takenFields = {};
-
-    if (name) {
-      const userByUsername = await User.findOne({ name }).select("_id");
-      if (userByUsername) takenFields.name = true;
-    }
-
+    // Validate email format if provided
     if (email) {
-      const userByEmail = await User.findOne({ email }).select("_id");
-      if (userByEmail) takenFields.email = true;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return {
+                isValid: false,
+                message: "Invalid email format"
+            };
+        }
     }
 
+    // Validate phone number format if provided
     if (phoneNumber) {
-      const userByPhone = await User.findOne({ phoneNumber }).select("_id");
-      if (userByPhone) takenFields.phoneNumber = true;
+        const phoneRegex = /^\+?[\d\s\-\(\)]+$/;
+        if (!phoneRegex.test(phoneNumber)) {
+            return {
+                isValid: false,
+                message: "Invalid phone number format"
+            };
+        }
     }
 
-    const anyTaken = Object.keys(takenFields).length > 0;
+    // Validate role enum values if provided
+    if (role) {
+        const validRoles = ["student", "lecturer", "schoolAdmin", "campusHubAdmin"];
+        if (!validRoles.includes(role)) {
+            return {
+                isValid: false,
+                message: "role must be one of: student, lecturer, schoolAdmin, campusHubAdmin"
+            };
+        }
+    }
 
-    return res.status(200).json({
-      success: true,
-      exist: anyTaken,
-      takenFields,
-      message: anyTaken
-        ? "User details are already taken."
-        : "All provided details are available.",
-    });
-  } catch (error) {
-    console.error("Error checking user existence:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
+    return { isValid: true };
 };
 
-export const modifyUser = async (req, res) => {
-  const { id } = req.params;
-  const userDetails = req.body;
-
-  // Validate ObjectId format
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid user ID format",
-    });
-  }
-
-  // Check for duplicate email or phoneNumber
-  try {
-    if (userDetails.email) {
-      const emailExists = await User.findOne({
-        email: userDetails.email,
-        _id: { $ne: id },
-      });
-      if (emailExists) {
-        return res.status(409).json({
-          success: false,
-          message: "Email is already in use by another user.",
-        });
-      }
-    }
-    if (userDetails.phoneNumber) {
-      const phoneExists = await User.findOne({
-        phoneNumber: userDetails.phoneNumber,
-        _id: { $ne: id },
-      });
-      if (phoneExists) {
-        return res.status(409).json({
-          success: false,
-          message: "Phone number is already in use by another user.",
-        });
-      }
+export const createUser = controllerWrapper(async (req, res) => {
+    const userData = { ...req.body };
+    
+    // Hash password before saving
+    if (userData.password) {
+        userData.password = await bcrypt.hash(userData.password, 10);
     }
 
-    const updatedUser = await User.findByIdAndUpdate(id, userDetails, {
-      new: true,
-      runValidators: true,
-    });
+    return await createRecord(
+        User,
+        userData,
+        "user",
+        validateUserData
+    );
+});
 
-    if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+export const getAllUsers = controllerWrapper(async (req, res) => {
+    return await getAllRecords(User, "user");
+});
+
+export const getUserById = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await getRecordById(User, id, "user");
+});
+
+export const updateUser = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    
+    // Hash password if it's being updated
+    if (req.body.password) {
+        req.body.password = await bcrypt.hash(req.body.password, 10);
     }
+    
+    return await updateRecord(User, id, req.body, "user", validateUserUpdateData);
+});
 
-    return res.status(200).json({
-      success: true,
-      data: updatedUser,
-      message: "User updated successfully",
-    });
-  } catch (error) {
-    console.error("Error updating user:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
+export const deleteUser = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await deleteRecord(User, id, "user");
+});
 
-export const deleteUser = async (req, res) => {
-  const { id } = req.params;
+export const checkExistedUserDetails = controllerWrapper(async (req, res) => {
+    try {
+        const { name, email, phoneNumber } = req.body;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid user ID format",
-    });
-  }
+        if (!name && !email && !phoneNumber) {
+            return {
+                success: false,
+                message: "Please provide username, email, or phoneNumber to check.",
+                statusCode: 400
+            };
+        }
 
-  try {
-    const deletedUser = await User.findByIdAndDelete(id);
+        const takenFields = {};
 
-    if (!deletedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+        if (name) {
+            const userByUsername = await User.findOne({ name }).select("_id");
+            if (userByUsername) takenFields.name = true;
+        }
+
+        if (email) {
+            const userByEmail = await User.findOne({ email }).select("_id");
+            if (userByEmail) takenFields.email = true;
+        }
+
+        if (phoneNumber) {
+            const userByPhone = await User.findOne({ phoneNumber }).select("_id");
+            if (userByPhone) takenFields.phoneNumber = true;
+        }
+
+        const anyTaken = Object.keys(takenFields).length > 0;
+
+        return {
+            success: true,
+            data: {
+                exist: anyTaken,
+                takenFields
+            },
+            message: anyTaken
+                ? "User details are already taken."
+                : "All provided details are available.",
+            statusCode: 200
+        };
+    } catch (error) {
+        console.error("Error checking user existence:", error.message);
+        return {
+            success: false,
+            message: "Server error - checkExistedUserDetails method",
+            statusCode: 500
+        };
     }
-
-    return res.status(200).json({
-      success: true,
-      message: "User deleted successfully",
-    });
-  } catch (error) {
-    console.error("Error deleting user:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
+});

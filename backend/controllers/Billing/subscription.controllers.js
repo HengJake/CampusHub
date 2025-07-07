@@ -1,74 +1,92 @@
+import {
+  createRecord,
+  getAllRecords,
+  getRecordById,
+  updateRecord,
+  deleteRecord,
+  validateReferenceExists,
+  validateMultipleReferences,
+  controllerWrapper
+} from "../../utils/reusable.js";
+
 import Subscription from "../../models/Billing/subscription.model.js";
 
-export const createSubscription = async (req, res) => {
-  const paymentDetails = req.body;
+const validateSubscriptionData = async (data) => {
+  const { plan, price, billingInterval } = data;
 
-  try {
-    const newSubscription = new Subscription({
-      schoolID: paymentDetails.SchoolID,
-      plan: paymentDetails.Plan,
-      price: paymentDetails.Price,
-      billingInterval: paymentDetails.BillingInterval,
-    });
-
-    const savedSubscription = await newSubscription.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Subscription created successfully",
-      data: savedSubscription,
-    });
-  } catch (error) {
-    console.error("Error creating subscription:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to create subscription",
-      error: error.message,
-    });
+  // Check required fields
+  if (!plan) {
+    return {
+      isValid: false,
+      message: "plan is required"
+    };
   }
+  if (!price) {
+    return {
+      isValid: false,
+      message: "price is required"
+    };
+  }
+  if (!billingInterval) {
+    return {
+      isValid: false,
+      message: "billingInterval is required"
+    };
+  }
+
+  // Validate plan enum values
+  const validPlans = ["Basic", "Standard", "Premium"];
+  if (!validPlans.includes(plan)) {
+    return {
+      isValid: false,
+      message: "plan must be one of: Basic, Standard, Premium"
+    };
+  }
+
+  // Validate billing interval enum values
+  const validIntervals = ["Monthly", "Yearly"];
+  if (!validIntervals.includes(billingInterval)) {
+    return {
+      isValid: false,
+      message: "billingInterval must be one of: Monthly, Yearly"
+    };
+  }
+
+  // Validate price is positive
+  if (price <= 0) {
+    return {
+      isValid: false,
+      message: "price must be greater than 0"
+    };
+  }
+
+  return { isValid: true };
 };
 
-export const readSubscription = async (req, res) => {
-  const { schoolId } = req.params;
+export const createSubscription = controllerWrapper(async (req, res) => {
+  return await createRecord(
+    Subscription,
+    req.body,
+    "subscription",
+    validateSubscriptionData
+  );
+});
 
-  try {
-    const subscription = await Subscription.findOne({ SchoolID: schoolId });
+export const getAllSubscription = controllerWrapper(async (req, res) => {
+  return await getAllRecords(Subscription, "subscription");
+});
 
-    if (!subscription) {
-      return res.status(404).json({
-        success: false,
-        message: "Subscription not found",
-      });
-    }
+export const getSubscriptionById = controllerWrapper(async (req, res) => {
+  const { id } = req.params;
+  return await getRecordById(Subscription, id, "subscription");
+});
 
-    res.status(200).json({
-      success: true,
-      data: subscription,
-    });
-  } catch (error) {
-    console.error("Error fetching subscription:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch subscription",
-      error: error.message,
-    });
-  }
-};
+export const updateSubscription = controllerWrapper(async (req, res) => {
+  const { id } = req.params;
+  return await updateRecord(Subscription, id, req.body, "subscription", validateSubscriptionData);
+});
 
-export const readAllSubscriptions = async (req, res) => {
-  try {
-    const subscriptions = await Subscription.find();
-
-    res.status(200).json({
-      success: true,
-      data: subscriptions,
-    });
-  } catch (error) {
-    console.error("Error fetching subscriptions:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch subscriptions",
-      error: error.message,
-    });
-  }
-};
+export const deleteSubscription = controllerWrapper(async (req, res) => {
+  const { id } = req.params;
+  return await deleteRecord(Subscription, id, "subscription");
+});

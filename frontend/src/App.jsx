@@ -60,6 +60,9 @@ import LNavbar from "./component/navBar/landingNavBar";
 import RNavBar from "./component/navBar/registrationNavBar";
 import SNavBar from "./component/navBar/studentNavBar";
 
+// CL testing animation
+import Test from "./pages/test.jsx";
+
 function App() {
   const path = useLocation().pathname;
   const [RenderedNavbar, setRenderedNavbar] = useState(null);
@@ -70,7 +73,9 @@ function App() {
 
   // Determine role from path
   const detectRoleFromPath = (path) => {
-    if (
+    if (path === "/test") {
+      return "test";
+    } else if (
       path === "/login" ||
       path === "/signup"
     ) {
@@ -120,6 +125,11 @@ function App() {
     const role = detectRoleFromPath(path);
 
     switch (role) {
+      case "test":
+        setRenderedNavbar(null);
+        setMargin("0");
+        setBgColor("brand.defaultBg");
+        break;
       case "register":
         setRenderedNavbar(<RNavBar />);
         setMargin("0");
@@ -188,6 +198,7 @@ function App() {
         </Button>  */}
 
         <Routes>
+          <Route path="/test" element={<Test />} />
           {/* Common Pages */}
           <Route path="/" element={<Landing />} />
           <Route path="/service" element={<Service />} />

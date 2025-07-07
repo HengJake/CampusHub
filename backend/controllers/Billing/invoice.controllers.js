@@ -12,6 +12,7 @@ import {
     validateMultipleReferences,
     controllerWrapper
 } from "../../utils/reusable.js";
+import { get } from "mongoose";
 
 const validateInvoiceData = async (data) => {
     const { paymentID, subscriptionID } = data;
@@ -53,4 +54,23 @@ export const createInvoice = controllerWrapper(async (req, res) => {
         "invoice",
         validateInvoiceData
     );
-})
+});
+
+export const getAllInvoice = controllerWrapper(async (req, res) => {
+    return await getAllRecords(Invoice, "invoice", ["paymentID", "subscriptionID"]);
+});
+
+export const getInvoiceById = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await getRecordById(Invoice, id, "invoice", ["paymentID", "subscriptionID"]);
+});
+
+export const updateInvoice = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await updateRecord(Invoice, id, req.body, "invoice", validateInvoiceData);
+});
+
+export const deleteInvoice = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await deleteRecord(Invoice, id, "invoice");
+});

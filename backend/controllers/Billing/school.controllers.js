@@ -11,75 +11,51 @@ import {
     controllerWrapper
 } from "../../utils/reusable.js";
 
-export const createSchool = async (req, res) => {
-    const schoolDetails = req.body;
-
-    try {
-
-        const user = await User.findById(schoolDetails.UserID);
-        if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid UserID: user not found",
-            });
-        }
-
-        const existingSchool = await School.findOne({
-            name: schoolDetails.Name,
-            address: schoolDetails.Address,
-            city: schoolDetails.City,
-            country: schoolDetails.Country,
-        });
-
-        if (existingSchool) {
-            return res.status(409).json({
-                success: false,
-                message: "A school with the same details already exists.",
-            });
-        }
-
-        const newSchool = new School({
-            UserID: schoolDetails.UserID,
-            Name: schoolDetails.Name,
-            Address: schoolDetails.Address,
-            City: schoolDetails.City,
-            Country: schoolDetails.Country,
-            Status: schoolDetails.Status || "Active",
-        });
-
-        const savedSchool = await newSchool.save();
-
-        res.status(201).json({
-            success: true,
-            message: "School created successfully",
-            data: savedSchool,
-        });
-    } catch (error) {
-        console.error("Error creating school:", error);
-        res.status(500).json({
-            success: false,
-            message: "Failed to create school",
-            error: error.message,
-        });
-    }
-};
-
-
-// =========NEW ERA==================
-const validatePaymentData = async (data) => {
-    const { UserID } = data;
+const validateSchoolData = async (data) => {
+    const { userID, name, address, city, country, status } = data;
 
     // Check required fields
-    if (!UserID) {
+    if (!userID) {
         return {
             isValid: false,
-            message: "UserID is required"
+            message: "userID is required"
+        };
+    }
+    if (!name) {
+        return {
+            isValid: false,
+            message: "name is required"
+        };
+    }
+    if (!address) {
+        return {
+            isValid: false,
+            message: "address is required"
+        };
+    }
+    if (!city) {
+        return {
+            isValid: false,
+            message: "city is required"
+        };
+    }
+    if (!country) {
+        return {
+            isValid: false,
+            message: "country is required"
         };
     }
 
-    // Validate references exist
-    const referenceValidation = await validateReferenceExists(UserID, User, "UserID");
+    // Validate status enum values
+    if (status && !["Active", "Inactive"].includes(status)) {
+        return {
+            isValid: false,
+            message: "status must be either 'Active' or 'Inactive'"
+        };
+    }
 
+    // Validate userID reference exists
+    const referenceValidation = await validateReferenceExists(userID, User, "userID");
     if (referenceValidation) {
         return {
             isValid: false,
@@ -90,7 +66,30 @@ const validatePaymentData = async (data) => {
     return { isValid: true };
 };
 
+export const createSchool = controllerWrapper(async (req, res) => {
+    return await createRecord(
+        School,
+        req.body,
+        "school",
+        validateSchoolData
+    );
+});
+
+export const getAllSchool = controllerWrapper(async (req, res) => {
+    return await getAllRecords(School, "school", ["userID"]);
+});
+
+export const getSchoolById = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await getRecordById(School, id, "school", ["userID"]);
+});
+
+export const updateSchool = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await updateRecord(School, id, req.body, "school", validateSchoolData);
+});
+
 export const deleteSchool = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(School, id, "school");
-})
+});

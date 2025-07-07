@@ -1,129 +1,87 @@
 import Course from '../../models/Academic/course.model.js';
-import mongoose from 'mongoose';
+import Module from '../../models/Academic/module.model.js';
+import {
+    createRecord,
+    getAllRecords,
+    getRecordById,
+    updateRecord,
+    deleteRecord,
+    validateReferenceExists,
+    validateMultipleReferences,
+    controllerWrapper
+} from "../../utils/reusable.js";
 
-//Create Course
-export const createCourse = async (req, res) => {
-    const { CourseName, Duration, ModuleID} = req.body;
+// Custom validation function for course data
+const validateCourseData = async (data) => {
+    const { CourseName, Duration, ModuleID } = data;
 
-    // Validate required fields
-    if (!CourseName || !Duration || !ModuleID ) {
-        return res.status(400).json({
-            success: false,
-            message: "Please provide all required fields (CourseName, Duration, ModuleID)",
-        });
+    // Check required fields
+    if (!CourseName || !Duration || !ModuleID) {
+        return {
+            isValid: false,
+            message: "Please provide all required fields (CourseName, Duration, ModuleID)"
+        };
     }
 
-    try {
-        const newCourse = new Course({
-            CourseName,
-            Duration,
-            ModuleID    
-        });
+    // Validate references exist
+    const referenceValidation = await validateMultipleReferences({
+        moduleID: { id: ModuleID, Model: Module }
+    });
 
-        await newCourse.save();
-
-        return res.status(201).json({
-            success: true,
-            data: newCourse,
-            message: "Course created successfully"
-        });
-    } catch (error) {
-        console.error("Error creating course:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
+    if (referenceValidation) {
+        return {
+            isValid: false,
+            message: referenceValidation.message
+        };
     }
+
+    return { isValid: true };
 };
 
-//Read Course
-export const getCourses = async (req, res) => {
-    try {
-        const courses = await Course.find()
-            .populate('ModuleID');
+// Create Course
+export const createCourse = controllerWrapper(async (req, res) => {
+    return await createRecord(
+        Course,
+        req.body,
+        "course",
+        validateCourseData
+    );
+});
 
-        return res.status(200).json({
-            success: true,
-            data: courses,
-        });
-    } catch (error) {
-        console.error("Error fetching courses:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
-    }
-};
+// Get All Courses
+export const getCourses = controllerWrapper(async (req, res) => {
+    return await getAllRecords(
+        Course,
+        "courses",
+        ['ModuleID']
+    );
+});
 
-//Update Course
-export const updateCourse = async (req, res) => {
+// Get Course by ID
+export const getCourseById = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    const updates = req.body;
+    return await getRecordById(
+        Course,
+        id,
+        "course",
+        ['ModuleID']
+    );
+});
 
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid course ID format"
-        });
-    }
-
-    try {
-        const updatedCourse = await Course.findByIdAndUpdate(id, updates, { new: true })
-            .populate('ModuleID');
-
-        if (!updatedCourse) {
-            return res.status(404).json({
-                success: false,
-                message: "Course not found"
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            data: updatedCourse,
-            message: "Course updated successfully"
-        });
-    } catch (error) {
-        console.error("Error updating course:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
-    }
-};
-
-//Delete Course
-export const deleteCourse = async (req, res) => {
+// Update Course
+export const updateCourse = controllerWrapper(async (req, res) => {
     const { id } = req.params;
+    return await updateRecord(
+        Course,
+        id,
+        req.body,
+        "course",
+        validateCourseData
+    );
+});
 
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid course ID format"
-        });
-    }
-
-    try {
-        const deletedCourse = await Course.findByIdAndDelete(id);
-
-        if (!deletedCourse) {
-            return res.status(404).json({
-                success: false,
-                message: "Course not found"
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Course deleted successfully"
-        });
-    } catch (error) {
-        console.error("Error deleting course:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
-    }
-};
+// Delete Course
+export const deleteCourse = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await deleteRecord(Course, id, "course");
+});

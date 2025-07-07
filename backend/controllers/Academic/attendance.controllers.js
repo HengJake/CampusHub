@@ -1,129 +1,103 @@
-import Attendace from "../../models/Academic/attendance.model";
-import mongoose from "mongoose";
+import Attendance from "../../models/Academic/attendance.model.js";
+import Student from "../../models/Academic/student.model.js";
+import ClassSchedule from "../../models/Academic/classSchedule.model.js";
+import {
+    createRecord,
+    getAllRecords,
+    getRecordById,
+    updateRecord,
+    deleteRecord,
+    validateMultipleReferences,
+    controllerWrapper
+} from "../../utils/reusable.js";
 
-//Create Attendance Record
-export const createAttendance = async (req, res) => {
-    const { StudentID, ScheduleID, Status, Date } = req.body;
+const validateAttendanceData = async (data) => {
+    const { StudentID, ScheduleID, Status, Date } = data;
 
-    // Validation
-    if (!StudentID || !ScheduleID || !Status || !Date) {
-        return res.status(400).json({
-            success: false,
-            message: "Please provide all required fields (StudentID, ScheduleID, Status, Date)",
-        });
+    // Check required fields
+    if (!StudentID) {
+        return {
+            isValid: false,
+            message: "StudentID is required"
+        };
+    }
+    if (!ScheduleID) {
+        return {
+            isValid: false,
+            message: "ScheduleID is required"
+        };
+    }
+    if (!Status) {
+        return {
+            isValid: false,
+            message: "Status is required"
+        };
+    }
+    if (!Date) {
+        return {
+            isValid: false,
+            message: "Date is required"
+        };
     }
 
-    if (!["present", "absent", "late"].includes(Status)) {
-        return res.status(400).json({
-            success: false,
-            message: "Status must be either 'present', 'absent', or 'late'",
-        });
+    // Validate Status enum values
+    const validStatuses = ["present", "absent", "late"];
+    if (!validStatuses.includes(Status)) {
+        return {
+            isValid: false,
+            message: "Status must be one of: present, absent, late"
+        };
     }
 
-    try {
-        const newAttendance = new Attendace({
-            StudentID,
-            ScheduleID,
-            Status,
-            Date,
-        });
-
-        await newAttendance.save();
-
-        return res.status(201).json({
-            success: true,
-            data: newAttendance,
-            message: "Attendance record created successfully",
-        });
-    } catch (error) {
-        console.error("Error creating attendance record:", error.message);
-
-        if (error.code === 11000) {
-            return res.status(409).json({
-                success: false,
-                message: "Attendance record already exists for this student and schedule",
-            });
-        }
-
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
+    // Validate Date format
+    const dateObj = new Date(Date);
+    if (isNaN(dateObj.getTime())) {
+        return {
+            isValid: false,
+            message: "Invalid date format"
+        };
     }
+
+    // Validate references exist
+    const referenceValidation = await validateMultipleReferences({
+        StudentID: { id: StudentID, Model: Student },
+        ScheduleID: { id: ScheduleID, Model: ClassSchedule }
+    });
+
+    if (referenceValidation) {
+        return {
+            isValid: false,
+            message: referenceValidation.message
+        };
+    }
+
+    return { isValid: true };
 };
 
-//Read Attendance Record
-export const getAttendance = async (req, res) => {
-    try {
-        const attendanceRecords = await Attendace.find()
-            .populate('StudentID')
-            .populate('ScheduleID');
+export const createAttendance = controllerWrapper(async (req, res) => {
+    return await createRecord(
+        Attendance,
+        req.body,
+        "attendance",
+        validateAttendanceData
+    );
+});
 
-        return res.status(200).json({
-            success: true,
-            data: attendanceRecords,
-            message: "Attendance records retrieved successfully",
-        });
-    } catch (error) {
-        console.error("Error retrieving attendance records:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }
-};
+export const getAllAttendance = controllerWrapper(async (req, res) => {
+    return await getAllRecords(Attendance, "attendance", ["StudentID", "ScheduleID"]);
+});
 
-//Update Attendance Record
-export const updateAttendance = async (req, res) => {
+export const getAttendanceById = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    const updates = req.body;
+    return await getRecordById(Attendance, id, "attendance", ["StudentID", "ScheduleID"]);
+});
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ success: false, message: "Invalid attendance ID format" });
-    }
-
-    try {
-        const updatedAttendance = await Attendace.findByIdAndUpdate(id, updates, {
-            new: true,
-            runValidators: true
-        });
-
-        if (!updatedAttendance) {
-            return res.status(404).json({ success: false, message: "Attendance record not found" });
-        }
-
-        return res.status(200).json({
-            success: true,
-            data: updatedAttendance,
-            message: "Attendance record updated successfully",
-        });
-    } catch (error) {
-        console.error("Error updating attendance record:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
-};
-
-//Delete Attendance Record
-export const deleteAttendance = async (req, res) => {
+export const updateAttendance = controllerWrapper(async (req, res) => {
     const { id } = req.params;
+    return await updateRecord(Attendance, id, req.body, "attendance", validateAttendanceData);
+});
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ success: false, message: "Invalid attendance ID format" });
-    }
-
-    try {
-        const deletedAttendance = await Attendace.findByIdAndDelete(id);
-
-        if (!deletedAttendance) {
-            return res.status(404).json({ success: false, message: "Attendance record not found" });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Attendance record deleted successfully",
-        });
-    } catch (error) {
-        console.error("Error deleting attendance record:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
-};
+export const deleteAttendance = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await deleteRecord(Attendance, id, "attendance");
+});

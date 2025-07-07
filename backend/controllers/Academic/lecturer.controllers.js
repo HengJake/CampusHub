@@ -1,135 +1,96 @@
-import Lecturer from "../../models/Academic/lecturer.model";    
-import mongoose from "mongoose";
+import Lecturer from "../../models/Academic/lecturer.model.js";
+import Department from "../../models/Academic/department.model.js";
+import {
+    createRecord,
+    getAllRecords,
+    getRecordById,
+    updateRecord,
+    deleteRecord,
+    validateReferenceExists,
+    validateMultipleReferences,
+    controllerWrapper
+} from "../../utils/reusable.js";
 
-//Create Lecturer
-export const createLecturer = async (req, res) => {
-    const { LecturerName, LecturerEmail, DepartmentID } = req.body;
+// Custom validation function for lecturer data
+const validateLecturerData = async (data) => {
+    const { LecturerName, LecturerEmail, DepartmentID } = data;
 
-    // Validate required fields
+    // Check required fields
     if (!LecturerName || !LecturerEmail || !DepartmentID) {
-        return res.status(400).json({
-            success: false,
-            message: "Please provide all required fields (LecturerName, LecturerEmail, DepartmentID)",
-        });
+        return {
+            isValid: false,
+            message: "Please provide all required fields (LecturerName, LecturerEmail, DepartmentID)"
+        };
     }
 
-    if (!mongoose.Types.ObjectId.isValid(DepartmentID)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid DepartmentID format",
-        });
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(LecturerEmail)) {
+        return {
+            isValid: false,
+            message: "Please provide a valid email address"
+        };
     }
 
-    try {
-        const newLecturer = new Lecturer({
-            LecturerName,
-            LecturerEmail,
-            DepartmentID    
-        });
+    // Validate references exist
+    const referenceValidation = await validateMultipleReferences({
+        departmentID: { id: DepartmentID, Model: Department }
+    });
 
-        await newLecturer.save();
-
-        return res.status(201).json({
-            success: true,
-            data: newLecturer,
-            message: "Lecturer created successfully"
-        });
-    } catch (error) {
-        console.error("Error creating lecturer:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
+    if (referenceValidation) {
+        return {
+            isValid: false,
+            message: referenceValidation.message
+        };
     }
+
+    return { isValid: true };
 };
 
-//Read Lecturer
-export const getLecturers = async (req, res) => {
-    try {
-        const lecturers = await Lecturer.find()
-            .populate('DepartmentID');
+// Create Lecturer
+export const createLecturer = controllerWrapper(async (req, res) => {
+    return await createRecord(
+        Lecturer,
+        req.body,
+        "lecturer",
+        validateLecturerData
+    );
+});
 
-        return res.status(200).json({
-            success: true,
-            data: lecturers,
-        });
-    } catch (error) {
-        console.error("Error fetching lecturers:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
-    }
-};
+// Get All Lecturers
+export const getLecturers = controllerWrapper(async (req, res) => {
+    return await getAllRecords(
+        Lecturer,
+        "lecturers",
+        ['DepartmentID']
+    );
+});
 
-//Update Lecturer
-export const updateLecturer = async (req, res) => {
+// Get Lecturer by ID
+export const getLecturerById = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    const updates = req.body;
+    return await getRecordById(
+        Lecturer,
+        id,
+        "lecturer",
+        ['DepartmentID']
+    );
+});
 
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid lecturer ID format"
-        });
-    }
-
-    try {
-        const updatedLecturer = await Lecturer.findByIdAndUpdate(id, updates, { new: true });
-
-        if (!updatedLecturer) {
-            return res.status(404).json({
-                success: false,
-                message: "Lecturer not found"
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            data: updatedLecturer,
-            message: "Lecturer updated successfully"
-        });
-    } catch (error) {
-        console.error("Error updating lecturer:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
-    }
-};
+// Update Lecturer
+export const updateLecturer = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await updateRecord(
+        Lecturer,
+        id,
+        req.body,
+        "lecturer",
+        validateLecturerData
+    );
+});
 
 // Delete Lecturer
-export const deleteLecturer = async (req, res) => {
+export const deleteLecturer = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid lecturer ID format"
-        });
-    }
-
-    try {
-        const deletedLecturer = await Lecturer.findByIdAndDelete(id);
-
-        if (!deletedLecturer) {
-            return res.status(404).json({
-                success: false,
-                message: "Lecturer not found"
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Lecturer deleted successfully"
-        });
-    } catch (error) {
-        console.error("Error deleting lecturer:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error"
-        });
-    }
-};
+    return await deleteRecord(Lecturer, id, "lecturer");
+});

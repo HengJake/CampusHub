@@ -21,4 +21,4 @@ const ResourceSchema = new mongoose.Schema({
     status: { type: Boolean, default: true }, // active or inactive
   });
   
-  module.exports = mongoose.model('Resource', ResourceSchema);
+  export default mongoose.model('Resource', ResourceSchema);

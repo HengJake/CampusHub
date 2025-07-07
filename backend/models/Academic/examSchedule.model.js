@@ -1,60 +1,60 @@
 import mongoose from 'mongoose';
-import Course from './course.model';
+import Course from './course.model.js';
 
 const examScheduleSchema = new mongoose.Schema({
-    IntakeID: {
-        type: Schema.Types.ObjectId,
+    intakeId: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Intake",
         required: true
-    }, 
+    },
 
-    CourseID: {
-        type: Schema.Types.ObjectId,
+    courseId: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Course",
         required: true
-    },  
+    },
 
-    ModuleID: {
-        type: Schema.Types.ObjectId,   
+    moduleId: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Module",
         required: true
     },
 
-    ExamDate: {
+    examDate: {
         type: String,
         required: true,
         validate: {
-            validator: function(v) {
+            validator: function (v) {
                 return /^\d{4}-\d{2}-\d{2}$/.test(v);
             },
             message: props => `${props.value} is not a valid date format!`
-        }        
+        }
     },
 
-    ExamTime: {
+    examTime: {
         type: String,
         required: true,
         validate: {
-            validator: function(v) {
+            validator: function (v) {
                 return /^([01]\d|2[0-3]):([0-5]\d)$/.test(v);
             },
             message: props => `${props.value} is not a valid time format!`
-        }   
+        }
     },
 
-    RoomID: {
-        type: Schema.Types.ObjectId,    
+    roomId: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Room",
         required: true
-    },  
+    },
 
-    Invigilators: {
-        type: [Schema.Types.ObjectId],
+    invigilators: {
+        type: [mongoose.Schema.Types.ObjectId],
         ref: "Lecturer",
         required: true
     },
 
-    DurationMinute: {
+    durationMinute: {
         type: Number,
         required: true,
         min: 1 // Duration in minutes
