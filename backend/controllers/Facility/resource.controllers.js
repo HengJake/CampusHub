@@ -24,12 +24,6 @@ const validateResourceData = async (data) => {
     };
   }
 
-  if (!type) {
-    return {
-      isValid: false,
-      message: "type is required"
-    };
-  }
 
   // Validate references exist
   const referenceValidation = await validateMultipleReferences({
