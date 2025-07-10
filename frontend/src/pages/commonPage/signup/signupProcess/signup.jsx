@@ -72,6 +72,9 @@ function signup({
 
   // handle method
   const handleSignup = async () => {
+
+    handleNextClick();
+
     let success = true;
     let toastId = "sign-up";
 

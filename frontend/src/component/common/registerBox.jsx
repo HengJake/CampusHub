@@ -19,6 +19,7 @@ const RegisterBox = ({
   skipOtp = false,
   formData,
   paymentId = "",
+  handleNextClick = null,
   ...props
 }) => {
   const { authorizeUser, logout } = useAuthStore();

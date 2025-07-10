@@ -27,7 +27,9 @@ function selectPlan({
   skipOtp,
   userPlan,
   setUserPlan,
-  formData
+  formData,
+  isWaiting,
+  handleNextClick
 }) {
 
   const showToast = useShowToast();
@@ -60,6 +62,14 @@ function selectPlan({
 
 
   const handlePlan = async () => {
+    handleNextClick(); // Move handleNextClick after validation
+
+    if (!userPlan.selectedPlan || !userPlan.billingInterval) {
+      showToast.error("Please select a plan", "", "plan-error");
+      return; // Return early if validation fails
+    }
+
+
     let id = subscriptionList[userPlan.billingInterval].find((item) => item.plan === userPlan.selectedPlan)._id;
 
     // Create the updated userPlan with planId
@@ -81,6 +91,7 @@ function selectPlan({
       onBack={onBack}
       buttonClick={handlePlan}
       skipOtp={skipOtp}
+      isWaiting={isWaiting}
     >
       <VStack>
         <ChakraLink

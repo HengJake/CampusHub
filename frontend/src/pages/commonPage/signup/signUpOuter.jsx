@@ -227,6 +227,8 @@ function signUpOuter() {
 
       {step === 3 && (
         <SelectPlan
+          isWaiting={isWaiting}
+          handleNextClick={handleNextClick}
           formData={formData}
           handleData={handleData}
           onNext={nextStep}
@@ -239,13 +241,14 @@ function signUpOuter() {
 
       {step === 4 && (
         <Payment
+          isWaiting={isWaiting}
+          handleNextClick={handleNextClick}
           formData={formData}
           handleData={handleData}
           onNext={nextStep}
           onBack={prevStep}
           userPayment={userPayment}
           setUserPayment={setUserPayment}
-          isWaiting={isWaiting}
         />
       )}
 

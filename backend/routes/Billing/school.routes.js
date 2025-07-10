@@ -4,7 +4,8 @@ import {
     getAllSchool,
     getSchoolById,
     updateSchool,
-    deleteSchool
+    deleteSchool,
+    getSchoolByUserId
 } from "../../controllers/Billing/school.controllers.js";
 
 const router = e.Router();
@@ -17,6 +18,8 @@ router.get("/", getAllSchool);
 
 // Get school by ID
 router.get("/:id", getSchoolById);
+
+router.get("/user/:id", getSchoolByUserId);
 
 // Update school by ID
 router.put("/:id", updateSchool);

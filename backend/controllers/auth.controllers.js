@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import generateToken from "../utils/jwtUtils.js";
 import transporter from "../config/nodemailer.js";
 import mongoose from "mongoose";
+import School from "../models/Billing/school.model.js";
 
 export const register = async (req, res) => {
   const { name, password, phoneNumber, email, role, twoFA_enabled } = req.body;
@@ -263,11 +264,32 @@ export const isAuthenticated = async (req, res) => {
       });
     }
 
+    // if (user.role === "schoolAdmin") {
+      
+    //   console.log("🚀 ~ isAuthenticated ~ user:", user)
+    //   const school = await School.findOne({ userID: user._id });
+    //   if (school) {
+    //     return res.status(201).json({
+    //       success: true,
+    //       message: "",
+    //       id: req.body.id,
+    //       twoFA_enabled: user.twoFA_enabled,
+    //       schoolId: school._id,
+    //     });
+    //   } else {
+    //     return res.status(404).json({
+    //       success: false,
+    //       message: "School not found for this user",
+    //     });
+    //   }
+    // }
+
     return res.status(201).json({
       success: true,
       message: "",
       id: req.body.id,
       twoFA_enabled: user.twoFA_enabled,
+      // schoolId : 
     });
   } catch (error) {
     console.error(error.message);

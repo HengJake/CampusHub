@@ -84,6 +84,13 @@ export const getSchoolById = controllerWrapper(async (req, res) => {
     return await getRecordById(School, id, "school", ["userID"]);
 });
 
+export const getSchoolByUserId = controllerWrapper(async (req, res) => {
+    const { userId } = req.params;
+    const userRes = await getRecordById(User, userId, "user", ["schoolID"])
+    console.log("🚀 ~ getSchoolByUserId ~ res:", userRes)
+//  get the user id and also respond and then use the user id to get the school
+})
+
 export const updateSchool = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await updateRecord(School, id, req.body, "school", validateSchoolData);
@@ -93,3 +100,4 @@ export const deleteSchool = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(School, id, "school");
 });
+

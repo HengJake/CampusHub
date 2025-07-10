@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
         // User role determines access permissions and functionality
     },
     
-    twoFAEnabled: {
+    twoFA_enabled: {
         type: Boolean,
         default: false,
         // Two-factor authentication status

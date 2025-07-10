@@ -44,6 +44,7 @@ function payment({
   userPayment,
   setUserPayment,
   isWaiting,
+  handleNextClick,
 }) {
 
   // format object key
@@ -125,6 +126,9 @@ function payment({
 
   const handlePayment = async () => {
 
+    handleNextClick();
+
+
     const structPayment = {
       schoolID: userPayment.schoolId,
       cardHolderName: userPayment.cardHolderName,
@@ -186,6 +190,7 @@ function payment({
       buttonText={payCreated ? "Confirm" : "Pay"}
       formData={formData}
       paymentId={formData.paymentId}
+      isWaiting={isWaiting}
     >
       <VStack mt={3}>
         <ToolTips createdAccount={payCreated}>
