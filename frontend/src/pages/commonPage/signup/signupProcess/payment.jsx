@@ -85,15 +85,15 @@ function payment({
       cvv: cvv || prev.cvv || "",
     }));
   }, [formData]);
-
-
+  
+  
   const showToast = useShowToast();
   const { createPayment, getSubscription, createInvoice } = useBillingStore();
   // validate data
   const [cardNumberError, setCardNumberError] = useState(false);
   const [expiryError, setExpiryError] = useState(false);
   const [cvvError, setCvvError] = useState(false);
-
+  
   const simulatePaymentProcessing = async () => {
     setIsProcessing(true);
     setProcessingStep(1);
@@ -101,18 +101,18 @@ function payment({
     // Step 1: Validating payment details
     await new Promise(resolve => setTimeout(resolve, 1500));
     setProcessingStep(2);
-
+    
     // Step 2: Processing payment
     await new Promise(resolve => setTimeout(resolve, 2000));
     setProcessingStep(3);
-
+    
     // Step 3: Confirming payment
     await new Promise(resolve => setTimeout(resolve, 1500));
     setProcessingStep(4);
-
+    
     // Step 4: Redirecting to dashboard
     await new Promise(resolve => setTimeout(resolve, 1000));
-
+    
     localStorage.removeItem("accountCreated");
     localStorage.removeItem("schoolCreated");
     localStorage.removeItem("paymentCreated");
@@ -123,9 +123,9 @@ function payment({
     // Navigate to admin dashboard
     navigate("/admin-dashboard");
   };
-
+  
   const handlePayment = async () => {
-
+    
     handleNextClick();
 
 

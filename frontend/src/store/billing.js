@@ -94,7 +94,8 @@ export const useBillingStore = create((set) => ({
     },
     // payment
     createPayment: async (paymentDetails) => {
-
+        console.log("🚀 ~ createPayment: ~ paymentDetails:", paymentDetails)
+        
         try {
             const res = await fetch(`/api/payment`, {
                 method: "POST",
@@ -112,7 +113,7 @@ export const useBillingStore = create((set) => ({
 
             return { success: true, message: data.message, data: data.data, id: data.data._id };
         } catch (error) {
-            console.error("Error fetching all subscription:", error.message);
+            console.error("Error creating payment:", error.message);
             return { success: false, message: error.message };
         }
     },

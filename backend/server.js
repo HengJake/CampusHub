@@ -12,6 +12,7 @@ import courseRoutes from "./routes/Academic/course.routes.js";
 import departmentRoutes from "./routes/Academic/department.routes.js";
 import examScheduleRoutes from "./routes/Academic/examSchedule.routes.js";
 import intakeRoutes from "./routes/Academic/intake.routes.js";
+import intakeCourseRoutes from "./routes/Academic/intakeCourse.routes.js";
 import lecturerRoutes from "./routes/Academic/lecturer.routes.js";
 import moduleRoutes from "./routes/Academic/module.routes.js";
 import attendanceRoutes from "./routes/Academic/attendance.routes.js";
@@ -49,10 +50,11 @@ app.use("/api/course", courseRoutes);
 app.use("/api/department", departmentRoutes);
 app.use("/api/exam-schedule", examScheduleRoutes);
 app.use("/api/intake", intakeRoutes);
+app.use("/api/intake-course", intakeCourseRoutes);
 app.use("/api/lecturer", lecturerRoutes);
 app.use("/api/module", moduleRoutes);
 app.use("/api/attendance", attendanceRoutes);
-app.use("/api/result", resultRoutes);  // Add this line
+app.use("/api/result", resultRoutes);
 
 // 2 Billing
 app.use("/api/subscription", subscriptionRoutes);
