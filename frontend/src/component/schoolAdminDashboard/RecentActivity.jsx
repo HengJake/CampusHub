@@ -1,5 +1,5 @@
 import { VStack, HStack, Avatar, Text, Box } from "@chakra-ui/react"
-import { mockData } from "../../../../../Vercel Gen/V4/src/data/mockData"
+import { mockData } from "../../store/TBI/mockData"
 
 export function RecentActivity() {
   return (
