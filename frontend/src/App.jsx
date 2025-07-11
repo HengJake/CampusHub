@@ -37,15 +37,16 @@ import { AdminSetting } from "./pages/schoolAdminPage/AdminSetting.jsx";
 import { AdminProfile } from "./pages/schoolAdminPage/AdminProfile.jsx";
 import { CourseManagement } from "./pages/schoolAdminPage/CourseManagement.jsx";
 import { LecturerManagement } from "./pages/schoolAdminPage/LecturerManagement.jsx"
+import { AcademicOverview } from "./pages/schoolAdminPage/AcademicOverview.jsx";
 
 // CampusHub Admin Pages
-import CampushubDashboard from "./pages/campusHubAdminPage/campushubDashboard/campushubDashboard.jsx";
-import Subscription from "./pages/campusHubAdminPage/subscription/subscription.jsx";
-import AnalyticalReport from "./pages/campusHubAdminPage/analyticalReport/analyticalReport.jsx";
-import ClientManagement from "./pages/campusHubAdminPage/clientManagement/clientManagement.jsx";
-import UserOversight from "./pages/campusHubAdminPage/userOversight/userOversight.jsx";
-import CampushubSetting from "./pages/campusHubAdminPage/campushubSetting/campushubSetting.jsx";
-import CampushubProfile from "./pages/campusHubAdminPage/campushubProfile/campushubProfile.jsx";
+// import CampushubDashboard from "./pages/campusHubAdminPage/campushubDashboard/campushubDashboard.jsx";
+// import Subscription from "./pages/campusHubAdminPage/subscription/subscription.jsx";
+// import AnalyticalReport from "./pages/campusHubAdminPage/analyticalReport/analyticalReport.jsx";
+// import ClientManagement from "./pages/campusHubAdminPage/clientManagement/clientManagement.jsx";
+// import UserOversight from "./pages/campusHubAdminPage/userOversight/userOversight.jsx";
+// import CampushubSetting from "./pages/campusHubAdminPage/campushubSetting/campushubSetting.jsx";
+// import CampushubProfile from "./pages/campusHubAdminPage/campushubProfile/campushubProfile.jsx";
 
 import { Box, Button } from "@chakra-ui/react";
 import { Routes, Route, useLocation } from "react-router-dom";
@@ -62,7 +63,6 @@ import CANavbar from "./component/navBar/campusHubAdminNavBar.jsx";
 import LNavbar from "./component/navBar/landingNavBar";
 import RNavBar from "./component/navBar/registrationNavBar";
 import SNavBar from "./component/navBar/studentNavBar";
-import { AcademicOverview } from "./pages/schoolAdminPage/AcademicOverview.jsx";
 
 
 function App() {
@@ -186,9 +186,9 @@ function App() {
         </Box>
       </Box>
 
-      <Box ml={margin} flex="1" display={"flex"} 
-      // mt={userRole === "student" ? "64px" : ""}
-      mt={"64px"}
+      <Box ml={margin} flex="1" display={"flex"}
+        // mt={userRole === "student" ? "64px" : ""}
+        mt={"64px"}
       >
         {/* <Button
           bg={"gray.900"}
@@ -260,13 +260,16 @@ function App() {
           <Route path="/admin-profile" element={<AdminProfile />} />
 
           {/* CampusHub Admin Pages */}
-          <Route path="/campushub-dashboard" element={<CampushubDashboard />} />
-          <Route path="/subscription" element={<Subscription />} />
-          <Route path="/analytical-report" element={<AnalyticalReport />} />
-          <Route path="/client-management" element={<ClientManagement />} />
-          <Route path="/user-oversight" element={<UserOversight />} />
-          <Route path="/campushub-setting" element={<CampushubSetting />} />
-          <Route path="/campushub-profile" element={<CampushubProfile />} />
+          {
+            // <Route path="/campushub-dashboard" element={<CampushubDashboard />} />
+            // <Route path="/subscription" element={<Subscription />} />
+            // <Route path="/analytical-report" element={<AnalyticalReport />} />
+            // <Route path="/client-management" element={<ClientManagement />} />
+            // <Route path="/user-oversight" element={<UserOversight />} />
+            // <Route path="/campushub-setting" element={<CampushubSetting />} />
+            // <Route path="/campushub-profile" element={<CampushubProfile />} />
+
+          }
         </Routes>
       </Box>
     </Box>
