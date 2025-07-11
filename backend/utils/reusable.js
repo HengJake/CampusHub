@@ -1,5 +1,36 @@
 import mongoose from "mongoose";
 
+export const validateUniqueField = async (Model, fieldValue, fieldName, entityName = "record", excludeId = null) => {
+    if (!fieldValue) return null; // Skip validation if field is not provided
+
+    try {
+        let query = { [fieldName]: fieldValue };
+
+        // Exclude current record when updating
+        if (excludeId) {
+            query._id = { $ne: excludeId };
+        }
+
+        const existingRecord = await Model.findOne(query);
+
+        if (existingRecord) {
+            return {
+                success: false,
+                message: `${entityName} with this ${fieldName} already exists`,
+                statusCode: 409
+            };
+        }
+
+        return null;
+    } catch (error) {
+        console.error(`Error validating unique ${fieldName}:`, error.message);
+        return {
+            success: false,
+            message: `Error validating unique ${fieldName}`,
+            statusCode: 500
+        };
+    }
+};
 
 export const isValidObjectId = (id) => {
     return mongoose.Types.ObjectId.isValid(id);
@@ -57,8 +88,11 @@ export const validateMultipleReferences = async (references) => {
     return null;
 };
 
-export const createRecord = async (Model, data, entityName = "record", validationFn = null) => {
+export const createRecord = async (Model, data, entityName = "record", validationFn = null, uniqueFields = []) => {
     try {
+        console.log(`[reusable.js] Creating ${entityName} with data:`, data);
+
+
         // Custom validation if provided
         if (validationFn) {
             const validationResult = await validationFn(data);
@@ -68,6 +102,15 @@ export const createRecord = async (Model, data, entityName = "record", validatio
                     message: validationResult.message,
                     statusCode: 400
                 };
+            }
+        }
+
+        // Validate unique fields
+        for (const field of uniqueFields) {
+            const uniqueValidation = await validateUniqueField(Model, data[field], field, entityName);
+            if (uniqueValidation) {
+                console.error("nah1");
+                return uniqueValidation;
             }
         }
 
@@ -252,6 +295,26 @@ export const deleteRecord = async (Model, id, entityName = "record") => {
         return {
             success: false,
             message: "Server error - deleteRecord method",
+            statusCode: 500
+        };
+    }
+};
+
+export const deleteAllRecords = async (Model, entityName = "records", filter = {}) => {
+    try {
+        const result = await Model.deleteMany(filter);
+
+        return {
+            success: true,
+            data: { deletedCount: result.deletedCount },
+            message: `${result.deletedCount} ${entityName} deleted successfully`,
+            statusCode: 200
+        };
+    } catch (error) {
+        console.error(`Error deleting all ${entityName}:`, error.message);
+        return {
+            success: false,
+            message: "Server error - deleteAllRecords method",
             statusCode: 500
         };
     }

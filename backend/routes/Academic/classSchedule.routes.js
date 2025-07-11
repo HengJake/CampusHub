@@ -4,8 +4,10 @@ import {
     getClassSchedules,
     getClassScheduleById,
     updateClassSchedule,
-    deleteClassSchedule
+    deleteClassSchedule,
+    deleteAllClassSchedules
 } from "../../controllers/Academic/classSchedule.controllers.js";
+import { getClassSchedulesBySchool } from "../../controllers/Academic/classSchedule.controllers.js";
 
 const router = e.Router();
 
@@ -21,7 +23,12 @@ router.get("/:id", getClassScheduleById);
 // Update class schedule by ID
 router.put("/:id", updateClassSchedule);
 
-// Delete class schedule by ID
+// Delete all classSchedules
+router.delete("/all", deleteAllClassSchedules);
+
+// Delete classSchedule by ID
 router.delete("/:id", deleteClassSchedule);
+
+router.get("/school/:schoolId", getClassSchedulesBySchool);
 
 export default router;

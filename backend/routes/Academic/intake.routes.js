@@ -4,8 +4,10 @@ import {
     getIntakes,
     getIntakeById,
     updateIntake,
-    deleteIntake
+    deleteIntake,
+    deleteAllIntakes
 } from "../../controllers/Academic/intake.controllers.js";
+import { getIntakesBySchool } from "../../controllers/Academic/intake.controllers.js";
 
 const router = e.Router();
 
@@ -21,7 +23,12 @@ router.get("/:id", getIntakeById);
 // Update intake by ID
 router.put("/:id", updateIntake);
 
+// Delete all intakes
+router.delete("/all", deleteAllIntakes);
+
 // Delete intake by ID
 router.delete("/:id", deleteIntake);
+
+router.get("/school/:schoolId", getIntakesBySchool);
 
 export default router;

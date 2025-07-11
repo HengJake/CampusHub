@@ -9,16 +9,116 @@ import {
     updateRecord,
     deleteRecord,
     validateMultipleReferences,
-    controllerWrapper
+    controllerWrapper,
+    deleteAllRecords
 } from "../../utils/reusable.js";
 
 // Custom validation for intakeCourse data
 const validateIntakeCourseData = async (data) => {
-    const { intakeId, courseId, schoolId } = data;
-    if (!intakeId || !courseId || !schoolId) {
-        return { isValid: false, message: "intakeId, courseId, and schoolId are required" };
+    const { intakeId, courseId, maxStudents, currentEnrollment, feeStructure, duration, maxDuration, requirements, isActive, status, schoolId } = data;
+
+    // Check required fields
+    if (!intakeId) {
+        return {
+            isValid: false,
+            message: "intakeId is required"
+        };
+    }
+    if (!courseId) {
+        return {
+            isValid: false,
+            message: "courseId is required"
+        };
+    }
+    if (!maxStudents) {
+        return {
+            isValid: false,
+            message: "maxStudents is required"
+        };
+    }
+    if (!feeStructure) {
+        return {
+            isValid: false,
+            message: "feeStructure is required"
+        };
+    }
+    if (!duration) {
+        return {
+            isValid: false,
+            message: "duration is required"
+        };
+    }
+    if (!maxDuration) {
+        return {
+            isValid: false,
+            message: "maxDuration is required"
+        };
+    }
+    if (!schoolId) {
+        return {
+            isValid: false,
+            message: "schoolId is required"
+        };
     }
 
+    // Validate maxStudents
+    if (maxStudents < 1) {
+        return {
+            isValid: false,
+            message: "maxStudents must be at least 1"
+        };
+    }
+
+    // Validate currentEnrollment if provided
+    if (currentEnrollment !== undefined && currentEnrollment < 0) {
+        return {
+            isValid: false,
+            message: "currentEnrollment must be non-negative"
+        };
+    }
+
+    // Validate feeStructure
+    if (!feeStructure.localStudent || !feeStructure.internationalStudent) {
+        return {
+            isValid: false,
+            message: "feeStructure must have both localStudent and internationalStudent fees"
+        };
+    }
+    if (feeStructure.localStudent < 0 || feeStructure.internationalStudent < 0) {
+        return {
+            isValid: false,
+            message: "Fees must be non-negative"
+        };
+    }
+
+    // Validate duration
+    if (duration < 1) {
+        return {
+            isValid: false,
+            message: "duration must be at least 1"
+        };
+    }
+
+    // Validate maxDuration
+    if (maxDuration < duration) {
+        return {
+            isValid: false,
+            message: "maxDuration must be greater than or equal to duration"
+        };
+    }
+
+    // Validate status enum values if provided
+    if (status) {
+        const validStatuses = ['available', 'full', 'closed', 'cancelled'];
+        if (!validStatuses.includes(status)) {
+            return {
+                isValid: false,
+                message: "status must be one of: available, full, closed, cancelled"
+            };
+        }
+    }
+
+    // Validate references exist
     const referenceValidation = await validateMultipleReferences({
         intakeId: { id: intakeId, Model: Intake },
         courseId: { id: courseId, Model: Course },
@@ -26,7 +126,10 @@ const validateIntakeCourseData = async (data) => {
     });
 
     if (referenceValidation) {
-        return { isValid: false, message: referenceValidation.message };
+        return {
+            isValid: false,
+            message: referenceValidation.message
+        };
     }
 
     return { isValid: true };
@@ -78,7 +181,7 @@ export const deleteIntakeCourse = controllerWrapper(async (req, res) => {
 });
 
 // Get IntakeCourses by School ID
-export const getIntakeCoursesBySchoolId = controllerWrapper(async (req, res) => {
+export const getIntakeCoursesBySchool = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
     return await getAllRecords(
         IntakeCourse,
@@ -93,7 +196,7 @@ export const getIntakeCoursesBySchoolId = controllerWrapper(async (req, res) => 
 });
 
 // Get IntakeCourses by Intake ID
-export const getIntakeCoursesByIntakeId = controllerWrapper(async (req, res) => {
+export const getIntakeCoursesByIntake = controllerWrapper(async (req, res) => {
     const { intakeId } = req.params;
     return await getAllRecords(
         IntakeCourse,
@@ -108,7 +211,7 @@ export const getIntakeCoursesByIntakeId = controllerWrapper(async (req, res) => 
 });
 
 // Get IntakeCourses by Course ID
-export const getIntakeCoursesByCourseId = controllerWrapper(async (req, res) => {
+export const getIntakeCoursesByCourse = controllerWrapper(async (req, res) => {
     const { courseId } = req.params;
     return await getAllRecords(
         IntakeCourse,
@@ -210,4 +313,8 @@ export const updateEnrollmentCount = controllerWrapper(async (req, res) => {
             statusCode: 500
         };
     }
-}); 
+});
+// Delete All IntakeCourses
+export const deleteAllIntakeCourses = controllerWrapper(async (req, res) => {
+    return await deleteAllRecords(IntakeCourse, "intakeCourses");
+});

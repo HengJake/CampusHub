@@ -1,6 +1,7 @@
 import Attendance from "../../models/Academic/attendance.model.js";
 import Student from "../../models/Academic/student.model.js";
 import ClassSchedule from "../../models/Academic/classSchedule.model.js";
+import School from "../../models/Billing/school.model.js";
 import {
     createRecord,
     getAllRecords,
@@ -8,49 +9,56 @@ import {
     updateRecord,
     deleteRecord,
     validateMultipleReferences,
-    controllerWrapper
+    controllerWrapper,
+    deleteAllRecords
 } from "../../utils/reusable.js";
 
 const validateAttendanceData = async (data) => {
-    const { StudentID, ScheduleID, Status, Date } = data;
+    const { studentId, scheduleId, status, date, schoolId } = data;
 
     // Check required fields
-    if (!StudentID) {
+    if (!studentId) {
         return {
             isValid: false,
-            message: "StudentID is required"
+            message: "studentId is required"
         };
     }
-    if (!ScheduleID) {
+    if (!scheduleId) {
         return {
             isValid: false,
-            message: "ScheduleID is required"
+            message: "scheduleId is required"
         };
     }
-    if (!Status) {
+    if (!status) {
         return {
             isValid: false,
-            message: "Status is required"
+            message: "status is required"
         };
     }
-    if (!Date) {
+    if (!date) {
         return {
             isValid: false,
-            message: "Date is required"
+            message: "date is required"
+        };
+    }
+    if (!schoolId) {
+        return {
+            isValid: false,
+            message: "schoolId is required"
         };
     }
 
-    // Validate Status enum values
+    // Validate status enum values
     const validStatuses = ["present", "absent", "late"];
-    if (!validStatuses.includes(Status)) {
+    if (!validStatuses.includes(status)) {
         return {
             isValid: false,
-            message: "Status must be one of: present, absent, late"
+            message: "status must be one of: present, absent, late"
         };
     }
 
-    // Validate Date format
-    const dateObj = new Date(Date);
+    // Validate date format
+    const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) {
         return {
             isValid: false,
@@ -60,8 +68,9 @@ const validateAttendanceData = async (data) => {
 
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
-        StudentID: { id: StudentID, Model: Student },
-        ScheduleID: { id: ScheduleID, Model: ClassSchedule }
+        studentId: { id: studentId, Model: Student },
+        scheduleId: { id: scheduleId, Model: ClassSchedule },
+        schoolId: { id: schoolId, Model: School }
     });
 
     if (referenceValidation) {
@@ -84,12 +93,30 @@ export const createAttendance = controllerWrapper(async (req, res) => {
 });
 
 export const getAllAttendance = controllerWrapper(async (req, res) => {
-    return await getAllRecords(Attendance, "attendance", ["StudentID", "ScheduleID"]);
+    return await getAllRecords(Attendance, "attendance", ["studentId", "scheduleId", "schoolId"]);
 });
 
 export const getAttendanceById = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    return await getRecordById(Attendance, id, "attendance", ["StudentID", "ScheduleID"]);
+    return await getRecordById(Attendance, id, "attendance", ["studentId", "scheduleId", "schoolId"]);
+});
+
+export const getAttendanceBySchoolId = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    if (!schoolId) {
+        return {
+            success: false,
+            message: "schoolId is required",
+            statusCode: 400
+        };
+    }
+    // Pass filter to getAllRecords
+    return await getAllRecords(
+        Attendance,
+        "attendance",
+        ["studentId", "scheduleId", "schoolId"],
+        { schoolId }
+    );
 });
 
 export const updateAttendance = controllerWrapper(async (req, res) => {
@@ -100,4 +127,8 @@ export const updateAttendance = controllerWrapper(async (req, res) => {
 export const deleteAttendance = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(Attendance, id, "attendance");
+});
+// Delete All Attendances
+export const deleteAllAttendances = controllerWrapper(async (req, res) => {
+    return await deleteAllRecords(Attendance, "attendances");
 });

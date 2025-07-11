@@ -26,14 +26,6 @@ const studentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'IntakeCourse',
         required: true,
-        // Reference to specific course offering in specific intake
-        validate: {
-            validator: async function (v) {
-                const intakeCourseExists = await IntakeCourse.exists({ _id: v });
-                return intakeCourseExists;
-            },
-            message: props => 'IntakeCourse does not exist!'
-        }
     },
 
     completionStatus: {

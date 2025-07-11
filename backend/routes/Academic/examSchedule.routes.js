@@ -4,8 +4,10 @@ import {
     getExamSchedules,
     getExamScheduleById,
     updateExamSchedule,
-    deleteExamSchedule
+    deleteExamSchedule,
+    deleteAllExamSchedules
 } from "../../controllers/Academic/examSchedule.controllers.js";
+import { getExamSchedulesBySchool } from "../../controllers/Academic/examSchedule.controllers.js";
 
 const router = e.Router();
 
@@ -21,7 +23,12 @@ router.get("/:id", getExamScheduleById);
 // Update exam schedule by ID
 router.put("/:id", updateExamSchedule);
 
-// Delete exam schedule by ID
+// Delete all examSchedules
+router.delete("/all", deleteAllExamSchedules);
+
+// Delete examSchedule by ID
 router.delete("/:id", deleteExamSchedule);
+
+router.get("/school/:schoolId", getExamSchedulesBySchool);
 
 export default router;

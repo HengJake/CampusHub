@@ -73,7 +73,7 @@ const moduleSchema = new mongoose.Schema({
 });
 
 // Indexes
-moduleSchema.index({ code: 1 }, { unique: true });
+moduleSchema.index({ schoolId: 1, code: 1 }, { unique: true });
 moduleSchema.index({ courseId: 1 });
 moduleSchema.index({ isActive: 1 });
 

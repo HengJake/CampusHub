@@ -6,7 +6,8 @@ import {
     getRecordById,
     updateRecord,
     deleteRecord,
-    controllerWrapper
+    controllerWrapper,
+    deleteAllRecords
 } from "../../utils/reusable.js";
 
 const validateUserData = async (data) => {
@@ -71,11 +72,11 @@ const validateUserData = async (data) => {
     }
 
     // Validate role enum values
-    const validRoles = ["student", "lecturer", "schoolAdmin", "campusHubAdmin"];
+    const validRoles = ["student", "lecturer", "companyAdmin", "schoolAdmin"];
     if (!validRoles.includes(role)) {
         return {
             isValid: false,
-            message: "role must be one of: student, lecturer, schoolAdmin, campusHubAdmin"
+            message: "role must be one of: student, lecturer, companyAdmin, schoolAdmin"
         };
     }
 
@@ -109,11 +110,11 @@ const validateUserUpdateData = async (data) => {
 
     // Validate role enum values if provided
     if (role) {
-        const validRoles = ["student", "lecturer", "schoolAdmin", "campusHubAdmin"];
+        const validRoles = ["student", "lecturer", "companyAdmin", "schoolAdmin"];
         if (!validRoles.includes(role)) {
             return {
                 isValid: false,
-                message: "role must be one of: student, lecturer, schoolAdmin, campusHubAdmin"
+                message: "role must be one of: student, lecturer, companyAdmin, schoolAdmin"
             };
         }
     }
@@ -123,7 +124,7 @@ const validateUserUpdateData = async (data) => {
 
 export const createUser = controllerWrapper(async (req, res) => {
     const userData = { ...req.body };
-    
+
     // Hash password before saving
     if (userData.password) {
         userData.password = await bcrypt.hash(userData.password, 10);
@@ -148,18 +149,23 @@ export const getUserById = controllerWrapper(async (req, res) => {
 
 export const updateUser = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    
+
     // Hash password if it's being updated
     if (req.body.password) {
         req.body.password = await bcrypt.hash(req.body.password, 10);
     }
-    
+
     return await updateRecord(User, id, req.body, "user", validateUserUpdateData);
 });
 
 export const deleteUser = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(User, id, "user");
+});
+
+// Delete All Students
+export const deleteAllUsers = controllerWrapper(async (req, res) => {
+    return await deleteAllRecords(User, "users");
 });
 
 export const checkExistedUserDetails = controllerWrapper(async (req, res) => {

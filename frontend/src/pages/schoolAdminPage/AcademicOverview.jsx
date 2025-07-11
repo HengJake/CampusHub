@@ -18,7 +18,6 @@ import {
   Progress,
 } from "@chakra-ui/react"
 import { FaBuilding } from "react-icons/fa";
-
 import {
   FiUsers,
   FiUser,
@@ -29,34 +28,92 @@ import {
 } from "react-icons/fi"
 import { FaGraduationCap } from "react-icons/fa";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
-import { useAcademicStore } from "../../store/TBI/academicStore.js"
-
-const enrollmentData = [
-  { month: "Jan", students: 2400 },
-  { month: "Feb", students: 2500 },
-  { month: "Mar", students: 2600 },
-  { month: "Apr", students: 2700 },
-  { month: "May", students: 2800 },
-  { month: "Jun", students: 2847 },
-]
-
-const departmentData = [
-  { name: "Computer Science", students: 850 },
-  { name: "Engineering", students: 720 },
-  { name: "Business", students: 650 },
-  { name: "Arts", students: 427 },
-  { name: "Science", students: 200 },
-]
-
-const recentActivities = [
-  { id: 1, student: "Alice Johnson", action: "enrolled in CS101", time: "2 mins ago", type: "enrollment" },
-  { id: 2, student: "Bob Smith", action: "submitted assignment", time: "5 mins ago", type: "assignment" },
-  { id: 3, student: "Carol Davis", action: "attended lecture", time: "10 mins ago", type: "attendance" },
-  { id: 4, student: "David Wilson", action: "completed exam", time: "15 mins ago", type: "exam" },
-]
+import { useAcademicStore } from "../../store/academic.js";
+import { useEffect } from "react";
 
 export function AcademicOverview() {
-  const { dashboardStats } = useAcademicStore()
+  const {
+    students,
+    lecturers,
+    courses,
+    modules,
+    departments,
+    intakes,
+    examSchedules,
+    attendance,
+    fetchStudents,
+    fetchLecturers,
+    fetchCourses,
+    fetchModules,
+    fetchDepartments,
+    fetchIntakes,
+    fetchExamSchedules,
+    fetchAttendance,
+    getCourseCompletionRate,
+    getAllCourseCompletionRate,
+    getAverageAttendance,
+    getExamPassRate,
+  } = useAcademicStore();
+
+  useEffect(() => {
+    fetchStudents();
+    fetchLecturers && fetchLecturers();
+    fetchCourses();
+    fetchModules && fetchModules();
+    fetchDepartments && fetchDepartments();
+    fetchIntakes && fetchIntakes();
+    fetchExamSchedules && fetchExamSchedules();
+    fetchAttendance && fetchAttendance();
+  }, []);
+
+  // Compute dashboard stats
+  const dashboardStats = {
+    totalStudents: students.length,
+    totalLecturers: lecturers?.length || 0,
+    totalCourses: courses.length,
+    totalModules: modules?.length || 0,
+    totalDepartments: departments?.length || 0,
+    totalIntakes: intakes?.length || 0,
+    upcomingExams: examSchedules?.length || 0,
+    todayAttendance: (() => {
+      // Calculate today's attendance percentage
+      const today = new Date().toISOString().slice(0, 10);
+      const todayAttendance = attendance.filter(a => a.date?.slice(0, 10) === today);
+      if (!todayAttendance.length) return 0;
+      const present = todayAttendance.filter(a => a.status === "present").length;
+      return Math.round((present / todayAttendance.length) * 100);
+    })(),
+  };
+
+  // Enrollment trends (example: students per month, you may need to adjust based on your data)
+  const enrollmentData = (() => {
+    // Group students by month of enrollment
+    const monthMap = {};
+    students.forEach(s => {
+      const month = s.enrollmentDate ? new Date(s.enrollmentDate).toLocaleString('default', { month: 'short' }) : "Unknown";
+      monthMap[month] = (monthMap[month] || 0) + 1;
+    });
+    return Object.entries(monthMap).map(([month, students]) => ({ month, students }));
+  })();
+
+  // Department distribution
+  const departmentData = departments?.map(dep => ({
+    name: dep.name,
+    students: students.filter(s => s.departmentId === dep._id).length,
+  })) || [];
+
+  // Recent activities (example: show last 5 students who enrolled/attended)
+  const recentActivities = students
+    .slice(-5)
+    .reverse()
+    .map(s => ({
+      id: s._id,
+      student: s.name,
+      action: "enrolled",
+      time: s.enrollmentDate ? new Date(s.enrollmentDate).toLocaleDateString() : "",
+      type: "enrollment",
+    }));
+
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
 
@@ -87,6 +144,8 @@ export function AcademicOverview() {
       </CardBody>
     </Card>
   )
+
+  console.log(getAllCourseCompletionRate())
 
   return (
     <Box p={6} minH="100vh" flex={1}>

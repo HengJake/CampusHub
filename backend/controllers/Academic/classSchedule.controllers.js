@@ -2,7 +2,6 @@ import ClassSchedule from '../../models/Academic/classSchedule.model.js';
 import Room from '../../models/Academic/room.model.js';
 import Module from '../../models/Academic/module.model.js';
 import Lecturer from '../../models/Academic/lecturer.model.js';
-import Intake from '../../models/Academic/intake.model.js';
 import {
     createRecord,
     getAllRecords,
@@ -11,27 +10,29 @@ import {
     deleteRecord,
     validateReferenceExists,
     validateMultipleReferences,
-    controllerWrapper
+    controllerWrapper,
+    deleteAllRecords
 } from "../../utils/reusable.js";
+import IntakeCourse from '../../models/Academic/intakeCourse.model.js';
 
 // Custom validation function for class schedule data
 const validateClassScheduleData = async (data) => {
-    const { RoomID, ModuleID, LecturerID, DayOfWeek, StartTime, EndTime, IntakeID } = data;
+    const { roomId, moduleId, lecturerId, dayOfWeek, startTime, endTime, intakeCourseId } = data;
 
     // Check required fields
-    if (!RoomID || !ModuleID || !LecturerID || !DayOfWeek || !StartTime || !EndTime || !IntakeID) {
+    if (!roomId || !moduleId || !lecturerId || !dayOfWeek || !startTime || !endTime || !intakeCourseId) {
         return {
             isValid: false,
-            message: "Please provide all required fields (RoomID, ModuleID, LecturerID, DayOfWeek, StartTime, EndTime, IntakeID)"
+            message: "Please provide all required fields (roomId, moduleId, lecturerId, dayOfWeek, startTime, endTime, intakeCourseId)"
         };
     }
 
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
-        roomID: { id: RoomID, Model: Room },
-        moduleID: { id: ModuleID, Model: Module },
-        lecturerID: { id: LecturerID, Model: Lecturer },
-        intakeID: { id: IntakeID, Model: Intake }
+        roomId: { id: roomId, Model: Room },
+        moduleId: { id: moduleId, Model: Module },
+        lecturerId: { id: lecturerId, Model: Lecturer },
+        intakeCourseId: { id: intakeCourseId, Model: IntakeCourse }
     });
 
     if (referenceValidation) {
@@ -59,7 +60,7 @@ export const getClassSchedules = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         ClassSchedule,
         "class schedules",
-        ['RoomID', 'ModuleID', 'LecturerID', 'IntakeID']
+        ['RoomID', 'ModuleID', 'LecturerID', 'intakeCourseId']
     );
 });
 
@@ -70,7 +71,7 @@ export const getClassScheduleById = controllerWrapper(async (req, res) => {
         ClassSchedule,
         id,
         "class schedule",
-        ['RoomID', 'ModuleID', 'LecturerID', 'IntakeID']
+        ['RoomID', 'ModuleID', 'LecturerID', 'intakeCourseId']
     );
 });
 
@@ -90,4 +91,18 @@ export const updateClassSchedule = controllerWrapper(async (req, res) => {
 export const deleteClassSchedule = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(ClassSchedule, id, "class schedule");
+});
+// Delete All ClassSchedules
+export const deleteAllClassSchedules = controllerWrapper(async (req, res) => {
+    return await deleteAllRecords(ClassSchedule, "classSchedules");
+});
+
+export const getClassSchedulesBySchool = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(
+        ClassSchedule,
+        "classSchedules",
+        ["moduleId", "lecturerId", "roomId", "schoolId"],
+        { schoolId }
+    );
 });

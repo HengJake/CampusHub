@@ -8,17 +8,18 @@ import {
     deleteRecord,
     validateReferenceExists,
     validateMultipleReferences,
-    controllerWrapper
+    controllerWrapper,
+    deleteAllRecords
 } from "../../utils/reusable.js";
 
 const validateSchoolData = async (data) => {
-    const { userID, name, address, city, country, status } = data;
+    const { userId, name, address, city, country, status } = data;
 
     // Check required fields
-    if (!userID) {
+    if (!userId) {
         return {
             isValid: false,
-            message: "userID is required"
+            message: "userId is required"
         };
     }
     if (!name) {
@@ -55,7 +56,7 @@ const validateSchoolData = async (data) => {
     }
 
     // Validate userID reference exists
-    const referenceValidation = await validateReferenceExists(userID, User, "userID");
+    const referenceValidation = await validateReferenceExists(userId, User, "userId");
     if (referenceValidation) {
         return {
             isValid: false,
@@ -76,19 +77,18 @@ export const createSchool = controllerWrapper(async (req, res) => {
 });
 
 export const getAllSchool = controllerWrapper(async (req, res) => {
-    return await getAllRecords(School, "school", ["userID"]);
+    return await getAllRecords(School, "school", ["userId"]);
 });
 
 export const getSchoolById = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    return await getRecordById(School, id, "school", ["userID"]);
+    return await getRecordById(School, id, "school", ["userId"]);
 });
 
 export const getSchoolByUserId = controllerWrapper(async (req, res) => {
     const { userId } = req.params;
-    const userRes = await getRecordById(User, userId, "user", ["schoolID"])
-    console.log("🚀 ~ getSchoolByUserId ~ res:", userRes)
-//  get the user id and also respond and then use the user id to get the school
+    return await getRecordById(User, userId, "user", ["schoolId"])
+    //  get the user id and also respond and then use the user id to get the school
 })
 
 export const updateSchool = controllerWrapper(async (req, res) => {
@@ -101,3 +101,6 @@ export const deleteSchool = controllerWrapper(async (req, res) => {
     return await deleteRecord(School, id, "school");
 });
 
+export const deleteAllSchools = controllerWrapper(async (req, res) => {
+    return await deleteAllRecords(School, "schools");
+})

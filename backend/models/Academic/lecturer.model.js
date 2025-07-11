@@ -7,6 +7,7 @@ const lecturerSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
+        unique: true
         // Reference to user account (contains personal info)
     },
 
@@ -97,7 +98,6 @@ const lecturerSchema = new mongoose.Schema({
 });
 
 // Indexes
-lecturerSchema.index({ userId: 1 });
 lecturerSchema.index({ departmentId: 1 });
 lecturerSchema.index({ isActive: 1 });
 

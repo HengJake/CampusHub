@@ -68,7 +68,7 @@ const roomSchema = new mongoose.Schema({
 });
 
 // Compound index for unique room identification
-roomSchema.index({ block: 1, floor: 1, roomNumber: 1 }, { unique: true });
+roomSchema.index({ schoolId: 1, block: 1, floor: 1, roomNumber: 1 }, { unique: true });
 roomSchema.index({ roomStatus: 1 });
 roomSchema.index({ type: 1 });
 roomSchema.index({ isActive: 1 });

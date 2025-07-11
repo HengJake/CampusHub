@@ -4,6 +4,7 @@ import generateToken from "../utils/jwtUtils.js";
 import transporter from "../config/nodemailer.js";
 import mongoose from "mongoose";
 import School from "../models/Billing/school.model.js";
+import Student from "../models/Academic/student.model.js";
 
 export const register = async (req, res) => {
   const { name, password, phoneNumber, email, role, twoFA_enabled } = req.body;
@@ -33,7 +34,21 @@ export const register = async (req, res) => {
   try {
     await newUser.save();
 
-    const token = generateToken(newUser);
+    let extraInfo = {};
+    if (role === "schoolAdmin") {
+      const school = await School.findOne({ userId: newUser._id });
+      if (school) {
+        extraPayload.schoolId = school._id;
+      }
+    } else if (role === "student") {
+      const student = await Student.findOne({ userId: newUser._id });
+      if (student) {
+        extraPayload.schoolId = student.schoolId;
+        extraPayload.studentId = student._id;
+      }
+    }
+
+    const token = generateToken(newUser, extraPayload);
 
     // add token in cookie
     res.cookie("token", token, {
@@ -108,7 +123,21 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    const token = generateToken(user);
+    let extraPayload = {};
+    if (user.role === "schoolAdmin") {
+      const school = await School.findOne({ userId: user._id });
+      if (school) {
+        extraPayload.schoolId = school._id;
+      }
+    } else if (user.role === "student") {
+      const student = await Student.findOne({ userId: user._id });
+      if (student) {
+        extraPayload.schoolId = student.schoolId;
+        extraPayload.studentId = student._id;
+      }
+    }
+
+    const token = generateToken(user, extraPayload);
 
     // add token in cookie
     res.cookie("token", token, {
@@ -265,8 +294,7 @@ export const isAuthenticated = async (req, res) => {
     }
 
     if (user.role === "schoolAdmin") {
-
-      const school = await School.findOne({ userID: user._id });
+      const school = await School.findOne({ userId: user._id });
       if (school) {
         return res.status(201).json({
           success: true,
@@ -280,6 +308,26 @@ export const isAuthenticated = async (req, res) => {
         return res.status(404).json({
           success: false,
           message: "School not found for this user",
+        });
+      }
+    }
+
+    if (user.role === "student") {
+      const student = await Student.findOne({ userId: user._id });
+      if (student) {
+        return res.status(201).json({
+          success: true,
+          message: "Student and User found",
+          role: user.role,
+          id: req.body.id,
+          twoFA_enabled: user.twoFA_enabled,
+          student: student, // full student document
+          schoolId: student.schoolId,
+        });
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: "Student not found for this user",
         });
       }
     }

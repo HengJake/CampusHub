@@ -413,6 +413,299 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+
+    // ===GET BY SCHOOL ID====
+    // ===== GET BY SCHOOL ID METHODS =====
+
+    fetchStudentsBySchoolId: async (schoolId) => {
+        set(state => ({ loading: { ...state.loading, students: true } }));
+        try {
+            const res = await fetch(`/api/student/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.message || "Failed to fetch students by schoolId");
+
+            set(state => ({
+                students: data.data,
+                loading: { ...state.loading, students: false },
+                errors: { ...state.errors, students: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, students: false },
+                errors: { ...state.errors, students: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchCoursesBySchoolId: async (schoolId) => {
+        set(state => ({ loading: { ...state.loading, courses: true } }));
+        try {
+            const res = await fetch(`/api/course/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.message || "Failed to fetch courses by schoolId");
+
+            set(state => ({
+                courses: data.data,
+                loading: { ...state.loading, courses: false },
+                errors: { ...state.errors, courses: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, courses: false },
+                errors: { ...state.errors, courses: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchIntakesBySchoolId: async (schoolId) => {
+        set(state => ({ loading: { ...state.loading, intakes: true } }));
+        try {
+            const res = await fetch(`/api/intake/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.message || "Failed to fetch intakes by schoolId");
+
+            set(state => ({
+                intakes: data.data,
+                loading: { ...state.loading, intakes: false },
+                errors: { ...state.errors, intakes: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, intakes: false },
+                errors: { ...state.errors, intakes: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchIntakeCoursesBySchoolId: async (schoolId) => {
+        set(state => ({ loading: { ...state.loading, intakeCourses: true } }));
+        try {
+            const res = await fetch(`/api/intake-course/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.message || "Failed to fetch intake courses by schoolId");
+
+            set(state => ({
+                intakeCourses: data.data,
+                loading: { ...state.loading, intakeCourses: false },
+                errors: { ...state.errors, intakeCourses: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, intakeCourses: false },
+                errors: { ...state.errors, intakeCourses: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchDepartmentsBySchoolId: async (schoolId) => {
+        set(state => ({ loading: { ...state.loading, departments: true } }));
+        try {
+            const res = await fetch(`/api/department/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.message || "Failed to fetch departments by schoolId");
+
+            set(state => ({
+                departments: data.data,
+                loading: { ...state.loading, departments: false },
+                errors: { ...state.errors, departments: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, departments: false },
+                errors: { ...state.errors, departments: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchLecturersBySchoolId: async (schoolId) => {
+        set(state => ({ loading: { ...state.loading, lecturers: true } }));
+        try {
+            const res = await fetch(`/api/lecturer/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.message || "Failed to fetch lecturers by schoolId");
+
+            set(state => ({
+                lecturers: data.data,
+                loading: { ...state.loading, lecturers: false },
+                errors: { ...state.errors, lecturers: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, lecturers: false },
+                errors: { ...state.errors, lecturers: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchModulesBySchoolId: async (schoolId) => {
+        set(state => ({ loading: { ...state.loading, modules: true } }));
+        try {
+            const res = await fetch(`/api/module/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.message || "Failed to fetch modules by schoolId");
+
+            set(state => ({
+                modules: data.data,
+                loading: { ...state.loading, modules: false },
+                errors: { ...state.errors, modules: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, modules: false },
+                errors: { ...state.errors, modules: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchExamSchedulesBySchoolId: async (schoolId) => {
+        set(state => ({ loading: { ...state.loading, examSchedules: true } }));
+        try {
+            const res = await fetch(`/api/examSchedule/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.message || "Failed to fetch exam schedules by schoolId");
+
+            set(state => ({
+                examSchedules: data.data,
+                loading: { ...state.loading, examSchedules: false },
+                errors: { ...state.errors, examSchedules: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, examSchedules: false },
+                errors: { ...state.errors, examSchedules: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchResultsBySchoolId: async (schoolId) => {
+        set(state => ({ loading: { ...state.loading, results: true } }));
+        try {
+            const res = await fetch(`/api/result/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.message || "Failed to fetch results by schoolId");
+
+            set(state => ({
+                results: data.data,
+                loading: { ...state.loading, results: false },
+                errors: { ...state.errors, results: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, results: false },
+                errors: { ...state.errors, results: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchAttendanceBySchoolId: async (schoolId) => {
+        set(state => ({ loading: { ...state.loading, attendance: true } }));
+        try {
+            const res = await fetch(`/api/attendance/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.message || "Failed to fetch attendance by schoolId");
+
+            set(state => ({
+                attendance: data.data,
+                loading: { ...state.loading, attendance: false },
+                errors: { ...state.errors, attendance: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, attendance: false },
+                errors: { ...state.errors, attendance: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchClassSchedulesBySchoolId: async (schoolId) => {
+        set(state => ({ loading: { ...state.loading, classSchedules: true } }));
+        try {
+            const res = await fetch(`/api/classSchedule/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.message || "Failed to fetch class schedules by schoolId");
+
+            set(state => ({
+                classSchedules: data.data,
+                loading: { ...state.loading, classSchedules: false },
+                errors: { ...state.errors, classSchedules: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, classSchedules: false },
+                errors: { ...state.errors, classSchedules: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchRoomsBySchoolId: async (schoolId) => {
+        set(state => ({ loading: { ...state.loading, rooms: true } }));
+        try {
+            const res = await fetch(`/api/room/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.message || "Failed to fetch rooms by schoolId");
+
+            set(state => ({
+                rooms: data.data,
+                loading: { ...state.loading, rooms: false },
+                errors: { ...state.errors, rooms: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, rooms: false },
+                errors: { ...state.errors, rooms: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+
     // ===== ANALYTICS FUNCTIONS =====
     getCourseCompletionRate: (intakeCourseId) => {
         const { students } = get();
@@ -422,6 +715,13 @@ export const useAcademicStore = create((set, get) => ({
 
         const completed = relevantStudents.filter(s => s.completionStatus === 'completed').length;
         return (completed / relevantStudents.length) * 100;
+    },
+
+    getAllCourseCompletionRate: () => {
+        const { students } = get();
+
+        const completed = students.filter(s => s.completionStatus === 'completed').length;
+        return (completed / students.length) * 100;
     },
 
     getExamPassRate: (moduleId) => {
