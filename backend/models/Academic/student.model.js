@@ -36,6 +36,17 @@ const studentSchema = new mongoose.Schema({
         }
     },
 
+    completionStatus: {
+        type: String,
+        enum: ["completed", "in progress", "dropped",],
+        default: "in progress",
+        required: true,
+    },
+
+    completionDate: {
+        type: Date,
+    },
+
     year: {
         type: Number,
         required: true,

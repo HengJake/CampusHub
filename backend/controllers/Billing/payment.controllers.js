@@ -15,21 +15,21 @@ import {
 
 // Custom validation function for payment data
 const validatePaymentData = async (data) => {
-    const { SchoolID, UserID, SubscriptionID } = data;
+    const { schoolID, userID, subscriptionID } = data;
 
     // Check required fields
-    if (!SchoolID) {
+    if (!schoolID) {
         return {
             isValid: false,
-            message: "SchoolID is required"
+            message: "schoolID is required"
         };
     }
 
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
-        schoolID: { id: SchoolID, Model: School },
-        userID: { id: UserID, Model: User },
-        subscriptionID: { id: SubscriptionID, Model: Subscription }
+        schoolID: { id: schoolID, Model: School },
+        userID: { id: userID, Model: User },
+        subscriptionID: { id: subscriptionID, Model: Subscription }
     });
 
     if (referenceValidation) {

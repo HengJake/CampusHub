@@ -9,5 +9,6 @@ export default function generateToken(user) {
         role: user.role,
         ...(user.role === "schoolAdmin" ? "" : user.schoolId)
     }
+    
     return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
 }

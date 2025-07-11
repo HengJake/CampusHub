@@ -24,16 +24,19 @@ import UserSetting from "./pages/userPage/userSetting/userSetting.jsx";
 import UserProfile from "./pages/userPage/userProfile/userProfile.jsx";
 
 // School Admin Pages
-import AdminDashboard from "./pages/schoolAdminPage/adminDashboard/adminDashboard.jsx";
-import StudentManagement from "./pages/schoolAdminPage/studentManagement/studentManagement.jsx";
-import FacilityManagement from "./pages/schoolAdminPage/facilityManagement/facilityManagement.jsx";
-import LockerManagement from "./pages/schoolAdminPage/lockerManagement/lockerManagement.jsx";
-import ParkingManagement from "./pages/schoolAdminPage/parkingManagement/parkingManagement.jsx";
-import BookingManagement from "./pages/schoolAdminPage/bookingManagement/bookingManagement.jsx";
-import FeedbackManagement from "./pages/schoolAdminPage/feedbackManagement/feedbackManagement.jsx";
-import AnnouncementManagement from "./pages/schoolAdminPage/announcementManagement/announcementManagement.jsx";
-import AdminSetting from "./pages/schoolAdminPage/adminSetting/adminSetting.jsx";
-import AdminProfile from "./pages/schoolAdminPage/adminProfile/adminProfile.jsx";
+import { Dashboard as AdminDashboard } from "./pages/schoolAdminPage/Dashboard.jsx";
+import { StudentManagement } from "./pages/schoolAdminPage/UserManagement.jsx";
+import { AcademicManagement } from "./pages/schoolAdminPage/AcademicManagement.jsx";
+import { FacilityManagement } from "./pages/schoolAdminPage/FacilityManagement.jsx";
+import { ParkingManagement } from "./pages/schoolAdminPage/ParkingManagement.jsx";
+import { LockerManagement } from "./pages/schoolAdminPage/LockerManagement.jsx";
+import { BookingManagement } from "./pages/schoolAdminPage/BookingManagement.jsx";
+import { FeedbackManagement } from "./pages/schoolAdminPage/FeedbackManagement.jsx";
+import { AnnouncementManagement } from "./pages/schoolAdminPage/AnnouncementManagement.jsx";
+import { AdminSetting } from "./pages/schoolAdminPage/AdminSetting.jsx";
+import { AdminProfile } from "./pages/schoolAdminPage/AdminProfile.jsx";
+import { CourseManagement } from "./pages/schoolAdminPage/CourseManagement.jsx";
+import { LecturerManagement } from "./pages/schoolAdminPage/LecturerManagement.jsx"
 
 // CampusHub Admin Pages
 import CampushubDashboard from "./pages/campusHubAdminPage/campushubDashboard/campushubDashboard.jsx";
@@ -59,6 +62,7 @@ import CANavbar from "./component/navBar/campusHubAdminNavBar.jsx";
 import LNavbar from "./component/navBar/landingNavBar";
 import RNavBar from "./component/navBar/registrationNavBar";
 import SNavBar from "./component/navBar/studentNavBar";
+import { AcademicOverview } from "./pages/schoolAdminPage/AcademicOverview.jsx";
 
 
 function App() {
@@ -71,50 +75,70 @@ function App() {
 
   // Determine role from path
   const detectRoleFromPath = (path) => {
-    if (
-      path === "/login" ||
-      path === "/signup"
-    ) {
+    // Registration pages
+    if (path === "/login" || path === "/signup") {
       return "register";
-    } else if (
-      path === "/" ||
-      path === "/service" ||
-      path === "/contact-us" ||
-      path === "/pricing" ||
-      path === "/about"
-    ) {
+    }
+
+    // Landing pages
+    if (path === "/" || path === "/service" || path === "/contact-us" || path === "/pricing" || path === "/about") {
       return "landing";
-    } else if (
-      path.startsWith("/user-") ||
-      path.startsWith("/book") ||
+    }
+
+    // User pages - exact matches and specific patterns
+    if (
+      path === "/user-dashboard" ||
+      path === "/book-facility" ||
+      path === "/book-locker" ||
       path === "/parking-lot" ||
-      path === "/class-schedule" ||
       path === "/classroom-finder" ||
+      path === "/class-schedule" ||
       path === "/result" ||
       path === "/attendance" ||
       path === "/bus-schedule" ||
       path === "/campus-ride" ||
       path === "/ride-detail" ||
-      path === "/feedback"
+      path === "/feedback" ||
+      path === "/user-setting" ||
+      path === "/user-profile"
     ) {
       return "user";
-    } else if (
-      path.startsWith("/admin-") ||
-      path.includes("-management") ||
-      path === "/announcement-management"
+    }
+
+    // Admin pages - exact matches and specific patterns
+    if (
+      path === "/admin-dashboard" ||
+      path === "/student-management" ||
+      path === "/facility-management" ||
+      path === "/locker-management" ||
+      path === "/parking-management" ||
+      path === "/booking-management" ||
+      path === "/feedback-management" ||
+      path === "/announcement-management" ||
+      path === "/academic-management" ||
+      path === "/course-management" ||
+      path === "/lecturer-management" ||
+      path === "/admin-setting" ||
+      path === "/admin-profile"
     ) {
       return "admin";
-    } else if (
-      path.startsWith("/campushub-") ||
+    }
+
+    // CampusHub Admin pages - exact matches and specific patterns
+    if (
+      path === "/campushub-dashboard" ||
       path === "/subscription" ||
       path === "/client-management" ||
       path === "/analytical-report" ||
-      path === "/user-oversight"
+      path === "/user-oversight" ||
+      path === "/campushub-setting" ||
+      path === "/campushub-profile"
     ) {
       return "company";
-    } else {
-      return "landing"; // fallback
     }
+
+    // Fallback to landing
+    return "landing";
   };
 
   useEffect(() => {
@@ -225,6 +249,9 @@ function App() {
           <Route path="/parking-management" element={<ParkingManagement />} />
           <Route path="/booking-management" element={<BookingManagement />} />
           <Route path="/feedback-management" element={<FeedbackManagement />} />
+          <Route path="/academic-management" element={<AcademicOverview />} />
+          <Route path="/course-management" element={<CourseManagement />} />
+          <Route path="/lecturer-management" element={<LecturerManagement />} />
           <Route
             path="/announcement-management"
             element={<AnnouncementManagement />}

@@ -56,7 +56,7 @@ function navBar() {
             _hover={{ bg: "gray.100" }}
             role="group"
           >
-            <ChakraLink as={RouterLink} to={"student-management"}>
+            <ChakraLink as={RouterLink} to={"admin-profile"}>
               <Icon
                 as={MdAccountCircle}
                 boxSize={6}
@@ -65,6 +65,7 @@ function navBar() {
               />
             </ChakraLink>
           </Button>
+
           <Button
             bg="transparent"
             padding={0}
@@ -84,12 +85,15 @@ function navBar() {
             _hover={{ bg: "gray.100" }}
             role="group"
           >
-            <Icon
-              as={IoIosSettings}
-              boxSize={6}
-              color="white"
-              _groupHover={{ color: "blue.800" }}
-            />
+            <ChakraLink as={RouterLink} to={"admin-setting"}>
+
+              <Icon
+                as={IoIosSettings}
+                boxSize={6}
+                color="white"
+                _groupHover={{ color: "blue.800" }}
+              />
+            </ChakraLink>
           </Button>
         </HStack>
       </Flex>
