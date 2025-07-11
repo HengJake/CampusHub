@@ -109,7 +109,8 @@ function attendance() {
           </HStack>
         </Box>
 
-        <Box
+        
+        {/* <Box
           bgColor={"#D9D9D9"}
           width={"50%"}
           borderRadius={"15px"}
@@ -177,7 +178,7 @@ function attendance() {
               <IoIosArrowForward size={"40px"} color="white" />
             </Button>
           </Box>
-        </Box>
+        </Box> */}
       </Box>
 
       <Accordion defaultIndex={[0]} allowMultiple>
