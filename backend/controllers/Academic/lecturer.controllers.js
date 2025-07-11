@@ -13,13 +13,13 @@ import {
 
 // Custom validation function for lecturer data
 const validateLecturerData = async (data) => {
-    const { LecturerName, LecturerEmail, DepartmentID } = data;
+    const { UserID, DepartmentID } = data;
 
     // Check required fields
-    if (!LecturerName || !LecturerEmail || !DepartmentID) {
+    if (!UserID|| !DepartmentID) {
         return {
             isValid: false,
-            message: "Please provide all required fields (LecturerName, LecturerEmail, DepartmentID)"
+            message: "Please provide all required fields (UserID, DepartmentID)"
         };
     }
 

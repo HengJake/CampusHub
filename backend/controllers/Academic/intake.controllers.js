@@ -10,10 +10,10 @@ import {
 
 // Custom validation function for intake data
 const validateIntakeData = async (data) => {
-    const { IntakeName, IntakeDescription, IntakeStartDate, IntakeEndDate } = data;
+    const { IntakeName, IntakeMonth, AcademicYear, Semester, RegistrationStartDate, RegistrationEndDate, OrientationDate, ClassesStartDate, ClassesEndDate, ExaminationStartDate, ExaminationEndDate, SchoolID } = data;
 
     // Check required fields
-    if (!IntakeName || !IntakeDescription || !IntakeStartDate || !IntakeEndDate) {
+    if (!IntakeName || !IntakeMonth || !AcademicYear || !Semester || !RegistrationStartDate || !RegistrationEndDate || !OrientationDate || !ClassesStartDate || !ClassesEndDate || !ExaminationStartDate || !ExaminationEndDate || !SchoolID) {
         return {
             isValid: false,
             message: "Please provide all required fields (IntakeName, IntakeDescription, IntakeStartDate, IntakeEndDate)"
@@ -21,8 +21,8 @@ const validateIntakeData = async (data) => {
     }
 
     // Validate dates
-    const startDate = new Date(IntakeStartDate);
-    const endDate = new Date(IntakeEndDate);
+    const startDate = new Date(RegistrationStartDate);
+    const endDate = new Date(RegistrationEndDate);
     
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
         return {

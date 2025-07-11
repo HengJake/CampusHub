@@ -1,10 +1,13 @@
 import Module from "../../models/Academic/module.model.js";
+import Course from "../../models/Academic/course.model.js";
+
 import {
     createRecord,
     getAllRecords,
     getRecordById,
     updateRecord,
     deleteRecord,
+    validateMultipleReferences,
     controllerWrapper
 } from "../../utils/reusable.js";
 

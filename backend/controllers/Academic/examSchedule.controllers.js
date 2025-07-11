@@ -2,7 +2,9 @@ import ExamSchedule from "../../models/Academic/examSchedule.model.js";
 import Room from "../../models/Academic/room.model.js";
 import Module from "../../models/Academic/module.model.js";
 import Lecturer from "../../models/Academic/lecturer.model.js";
-import Intake from "../../models/Academic/intake.model.js";
+import IntakeCourse from "../../models/Academic/intakeCourse.model.js";
+import Course from "../../models/Academic/course.model.js";
+
 import {
     createRecord,
     getAllRecords,
@@ -16,22 +18,22 @@ import {
 
 // Custom validation function for exam schedule data
 const validateExamScheduleData = async (data) => {
-    const { RoomID, ModuleID, LecturerID, DayOfWeek, StartTime, EndTime, IntakeID } = data;
+    const { RoomID, ModuleID, invigilators, examDate, examTime, intakeCourseID, courseId, durationMinute, schoolID } = data;
 
     // Check required fields
-    if (!RoomID || !ModuleID || !LecturerID || !DayOfWeek || !StartTime || !EndTime || !IntakeID) {
+    if (!RoomID || !ModuleID || !examDate || !examTime || !intakeCourseID || !CourseID || !durationMinute || !schoolID) {
         return {
             isValid: false,
-            message: "Please provide all required fields (RoomID, ModuleID, LecturerID, DayOfWeek, StartTime, EndTime, IntakeID)"
+            message: "Please provide all required fields (RoomID, ModuleID, invigilators, examDate, examTime, intakeCourseID, courseId, durationMinute, schoolID )"
         };
     }
 
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
-        roomID: { id: RoomID, Model: Room },
-        moduleID: { id: ModuleID, Model: Module },
-        lecturerID: { id: LecturerID, Model: Lecturer },
-        intakeID: { id: IntakeID, Model: Intake }
+        RoomID: { id: RoomID, Model: Room },
+        ModuleID: { id: ModuleID, Model: Module },
+        intakeCourseID: { id: intakeCourseID, Model: IntakeCourse },
+        CourseID: { id: CourseID, Model: Course }
     });
 
     if (referenceValidation) {
@@ -59,7 +61,7 @@ export const getExamSchedules = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         ExamSchedule,
         "exam schedules",
-        ['RoomID', 'ModuleID', 'LecturerID', 'IntakeID']
+        ['RoomID', 'ModuleID', 'CourseID', 'intakeCourseID']
     );
 });
 
@@ -70,7 +72,7 @@ export const getExamScheduleById = controllerWrapper(async (req, res) => {
         ExamSchedule,
         id,
         "exam schedule",
-        ['RoomID', 'ModuleID', 'LecturerID', 'IntakeID']
+        ['RoomID', 'ModuleID', 'CourseID', 'intakeCourseID']
     );
 });
 

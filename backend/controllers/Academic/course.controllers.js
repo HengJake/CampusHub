@@ -1,5 +1,7 @@
 import Course from '../../models/Academic/course.model.js';
 import Module from '../../models/Academic/module.model.js';
+import Department from '../../models/Academic/department.model.js';
+
 import {
     createRecord,
     getAllRecords,
@@ -13,10 +15,10 @@ import {
 
 // Custom validation function for course data
 const validateCourseData = async (data) => {
-    const { CourseName, Duration, ModuleID } = data;
+    const { courseName, courseCode, courseDescription, courseLevel, courseType, totalCreditHours, departmentId, duration, schoolId } = data;
 
     // Check required fields
-    if (!CourseName || !Duration || !ModuleID) {
+    if (!courseName || !courseCode || !courseDescription || !courseLevel || !courseType || !totalCreditHours || !DepartmentID || !duration || !SchoolID) {
         return {
             isValid: false,
             message: "Please provide all required fields (CourseName, Duration, ModuleID)"
@@ -25,7 +27,7 @@ const validateCourseData = async (data) => {
 
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
-        moduleID: { id: ModuleID, Model: Module }
+        departmentId: { id: DepartmentID, Model: Department }
     });
 
     if (referenceValidation) {
@@ -53,7 +55,7 @@ export const getCourses = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Course,
         "courses",
-        ['ModuleID']
+        ['DepartmentID']
     );
 });
 
@@ -64,7 +66,7 @@ export const getCourseById = controllerWrapper(async (req, res) => {
         Course,
         id,
         "course",
-        ['ModuleID']
+        ['DepartmentID']
     );
 });
 
