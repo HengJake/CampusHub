@@ -30,6 +30,24 @@ import { FaGraduationCap } from "react-icons/fa";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
 import { useAcademicStore } from "../../store/academic.js";
 import { useEffect } from "react";
+import { StatCard } from "../../component/common/statsCard.jsx";
+import {
+  FiCheckCircle,
+  FiTrendingUp,
+  FiAlertTriangle,
+  FiStar,
+  FiAlertCircle,
+  FiMessageSquare,
+  FiCalendar,
+  FiUserPlus,
+  FiRefreshCw,
+  FiBarChart,
+  FiDownload,
+  FiBarChart2,
+  FiDatabase,
+  FiUpload,
+  FiPieChart,
+} from "react-icons/fi";
 
 export function AcademicOverview() {
   const {
@@ -41,6 +59,8 @@ export function AcademicOverview() {
     intakes,
     examSchedules,
     attendance,
+    classSchedules,
+    results,
     fetchStudents,
     fetchLecturers,
     fetchCourses,
@@ -49,6 +69,8 @@ export function AcademicOverview() {
     fetchIntakes,
     fetchExamSchedules,
     fetchAttendance,
+    fetchClassSchedules,
+    fetchResults,
     getCourseCompletionRate,
     getAllCourseCompletionRate,
     getAverageAttendance,
@@ -64,10 +86,13 @@ export function AcademicOverview() {
     fetchIntakes && fetchIntakes();
     fetchExamSchedules && fetchExamSchedules();
     fetchAttendance && fetchAttendance();
+    fetchClassSchedules && fetchClassSchedules();
+    fetchResults && fetchResults();
   }, []);
 
   // Compute dashboard stats
   const dashboardStats = {
+    // Basic counts
     totalStudents: students.length,
     totalLecturers: lecturers?.length || 0,
     totalCourses: courses.length,
@@ -83,7 +108,136 @@ export function AcademicOverview() {
       const present = todayAttendance.filter(a => a.status === "present").length;
       return Math.round((present / todayAttendance.length) * 100);
     })(),
+
+    // 📚 Student Academic Performance
+    passRate: (() => {
+      if (!results.length) return 0;
+      const passed = results.filter(r => r.grade !== 'F' && r.grade !== 'Fail').length;
+      return Math.round((passed / results.length) * 100);
+    })(),
+    averageGPA: (() => {
+      if (!results.length) return 0;
+      const gradePoints = { 'A': 4.0, 'B': 3.0, 'C': 2.0, 'D': 1.0, 'F': 0.0 };
+      const totalPoints = results.reduce((sum, r) => sum + (gradePoints[r.grade] || 0), 0);
+      return totalPoints / results.length;
+    })(),
+    atRiskStudents: (() => {
+      if (!students.length) return 0;
+      // Students with GPA < 2.0 or multiple failed courses
+      return students.filter(s => {
+        const studentResults = results.filter(r => r.studentId === s._id);
+        if (!studentResults.length) return false;
+        const avgGrade = studentResults.reduce((sum, r) => sum + (r.grade === 'A' ? 4 : r.grade === 'B' ? 3 : r.grade === 'C' ? 2 : r.grade === 'D' ? 1 : 0), 0) / studentResults.length;
+        return avgGrade < 2.0;
+      }).length;
+    })(),
+    topPerformers: (() => {
+      if (!students.length) return 0;
+      // Students with GPA > 3.5
+      return students.filter(s => {
+        const studentResults = results.filter(r => r.studentId === s._id);
+        if (!studentResults.length) return false;
+        const avgGrade = studentResults.reduce((sum, r) => sum + (r.grade === 'A' ? 4 : r.grade === 'B' ? 3 : r.grade === 'C' ? 2 : r.grade === 'D' ? 1 : 0), 0) / studentResults.length;
+        return avgGrade > 3.5;
+      }).length;
+    })(),
+
+    // 🧑‍🏫 Lecturer/Subject Overview
+    avgSubjectLoad: (() => {
+      if (!lecturers.length) return 0;
+      const totalSubjects = modules.length;
+      return Math.round(totalSubjects / lecturers.length);
+    })(),
+    totalContactHours: (() => {
+      if (!classSchedules.length) return 0;
+      return classSchedules.reduce((total, schedule) => total + (schedule.duration || 0), 0);
+    })(),
+    highFailRateSubjects: (() => {
+      if (!modules.length) return 0;
+      return modules.filter(module => {
+        const moduleResults = results.filter(r => r.moduleId === module._id);
+        if (!moduleResults.length) return false;
+        const failRate = moduleResults.filter(r => r.grade === 'F').length / moduleResults.length;
+        return failRate > 0.3; // 30% fail rate threshold
+      }).length;
+    })(),
+    avgFeedbackScore: (() => {
+      // Mock feedback score - in real app, this would come from feedback data
+      return 4.2;
+    })(),
+
+    // 🏫 Class & Semester Metrics
+    activeSemesters: (() => {
+      if (!intakes.length) return 0;
+      const currentDate = new Date();
+      return intakes.filter(intake => {
+        const intakeDate = new Date(intake.startDate);
+        const endDate = new Date(intake.endDate);
+        return currentDate >= intakeDate && currentDate <= endDate;
+      }).length;
+    })(),
+    avgClassSize: (() => {
+      if (!classSchedules.length) return 0;
+      const totalStudents = students.length;
+      return Math.round(totalStudents / classSchedules.length);
+    })(),
+    courseRetakeRate: (() => {
+      if (!students.length) return 0;
+      const retakeStudents = students.filter(s => s.completionStatus === 'retaking').length;
+      return Math.round((retakeStudents / students.length) * 100);
+    })(),
+    enrollmentRate: (() => {
+      if (!students.length) return 0;
+      const enrolledStudents = students.filter(s => s.enrollmentStatus === 'enrolled').length;
+      return Math.round((enrolledStudents / students.length) * 100);
+    })(),
+
+    // 📅 Attendance Tracking
+    avgAttendanceRate: (() => {
+      if (!attendance.length) return 0;
+      const present = attendance.filter(a => a.status === "present").length;
+      return Math.round((present / attendance.length) * 100);
+    })(),
+    lowAttendanceAlerts: (() => {
+      if (!students.length) return 0;
+      return students.filter(student => {
+        const studentAttendance = attendance.filter(a => a.studentId === student._id);
+        if (!studentAttendance.length) return false;
+        const attendanceRate = studentAttendance.filter(a => a.status === "present").length / studentAttendance.length;
+        return attendanceRate < 0.75; // Below 75% attendance
+      }).length;
+    })(),
+    attendancePerformanceCorr: (() => {
+      // Mock correlation - in real app, calculate actual correlation
+      return 85;
+    })(),
+    weeklyAbsenceTrend: (() => {
+      if (!attendance.length) return 0;
+      const absent = attendance.filter(a => a.status === "absent").length;
+      return Math.round((absent / attendance.length) * 100);
+    })(),
+
+    // 📤 Assessment & Exam Insights
+    resultSubmissionProgress: (() => {
+      if (!modules.length) return 0;
+      const modulesWithResults = modules.filter(module =>
+        results.some(r => r.moduleId === module._id)
+      ).length;
+      return Math.round((modulesWithResults / modules.length) * 100);
+    })(),
+    assessmentWeightage: (() => {
+      // Mock assessment weightage - in real app, calculate from actual data
+      return 70; // 70% coursework, 30% exams
+    })(),
+    pendingGradingItems: (() => {
+      if (!modules.length) return 0;
+      const modulesWithResults = modules.filter(module =>
+        results.some(r => r.moduleId === module._id)
+      ).length;
+      return modules.length - modulesWithResults;
+    })(),
   };
+  
 
   // Enrollment trends (example: students per month, you may need to adjust based on your data)
   const enrollmentData = (() => {
@@ -117,36 +271,6 @@ export function AcademicOverview() {
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
 
-  const StatCard = ({ title, value, change, icon, color }) => (
-    <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-      <CardBody>
-        <Stat>
-          <HStack justify="space-between">
-            <Box>
-              <StatLabel color="gray.600" fontSize="sm">
-                {title}
-              </StatLabel>
-              <StatNumber fontSize="2xl" color={color}>
-                {value}
-              </StatNumber>
-              {change && (
-                <StatHelpText>
-                  <StatArrow type={change > 0 ? "increase" : "decrease"} />
-                  {Math.abs(change)}%
-                </StatHelpText>
-              )}
-            </Box>
-            <Box color={color} fontSize="2xl">
-              {icon}
-            </Box>
-          </HStack>
-        </Stat>
-      </CardBody>
-    </Card>
-  )
-
-  console.log(getAllCourseCompletionRate())
-
   return (
     <Box p={6} minH="100vh" flex={1}>
       <VStack spacing={6} align="stretch">
@@ -158,59 +282,173 @@ export function AcademicOverview() {
           <Text color="gray.600">Welcome to the Academic Management Dashboard</Text>
         </Box>
 
-        {/* Stats Cards */}
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
-          <StatCard
-            title="Total Students"
-            value={dashboardStats.totalStudents.toLocaleString()}
-            change={5.2}
-            icon={<FiUsers />}
-            color="blue.500"
-          />
-          <StatCard
-            title="Total Lecturers"
-            value={dashboardStats.totalLecturers}
-            change={2.1}
-            icon={<FiUser />}
-            color="green.500"
-          />
-          <StatCard
-            title="Active Courses"
-            value={dashboardStats.totalCourses}
-            change={8.3}
-            icon={<FiBook />}
-            color="purple.500"
-          />
-          <StatCard
-            title="Total Modules"
-            value={dashboardStats.totalModules}
-            change={12.5}
-            icon={<FiBookOpen />}
-            color="orange.500"
-          />
-        </Grid>
+        {/* Academic Performance Stats */}
+        <Box>
+          <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
+            📚 Student Academic Performance
+          </Text>
+          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
+            <StatCard
+              title="Pass Rate"
+              value={`${dashboardStats.passRate}%`}
+              change={2.5}
+              icon={<FiCheckCircle />}
+              color="green.500"
+            />
+            <StatCard
+              title="Average GPA"
+              value={dashboardStats.averageGPA.toFixed(2)}
+              change={0.1}
+              icon={<FiTrendingUp />}
+              color="blue.500"
+            />
+            <StatCard
+              title="At-Risk Students"
+              value={dashboardStats.atRiskStudents}
+              change={-3}
+              icon={<FiAlertTriangle />}
+              color="red.500"
+            />
+            <StatCard
+              title="Top Performers"
+              value={dashboardStats.topPerformers}
+              icon={<FiStar />}
+              color="yellow.500"
+            />
+          </Grid>
+        </Box>
 
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
-          <StatCard
-            title="Departments"
-            value={dashboardStats.totalDepartments}
-            icon={<FaBuilding />}
-            color="teal.500"
-          />
-          <StatCard
-            title="Active Intakes"
-            value={dashboardStats.totalIntakes}
-            icon={<FaGraduationCap />}
-            color="pink.500"
-          />
-          <StatCard title="Upcoming Exams" value={dashboardStats.upcomingExams} icon={<FiClock />} color="red.500" />
-          <StatCard
-            title="Today's Attendance"
-            value={`${dashboardStats.todayAttendance}%`}
-            icon={<FiCheckSquare />}
-            color="cyan.500"
-          />
-        </Grid>
+        {/* Lecturer Overview Stats */}
+        <Box>
+          <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
+            🧑‍🏫 Lecturer/Subject Overview
+          </Text>
+          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
+            <StatCard
+              title="Avg Subject Load"
+              value={dashboardStats.avgSubjectLoad}
+              icon={<FiBook />}
+              color="purple.500"
+            />
+            <StatCard
+              title="Contact Hours"
+              value={dashboardStats.totalContactHours}
+              icon={<FiClock />}
+              color="teal.500"
+            />
+            <StatCard
+              title="High Fail Rate Subjects"
+              value={dashboardStats.highFailRateSubjects}
+              icon={<FiAlertCircle />}
+              color="orange.500"
+            />
+            <StatCard
+              title="Avg Feedback Score"
+              value={`${dashboardStats.avgFeedbackScore}/5`}
+              icon={<FiMessageSquare />}
+              color="pink.500"
+            />
+          </Grid>
+        </Box>
+
+        {/* Class & Semester Metrics */}
+        <Box>
+          <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
+            🏫 Class & Semester Metrics
+          </Text>
+          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
+            <StatCard
+              title="Active Semesters"
+              value={dashboardStats.activeSemesters}
+              icon={<FiCalendar />}
+              color="indigo.500"
+            />
+            <StatCard
+              title="Avg Class Size"
+              value={dashboardStats.avgClassSize}
+              icon={<FiUsers />}
+              color="cyan.500"
+            />
+            <StatCard
+              title="Course Retake Rate"
+              value={`${dashboardStats.courseRetakeRate}%`}
+              icon={<FiRefreshCw />}
+              color="red.400"
+            />
+            <StatCard
+              title="Enrollment Rate"
+              value={`${dashboardStats.enrollmentRate}%`}
+              icon={<FiUserPlus />}
+              color="green.400"
+            />
+          </Grid>
+        </Box>
+
+        {/* Attendance Tracking */}
+        <Box>
+          <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
+            📅 Attendance Tracking
+          </Text>
+          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
+            <StatCard
+              title="Avg Attendance Rate"
+              value={`${dashboardStats.avgAttendanceRate}%`}
+              icon={<FiCheckSquare />}
+              color="green.500"
+            />
+            <StatCard
+              title="Low Attendance Alerts"
+              value={dashboardStats.lowAttendanceAlerts}
+              icon={<FiAlertTriangle />}
+              color="red.500"
+            />
+            <StatCard
+              title="Attendance vs Performance"
+              value={`${dashboardStats.attendancePerformanceCorr}%`}
+              icon={<FiTrendingUp />}
+              color="blue.500"
+            />
+            <StatCard
+              title="Weekly Absence Trend"
+              value={`${dashboardStats.weeklyAbsenceTrend}%`}
+              icon={<FiBarChart />}
+              color="orange.500"
+            />
+          </Grid>
+        </Box>
+
+        {/* Assessment & Exam Insights */}
+        <Box>
+          <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
+            📤 Assessment & Exam Insights
+          </Text>
+          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
+            <StatCard
+              title="Upcoming Exams"
+              value={dashboardStats.upcomingExams}
+              icon={<FiCalendar />}
+              color="red.500"
+            />
+            <StatCard
+              title="Result Submission"
+              value={`${dashboardStats.resultSubmissionProgress}%`}
+              icon={<FiUpload />}
+              color="green.500"
+            />
+            <StatCard
+              title="Assessment Weightage"
+              value={`${dashboardStats.assessmentWeightage}%`}
+              icon={<FiPieChart />}
+              color="purple.500"
+            />
+            <StatCard
+              title="Pending Grading"
+              value={dashboardStats.pendingGradingItems}
+              icon={<FiClock />}
+              color="orange.500"
+            />
+          </Grid>
+        </Box>
 
         <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={6}>
           {/* Charts Section */}

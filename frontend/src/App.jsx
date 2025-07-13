@@ -40,7 +40,6 @@ import UserProfile from "./pages/userPage/userProfile/userProfile.jsx";
 // School Admin Pages
 import { Dashboard as AdminDashboard } from "./pages/schoolAdminPage/Dashboard.jsx";
 import { StudentManagement } from "./pages/schoolAdminPage/UserManagement.jsx";
-import { AcademicManagement } from "./pages/schoolAdminPage/AcademicManagement.jsx";
 import { FacilityManagement } from "./pages/schoolAdminPage/FacilityManagement.jsx";
 import { ParkingManagement } from "./pages/schoolAdminPage/ParkingManagement.jsx";
 import { LockerManagement } from "./pages/schoolAdminPage/LockerManagement.jsx";
@@ -127,7 +126,6 @@ function App() {
       path === "/parking-management" ||
       path === "/booking-management" ||
       path === "/feedback-management" ||
-      path === "/announcement-management" ||
       path === "/academic-management" ||
       path === "/course-management" ||
       path === "/lecturer-management" ||
@@ -291,7 +289,6 @@ function App() {
           <Route path="/booking-management" element={wrapWithAuth(<BookingManagement />)} />
           <Route path="/feedback-management" element={wrapWithAuth(<FeedbackManagement />)} />
           <Route path="/academic-overview" element={wrapWithAuth(<AcademicOverview />)} />
-          <Route path="/academic-management" element={wrapWithAuth(<AcademicManagement />)} />
           <Route path="/course-management" element={wrapWithAuth(<CourseManagement />)} />
           <Route path="/lecturer-management" element={wrapWithAuth(<LecturerManagement />)} />
           <Route path="/announcement-management" element={wrapWithAuth(<AnnouncementManagement />)} />

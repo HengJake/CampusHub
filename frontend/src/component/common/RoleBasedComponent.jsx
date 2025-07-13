@@ -36,9 +36,10 @@ const RoleBasedComponent = ({
     } = useAuth();
 
     const [authError, setAuthError] = useState(null);
+    const [authSuccess, setAuthSuccess] = useState(false);
 
     useEffect(() => {
-        if (isInitialized && !isLoading) {
+        if (isInitialized && !isLoading && !authSuccess) {
             if (isAuthenticated && hasAccess(requiredRole)) {
                 // Validate schoolId for schoolAdmin operations
                 if (requiredRole === 'schoolAdmin' || requiredRole === 'student') {
@@ -46,6 +47,7 @@ const RoleBasedComponent = ({
                         const currentSchoolId = getSchoolId();
                         if (currentSchoolId) {
                             setAuthError(null);
+                            setAuthSuccess(true);
                             onAuthSuccess?.({ schoolId: currentSchoolId, role: userRole });
                         } else {
                             throw new Error('School ID not available');
@@ -55,6 +57,7 @@ const RoleBasedComponent = ({
                         onAuthError?.(error);
                     }
                 } else {
+                    setAuthSuccess(true);
                     setAuthError(null);
                     onAuthSuccess?.({ role: userRole });
                 }

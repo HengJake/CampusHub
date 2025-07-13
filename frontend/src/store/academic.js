@@ -83,10 +83,49 @@ export const useAcademicStore = create((set, get) => ({
         return url;
     },
 
+    // Add a helper to check if user is authenticated
+    isAuthenticated: () => {
+        const authStore = useAuthStore.getState();
+        return authStore.isAuthenticated;
+    },
+
+    // Add a helper to wait for authentication
+    waitForAuth: async () => {
+        const authStore = useAuthStore.getState();
+        let attempts = 0;
+        const maxAttempts = 100; // 10 seconds with 100ms intervals
+
+        while (!authStore.isAuthenticated && attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+
+            // Re-check the auth store state on each attempt
+            const currentAuthStore = useAuthStore.getState();
+            if (currentAuthStore.isAuthenticated) {
+                break;
+            }
+        }
+
+        if (!authStore.isAuthenticated) {
+            throw new Error('Authentication timeout - please log in again');
+        }
+
+        const schoolId = authStore.getSchoolId();
+        if (!schoolId) {
+            throw new Error('School ID not available - authentication incomplete');
+        }
+
+        return schoolId;
+    },
+
+
     // ===== STUDENT OPERATIONS =====
     fetchStudents: async (filters = {}) => {
         set(state => ({ loading: { ...state.loading, students: true } }));
+
         try {
+            await get().waitForAuth();
+
             const url = get().buildUrl('/api/student', filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -205,6 +244,8 @@ export const useAcademicStore = create((set, get) => ({
     fetchCourses: async (filters = {}) => {
         set(state => ({ loading: { ...state.loading, courses: true } }));
         try {
+            await get().waitForAuth();
+
             const url = get().buildUrl('/api/course', filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -266,10 +307,369 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+    // ===== LECTURER OPERATIONS =====
+    fetchLecturers: async (filters = {}) => {
+        set(state => ({ loading: { ...state.loading, lecturers: true } }));
+        try {
+            await get().waitForAuth();
+
+            const url = get().buildUrl('/api/lecturer', filters);
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch lecturers");
+            }
+
+            set(state => ({
+                lecturers: data.data,
+                loading: { ...state.loading, lecturers: false },
+                errors: { ...state.errors, lecturers: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, lecturers: false },
+                errors: { ...state.errors, lecturers: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    createLecturer: async (lecturerData) => {
+        try {
+            // Automatically add schoolId for schoolAdmin
+            const authStore = useAuthStore.getState();
+            const user = authStore.getCurrentUser();
+
+            if (user.role === 'schoolAdmin') {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    lecturerData.schoolId = schoolId;
+                }
+            }
+
+            const res = await fetch('/api/lecturer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(lecturerData),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to create lecturer");
+            }
+
+            set(state => ({
+                lecturers: [...state.lecturers, data.data]
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    updateLecturer: async (id, updates) => {
+        try {
+            const res = await fetch(`/api/lecturer/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updates),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update lecturer");
+            }
+
+            // Update in local state
+            set(state => ({
+                lecturers: state.lecturers.map(lecturer =>
+                    lecturer._id === id ? data.data : lecturer
+                )
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteLecturer: async (id) => {
+        try {
+            const res = await fetch(`/api/lecturer/${id}`, {
+                method: 'DELETE',
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete lecturer");
+            }
+
+            // Remove from local state
+            set(state => ({
+                lecturers: state.lecturers.filter(lecturer => lecturer._id !== id)
+            }));
+
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    // ===== DEPARTMENT OPERATIONS =====
+    fetchDepartments: async (filters = {}) => {
+        set(state => ({ loading: { ...state.loading, departments: true } }));
+        try {
+            await get().waitForAuth();
+
+            const url = get().buildUrl('/api/department', filters);
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch departments");
+            }
+
+            set(state => ({
+                departments: data.data,
+                loading: { ...state.loading, departments: false },
+                errors: { ...state.errors, departments: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, departments: false },
+                errors: { ...state.errors, departments: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    createDepartment: async (departmentData) => {
+        try {
+            // Automatically add schoolId for schoolAdmin
+            const authStore = useAuthStore.getState();
+            const user = authStore.getCurrentUser();
+
+            if (user.role === 'schoolAdmin') {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    departmentData.schoolId = schoolId;
+                }
+            }
+
+            const res = await fetch('/api/department', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(departmentData),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to create department");
+            }
+
+            set(state => ({
+                departments: [...state.departments, data.data]
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    updateDepartment: async (id, updates) => {
+        try {
+            const res = await fetch(`/api/department/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updates),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update department");
+            }
+
+            // Update in local state
+            set(state => ({
+                departments: state.departments.map(department =>
+                    department._id === id ? data.data : department
+                )
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteDepartment: async (id) => {
+        try {
+            const res = await fetch(`/api/department/${id}`, {
+                method: 'DELETE',
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete department");
+            }
+
+            // Remove from local state
+            set(state => ({
+                departments: state.departments.filter(department => department._id !== id)
+            }));
+
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    // ===== MODULE OPERATIONS =====
+    fetchModules: async (filters = {}) => {
+        set(state => ({ loading: { ...state.loading, modules: true } }));
+        try {
+            await get().waitForAuth();
+
+            const url = get().buildUrl('/api/module', filters);
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch modules");
+            }
+
+            set(state => ({
+                modules: data.data,
+                loading: { ...state.loading, modules: false },
+                errors: { ...state.errors, modules: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, modules: false },
+                errors: { ...state.errors, modules: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    createModule: async (moduleData) => {
+        try {
+            // Automatically add schoolId for schoolAdmin
+            const authStore = useAuthStore.getState();
+            const user = authStore.getCurrentUser();
+
+            if (user.role === 'schoolAdmin') {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    moduleData.schoolId = schoolId;
+                }
+            }
+
+            const res = await fetch('/api/module', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(moduleData),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to create module");
+            }
+
+            set(state => ({
+                modules: [...state.modules, data.data]
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    updateModule: async (id, updates) => {
+        try {
+            const res = await fetch(`/api/module/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updates),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update module");
+            }
+
+            // Update in local state
+            set(state => ({
+                modules: state.modules.map(module =>
+                    module._id === id ? data.data : module
+                )
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteModule: async (id) => {
+        try {
+            const res = await fetch(`/api/module/${id}`, {
+                method: 'DELETE',
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete module");
+            }
+
+            // Remove from local state
+            set(state => ({
+                modules: state.modules.filter(module => module._id !== id)
+            }));
+
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
     // ===== INTAKE COURSE OPERATIONS =====
     fetchIntakeCourses: async (filters = {}) => {
         set(state => ({ loading: { ...state.loading, intakeCourses: true } }));
         try {
+            await get().waitForAuth();
+
             const url = get().buildUrl('/api/intake-course', filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -296,6 +696,8 @@ export const useAcademicStore = create((set, get) => ({
 
     fetchAvailableIntakeCourses: async () => {
         try {
+            await get().waitForAuth();
+
             const url = get().buildUrl('/api/intake-course/available');
             const res = await fetch(url);
             const data = await res.json();
@@ -343,6 +745,8 @@ export const useAcademicStore = create((set, get) => ({
     fetchAttendance: async (filters = {}) => {
         set(state => ({ loading: { ...state.loading, attendance: true } }));
         try {
+            await get().waitForAuth();
+
             const url = get().buildUrl('/api/attendance', filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -404,10 +808,79 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+    // ===== CLASS SCHEDULE OPERATIONS =====
+    fetchClassSchedules: async (filters = {}) => {
+        set(state => ({ loading: { ...state.loading, classSchedules: true } }));
+        try {
+            await get().waitForAuth();
+
+            const url = get().buildUrl('/api/class-schedule', filters);
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch class schedules");
+            }
+
+            set(state => ({
+                classSchedules: data.data,
+                loading: { ...state.loading, classSchedules: false },
+                errors: { ...state.errors, classSchedules: null }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, classSchedules: false },
+                errors: { ...state.errors, classSchedules: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    createClassSchedule: async (scheduleData) => {
+        try {
+            // Automatically add schoolId for schoolAdmin
+            const authStore = useAuthStore.getState();
+            const user = authStore.getCurrentUser();
+
+            if (user.role === 'schoolAdmin') {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    scheduleData.schoolId = schoolId;
+                }
+            }
+
+            const res = await fetch('/api/classSchedule', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(scheduleData),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to create class schedule");
+            }
+
+            set(state => ({
+                classSchedules: [...state.classSchedules, data.data]
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
     // ===== RESULT OPERATIONS =====
     fetchResults: async (filters = {}) => {
         set(state => ({ loading: { ...state.loading, results: true } }));
         try {
+            await get().waitForAuth();
+
             const url = get().buildUrl('/api/result', filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -469,12 +942,45 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+    // =======INTAKE OPERATIONS======
+    fetchIntakes: async (filters = {}) => {
+        set(state => ({ loading: { ...state.loading, intakes: true } }));
+        try {
+            await get().waitForAuth();
+
+            const url = get().buildUrl('/api/intake', filters);
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch courses");
+            }
+
+            set(state => ({
+                intakes: data.data,
+                loading: { ...state.loading, intakes: false },
+                errors: { ...state.errors, intakes: null }
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set(state => ({
+                loading: { ...state.loading, intakes: false },
+                errors: { ...state.errors, intakes: error.message }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+
     // ===GET BY SCHOOL ID====
     // ===== GET BY SCHOOL ID METHODS =====
 
     fetchStudentsBySchoolId: async (schoolId) => {
+
         set(state => ({ loading: { ...state.loading, students: true } }));
         try {
+            await get().waitForAuth();
+
             const res = await fetch(`/api/student/school/${schoolId}`);
             const data = await res.json();
 
@@ -499,6 +1005,8 @@ export const useAcademicStore = create((set, get) => ({
     fetchCoursesBySchoolId: async (schoolId) => {
         set(state => ({ loading: { ...state.loading, courses: true } }));
         try {
+            await get().waitForAuth();
+
             const res = await fetch(`/api/course/school/${schoolId}`);
             const data = await res.json();
 
@@ -523,6 +1031,8 @@ export const useAcademicStore = create((set, get) => ({
     fetchIntakesBySchoolId: async (schoolId) => {
         set(state => ({ loading: { ...state.loading, intakes: true } }));
         try {
+            await get().waitForAuth();
+
             const res = await fetch(`/api/intake/school/${schoolId}`);
             const data = await res.json();
 
@@ -547,6 +1057,8 @@ export const useAcademicStore = create((set, get) => ({
     fetchIntakeCoursesBySchoolId: async (schoolId) => {
         set(state => ({ loading: { ...state.loading, intakeCourses: true } }));
         try {
+            await get().waitForAuth();
+
             const res = await fetch(`/api/intake-course/school/${schoolId}`);
             const data = await res.json();
 
@@ -571,6 +1083,8 @@ export const useAcademicStore = create((set, get) => ({
     fetchDepartmentsBySchoolId: async (schoolId) => {
         set(state => ({ loading: { ...state.loading, departments: true } }));
         try {
+            await get().waitForAuth();
+
             const res = await fetch(`/api/department/school/${schoolId}`);
             const data = await res.json();
 
@@ -595,6 +1109,8 @@ export const useAcademicStore = create((set, get) => ({
     fetchLecturersBySchoolId: async (schoolId) => {
         set(state => ({ loading: { ...state.loading, lecturers: true } }));
         try {
+            await get().waitForAuth();
+
             const res = await fetch(`/api/lecturer/school/${schoolId}`);
             const data = await res.json();
 
@@ -619,6 +1135,8 @@ export const useAcademicStore = create((set, get) => ({
     fetchModulesBySchoolId: async (schoolId) => {
         set(state => ({ loading: { ...state.loading, modules: true } }));
         try {
+            await get().waitForAuth();
+
             const res = await fetch(`/api/module/school/${schoolId}`);
             const data = await res.json();
 
@@ -643,6 +1161,8 @@ export const useAcademicStore = create((set, get) => ({
     fetchExamSchedulesBySchoolId: async (schoolId) => {
         set(state => ({ loading: { ...state.loading, examSchedules: true } }));
         try {
+            await get().waitForAuth();
+
             const res = await fetch(`/api/examSchedule/school/${schoolId}`);
             const data = await res.json();
 
@@ -667,6 +1187,8 @@ export const useAcademicStore = create((set, get) => ({
     fetchResultsBySchoolId: async (schoolId) => {
         set(state => ({ loading: { ...state.loading, results: true } }));
         try {
+            await get().waitForAuth();
+
             const res = await fetch(`/api/result/school/${schoolId}`);
             const data = await res.json();
 
@@ -691,6 +1213,8 @@ export const useAcademicStore = create((set, get) => ({
     fetchAttendanceBySchoolId: async (schoolId) => {
         set(state => ({ loading: { ...state.loading, attendance: true } }));
         try {
+            await get().waitForAuth();
+
             const res = await fetch(`/api/attendance/school/${schoolId}`);
             const data = await res.json();
 
@@ -715,6 +1239,8 @@ export const useAcademicStore = create((set, get) => ({
     fetchClassSchedulesBySchoolId: async (schoolId) => {
         set(state => ({ loading: { ...state.loading, classSchedules: true } }));
         try {
+            await get().waitForAuth();
+
             const res = await fetch(`/api/classSchedule/school/${schoolId}`);
             const data = await res.json();
 
@@ -739,6 +1265,8 @@ export const useAcademicStore = create((set, get) => ({
     fetchRoomsBySchoolId: async (schoolId) => {
         set(state => ({ loading: { ...state.loading, rooms: true } }));
         try {
+            await get().waitForAuth();
+
             const res = await fetch(`/api/room/school/${schoolId}`);
             const data = await res.json();
 
@@ -801,6 +1329,25 @@ export const useAcademicStore = create((set, get) => ({
     // ===== UTILITY FUNCTIONS =====
     clearErrors: () => {
         set({ errors: {} });
+    },
+
+    clearAllErrors: () => {
+        set(state => ({
+            errors: {
+                students: null,
+                courses: null,
+                intakes: null,
+                intakeCourses: null,
+                departments: null,
+                lecturers: null,
+                modules: null,
+                classSchedules: null,
+                examSchedules: null,
+                attendance: null,
+                results: null,
+                rooms: null,
+            }
+        }));
     },
 
     clearData: () => {

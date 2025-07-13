@@ -5,20 +5,18 @@ import {
   Button,
   Card,
   CardBody,
+  HStack,
+  Input,
+  Select,
   Table,
   Thead,
   Tbody,
   Tr,
   Th,
   Td,
-  Text,
-  Input,
-  Select,
-  HStack,
-  VStack,
   Badge,
   Avatar,
-  IconButton,
+  Text,
   useDisclosure,
   Modal,
   ModalOverlay,
@@ -30,28 +28,31 @@ import {
   FormControl,
   FormLabel,
   useToast,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
   useColorModeValue,
-  InputGroup,
-  InputLeftElement,
+  VStack,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Flex,
+  Spacer,
 } from "@chakra-ui/react"
 import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiDownload } from "react-icons/fi"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useAdminStore } from "../../store/TBI/adminStore.js"
 import { useAcademicStore } from "../../store/academic.js";
 
 export function StudentManagement() {
 
-  const { students, createStudent } = useAcademicStore();
-
-  // const { students, addStudent, updateStudent, deleteStudent } = useAdminStore()
+  const { students, fetchStudents,
+    createStudent,
+    updateStudent,
+    deleteStudent } = useAcademicStore();
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("All")
+  const [statusFilter, setStatusFilter] = useState("all") // Changed from "All" to "all"
   const [selectedStudent, setSelectedStudent] = useState(null)
   const [formData, setFormData] = useState({
     name: "",
@@ -66,12 +67,17 @@ export function StudentManagement() {
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
 
-  const filteredStudents = students.filter((student) => {
+  useEffect(() => {
+    fetchStudents();
+  }, [])
+  console.log("🚀 ~ StudentManagement ~ students:", students)
+
+  let filteredStudents = students.filter((student) => {
     const matchesSearch =
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "All" || student.status === statusFilter
+      student.userId.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.userId.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student._id.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === "all" || student.status.toLowerCase() === statusFilter.toLowerCase()
     return matchesSearch && matchesStatus
   })
 
@@ -117,8 +123,8 @@ export function StudentManagement() {
     const csvContent = [
       ["Name", "Email", "Student ID", "Department", "Year", "Status"],
       ...filteredStudents.map((student) => [
-        student.name,
-        student.email,
+        student.userId.name,
+        student.userId.email,
         student.studentId,
         student.department,
         student.year,
@@ -161,23 +167,26 @@ export function StudentManagement() {
         {/* Filters */}
         <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
           <CardBody>
-            <HStack spacing={4}>
-              <Box flex="1">
-                <InputGroup>
-                  <InputLeftElement>
-                    <FiSearch />
-                  </InputLeftElement>
-                  <Input
-                    placeholder="Search students..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </InputGroup>
+            <HStack spacing={4} mb={4} flexWrap="wrap" gap={2}>
+              <Box flex="1" minW="200px">
+                <Input
+                  placeholder="Search students..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  size="md"
+                />
               </Box>
-              <Select w="200px" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                <option value="All">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+              <Select
+                w={{ base: "full", sm: "200px" }}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="graduated">Graduated</option>
+                <option value="dropped">Dropped</option>
+                <option value="suspended">Suspended</option>
               </Select>
             </HStack>
           </CardBody>
@@ -186,54 +195,128 @@ export function StudentManagement() {
         {/* Students Table */}
         <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
           <CardBody>
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Student</Th>
-                  <Th>Student ID</Th>
-                  <Th>Department</Th>
-                  <Th>Year</Th>
-                  <Th>Status</Th>
-                  <Th>Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {filteredStudents.map((student) => (
-                  <Tr key={student.id}>
-                    <Td>
-                      <HStack>
-                        <Avatar size="sm" name={student.name} />
-                        <Box>
-                          <Text fontWeight="medium">{student.name}</Text>
-                          <Text fontSize="sm" color="gray.600">
-                            {student.email}
-                          </Text>
-                        </Box>
-                      </HStack>
-                    </Td>
-                    <Td>{student.studentId}</Td>
-                    <Td>{student.department}</Td>
-                    <Td>{student.year}</Td>
-                    <Td>
-                      <Badge colorScheme={student.status === "Active" ? "green" : "red"}>{student.status}</Badge>
-                    </Td>
-                    <Td>
-                      <Menu>
-                        <MenuButton as={IconButton} icon={<FiMoreVertical />} variant="ghost" size="sm" />
-                        <MenuList>
-                          <MenuItem icon={<FiEdit />} onClick={() => handleEdit(student)}>
-                            Edit
-                          </MenuItem>
-                          <MenuItem icon={<FiTrash2 />} onClick={() => handleDelete(student.id)} color="red.500">
-                            Delete
-                          </MenuItem>
-                        </MenuList>
-                      </Menu>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
+            {/* Desktop Table View */}
+            <Box display={{ base: "none", lg: "block" }}>
+              {filteredStudents.length === 0 ? (
+                <Box textAlign="center" py={8}>
+                  <Text color="gray.500">No students found</Text>
+                </Box>
+              ) : (
+                <Table variant="simple">
+                  <Thead>
+                    <Tr>
+                      <Th>Student</Th>
+                      <Th>Student ID</Th>
+                      <Th>Course</Th>
+                      <Th>Intake</Th>
+                      <Th>Year</Th>
+                      <Th>Status</Th>
+                      <Th>Actions</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {filteredStudents.map((student) => (
+                      <Tr key={student._id}>
+                        <Td>
+                          <HStack>
+                            <Avatar size="sm" name={student.userId.name} />
+                            <Box>
+                              <Text fontWeight="medium">{student.userId.name}</Text>
+                              <Text fontSize="sm" color="gray.600">
+                                {student.userId.email}
+                              </Text>
+                            </Box>
+                          </HStack>
+                        </Td>
+                        <Td>{student._id}</Td>
+                        <Td>{student.intakeCourseId.courseId.courseName}</Td>
+                        <Td>{student.intakeCourseId.intakeId.intakeName}</Td>
+                        <Td>{student.year}</Td>
+                        <Td>
+                          <Badge colorScheme={student.status === "active" ? "green" : "red"}>{student.status}</Badge>
+                        </Td>
+                        <Td>
+                          <HStack spacing={2}>
+                            <Button size="sm" colorScheme="blue" onClick={() => handleEdit(student)}>
+                              <FiEdit />
+                            </Button>
+                            <Button size="sm" colorScheme="red" onClick={() => handleDelete(student._id)}>
+                              <FiTrash2 />
+                            </Button>
+                          </HStack>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              )}
+            </Box>
+
+            {/* Mobile Accordion View */}
+            <Box display={{ base: "block", lg: "none" }}>
+              {filteredStudents.length === 0 ? (
+                <Box textAlign="center" py={8}>
+                  <Text color="gray.500">No students found</Text>
+                </Box>
+              ) : (
+                <Accordion allowMultiple>
+                  {filteredStudents.map((student) => (
+                    <AccordionItem key={student._id}>
+                      <h2>
+                        <AccordionButton>
+                          <Box as="span" flex="1" textAlign="left">
+                            <HStack>
+                              <Avatar size="sm" name={student.userId.name} />
+                              <Box>
+                                <Text fontWeight="medium">{student.userId.name}</Text>
+                                <Text fontSize="sm" color="gray.600">
+                                  {student.userId.email}
+                                </Text>
+                              </Box>
+                            </HStack>
+                          </Box>
+                          <AccordionIcon />
+                        </AccordionButton>
+                      </h2>
+                      <AccordionPanel pb={4}>
+                        <VStack spacing={3} align="stretch">
+                          <Flex justify="space-between">
+                            <Text fontWeight="medium">Student ID:</Text>
+                            <Text>{student._id}</Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text fontWeight="medium">Course:</Text>
+                            <Text>{student.intakeCourseId.courseId.courseName}</Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text fontWeight="medium">Intake:</Text>
+                            <Text>{student.intakeCourseId.intakeId.intakeName}</Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text fontWeight="medium">Year:</Text>
+                            <Text>{student.year}</Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text fontWeight="medium">Status:</Text>
+                            <Badge colorScheme={student.status === "active" ? "green" : "red"}>
+                              {student.status}
+                            </Badge>
+                          </Flex>
+                          <HStack spacing={2} justify="center" pt={2}>
+                            <Button size="sm" colorScheme="blue" onClick={() => handleEdit(student)}>
+                              <FiEdit />
+                            </Button>
+                            <Button size="sm" colorScheme="red" onClick={() => handleDelete(student._id)}>
+                              <FiTrash2 />
+                            </Button>
+                          </HStack>
+                        </VStack>
+                      </AccordionPanel>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
+            </Box>
           </CardBody>
         </Card>
 
@@ -314,3 +397,4 @@ export function StudentManagement() {
     </Box>
   )
 }
+
