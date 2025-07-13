@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   Box,
@@ -33,98 +33,215 @@ import {
   CardBody,
   Flex,
   Spacer,
+  useToast,
 } from "@chakra-ui/react";
-import { useState } from "react";
 import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
-
-const mockClients = [
-  {
-    id: 1,
-    name: "Lincoln High School",
-    address: "123 Education St, Springfield, IL",
-    contact: "principal@lincoln.edu",
-    phone: "(555) 123-4567",
-    subAdmin: "John Smith",
-    status: "Active",
-    students: 1250,
-    staff: 85,
-  },
-  {
-    id: 2,
-    name: "Roosevelt Elementary",
-    address: "456 Learning Ave, Springfield, IL",
-    contact: "admin@roosevelt.edu",
-    phone: "(555) 234-5678",
-    subAdmin: "Sarah Johnson",
-    status: "Active",
-    students: 650,
-    staff: 45,
-  },
-  {
-    id: 3,
-    name: "Washington Middle School",
-    address: "789 Knowledge Blvd, Springfield, IL",
-    contact: "office@washington.edu",
-    phone: "(555) 345-6789",
-    subAdmin: "Mike Davis",
-    status: "Inactive",
-    students: 890,
-    staff: 62,
-  },
-];
-
-const mockSubAdmins = [
-  {
-    id: 1,
-    name: "John Smith",
-    email: "john@example.com",
-    clients: ["Lincoln High School"],
-  },
-  {
-    id: 2,
-    name: "Sarah Johnson",
-    email: "sarah@example.com",
-    clients: ["Roosevelt Elementary"],
-  },
-  {
-    id: 3,
-    name: "Mike Davis",
-    email: "mike@example.com",
-    clients: ["Washington Middle School"],
-  },
-  { id: 4, name: "Lisa Wilson", email: "lisa@example.com", clients: [] },
-];
+import { useAcademicStore } from "../../store/academic.js";
 
 export default function ClientManagement() {
-  const [clients, setClients] = useState(mockClients);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    address: "",
+    city: "",
+    country: "",
+    status: "Active",
+    userId: ""
+  });
+  const [schoolAdmins, setSchoolAdmins] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isSubAdminOpen,
     onOpen: onSubAdminOpen,
     onClose: onSubAdminClose,
   } = useDisclosure();
+  const toast = useToast();
 
-  const filteredClients = clients.filter(
-    (client) =>
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.contact.toLowerCase().includes(searchTerm.toLowerCase())
+  // Get academic store functions
+  const { 
+    students, 
+    lecturers, 
+    fetchStudents, 
+    fetchLecturers,
+    fetchStudentsBySchoolId,
+    fetchLecturersBySchoolId,
+    loading,
+    errors 
+  } = useAcademicStore();
+
+  // Mock schools data (since we don't have school store in academic.js)
+  const [schools, setSchools] = useState([
+    {
+      _id: "1",
+      name: "Asia Pacific University",
+      address: "Technology Park Malaysia, Bukit Jalil",
+      city: "Kuala Lumpur",
+      country: "Malaysia",
+      status: "Active",
+      userId: "admin1"
+    },
+    {
+      _id: "2", 
+      name: "Borneo Pacific University",
+      address: "Borneo Tech Park, Kota Kinabalu",
+      city: "Kota Kinabalu", 
+      country: "Malaysia",
+      status: "Active",
+      userId: "admin2"
+    }
+  ]);
+
+  // Load data on component mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      // Fetch all students and lecturers to get user counts
+      await fetchStudents();
+      await fetchLecturers();
+      
+      // Mock school admins data
+      setSchoolAdmins([
+        {
+          _id: "admin1",
+          name: "Dr. Sarah Johnson",
+          email: "sarah.johnson@apu.edu.my",
+          role: "schoolAdmin",
+          clients: ["Asia Pacific University"]
+        },
+        {
+          _id: "admin2", 
+          name: "Prof. Michael Chen",
+          email: "michael.chen@bpu.edu.my",
+          role: "schoolAdmin",
+          clients: ["Borneo Pacific University"]
+        }
+      ]);
+    } catch (error) {
+      toast({
+        title: "Error loading data",
+        description: error.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const filteredSchools = schools.filter(
+    (school) =>
+      school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      school.city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleEdit = (client) => {
-    setSelectedClient(client);
+  const handleEdit = (school) => {
+    setSelectedClient(school);
+    setFormData({
+      name: school.name,
+      address: school.address,
+      city: school.city,
+      country: school.country,
+      status: school.status,
+      userId: school.userId
+    });
     onOpen();
   };
 
-  const handleDelete = (clientId) => {
-    setClients(clients.filter((c) => c.id !== clientId));
+  const handleDelete = async (schoolId) => {
+    try {
+      setSchools(schools.filter((s) => s._id !== schoolId));
+      toast({
+        title: "School deleted",
+        description: "School has been successfully deleted",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "Error deleting school",
+        description: error.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      if (selectedClient) {
+        // Update existing school
+        const updatedSchools = schools.map(school =>
+          school._id === selectedClient._id 
+            ? { ...school, ...formData }
+            : school
+        );
+        setSchools(updatedSchools);
+        toast({
+          title: "School updated",
+          description: "School has been successfully updated",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        // Create new school
+        const newSchool = {
+          _id: Date.now().toString(),
+          ...formData
+        };
+        setSchools([...schools, newSchool]);
+        toast({
+          title: "School created",
+          description: "School has been successfully created",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+      onClose();
+      setSelectedClient(null);
+      setFormData({
+        name: "",
+        address: "",
+        city: "",
+        country: "",
+        status: "Active",
+        userId: ""
+      });
+    } catch (error) {
+      toast({
+        title: "Error saving school",
+        description: error.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const getSchoolStats = (schoolId) => {
+    // This would normally fetch from academic store by schoolId
+    // For now, return mock data
+    return {
+      students: Math.floor(Math.random() * 1000) + 500,
+      staff: Math.floor(Math.random() * 100) + 50
+    };
+  };
+
+  const getSchoolAdmin = (userId) => {
+    const admin = schoolAdmins.find(admin => admin._id === userId);
+    return admin ? admin.name : "Unassigned";
   };
 
   return (
-    <VStack spacing={6} align="stretch">
+    <VStack w={"100%"} h={"100%"} pr={10} pl={7} gap={8}>
       {/* Header */}
-      <Flex>
+      <Flex w={"100%"}>
         <Box>
           <Text fontSize="2xl" fontWeight="bold">
             Client Management
@@ -133,7 +250,7 @@ export default function ClientManagement() {
             Manage school clients and their information
           </Text>
         </Box>
-        <Spacer />
+        <Spacer/>
         <HStack>
           <Button leftIcon={<Plus />} colorScheme="blue" onClick={onOpen}>
             Add Client
@@ -145,12 +262,12 @@ export default function ClientManagement() {
       </Flex>
 
       {/* Search and Filters */}
-      <Card>
+      <Card  w={"100%"}>
         <CardBody>
           <HStack spacing={4}>
             <Box position="relative" flex={1}>
               <Input
-                placeholder="Search clients..."
+                placeholder="Search schools..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 pl={10}
@@ -165,22 +282,22 @@ export default function ClientManagement() {
               </Box>
             </Box>
             <Select placeholder="Filter by status" w="200px">
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
             </Select>
           </HStack>
         </CardBody>
       </Card>
 
-      {/* Clients Table */}
-      <Card>
+      {/* Schools Table */}
+      <Card w={"100%"} h={"fit-content"}>
         <CardBody>
           <TableContainer>
             <Table variant="simple">
               <Thead>
                 <Tr>
                   <Th>School Name</Th>
-                  <Th>Contact</Th>
+                  <Th>Location</Th>
                   <Th>Sub-Admin</Th>
                   <Th>Users</Th>
                   <Th>Status</Th>
@@ -188,98 +305,131 @@ export default function ClientManagement() {
                 </Tr>
               </Thead>
               <Tbody>
-                {filteredClients.map((client) => (
-                  <Tr key={client.id}>
-                    <Td>
-                      <VStack align="start" spacing={1}>
-                        <Text fontWeight="medium">{client.name}</Text>
-                        <Text fontSize="sm" color="gray.500">
-                          {client.address}
-                        </Text>
-                      </VStack>
-                    </Td>
-                    <Td>
-                      <VStack align="start" spacing={1}>
-                        <Text fontSize="sm">{client.contact}</Text>
-                        <Text fontSize="sm" color="gray.500">
-                          {client.phone}
-                        </Text>
-                      </VStack>
-                    </Td>
-                    <Td>{client.subAdmin}</Td>
-                    <Td>
-                      <VStack align="start" spacing={1}>
-                        <Text fontSize="sm">Students: {client.students}</Text>
-                        <Text fontSize="sm" color="gray.500">
-                          Staff: {client.staff}
-                        </Text>
-                      </VStack>
-                    </Td>
-                    <Td>
-                      <Badge
-                        colorScheme={
-                          client.status === "Active" ? "green" : "red"
-                        }
-                      >
-                        {client.status}
-                      </Badge>
-                    </Td>
-                    <Td>
-                      <HStack>
-                        <IconButton
-                          icon={<Edit />}
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(client)}
-                        />
-                        <IconButton
-                          icon={<Trash2 />}
-                          size="sm"
-                          variant="ghost"
-                          colorScheme="red"
-                          onClick={() => handleDelete(client.id)}
-                        />
-                      </HStack>
-                    </Td>
-                  </Tr>
-                ))}
+                {filteredSchools.map((school) => {
+                  const stats = getSchoolStats(school._id);
+                  return (
+                    <Tr key={school._id}>
+                      <Td>
+                        <VStack align="start" spacing={1}>
+                          <Text fontWeight="medium">{school.name}</Text>
+                          <Text fontSize="sm" color="gray.500">
+                            {school.address}
+                          </Text>
+                        </VStack>
+                      </Td>
+                      <Td>
+                        <VStack align="start" spacing={1}>
+                          <Text fontSize="sm">{school.city}</Text>
+                          <Text fontSize="sm" color="gray.500">
+                            {school.country}
+                          </Text>
+                        </VStack>
+                      </Td>
+                      <Td>{getSchoolAdmin(school.userId)}</Td>
+                      <Td>
+                        <VStack align="start" spacing={1}>
+                          <Text fontSize="sm">Students: {stats.students}</Text>
+                          <Text fontSize="sm" color="gray.500">
+                            Staff: {stats.staff}
+                          </Text>
+                        </VStack>
+                      </Td>
+                      <Td>
+                        <Badge
+                          colorScheme={
+                            school.status === "Active" ? "green" : "red"
+                          }
+                        >
+                          {school.status}
+                        </Badge>
+                      </Td>
+                      <Td>
+                        <HStack>
+                          <IconButton
+                            icon={<Edit />}
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(school)}
+                          />
+                          <IconButton
+                            icon={<Trash2 />}
+                            size="sm"
+                            variant="ghost"
+                            colorScheme="red"
+                            onClick={() => handleDelete(school._id)}
+                          />
+                        </HStack>
+                      </Td>
+                    </Tr>
+                  );
+                })}
               </Tbody>
             </Table>
           </TableContainer>
         </CardBody>
       </Card>
 
-      {/* Add/Edit Client Modal */}
+      {/* Add/Edit School Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
-            {selectedClient ? "Edit Client" : "Add New Client"}
+            {selectedClient ? "Edit School" : "Add New School"}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4}>
               <FormControl>
                 <FormLabel>School Name</FormLabel>
-                <Input placeholder="Enter school name" />
+                <Input 
+                  placeholder="Enter school name" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                />
               </FormControl>
               <FormControl>
                 <FormLabel>Address</FormLabel>
-                <Input placeholder="Enter address" />
+                <Input 
+                  placeholder="Enter address" 
+                  value={formData.address}
+                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                />
               </FormControl>
               <FormControl>
-                <FormLabel>Contact Email</FormLabel>
-                <Input placeholder="Enter contact email" />
+                <FormLabel>City</FormLabel>
+                <Input 
+                  placeholder="Enter city" 
+                  value={formData.city}
+                  onChange={(e) => setFormData({...formData, city: e.target.value})}
+                />
               </FormControl>
               <FormControl>
-                <FormLabel>Phone Number</FormLabel>
-                <Input placeholder="Enter phone number" />
+                <FormLabel>Country</FormLabel>
+                <Input 
+                  placeholder="Enter country" 
+                  value={formData.country}
+                  onChange={(e) => setFormData({...formData, country: e.target.value})}
+                />
               </FormControl>
               <FormControl>
-                <FormLabel>Assign Sub-Admin</FormLabel>
-                <Select placeholder="Select sub-admin">
-                  {mockSubAdmins.map((admin) => (
-                    <option key={admin.id} value={admin.id}>
+                <FormLabel>Status</FormLabel>
+                <Select 
+                  value={formData.status}
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel>Assign School Admin</FormLabel>
+                <Select 
+                  placeholder="Select school admin"
+                  value={formData.userId}
+                  onChange={(e) => setFormData({...formData, userId: e.target.value})}
+                >
+                  {schoolAdmins.map((admin) => (
+                    <option key={admin._id} value={admin._id}>
                       {admin.name}
                     </option>
                   ))}
@@ -291,7 +441,7 @@ export default function ClientManagement() {
             <Button variant="ghost" mr={3} onClick={onClose}>
               Cancel
             </Button>
-            <Button colorScheme="blue">
+            <Button colorScheme="blue" onClick={handleSubmit}>
               {selectedClient ? "Update" : "Create"}
             </Button>
           </ModalFooter>
@@ -301,8 +451,8 @@ export default function ClientManagement() {
       {/* Sub-Admins Modal */}
       <Modal isOpen={isSubAdminOpen} onClose={onSubAdminClose} size="xl">
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Sub-Admins Management</ModalHeader>
+        <ModalContent w={"100%"}>
+          <ModalHeader>School Admins Management</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <TableContainer>
@@ -311,13 +461,13 @@ export default function ClientManagement() {
                   <Tr>
                     <Th>Name</Th>
                     <Th>Email</Th>
-                    <Th>Assigned Clients</Th>
+                    <Th>Assigned Schools</Th>
                     <Th>Actions</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {mockSubAdmins.map((admin) => (
-                    <Tr key={admin.id}>
+                  {schoolAdmins.map((admin) => (
+                    <Tr key={admin._id}>
                       <Td>{admin.name}</Td>
                       <Td>{admin.email}</Td>
                       <Td>
@@ -328,7 +478,7 @@ export default function ClientManagement() {
                             </Badge>
                           ))
                         ) : (
-                          <Text color="gray.500">No clients assigned</Text>
+                          <Text color="gray.500">No schools assigned</Text>
                         )}
                       </Td>
                       <Td>
@@ -348,7 +498,7 @@ export default function ClientManagement() {
             </TableContainer>
           </ModalBody>
           <ModalFooter>
-            <Button onClick={onSubAdminClose}>Close</Button>
+            <Button onClick={onSubAdminClose} fontWeight={"bold"} w={"100%"} _hover={{bgColor:"red", color:"white"}}>Close</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
