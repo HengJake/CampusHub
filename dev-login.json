@@ -1,0 +1,9 @@
+{
+  "user": {
+    "email": "company@gmail.com",
+    "role": "companyAdmin"
+  },
+  "loginTime": "2025-07-12T06:11:22.530Z",
+  "message": "Login successful",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzBkOWZhMTI3MDQ4ODczZmRmNzQzYSIsImVtYWlsIjoiY29tcGFueUBnbWFpbC5jb20iLCJyb2xlIjoiY29tYXBueUFkbWluIiwiaWF0IjoxNzUyMzAwNjgyLCJleHAiOjE3NTQ4OTI2ODJ9.i1ed336_s45ets7zGizsgr5-YIiri9nfoybO4vwbyIw"
+}

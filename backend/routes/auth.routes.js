@@ -20,6 +20,7 @@ router.post("/login", loginUser);
 router.post("/logout", logout);
 
 router.post("/send-verify-otp", userAuth, sendVerifyOtp);
+
 router.post("/verify-account", userAuth, verifyEmail);
 
 router.post("/is-auth", userAuth, isAuthenticated);

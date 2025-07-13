@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useAuthStore } from "./auth.js";
 
 export const useAcademicStore = create((set, get) => ({
     // State - Store frequently accessed data in arrays
@@ -47,16 +48,46 @@ export const useAcademicStore = create((set, get) => ({
         rooms: null,
     },
 
+    // Helper to get schoolId from auth store
+    getSchoolId: () => {
+        const authStore = useAuthStore.getState();
+        return authStore.getSchoolId();
+    },
+
+    // Helper to build URL with automatic schoolId injection
+    buildUrl: (endpoint, filters = {}) => {
+        const authStore = useAuthStore.getState();
+        const user = authStore.getCurrentUser();
+
+        let url = endpoint;
+
+        // Automatically add schoolId for schoolAdmin and student
+        if (user.role === 'schoolAdmin' || user.role === 'student') {
+            const schoolId = authStore.getSchoolId();
+            if (schoolId) {
+                // If endpoint already has schoolId, use it, otherwise add it
+                if (endpoint.includes('/school/')) {
+                    url = endpoint;
+                } else {
+                    url = `${endpoint}/school/${schoolId}`;
+                }
+            }
+        }
+
+        // Add other filters
+        const queryParams = new URLSearchParams(filters);
+        if (queryParams.toString()) {
+            url += `?${queryParams.toString()}`;
+        }
+
+        return url;
+    },
+
     // ===== STUDENT OPERATIONS =====
     fetchStudents: async (filters = {}) => {
         set(state => ({ loading: { ...state.loading, students: true } }));
         try {
-            let url = '/api/student';
-            const queryParams = new URLSearchParams(filters);
-            if (queryParams.toString()) {
-                url += `?${queryParams.toString()}`;
-            }
-
+            const url = get().buildUrl('/api/student', filters);
             const res = await fetch(url);
             const data = await res.json();
 
@@ -82,6 +113,17 @@ export const useAcademicStore = create((set, get) => ({
 
     createStudent: async (studentData) => {
         try {
+            // Automatically add schoolId for schoolAdmin
+            const authStore = useAuthStore.getState();
+            const user = authStore.getCurrentUser();
+
+            if (user.role === 'schoolAdmin') {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    studentData.schoolId = schoolId;
+                }
+            }
+
             const res = await fetch('/api/student', {
                 method: 'POST',
                 headers: {
@@ -163,12 +205,7 @@ export const useAcademicStore = create((set, get) => ({
     fetchCourses: async (filters = {}) => {
         set(state => ({ loading: { ...state.loading, courses: true } }));
         try {
-            let url = '/api/course';
-            const queryParams = new URLSearchParams(filters);
-            if (queryParams.toString()) {
-                url += `?${queryParams.toString()}`;
-            }
-
+            const url = get().buildUrl('/api/course', filters);
             const res = await fetch(url);
             const data = await res.json();
 
@@ -194,6 +231,17 @@ export const useAcademicStore = create((set, get) => ({
 
     createCourse: async (courseData) => {
         try {
+            // Automatically add schoolId for schoolAdmin
+            const authStore = useAuthStore.getState();
+            const user = authStore.getCurrentUser();
+
+            if (user.role === 'schoolAdmin') {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    courseData.schoolId = schoolId;
+                }
+            }
+
             const res = await fetch('/api/course', {
                 method: 'POST',
                 headers: {
@@ -222,12 +270,7 @@ export const useAcademicStore = create((set, get) => ({
     fetchIntakeCourses: async (filters = {}) => {
         set(state => ({ loading: { ...state.loading, intakeCourses: true } }));
         try {
-            let url = '/api/intake-course';
-            const queryParams = new URLSearchParams(filters);
-            if (queryParams.toString()) {
-                url += `?${queryParams.toString()}`;
-            }
-
+            const url = get().buildUrl('/api/intake-course', filters);
             const res = await fetch(url);
             const data = await res.json();
 
@@ -253,7 +296,8 @@ export const useAcademicStore = create((set, get) => ({
 
     fetchAvailableIntakeCourses: async () => {
         try {
-            const res = await fetch('/api/intake-course/available');
+            const url = get().buildUrl('/api/intake-course/available');
+            const res = await fetch(url);
             const data = await res.json();
 
             if (!data.success) {
@@ -299,12 +343,7 @@ export const useAcademicStore = create((set, get) => ({
     fetchAttendance: async (filters = {}) => {
         set(state => ({ loading: { ...state.loading, attendance: true } }));
         try {
-            let url = '/api/attendance';
-            const queryParams = new URLSearchParams(filters);
-            if (queryParams.toString()) {
-                url += `?${queryParams.toString()}`;
-            }
-
+            const url = get().buildUrl('/api/attendance', filters);
             const res = await fetch(url);
             const data = await res.json();
 
@@ -330,6 +369,17 @@ export const useAcademicStore = create((set, get) => ({
 
     createAttendance: async (attendanceData) => {
         try {
+            // Automatically add schoolId for schoolAdmin
+            const authStore = useAuthStore.getState();
+            const user = authStore.getCurrentUser();
+
+            if (user.role === 'schoolAdmin') {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    attendanceData.schoolId = schoolId;
+                }
+            }
+
             const res = await fetch('/api/attendance', {
                 method: 'POST',
                 headers: {
@@ -358,12 +408,7 @@ export const useAcademicStore = create((set, get) => ({
     fetchResults: async (filters = {}) => {
         set(state => ({ loading: { ...state.loading, results: true } }));
         try {
-            let url = '/api/result';
-            const queryParams = new URLSearchParams(filters);
-            if (queryParams.toString()) {
-                url += `?${queryParams.toString()}`;
-            }
-
+            const url = get().buildUrl('/api/result', filters);
             const res = await fetch(url);
             const data = await res.json();
 
@@ -389,6 +434,17 @@ export const useAcademicStore = create((set, get) => ({
 
     createResult: async (resultData) => {
         try {
+            // Automatically add schoolId for schoolAdmin
+            const authStore = useAuthStore.getState();
+            const user = authStore.getCurrentUser();
+
+            if (user.role === 'schoolAdmin') {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    resultData.schoolId = schoolId;
+                }
+            }
+
             const res = await fetch('/api/result', {
                 method: 'POST',
                 headers: {
@@ -412,7 +468,6 @@ export const useAcademicStore = create((set, get) => ({
             return { success: false, message: error.message };
         }
     },
-
 
     // ===GET BY SCHOOL ID====
     // ===== GET BY SCHOOL ID METHODS =====
@@ -704,7 +759,6 @@ export const useAcademicStore = create((set, get) => ({
             return { success: false, message: error.message };
         }
     },
-
 
     // ===== ANALYTICS FUNCTIONS =====
     getCourseCompletionRate: (intakeCourseId) => {

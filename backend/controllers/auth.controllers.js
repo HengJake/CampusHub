@@ -5,6 +5,8 @@ import transporter from "../config/nodemailer.js";
 import mongoose from "mongoose";
 import School from "../models/Billing/school.model.js";
 import Student from "../models/Academic/student.model.js";
+import jwt from "jsonwebtoken";
+import Lecturer from "../models/Academic/lecturer.model.js";
 
 export const register = async (req, res) => {
   const { name, password, phoneNumber, email, role, twoFA_enabled } = req.body;
@@ -274,74 +276,79 @@ export const verifyEmail = async (req, res) => {
 
 export const isAuthenticated = async (req, res) => {
   try {
-    const { id } = req.body;
+    const token = req.cookies.token;
 
-    // Validate ObjectId format
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
+    if (!token) {
+      return res.status(401).json({
         success: false,
-        message: "Invalid user ID format",
+        message: "No token provided"
       });
     }
 
-    const user = await User.findById(id).select("-password"); // Exclude password
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
 
     if (!user) {
-      return res.status(404).json({
+      return res.status(401).json({
         success: false,
-        message: "User not found",
+        message: "User not found"
       });
     }
 
-    if (user.role === "schoolAdmin") {
-      const school = await School.findOne({ userId: user._id });
-      if (school) {
-        return res.status(201).json({
-          success: true,
-          message: "School and User found",
-          role: user.role,
-          id: req.body.id,
-          twoFA_enabled: user.twoFA_enabled,
-          schoolId: school._id,
-        });
-      } else {
-        return res.status(404).json({
-          success: false,
-          message: "School not found for this user",
-        });
-      }
-    }
-
-    if (user.role === "student") {
-      const student = await Student.findOne({ userId: user._id });
-      if (student) {
-        return res.status(201).json({
-          success: true,
-          message: "Student and User found",
-          role: user.role,
-          id: req.body.id,
-          twoFA_enabled: user.twoFA_enabled,
-          student: student, // full student document
-          schoolId: student.schoolId,
-        });
-      } else {
-        return res.status(404).json({
-          success: false,
-          message: "Student not found for this user",
-        });
-      }
-    }
-
-    return res.status(201).json({
+    // Enhanced response based on user role
+    let responseData = {
       success: true,
-      message: "User found",
+      message: "User is authenticated",
+      id: user._id,
       role: user.role,
-      id: req.body.id,
-      twoFA_enabled: user.twoFA_enabled,
-    });
+      email: user.email,
+      twoFA_enabled: user.twoFA_enabled
+    };
+
+    // Add role-specific data
+    if (user.role === "schoolAdmin") {
+
+      const school = await School.findOne({ userId: user._id });
+      // For schoolAdmin, include schoolId
+      responseData.schoolId = school._id;
+      responseData.school = school._id; // For backward compatibility
+
+    } else if (user.role === "student") {
+      // For student, include schoolId and student details
+      const student = await Student.findOne({ userId: user._id });
+
+      if (student) {
+        responseData.schoolId = student.schoolId;
+        responseData.student = {
+          _id: student._id,
+          name: user.name,
+          studentId: student._id,
+          schoolId: student.schoolId,
+          intakeCourseId: student.intakeCourseId,
+          status: student.status
+        };
+      }
+    } else if (user.role === "lecturer") {
+      // For lecturer, include schoolId
+      const lecturer = await Lecturer.findOne({ userId: user._id });
+      if (lecturer) {
+        responseData.schoolId = lecturer.schoolId;
+        responseData.lecturer = {
+          _id: lecturer._id,
+          name: user.name,
+          schoolId: lecturer.schoolId,
+          departmentId: lecturer.departmentId
+        };
+      }
+    }
+
+    res.json(responseData);
   } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Authentication error:", error);
+    res.status(401).json({
+      success: false,
+      message: "Invalid token"
+    });
   }
 };
 
@@ -425,3 +432,4 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+

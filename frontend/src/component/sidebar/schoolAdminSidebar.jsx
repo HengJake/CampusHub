@@ -4,7 +4,7 @@ import { MdDashboard } from "react-icons/md";
 import { LiaChalkboardTeacherSolid } from "react-icons/lia";
 import { MdClass } from "react-icons/md";
 import { FaSchool } from "react-icons/fa";
-
+import { FaRegEye } from "react-icons/fa";
 import {
   FaChalkboardTeacher,
   FaUserGraduate,
@@ -81,8 +81,13 @@ function Sidebar() {
             </Button>
           </Link>
           <Link to="/academic-management">
-            <Button sx={sidebarButtonStyle("Academic Overview")}>
+            <Button sx={sidebarButtonStyle("Academic Management")}>
               <Icon as={FaSchool} boxSize={6} color="white" zIndex={2} />
+            </Button>
+          </Link>
+          <Link to="/academic-overview">
+            <Button sx={sidebarButtonStyle("Academic Overview")}>
+              <Icon as={FaRegEye} boxSize={6} color="white" zIndex={2} />
             </Button>
           </Link>
           <Link to="/course-management">
@@ -95,11 +100,6 @@ function Sidebar() {
               <Icon as={FaChalkboardTeacher} boxSize={6} color="white" zIndex={2} />
             </Button>
           </Link>
-          <Link to="/facility-management">
-            <Button sx={sidebarButtonStyle("Facility")}>
-              <Icon as={FaTools} boxSize={6} color="white" zIndex={2} />
-            </Button>
-          </Link>
         </VStack>
 
         {/* Group 2 */}
@@ -109,6 +109,11 @@ function Sidebar() {
           justifyContent={"center"}
           p={2}
         >
+          <Link to="/facility-management">
+            <Button sx={sidebarButtonStyle("Facility")}>
+              <Icon as={FaTools} boxSize={6} color="white" zIndex={2} />
+            </Button>
+          </Link>
           <Link to="/locker-management">
             <Button sx={sidebarButtonStyle("Lockers")}>
               <Icon as={FaLock} boxSize={6} color="white" zIndex={2} />

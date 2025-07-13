@@ -17,11 +17,19 @@ import { CampusHubLogo } from "../campusHubLogo.jsx";
 import { FaSearch } from "react-icons/fa";
 import { IoIosNotifications } from "react-icons/io";
 import { IoIosSettings } from "react-icons/io";
+import { useAuthStore } from "../../store/auth.js";
 
 import "../generalComponent.scss";
 
 function navBar() {
   // const { colorMode, toggleColorMode } = useColorMode();
+  const { logIn, logout } = useAuthStore();
+
+  // TODO: DEV
+  const handleLogin = async () => {
+    const res = await logIn({ "email": "admin2@apu.edu.my", "password": "password123" })
+    console.log("🚀 ~ handleLogin ~ res:", res)
+  }
 
   return (
     <Container maxWidth={"100vw"} px={4} className="navBar" bg="#344E41">
@@ -33,7 +41,8 @@ function navBar() {
         gap={"10"}
       >
         <CampusHubLogo />
-
+        <Button onClick={handleLogin}>LOGIN</Button>
+        <Button onClick={logout}>LOGOUT</Button>
         <InputGroup>
           <Input placeholder="Search..." bg="white" />
           <InputRightElement width="3rem">
