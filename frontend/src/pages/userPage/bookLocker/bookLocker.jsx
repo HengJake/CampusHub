@@ -1,123 +1,182 @@
-import React, { useState } from "react";
-import "./bookLocker.scss";
-import { useNavigate } from "react-router-dom";
-import { RxHamburgerMenu } from "react-icons/rx";
-import { LuSettings2 } from "react-icons/lu";
-import { SimpleGrid } from "@chakra-ui/react";
-import Locker from "../../../component/Student/Locker/Locker";
+"use client";
+import React from "react";
 
-import {
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  MenuItemOption,
-  MenuGroup,
-  MenuOptionGroup,
-  MenuDivider,
-  IconButton,
-} from "@chakra-ui/react";
+import { useState } from "react";
+import { ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
 
+import { LockerCard } from "./locker-card";
+import { BookingDialog } from "./booking-dialog";
 import {
   Box,
-  Grid,
   Flex,
-  Stack,
-  HStack,
-  Input,
-  Heading,
-  Center,
   Text,
   Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  Link as ChakraLink,
+  VStack,
+  HStack,
+  RadioGroup,
+  Radio,
+  Checkbox,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Grid,
+  GridItem,
 } from "@chakra-ui/react";
-import classSchedule from "../classSchedule/classSchedule";
 
-function bookLocker() {
-  const noOfLocker = 20;
-  const [bookedLockers, setBookedLockers] = useState(Array(noOfLocker).fill(false));
+const initialLockers = Array.from({ length: 32 }, (_, i) => {
+  const id = i + 1;
+  let status = "available";
+  let isAccessible = false;
+  let position = "top";
 
-  const handleBook = (index) => {
-    setBookedLockers((prev) => {
-      if (prev[index]) return prev;
-      const updated = [...prev];
-      updated[index] = true;
-      return updated;
-    });
+  if ([2, 3, 6, 7].includes(id)) {
+    status = "booked";
+  }
+  if (id >= 25 && id <= 32) {
+    status = "accessible";
+    isAccessible = true;
+  }
+
+  if (id >= 9 && id <= 16) {
+    position = "middle";
+  } else if (id >= 17 && id <= 24) {
+    position = "bottom";
+  } else if (id >= 25 && id <= 32) {
+    position = "bottom"; // Accessible lockers are also at the bottom in the image
+  }
+
+  return { id, status, isAccessible, position };
+});
+
+export default function LockerRoomBookingPage() {
+  const [lockers, setLockers] = useState(initialLockers);
+  const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
+  const [selectedLockerId, setSelectedLockerId] = useState(null);
+
+  const [accessibilityFilter, setAccessibilityFilter] = useState(null);
+  const [isDisabilityAccessible, setIsDisabilityAccessible] = useState(false);
+  const [isTypeFilterOpen, setIsTypeFilterOpen] = useState(true);
+  const [isAccessibilityFilterOpen, setIsAccessibilityFilterOpen] =
+    useState(true);
+  const [isFloorFilterOpen, setIsFloorFilterOpen] = useState(true);
+
+  const handleLockerClick = (id) => {
+    setSelectedLockerId(id);
+    setIsBookingDialogOpen(true);
   };
 
+  const handleCloseBookingDialog = () => {
+    setIsBookingDialogOpen(false);
+    setSelectedLockerId(null);
+  };
+
+  const filteredLockers = lockers.filter((locker) => {
+    let matchesAccessibility = true;
+    if (accessibilityFilter) {
+      matchesAccessibility = locker.position === accessibilityFilter;
+    }
+    if (isDisabilityAccessible) {
+      matchesAccessibility = matchesAccessibility && locker.isAccessible;
+    }
+    return matchesAccessibility;
+  });
+
   return (
-    <Flex
-      display="flex"
-      flexDirection="row"
-      alignItems="center"
-      // justifyContent="center"
-      border={"1px"}
-      height="100%"
-      w="100%"
-      gap={"5%"}
-      p={5}
-    >
-      <Box
-        display="flex"
-        p={5}
-        alignItems="center"
-        justifyContent="left"
-        gap={"30px"}
-        border={"1px"}
-        w={"40%"}
-        h={"100%"}
-      >
-        <Menu w="100%" border="1px">
-          <MenuButton
-            px={4}
-            py={2}
-            transition="all 0.2s"
-            borderRadius="15px"
-            borderWidth="1px"
-            h={"50px"}
-            w={"fit-content"}
-            _hover={{ bg: "gray.400" }}
-            _expanded={{ bg: "blue.400" }}
-            _focus={{ boxShadow: "outline" }}
-          >
-            <LuSettings2 size={20} />
-          </MenuButton>
-          <MenuList>
-            <MenuGroup title="Filters">
-              <MenuItem>New File</MenuItem>
-              <MenuItem>New Window</MenuItem>
-              <MenuDivider />
-              <MenuItem>Open...</MenuItem>
-              <MenuItem>Save File</MenuItem>
-            </MenuGroup>
-          </MenuList>
-        </Menu>
-        <Text fontSize={"24px"} fontWeight={"bold"}>
-          Lockers | Floor 1
-        </Text>
+    <Box h="100%" display="flex" flexDirection="column">
+      <Box flex="1" display="flex">
+        <Box w="64" p={6} pr={6}>
+          <Box mb={6} display="flex" alignItems="center" gap={2}>
+            <SlidersHorizontal size={20} />
+            <Text fontSize="xl" fontWeight="bold" color="gray.800">
+              Lockers | Floor 01
+            </Text>
+          </Box>
+
+          <Box mb={6}>
+            <Text mb={4} fontSize="lg" fontWeight="semibold" color="gray.700">
+              Filters
+            </Text>
+
+            <Accordion allowToggle defaultIndex={[0, 1, 2]} mb={4}>
+              <AccordionItem>
+                <AccordionButton>
+                  <Box flex="1" textAlign="left" fontWeight="medium" color="gray.600">
+                    Type
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb={4} pl={2} pt={2}>
+                  <Text fontSize="sm" color="gray.500">
+                    No type filters available yet.
+                  </Text>
+                </AccordionPanel>
+              </AccordionItem>
+
+              <AccordionItem>
+                <AccordionButton>
+                  <Box flex="1" textAlign="left" fontWeight="medium" color="gray.600">
+                    Accessibility
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb={4} pl={2} pt={2}>
+                  <RadioGroup value={accessibilityFilter || ""} onChange={setAccessibilityFilter}>
+                    <VStack align="start" spacing={2}>
+                      <Radio value="top">Top</Radio>
+                      <Radio value="middle">Middle</Radio>
+                      <Radio value="bottom">Bottom</Radio>
+                    </VStack>
+                  </RadioGroup>
+                  <HStack mt={4} spacing={2}>
+                    <Checkbox
+                      isChecked={isDisabilityAccessible}
+                      onChange={(e) => setIsDisabilityAccessible(e.target.checked)}
+                    />
+                    <Text>Disability Accessible</Text>
+                  </HStack>
+                </AccordionPanel>
+              </AccordionItem>
+
+              <AccordionItem>
+                <AccordionButton>
+                  <Box flex="1" textAlign="left" fontWeight="medium" color="gray.600">
+                    Floor
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb={4} pl={2} pt={2}>
+                  <Text fontSize="sm" color="gray.500">
+                    Floor 01 (Current)
+                  </Text>
+                </AccordionPanel>
+              </AccordionItem>
+            </Accordion>
+          </Box>
+        </Box>
+
+        <Box flex="1" p={6} h={"100%"}>
+          <Grid templateColumns="repeat(8, 1fr)" gap={5}>
+            {filteredLockers.map((locker) => (
+              <GridItem key={locker.id}>
+                <LockerCard
+                  id={locker.id}
+                  status={locker.status}
+                  isAccessible={locker.isAccessible}
+                  onClick={handleLockerClick}
+                />
+              </GridItem>
+            ))}
+          </Grid>
+        </Box>
       </Box>
-      <Box w={"100%"} h={"fit-content"} border={"1px"}>
-        <SimpleGrid minChildWidth="100px" spacing="20px">
-          {Array.from({ length: noOfLocker }, (_, i) => (
-            <Locker
-              key={i}
-              number={i + 1}
-              isBooked={bookedLockers[i]}
-              onBook={() => handleBook(i)}
-            />
-          ))}
-        </SimpleGrid>
-      </Box>
-    </Flex>
+
+      <BookingDialog
+        isOpen={isBookingDialogOpen}
+        onClose={handleCloseBookingDialog}
+        lockerId={selectedLockerId}
+      />
+    </Box>
   );
 }
-
-export default bookLocker;
