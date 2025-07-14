@@ -95,7 +95,7 @@ const courseSchema = new mongoose.Schema({
 });
 
 // Indexes
-courseSchema.index({ courseCode: 1 }, { unique: true });
+courseSchema.index({ schoolId: 1, courseCode: 1 }, { unique: true });
 courseSchema.index({ departmentId: 1 });
 courseSchema.index({ courseLevel: 1 });
 courseSchema.index({ isActive: 1 });

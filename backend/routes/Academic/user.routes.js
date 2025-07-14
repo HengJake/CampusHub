@@ -5,7 +5,8 @@ import {
     getUserById,
     updateUser,
     deleteUser,
-    checkExistedUserDetails
+    checkExistedUserDetails,
+    deleteAllUsers
 } from "../../controllers/Academic/user.controllers.js";
 
 const router = e.Router();
@@ -18,6 +19,9 @@ router.get("/", getAllUsers);
 
 // Get user by ID
 router.get("/:id", getUserById);
+
+// Delete all users
+router.delete("/all", deleteAllUsers);
 
 // Update user by ID
 router.put("/:id", updateUser);

@@ -7,27 +7,27 @@ import {
     getRecordById,
     updateRecord,
     deleteRecord,
-    validateMultipleReferences,
-    controllerWrapper
+    controllerWrapper,
+    deleteAllRecords
 } from "../../utils/reusable.js";
 
 // Custom validation function for module data
 const validateModuleData = async (data) => {
-    const { ModuleName, ModuleCode, ModuleDescription, CreditHours } = data;
+    const { moduleName, code, moduleDescription, totalCreditHour } = data;
 
     // Check required fields
-    if (!ModuleName || !ModuleCode || !ModuleDescription || !CreditHours) {
+    if (!moduleName || !code || !moduleDescription || !totalCreditHour) {
         return {
             isValid: false,
-            message: "Please provide all required fields (ModuleName, ModuleCode, ModuleDescription, CreditHours)"
+            message: "Please provide all required fields (moduleName, code, moduleDescription, totalCreditHour)"
         };
     }
 
-    // Validate CreditHours is a positive number
-    if (CreditHours <= 0) {
+    // Validate totalCreditHour is a positive number
+    if (totalCreditHour <= 0) {
         return {
             isValid: false,
-            message: "CreditHours must be a positive number"
+            message: "totalCreditHour must be a positive number"
         };
     }
 
@@ -71,4 +71,18 @@ export const updateModule = controllerWrapper(async (req, res) => {
 export const deleteModule = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(Module, id, "module");
+});
+// Delete All Modules
+export const deleteAllModules = controllerWrapper(async (req, res) => {
+    return await deleteAllRecords(Module, "modules");
+});
+
+export const getModulesBySchool = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(
+        Module,
+        "modules",
+        ["schoolId"],
+        { schoolId }
+    );
 });

@@ -17,6 +17,7 @@ import lecturerRoutes from "./routes/Academic/lecturer.routes.js";
 import moduleRoutes from "./routes/Academic/module.routes.js";
 import attendanceRoutes from "./routes/Academic/attendance.routes.js";
 import resultRoutes from "./routes/Academic/result.routes.js";
+import roomRoutes from "./routes/Academic/room.routes.js"
 
 // 2 Billing
 import subscriptionRoutes from "./routes/Billing/subscription.routes.js";
@@ -43,6 +44,7 @@ app.use(express.json());
 
 // 1 Academic
 app.use("/auth", authRoutes);
+
 app.use("/api/user", userRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/class-schedule", classScheduleRoutes);
@@ -55,6 +57,7 @@ app.use("/api/lecturer", lecturerRoutes);
 app.use("/api/module", moduleRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/result", resultRoutes);
+app.use("/api/room", roomRoutes);
 
 // 2 Billing
 app.use("/api/subscription", subscriptionRoutes);

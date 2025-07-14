@@ -8,7 +8,8 @@ import {
     updateRecord,
     deleteRecord,
     validateMultipleReferences,
-    controllerWrapper
+    controllerWrapper,
+    deleteAllRecords
 } from "../../utils/reusable.js";
 
 const validateResultData = async (data) => {
@@ -123,7 +124,7 @@ export const getResultsByModuleId = controllerWrapper(async (req, res) => {
 
 export const getResultsByGrade = controllerWrapper(async (req, res) => {
     const { grade } = req.params;
-    
+
     // Validate grade parameter
     const validGrades = ["A", "B", "C", "D", "F"];
     if (!validGrades.includes(grade)) {
@@ -144,10 +145,10 @@ export const getResultsByGrade = controllerWrapper(async (req, res) => {
 
 export const getStudentGPA = controllerWrapper(async (req, res) => {
     const { studentId } = req.params;
-    
+
     try {
         const results = await Result.find({ studentId }).populate('moduleId');
-        
+
         if (results.length === 0) {
             return {
                 success: false,
@@ -199,10 +200,10 @@ export const getStudentGPA = controllerWrapper(async (req, res) => {
 
 export const getModuleStatistics = controllerWrapper(async (req, res) => {
     const { moduleId } = req.params;
-    
+
     try {
         const results = await Result.find({ moduleId }).populate('studentId');
-        
+
         if (results.length === 0) {
             return {
                 success: false,
@@ -246,4 +247,19 @@ export const getModuleStatistics = controllerWrapper(async (req, res) => {
             statusCode: 500
         };
     }
+});
+
+// Delete All Results
+export const deleteAllResults = controllerWrapper(async (req, res) => {
+    return await deleteAllRecords(Result, "results");
+});
+
+export const getResultsBySchool = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(
+        Result,
+        "results",
+        ["studentId", "moduleId", "schoolId"],
+        { schoolId }
+    );
 });

@@ -4,8 +4,10 @@ import {
     getCourses,
     getCourseById,
     updateCourse,
-    deleteCourse
+    deleteCourse,
+    deleteAllCourses
 } from "../../controllers/Academic/course.controllers.js";
+import { getCoursesBySchool } from "../../controllers/Academic/course.controllers.js";
 
 const router = e.Router();
 
@@ -21,7 +23,12 @@ router.get("/:id", getCourseById);
 // Update course by ID
 router.put("/:id", updateCourse);
 
+// Delete all courses
+router.delete("/all", deleteAllCourses);
+
 // Delete course by ID
 router.delete("/:id", deleteCourse);
+
+router.get("/school/:schoolId", getCoursesBySchool);
 
 export default router;

@@ -10,30 +10,20 @@ import {
     deleteRecord,
     validateReferenceExists,
     validateMultipleReferences,
-    controllerWrapper
+    controllerWrapper,
+    deleteAllRecords
 } from "../../utils/reusable.js";
 
 // Custom validation function for course data
 const validateCourseData = async (data) => {
-    const { courseName, courseCode, courseDescription, courseLevel, courseType, totalCreditHours, departmentId, duration, schoolId } = data;
+    // CORRECT - Using camelCase
+    const { courseName, duration } = data;
 
     // Check required fields
-    if (!courseName || !courseCode || !courseDescription || !courseLevel || !courseType || !totalCreditHours || !DepartmentID || !duration || !SchoolID) {
+    if (!courseName || !duration) {
         return {
             isValid: false,
-            message: "Please provide all required fields (CourseName, Duration, ModuleID)"
-        };
-    }
-
-    // Validate references exist
-    const referenceValidation = await validateMultipleReferences({
-        departmentId: { id: DepartmentID, Model: Department }
-    });
-
-    if (referenceValidation) {
-        return {
-            isValid: false,
-            message: referenceValidation.message
+            message: "Please provide all required fields (CourseName, Duration)"
         };
     }
 
@@ -55,7 +45,7 @@ export const getCourses = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Course,
         "courses",
-        ['DepartmentID']
+        ["schoolId"]
     );
 });
 
@@ -66,7 +56,7 @@ export const getCourseById = controllerWrapper(async (req, res) => {
         Course,
         id,
         "course",
-        ['DepartmentID']
+        ["schoolId"]
     );
 });
 
@@ -86,4 +76,19 @@ export const updateCourse = controllerWrapper(async (req, res) => {
 export const deleteCourse = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(Course, id, "course");
+});
+
+// Delete All Courses
+export const deleteAllCourses = controllerWrapper(async (req, res) => {
+    return await deleteAllRecords(Course, "courses");
+});
+
+export const getCoursesBySchool = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(
+        Course,
+        "courses",
+        ["departmentId", "schoolId"],
+        { schoolId }
+    );
 });

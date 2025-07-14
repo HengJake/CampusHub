@@ -5,35 +5,43 @@ import {
     getStudentById,
     updateStudent,
     deleteStudent,
-    getStudentsBySchoolId,
+    getStudentsBySchool,
     getStudentsByIntakeCourseId,
-    getStudentsByYear
+    getStudentsByYear,
+    deleteAllStudents,
+    getStudentsByUser
 } from "../../controllers/Academic/student.controllers.js";
+import { userAuth, authRole } from "../../utils/authMiddleware.js";
 
 const router = e.Router();
 
-// Create a new student
-router.post("/", createStudent);
+// Create a new student (both roles can create)
+router.post("/", userAuth, authRole(["companyAdmin", "schoolAdmin"]), createStudent);
 
-// Get all students
-router.get("/", getAllStudents);
+// Get all students (company admin only)
+router.get("/", userAuth, authRole("companyAdmin"), getAllStudents);
 
-// Get student by ID
-router.get("/:id", getStudentById);
+// Get student by ID (both roles)
+router.get("/:id", userAuth, authRole(["companyAdmin", "schoolAdmin"]), getStudentById);
 
-// Update student by ID
-router.put("/:id", updateStudent);
+// Update student by ID (both roles)
+router.put("/:id", userAuth, authRole(["companyAdmin", "schoolAdmin"]), updateStudent);
 
-// Delete student by ID
-router.delete("/:id", deleteStudent);
+// Delete all students (company admin only)
+router.delete("/all", userAuth, authRole("companyAdmin"), deleteAllStudents);
 
-// Get students by school ID
-router.get("/school/:schoolId", getStudentsBySchoolId);
+// Delete student by ID (both roles)
+router.delete("/:id", userAuth, authRole(["companyAdmin", "schoolAdmin"]), deleteStudent);
+
+// Get students by school ID (school admin only, but company admin can also access)
+router.get("/school/:schoolId", userAuth, authRole(["companyAdmin", "schoolAdmin"]), getStudentsBySchool);
 
 // Get students by intakeCourseId (main filter for course+intake)
 router.get("/intake-course/:intakeCourseId", getStudentsByIntakeCourseId);
 
 // Get students by year
 router.get("/year/:year", getStudentsByYear);
+
+router.get("/user/:userId", getStudentsByUser);
 
 export default router;

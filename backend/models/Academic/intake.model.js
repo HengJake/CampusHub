@@ -18,20 +18,11 @@ const intakeSchema = new mongoose.Schema({
     academicYear: {
         type: String,
         required: true,
-        // Academic year (e.g., "2024/2025")
-        validate: {
-            validator: function (v) {
-                return /^\d{4}\/\d{4}$/.test(v);
-            },
-            message: props => `${props.value} is not a valid academic year format (YYYY/YYYY)!`
-        }
     },
 
     semester: {
-        type: String,
-        enum: ['Semester 1', 'Semester 2', 'Short Semester'],
+        type: Number,
         required: true,
-        // Semester within the academic year
     },
 
     // Academic Calendar Dates
@@ -111,6 +102,8 @@ const intakeSchema = new mongoose.Schema({
 });
 
 // Indexes
+
+intakeSchema.index({ schoolId: 1, intakeName: 1 }, { unique: true });
 intakeSchema.index({ academicYear: 1, semester: 1 });
 intakeSchema.index({ intakeMonth: 1 });
 intakeSchema.index({ isActive: 1 });

@@ -8,24 +8,25 @@ import {
     deleteRecord,
     validateReferenceExists,
     validateMultipleReferences,
-    controllerWrapper
+    controllerWrapper,
+    deleteAllRecords
 } from "../../utils/reusable.js";
 
 // Custom validation function for department data
 const validateDepartmentData = async (data) => {
-    const { departmentName, DepartmentDescription, RoomID } = data;
+    const { departmentName, departmentDescription, roomId } = data;
 
     // Check required fields
-    if (!departmentName || !DepartmentDescription || !RoomID) {
+    if (!departmentName || !departmentDescription || !roomId) {
         return {
             isValid: false,
-            message: "Please provide all required fields (departmentName, DepartmentDescription, RoomID)"
+            message: "Please provide all required fields (departmentName, departmentDescription, roomId)"
         };
     }
 
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
-        roomID: { id: RoomID, Model: Room }
+        roomId: { id: roomId, Model: Room }
     });
 
     if (referenceValidation) {
@@ -84,4 +85,18 @@ export const updateDepartment = controllerWrapper(async (req, res) => {
 export const deleteDepartment = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(Department, id, "department");
+});
+// Delete All Departments
+export const deleteAllDepartments = controllerWrapper(async (req, res) => {
+    return await deleteAllRecords(Department, "departments");
+});
+
+export const getDepartmentsBySchool = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(
+        Department,
+        "departments",
+        ["schoolId"],
+        { schoolId }
+    );
 });

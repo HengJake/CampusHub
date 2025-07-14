@@ -5,50 +5,23 @@ import {
     getRecordById,
     updateRecord,
     deleteRecord,
-    controllerWrapper
+    controllerWrapper,
+    deleteAllRecords
 } from "../../utils/reusable.js";
 
 const validateRoomData = async (data) => {
-    const { RoomName, RoomDescription, Capacity } = data;
+    const { capacity } = data;
 
     // Check required fields
-    if (!RoomName) {
-        return {
-            isValid: false,
-            message: "RoomName is required"
-        };
-    }
-    if (!RoomDescription) {
-        return {
-            isValid: false,
-            message: "RoomDescription is required"
-        };
-    }
-    if (!Capacity) {
+    if (!capacity) {
         return {
             isValid: false,
             message: "Capacity is required"
         };
     }
 
-    // Validate RoomName is not empty
-    if (RoomName.trim().length === 0) {
-        return {
-            isValid: false,
-            message: "RoomName cannot be empty"
-        };
-    }
-
-    // Validate RoomDescription is not empty
-    if (RoomDescription.trim().length === 0) {
-        return {
-            isValid: false,
-            message: "RoomDescription cannot be empty"
-        };
-    }
-
     // Validate Capacity is a positive number
-    if (typeof Capacity !== 'number' || Capacity <= 0) {
+    if (typeof capacity !== 'number' || capacity <= 0) {
         return {
             isValid: false,
             message: "Capacity must be a positive number"
@@ -84,4 +57,18 @@ export const updateRoom = controllerWrapper(async (req, res) => {
 export const deleteRoom = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(Room, id, "room");
+});
+// Delete All Rooms
+export const deleteAllRooms = controllerWrapper(async (req, res) => {
+    return await deleteAllRecords(Room, "rooms");
+});
+
+export const getRoomsBySchool = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(
+        Room,
+        "rooms",
+        ["schoolId"],
+        { schoolId }
+    );
 });

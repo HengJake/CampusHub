@@ -8,7 +8,6 @@ export function BookingApprovals() {
   const { bookings } = useAdminStore()
 
   const pendingBookings = bookings?.filter(booking => booking.status === "Pending") || []
-  console.log("🚀 ~ BookingApprovals ~ pendingBookings:", pendingBookings)
 
   const handleApprove = (bookingId) => {
     // TODO: Implement approve booking logic

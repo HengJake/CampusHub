@@ -57,7 +57,7 @@ const departmentSchema = new mongoose.Schema({
 });
 
 // Indexes
-departmentSchema.index({ departmentName: 1 });
+departmentSchema.index({ schoolId: 1, departmentName: 1 }, { unique: true });
 departmentSchema.index({ isActive: 1 });
 
 const Department = mongoose.model('Department', departmentSchema);

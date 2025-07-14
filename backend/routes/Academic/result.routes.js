@@ -9,7 +9,9 @@ import {
     getResultsByModuleId,
     getResultsByGrade,
     getStudentGPA,
-    getModuleStatistics
+    getModuleStatistics,
+    deleteAllResults,
+    getResultsBySchool
 } from "../../controllers/Academic/result.controllers.js";
 
 const router = e.Router();
@@ -25,6 +27,9 @@ router.get("/:id", getResultById);
 
 // Update result by ID
 router.put("/:id", updateResult);
+
+// Delete all results
+router.delete("/all", deleteAllResults);
 
 // Delete result by ID
 router.delete("/:id", deleteResult);
@@ -43,5 +48,8 @@ router.get("/gpa/:studentId", getStudentGPA);
 
 // Get module statistics
 router.get("/statistics/:moduleId", getModuleStatistics);
+
+router.get("/school/:schoolId", getResultsBySchool);
+
 
 export default router;

@@ -36,11 +36,11 @@ import { AnnouncementManagement } from "./pages/schoolAdminPage/AnnouncementMana
 import { AdminSetting } from "./pages/schoolAdminPage/AdminSetting.jsx";
 import { AdminProfile } from "./pages/schoolAdminPage/AdminProfile.jsx";
 import { CourseManagement } from "./pages/schoolAdminPage/CourseManagement.jsx";
-import { LecturerManagement } from "./pages/schoolAdminPage/LecturerManagement.jsx"
+import { LecturerManagement } from "./pages/schoolAdminPage/LecturerManagement.jsx";
 import { AcademicOverview } from "./pages/schoolAdminPage/AcademicOverview.jsx";
 
 // CampusHub Admin Pages
-// import CampushubDashboard from "./pages/campusHubAdminPage/campushubDashboard/campushubDashboard.jsx";
+import CampushubDashboard from "./pages/campusHubAdminPage/dashboard.jsx";
 // import Subscription from "./pages/campusHubAdminPage/subscription/subscription.jsx";
 // import AnalyticalReport from "./pages/campusHubAdminPage/analyticalReport/analyticalReport.jsx";
 // import ClientManagement from "./pages/campusHubAdminPage/clientManagement/clientManagement.jsx";
@@ -64,7 +64,6 @@ import LNavbar from "./component/navBar/landingNavBar";
 import RNavBar from "./component/navBar/registrationNavBar";
 import SNavBar from "./component/navBar/studentNavBar";
 
-
 function App() {
   const path = useLocation().pathname;
   const [RenderedNavbar, setRenderedNavbar] = useState(null);
@@ -81,7 +80,13 @@ function App() {
     }
 
     // Landing pages
-    if (path === "/" || path === "/service" || path === "/contact-us" || path === "/pricing" || path === "/about") {
+    if (
+      path === "/" ||
+      path === "/service" ||
+      path === "/contact-us" ||
+      path === "/pricing" ||
+      path === "/about"
+    ) {
       return "landing";
     }
 
@@ -186,7 +191,10 @@ function App() {
         </Box>
       </Box>
 
-      <Box ml={margin} flex="1" display={"flex"}
+      <Box
+        ml={margin}
+        flex="1"
+        display={"flex"}
         // mt={userRole === "student" ? "64px" : ""}
         mt={"64px"}
       >
@@ -259,17 +267,14 @@ function App() {
           <Route path="/admin-setting" element={<AdminSetting />} />
           <Route path="/admin-profile" element={<AdminProfile />} />
 
-          {/* CampusHub Admin Pages */}
-          {
-            // <Route path="/campushub-dashboard" element={<CampushubDashboard />} />
-            // <Route path="/subscription" element={<Subscription />} />
-            // <Route path="/analytical-report" element={<AnalyticalReport />} />
-            // <Route path="/client-management" element={<ClientManagement />} />
-            // <Route path="/user-oversight" element={<UserOversight />} />
-            // <Route path="/campushub-setting" element={<CampushubSetting />} />
-            // <Route path="/campushub-profile" element={<CampushubProfile />} />
-
-          }
+          {/* CampusHub Admin Pages*/}
+          <Route path="/campushub-dashboard" element={<CampushubDashboard />} />
+          {/* <Route path="/subscription" element={<Subscription />} />
+          <Route path="/analytical-report" element={<AnalyticalReport />} />
+          <Route path="/client-management" element={<ClientManagement />} />
+          <Route path="/user-oversight" element={<UserOversight />} />
+          <Route path="/campushub-setting" element={<CampushubSetting />} />
+          <Route path="/campushub-profile" element={<CampushubProfile />} /> */}
         </Routes>
       </Box>
     </Box>

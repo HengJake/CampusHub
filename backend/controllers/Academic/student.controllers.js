@@ -11,23 +11,41 @@ import {
     updateRecord,
     deleteRecord,
     validateMultipleReferences,
-    controllerWrapper
+    controllerWrapper,
+    deleteAllRecords
 } from "../../utils/reusable.js";
 
 // Custom validation for student data
 const validateStudentData = async (data) => {
-    const { userId, schoolId, intakeCourseId } = data;
-    if (!userId || !schoolId || !intakeCourseId) {
-        return { isValid: false, message: "userId, schoolId, and intakeCourseId are required" };
+    const { userId, schoolId, intakeCourseId, year, currentSemester } = data;
+
+    // Check required fields
+    if (!userId || !schoolId || !intakeCourseId || year === undefined || currentSemester === undefined) {
+        return { isValid: false, message: "userId, schoolId, intakeCourseId, year, and currentSemester are required" };
     }
+
+    // Validate year
+    if (!Number.isInteger(Number(year)) || Number(year) < 1 || Number(year) > 5) {
+        return { isValid: false, message: "year must be an integer between 1 and 5" };
+    }
+
+    // Validate currentSemester
+    if (!Number.isInteger(Number(currentSemester)) || Number(currentSemester) < 1) {
+        return { isValid: false, message: "currentSemester must be an integer >= 1" };
+    }
+
+    // Validate references
     const referenceValidation = await validateMultipleReferences({
         userId: { id: userId, Model: User },
         schoolId: { id: schoolId, Model: School },
         intakeCourseId: { id: intakeCourseId, Model: IntakeCourse }
     });
+
     if (referenceValidation) {
+        console.error('Reference validation failed:', referenceValidation);
         return { isValid: false, message: referenceValidation.message };
     }
+
     return { isValid: true };
 };
 
@@ -83,7 +101,7 @@ export const deleteStudent = controllerWrapper(async (req, res) => {
 });
 
 // Get Students by School ID
-export const getStudentsBySchoolId = controllerWrapper(async (req, res) => {
+export const getStudentsBySchool = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
     return await getAllRecords(
         Student,
@@ -118,6 +136,23 @@ export const getStudentsByIntakeCourseId = controllerWrapper(async (req, res) =>
     );
 });
 
+export const getStudentsByUser = controllerWrapper(async (req, res) => {
+    const { userId } = req.params;
+    return await getAllRecords(
+        Student,
+        "students",
+        [
+            "userId",
+            "schoolId",
+            {
+                path: "intakeCourseId",
+                populate: [{ path: "intakeId" }, { path: "courseId" }]
+            }
+        ],
+        { userId }
+    );
+});
+
 // Get Students by Year
 export const getStudentsByYear = controllerWrapper(async (req, res) => {
     const { year } = req.params;
@@ -144,4 +179,8 @@ export const getStudentsByYear = controllerWrapper(async (req, res) => {
         ],
         { year: Number(year) }
     );
+});
+// Delete All Students
+export const deleteAllStudents = controllerWrapper(async (req, res) => {
+    return await deleteAllRecords(Student, "students");
 });

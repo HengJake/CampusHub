@@ -1,5 +1,6 @@
 import Lecturer from "../../models/Academic/lecturer.model.js";
 import Department from "../../models/Academic/department.model.js";
+import School from "../../models/Billing/school.model.js";
 import {
     createRecord,
     getAllRecords,
@@ -8,18 +9,19 @@ import {
     deleteRecord,
     validateReferenceExists,
     validateMultipleReferences,
-    controllerWrapper
+    controllerWrapper,
+    deleteAllRecords
 } from "../../utils/reusable.js";
 
 // Custom validation function for lecturer data
 const validateLecturerData = async (data) => {
-    const { UserID, DepartmentID } = data;
+    const { LecturerName, LecturerEmail, DepartmentID } = data;
 
     // Check required fields
-    if (!UserID|| !DepartmentID) {
+    if (!LecturerName || !LecturerEmail || !DepartmentID) {
         return {
             isValid: false,
-            message: "Please provide all required fields (UserID, DepartmentID)"
+            message: "Please provide all required fields (LecturerName, LecturerEmail, DepartmentID)"
         };
     }
 
@@ -34,7 +36,8 @@ const validateLecturerData = async (data) => {
 
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
-        departmentID: { id: DepartmentID, Model: Department }
+        departmentId: { id: departmentId, Model: Department },
+        schoolId: { id: schoolId, Model: School }
     });
 
     if (referenceValidation) {
@@ -43,6 +46,7 @@ const validateLecturerData = async (data) => {
             message: referenceValidation.message
         };
     }
+
 
     return { isValid: true };
 };
@@ -53,7 +57,8 @@ export const createLecturer = controllerWrapper(async (req, res) => {
         Lecturer,
         req.body,
         "lecturer",
-        validateLecturerData
+        validateLecturerData,
+        ['userId']
     );
 });
 
@@ -62,7 +67,7 @@ export const getLecturers = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Lecturer,
         "lecturers",
-        ['DepartmentID']
+        ['departmentId']
     );
 });
 
@@ -73,7 +78,7 @@ export const getLecturerById = controllerWrapper(async (req, res) => {
         Lecturer,
         id,
         "lecturer",
-        ['DepartmentID']
+        ['departmentId']
     );
 });
 
@@ -93,4 +98,18 @@ export const updateLecturer = controllerWrapper(async (req, res) => {
 export const deleteLecturer = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(Lecturer, id, "lecturer");
+});
+// Delete All Lecturers
+export const deleteAllLecturers = controllerWrapper(async (req, res) => {
+    return await deleteAllRecords(Lecturer, "lecturers");
+});
+
+export const getLecturersBySchool = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(
+        Lecturer,
+        "lecturers",
+        ["departmentId", "schoolId"],
+        { schoolId }
+    );
 });

@@ -35,13 +35,19 @@ import {
   MenuList,
   MenuItem,
   useColorModeValue,
+  InputGroup,
+  InputLeftElement,
 } from "@chakra-ui/react"
 import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiDownload } from "react-icons/fi"
 import { useState } from "react"
 import { useAdminStore } from "../../store/TBI/adminStore.js"
+import { useAcademicStore } from "../../store/academic.js";
 
 export function StudentManagement() {
-  const { students, addStudent, updateStudent, deleteStudent } = useAdminStore()
+
+  const { students, createStudent } = useAcademicStore();
+
+  // const { students, addStudent, updateStudent, deleteStudent } = useAdminStore()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
   const [searchTerm, setSearchTerm] = useState("")
@@ -70,36 +76,7 @@ export function StudentManagement() {
   })
 
   const handleSubmit = () => {
-    if (!formData.name || !formData.email || !formData.studentId) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      })
-      return
-    }
-
-    if (selectedStudent) {
-      updateStudent(selectedStudent.id, formData)
-      toast({
-        title: "Success",
-        description: "Student updated successfully",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      })
-    } else {
-      addStudent({ ...formData, status: "Active", joinDate: new Date().toISOString().split("T")[0] })
-      toast({
-        title: "Success",
-        description: "Student added successfully",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      })
-    }
+    console.log("add student")
 
     setFormData({
       name: "",
@@ -115,13 +92,18 @@ export function StudentManagement() {
   }
 
   const handleEdit = (student) => {
+
+    console.log("delete user")
+
     setSelectedStudent(student)
     setFormData(student)
     onOpen()
   }
 
   const handleDelete = (id) => {
-    deleteStudent(id)
+
+    console.log("delete user")
+
     toast({
       title: "Success",
       description: "Student deleted successfully",
@@ -181,12 +163,16 @@ export function StudentManagement() {
           <CardBody>
             <HStack spacing={4}>
               <Box flex="1">
-                <Input
-                  placeholder="Search students..."
-                  leftElement={<FiSearch />}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <InputGroup>
+                  <InputLeftElement>
+                    <FiSearch />
+                  </InputLeftElement>
+                  <Input
+                    placeholder="Search students..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </InputGroup>
               </Box>
               <Select w="200px" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                 <option value="All">All Status</option>
