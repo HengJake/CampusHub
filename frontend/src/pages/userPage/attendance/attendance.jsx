@@ -52,8 +52,6 @@ import { he } from "date-fns/locale";
 import { color } from "framer-motion";
 
 function attendance() {
-
-
   return (
     <Flex
       display={"flex"}
@@ -90,10 +88,10 @@ function attendance() {
             </Text>
 
             <PinInput otp>
-              <PinInputField />
-              <PinInputField />
-              <PinInputField />
-              <PinInputField />
+              <PinInputField color={"black"} />
+              <PinInputField color={"black"} />
+              <PinInputField color={"black"} />
+              <PinInputField color={"black"} />
             </PinInput>
 
             <Button
@@ -109,7 +107,6 @@ function attendance() {
           </HStack>
         </Box>
 
-        
         {/* <Box
           bgColor={"#D9D9D9"}
           width={"50%"}
