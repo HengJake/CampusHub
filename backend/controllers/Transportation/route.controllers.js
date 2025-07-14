@@ -41,6 +41,17 @@ export const getRouteById = controllerWrapper(async (req, res) => {
   return await getRecordById(Route, id, "route", ["StopID"]);
 });
 
+// Get Routes by Stop ID
+export const getRoutesByStopId = controllerWrapper(async (req, res) => {
+  const { stopId } = req.params;
+  return await getAllRecords(
+      Route,
+      "routes",
+      ["StopID"],
+      { StopID: stopId }
+  );
+});
+
 export const updateRoute = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await updateRecord(Route, id, req.body, "route", validateRouteData);
@@ -50,3 +61,4 @@ export const deleteRoute = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(Route, id, "route");
 });
+

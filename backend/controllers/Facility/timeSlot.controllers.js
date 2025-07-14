@@ -35,6 +35,18 @@ export const getTimeslotById = controllerWrapper(async (req, res) => {
   return await getRecordById(Timeslot, id, "timeslot", ["resourceId"]);
 });
 
+
+// Get Timeslots by Resource ID
+export const getTimeslotsByResourceId = controllerWrapper(async (req, res) => {
+  const { resourceId } = req.params;
+  return await getAllRecords(
+      Timeslot,
+      "timeslots",
+      ["resourceId"],
+      { resourceId }
+  );
+}); 
+
 export const updateTimeslot = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await updateRecord(Timeslot, id, req.body, "timeslot", validateTimeslotData);
@@ -43,4 +55,4 @@ export const updateTimeslot = controllerWrapper(async (req, res) => {
 export const deleteTimeslot = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(Timeslot, id, "timeslot");
-}); 
+});

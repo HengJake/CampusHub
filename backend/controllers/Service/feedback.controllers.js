@@ -17,6 +17,28 @@ export const getFeedbackById = controllerWrapper(async (req, res) => {
     return await getRecordById(Feedback, id, "feedback");
 });
 
+// Get Feedbacks by Student ID
+export const getFeedbacksByStudentId = controllerWrapper(async (req, res) => {
+    const { studentId } = req.params;
+    return await getAllRecords(
+        Feedback,
+        "feedbacks",
+        [],
+        { StudentID: studentId }
+    );
+});
+
+// Get Feedbacks by Feedback Type
+export const getFeedbacksByFeedbackType = controllerWrapper(async (req, res) => {
+    const { feedbackType } = req.params;
+    return await getAllRecords(
+        Feedback,
+        "feedbacks",
+        [],
+        { FeedbackType: feedbackType }
+    );
+}); 
+
 // Update Feedback
 export const updateFeedback = controllerWrapper(async (req, res) => {
     const { id } = req.params;
@@ -27,4 +49,5 @@ export const updateFeedback = controllerWrapper(async (req, res) => {
 export const deleteFeedback = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(Feedback, id, "feedback");
-}); 
+});
+

@@ -43,6 +43,29 @@ export const getBusScheduleById = controllerWrapper(async (req, res) => {
   return await getRecordById(BusSchedule, id, "busSchedule", ["RouteID", "VehicleID"]);
 });
 
+// Get BusSchedules by Route ID
+export const getBusSchedulesByRouteId = controllerWrapper(async (req, res) => {
+  const { routeId } = req.params;
+  return await getAllRecords(
+      BusSchedule,
+      "busSchedules",
+      ["RouteID", "VehicleID"],
+      { RouteID: routeId }
+  );
+});
+
+// Get BusSchedules by Vehicle ID
+export const getBusSchedulesByVehicleId = controllerWrapper(async (req, res) => {
+  const { vehicleId } = req.params;
+  return await getAllRecords(
+      BusSchedule,
+      "busSchedules",
+      ["RouteID", "VehicleID"],
+      { VehicleID: vehicleId }
+  );
+});
+
+
 export const updateBusSchedule = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await updateRecord(BusSchedule, id, req.body, "busSchedule", validateBusScheduleData);

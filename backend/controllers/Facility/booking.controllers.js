@@ -41,6 +41,28 @@ export const getBookingById = controllerWrapper(async (req, res) => {
   return await getRecordById(Booking, id, "booking", ["studentId", "resourceId"]);
 });
 
+// Get Bookings by Student ID
+export const getBookingsByStudentId = controllerWrapper(async (req, res) => {
+  const { studentId } = req.params;
+  return await getAllRecords(
+      Booking,
+      "bookings",
+      ["studentId", "resourceId"],
+      { studentId }
+  );
+});
+
+// Get Bookings by Resource ID
+export const getBookingsByResourceId = controllerWrapper(async (req, res) => {
+  const { resourceId } = req.params;
+  return await getAllRecords(
+      Booking,
+      "bookings",
+      ["studentId", "resourceId"],
+      { resourceId }
+  );
+}); 
+
 export const updateBooking = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await updateRecord(Booking, id, req.body, "booking", validateBookingData);
@@ -49,4 +71,4 @@ export const updateBooking = controllerWrapper(async (req, res) => {
 export const deleteBooking = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(Booking, id, "booking");
-}); 
+});

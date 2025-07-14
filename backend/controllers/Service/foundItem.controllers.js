@@ -42,6 +42,29 @@ export const getFoundItemById = controllerWrapper(async (req, res) => {
   return await getRecordById(FoundItem, id, "foundItem", ["SubmittedBy", "ClaimedBy"]);
 });
 
+
+// Get FoundItems by SubmittedBy
+export const getFoundItemsBySubmittedBy = controllerWrapper(async (req, res) => {
+  const { submittedBy } = req.params;
+  return await getAllRecords(
+      FoundItem,
+      "foundItems",
+      ["SubmittedBy", "ClaimedBy"],
+      { SubmittedBy: submittedBy }
+  );
+});
+
+// Get FoundItems by ClaimedBy
+export const getFoundItemsByClaimedBy = controllerWrapper(async (req, res) => {
+  const { claimedBy } = req.params;
+  return await getAllRecords(
+      FoundItem,
+      "foundItems",
+      ["SubmittedBy", "ClaimedBy"],
+      { ClaimedBy: claimedBy }
+  );
+}); 
+
 export const updateFoundItem = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await updateRecord(FoundItem, id, req.body, "foundItem", validateFoundItemData);
@@ -50,4 +73,4 @@ export const updateFoundItem = controllerWrapper(async (req, res) => {
 export const deleteFoundItem = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(FoundItem, id, "foundItem");
-}); 
+});

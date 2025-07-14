@@ -42,6 +42,29 @@ export const getLostItemById = controllerWrapper(async (req, res) => {
   return await getRecordById(LostItem, id, "lostItem", ["Owner", "MatchedItem"]);
 });
 
+
+// Get LostItems by Owner
+export const getLostItemsByOwner = controllerWrapper(async (req, res) => {
+  const { owner } = req.params;
+  return await getAllRecords(
+      LostItem,
+      "lostItems",
+      ["Owner", "MatchedItem"],
+      { Owner: owner }
+  );
+});
+
+// Get LostItems by MatchedItem
+export const getLostItemsByMatchedItem = controllerWrapper(async (req, res) => {
+  const { matchedItem } = req.params;
+  return await getAllRecords(
+      LostItem,
+      "lostItems",
+      ["Owner", "MatchedItem"],
+      { MatchedItem: matchedItem }
+  );
+}); 
+
 export const updateLostItem = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await updateRecord(LostItem, id, req.body, "lostItem", validateLostItemData);
@@ -50,4 +73,4 @@ export const updateLostItem = controllerWrapper(async (req, res) => {
 export const deleteLostItem = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(LostItem, id, "lostItem");
-}); 
+});

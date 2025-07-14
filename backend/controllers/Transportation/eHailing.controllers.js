@@ -51,6 +51,40 @@ export const getEHailingById = controllerWrapper(async (req, res) => {
   return await getRecordById(EHailing, id, "eHailing", ["StudentID", "RouteID", "PickupLocation", "DropOffLocation", "VehicleID"]);
 });
 
+// Get EHailings by Student ID
+export const getEHailingsByStudentId = controllerWrapper(async (req, res) => {
+  const { studentId } = req.params;
+  return await getAllRecords(
+      EHailing,
+      "eHailings",
+      ["StudentID", "RouteID", "PickupLocation", "DropOffLocation", "VehicleID"],
+      { StudentID: studentId }
+  );
+});
+
+// Get EHailings by Route ID
+export const getEHailingsByRouteId = controllerWrapper(async (req, res) => {
+  const { routeId } = req.params;
+  return await getAllRecords(
+      EHailing,
+      "eHailings",
+      ["StudentID", "RouteID", "PickupLocation", "DropOffLocation", "VehicleID"],
+      { RouteID: routeId }
+  );
+});
+
+// Get EHailings by Vehicle ID
+export const getEHailingsByVehicleId = controllerWrapper(async (req, res) => {
+  const { vehicleId } = req.params;
+  return await getAllRecords(
+      EHailing,
+      "eHailings",
+      ["StudentID", "RouteID", "PickupLocation", "DropOffLocation", "VehicleID"],
+      { VehicleID: vehicleId }
+  );
+});
+
+
 export const updateEHailing = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await updateRecord(EHailing, id, req.body, "eHailing", validateEHailingData);
@@ -60,3 +94,5 @@ export const deleteEHailing = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(EHailing, id, "eHailing");
 });
+
+

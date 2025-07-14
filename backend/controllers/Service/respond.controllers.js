@@ -17,6 +17,17 @@ export const getRespondById = controllerWrapper(async (req, res) => {
     return await getRecordById(Respond, id, "respond");
 });
 
+// Get Responds by Feedback ID
+export const getRespondsByFeedbackId = controllerWrapper(async (req, res) => {
+    const { feedbackId } = req.params;
+    return await getAllRecords(
+        Respond,
+        "responds",
+        [],
+        { FeedbackID: feedbackId }
+    );
+}); 
+
 // Update Respond
 export const updateRespond = controllerWrapper(async (req, res) => {
     const { id } = req.params;
@@ -27,4 +38,4 @@ export const updateRespond = controllerWrapper(async (req, res) => {
 export const deleteRespond = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(Respond, id, "respond");
-}); 
+});

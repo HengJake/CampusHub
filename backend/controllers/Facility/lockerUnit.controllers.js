@@ -54,6 +54,15 @@ export const getLockerUnitById = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await getRecordById(LockerUnit, id, "lockerUnit", ["resourceId"]);
 });
+export const getLockerUnitsByResourceId = controllerWrapper(async (req, res) => {
+    const { resourceId } = req.params;
+    return await getAllRecords(
+        LockerUnit,
+        "lockerUnits",
+        ["resourceId"],
+        { resourceId }
+    );
+});
 export const updateLockerUnit = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await updateRecord(LockerUnit, id, req.body, "lockerUnit", validateLockerUnitData);
@@ -62,5 +71,7 @@ export const deleteLockerUnit = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(LockerUnit, id, "lockerUnit");
 });
+
+
 
 

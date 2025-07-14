@@ -36,6 +36,17 @@ export const getParkingLotById = controllerWrapper(async (req, res) => {
   return await getRecordById(ParkingLot, id, "parkingLot", ["schoolId"]);
 });
 
+// Get ParkingLots by School ID
+export const getParkingLotsBySchoolId = controllerWrapper(async (req, res) => {
+  const { schoolId } = req.params;
+  return await getAllRecords(
+      ParkingLot,
+      "parkingLots",
+      ["schoolId"],
+      { schoolId }
+  );
+}); 
+
 export const updateParkingLot = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await updateRecord(ParkingLot, id, req.body, "parkingLot", validateParkingLotData);
@@ -44,4 +55,5 @@ export const updateParkingLot = controllerWrapper(async (req, res) => {
 export const deleteParkingLot = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(ParkingLot, id, "parkingLot");
-}); 
+});
+
