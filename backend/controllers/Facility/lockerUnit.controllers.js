@@ -47,9 +47,20 @@ export const createLockerUnit = controllerWrapper(async (req, res) => {
         validateLockerUnitData
     )
 })
-export const getAllLockerUnit = controllerWrapper(async (req, res) => { })
-export const getLockerUnitById = controllerWrapper(async (req, res) => { })
-export const updateLockerUnit = controllerWrapper(async (req, res) => { })
-export const deleteLockerUnit = controllerWrapper(async (req, res) => { });
+export const getAllLockerUnit = controllerWrapper(async (req, res) => {
+    return await getAllRecords(LockerUnit, "lockerUnit", ["resourceId"]);
+});
+export const getLockerUnitById = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await getRecordById(LockerUnit, id, "lockerUnit", ["resourceId"]);
+});
+export const updateLockerUnit = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await updateRecord(LockerUnit, id, req.body, "lockerUnit", validateLockerUnitData);
+});
+export const deleteLockerUnit = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await deleteRecord(LockerUnit, id, "lockerUnit");
+});
 
 

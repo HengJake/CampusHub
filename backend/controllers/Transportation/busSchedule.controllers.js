@@ -1,155 +1,54 @@
-// import BusSchedule from "../../models/Transportation/busShcedule.model.js";
-// import mongoose from "mongoose";
+import {
+  createRecord,
+  getAllRecords,
+  getRecordById,
+  updateRecord,
+  deleteRecord,
+  validateMultipleReferences,
+  controllerWrapper
+} from "../../utils/reusable.js";
+import BusSchedule from "../../models/Transportation/busShcedule.model.js";
+import Route from "../../models/Transportation/route.model.js";
+import Vehicle from "../../models/Transportation/vehicle.model.js";
 
-// // Create a Bus Schedule
-// export const createBusSchedule = async (req, res) => {
-//   const { routeID, vehiclesID, departureTime, arrivalTime, dayActive, active } = req.body;
+const validateBusScheduleData = async (data) => {
+  const { RouteID, VehicleID, DepartureTime, ArrivalTime, DayActive } = data;
+  if (!RouteID || !Array.isArray(RouteID) || RouteID.length === 0) return { isValid: false, message: "RouteID array is required" };
+  if (!VehicleID) return { isValid: false, message: "VehicleID is required" };
+  if (!DepartureTime) return { isValid: false, message: "DepartureTime is required" };
+  if (!ArrivalTime) return { isValid: false, message: "ArrivalTime is required" };
+  if (DayActive == null) return { isValid: false, message: "DayActive is required" };
+  if (![1,2,3,4,5,6,7].includes(DayActive)) return { isValid: false, message: "DayActive must be a number from 1 (Mon) to 7 (Sun)" };
+  // Validate references
+  const referenceValidation = await validateMultipleReferences({
+    VehicleID: { id: VehicleID, Model: Vehicle },
+    ...Object.fromEntries(RouteID.map(id => [id, { id, Model: Route }]))
+  });
+  if (referenceValidation) {
+    return { isValid: false, message: referenceValidation.message };
+  }
+  return { isValid: true };
+};
 
-//   if (!routeID || !vehiclesID || !departureTime || !arrivalTime || !dayActive) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "Please provide all required fields",
-//     });
-//   }
+export const createBusSchedule = controllerWrapper(async (req, res) => {
+  return await createRecord(BusSchedule, req.body, "busSchedule", validateBusScheduleData);
+});
 
-//   if (!Array.isArray(routeID) || !routeID.every(id => mongoose.Types.ObjectId.isValid(id))) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "Invalid routeID array",
-//     });
-//   }
+export const getAllBusSchedules = controllerWrapper(async (req, res) => {
+  return await getAllRecords(BusSchedule, "busSchedule", ["RouteID", "VehicleID"]);
+});
 
-//   if (!mongoose.Types.ObjectId.isValid(vehiclesID)) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "Invalid vehiclesID",
-//     });
-//   }
+export const getBusScheduleById = controllerWrapper(async (req, res) => {
+  const { id } = req.params;
+  return await getRecordById(BusSchedule, id, "busSchedule", ["RouteID", "VehicleID"]);
+});
 
-//   if (![1, 2, 3, 4, 5, 6, 7].includes(dayActive)) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "dayActive must be a number from 1 (Mon) to 7 (Sun)",
-//     });
-//   }
+export const updateBusSchedule = controllerWrapper(async (req, res) => {
+  const { id } = req.params;
+  return await updateRecord(BusSchedule, id, req.body, "busSchedule", validateBusScheduleData);
+});
 
-//   try {
-//     const newSchedule = new BusSchedule({
-//       routeID,
-//       vehiclesID,
-//       departureTime,
-//       arrivalTime,
-//       dayActive,
-//       active,
-//     });
-
-//     await newSchedule.save();
-
-//     return res.status(201).json({
-//       success: true,
-//       data: newSchedule,
-//       message: "Bus schedule created successfully",
-//     });
-//   } catch (error) {
-//     console.error("Error creating bus schedule:", error.message);
-//     res.status(500).json({ success: false, message: "Server error" });
-//   }
-// };
-
-// // Get all bus schedules
-// export const getAllBusSchedules = async (req, res) => {
-//   try {
-//     const schedules = await BusSchedule.find({})
-//       .populate("routeID")
-//       .populate("vehiclesID");
-
-//     return res.status(200).json({
-//       success: true,
-//       data: schedules,
-//       count: schedules.length,
-//     });
-//   } catch (error) {
-//     console.error("Error fetching bus schedules:", error.message);
-//     res.status(500).json({ success: false, message: "Internal server error" });
-//   }
-// };
-
-// // Get a schedule by ID
-// export const getBusScheduleById = async (req, res) => {
-//   const { id } = req.params;
-
-//   if (!mongoose.Types.ObjectId.isValid(id)) {
-//     return res.status(400).json({ success: false, message: "Invalid schedule ID format" });
-//   }
-
-//   try {
-//     const schedule = await BusSchedule.findById(id)
-//       .populate("routeID")
-//       .populate("vehiclesID");
-
-//     if (!schedule) {
-//       return res.status(404).json({ success: false, message: "Schedule not found" });
-//     }
-
-//     return res.status(200).json({ success: true, data: schedule });
-//   } catch (error) {
-//     console.error("Error fetching schedule:", error.message);
-//     res.status(500).json({ success: false, message: "Internal server error" });
-//   }
-// };
-
-// // Update schedule
-// export const updateBusSchedule = async (req, res) => {
-//   const { id } = req.params;
-//   const updates = req.body;
-
-//   if (!mongoose.Types.ObjectId.isValid(id)) {
-//     return res.status(400).json({ success: false, message: "Invalid schedule ID format" });
-//   }
-
-//   try {
-//     const updatedSchedule = await BusSchedule.findByIdAndUpdate(id, updates, {
-//       new: true,
-//       runValidators: true,
-//     });
-
-//     if (!updatedSchedule) {
-//       return res.status(404).json({ success: false, message: "Schedule not found" });
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       data: updatedSchedule,
-//       message: "Schedule updated successfully",
-//     });
-//   } catch (error) {
-//     console.error("Error updating schedule:", error.message);
-//     res.status(500).json({ success: false, message: "Internal server error" });
-//   }
-// };
-
-// // Delete schedule
-// export const deleteBusSchedule = async (req, res) => {
-//   const { id } = req.params;
-
-//   if (!mongoose.Types.ObjectId.isValid(id)) {
-//     return res.status(400).json({ success: false, message: "Invalid schedule ID format" });
-//   }
-
-//   try {
-//     const deleted = await BusSchedule.findByIdAndDelete(id);
-
-//     if (!deleted) {
-//       return res.status(404).json({ success: false, message: "Schedule not found" });
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "Schedule deleted successfully",
-//       data: deleted,
-//     });
-//   } catch (error) {
-//     console.error("Error deleting schedule:", error.message);
-//     res.status(500).json({ success: false, message: "Internal server error" });
-//   }
-// };
+export const deleteBusSchedule = controllerWrapper(async (req, res) => {
+  const { id } = req.params;
+  return await deleteRecord(BusSchedule, id, "busSchedule");
+});

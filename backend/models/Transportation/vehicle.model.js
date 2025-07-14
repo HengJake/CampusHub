@@ -11,7 +11,7 @@ const vehiclesSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["bus", "car"],
+      enum: ["bus", "minibus", "private_car", "van", "motorcycle"],
       required: true,
     },
     // to record how many people the vehicle can afford
@@ -22,8 +22,8 @@ const vehiclesSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["active", "inactive", "maintenance", "repair"],
-      default: "active",
+      enum: ["available", "in_service", "under_maintenance", "inactive"],
+      default: "available",
     },
   },
   {

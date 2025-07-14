@@ -1,49 +1,46 @@
 import mongoose from 'mongoose';
 
 const foundItemSchema = new mongoose.Schema({
-    SubmittedBy: {
-        type: String,
+    submittedBy: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-
-    Name: {
+    name: {
         type: String,
         required: true,
         trim: true
     },
-
-    Description: {
+    description: {
         type: String,
         required: true,
         trim: true
     },
-
-    FoundLocation: {
+    foundLocation: {
         type: String,
         required: true,
         trim: true,
-        enum: ['library', 'cafeteria', 'classroom', 'court', 'parking lot', 'other']
+        enum: ['library', 'cafeteria', 'classroom', 'court', 'parking lot', 'lobby', 'office', 'gym', 'outdoor_area', 'other']
     },
-
-    FoundDate: {
-        type: DateTime,
-        required: true, 
+    foundDate: {
+        type: Date,
+        required: true,
         default: Date.now
     },
-
-    ClaimedBy: {
-        type: String,
+    image: {
+        type: String // Base64
+    },
+    claimedBy: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         default: null
     },
-
-    Status: {
+    status: {
         type: String,
         required: true,
-        enum: ['available', 'claimed', 'unclaimed'],
-        default: 'available'
-    },
+        enum: ['unclaimed', 'claimed', 'pending', 'archived'],
+        default: 'unclaimed'
+    }
 });
 
 const FoundItem = mongoose.model('FoundItem', foundItemSchema);
