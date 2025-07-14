@@ -41,7 +41,6 @@ import {
 } from "@chakra-ui/react"
 import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiEye, FiDownload } from "react-icons/fi"
 import { useState } from "react"
-import { useAcademicStore } from "../../store/TBI/academicStore.js"
 
 export function LecturerManagement() {
   const { lecturers, addLecturer, updateLecturer, deleteLecturer } = useAcademicStore()

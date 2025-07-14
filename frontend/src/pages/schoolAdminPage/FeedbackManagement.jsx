@@ -1,5 +1,3 @@
-"use client"
-
 import {
   Box,
   Button,
@@ -35,10 +33,8 @@ import {
 } from "@chakra-ui/react"
 import { FiMessageSquare, FiClock, FiCheckCircle, FiAlertCircle } from "react-icons/fi"
 import { useState } from "react"
-import { useAdminStore } from "../../store/TBI/adminStore.js"
 
 export function FeedbackManagement() {
-  const { feedback, updateFeedbackStatus } = useAdminStore()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
   const [selectedFeedback, setSelectedFeedback] = useState(null)

@@ -80,14 +80,9 @@ function Sidebar() {
               <Icon as={FaUserGraduate} boxSize={6} color="white" zIndex={2} />
             </Button>
           </Link>
-          <Link to="/academic-management">
-            <Button sx={sidebarButtonStyle("Academic Management")}>
-              <Icon as={FaSchool} boxSize={6} color="white" zIndex={2} />
-            </Button>
-          </Link>
           <Link to="/academic-overview">
             <Button sx={sidebarButtonStyle("Academic Overview")}>
-              <Icon as={FaRegEye} boxSize={6} color="white" zIndex={2} />
+              <Icon as={FaSchool} boxSize={6} color="white" zIndex={2} />
             </Button>
           </Link>
           <Link to="/course-management">

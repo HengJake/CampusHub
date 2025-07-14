@@ -1,5 +1,3 @@
-"use client"
-
 import {
   Box,
   Button,
@@ -37,15 +35,14 @@ import {
   AccordionIcon,
   Flex,
   Spacer,
+  Divider
 } from "@chakra-ui/react"
 import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiDownload } from "react-icons/fi"
 import { useEffect, useState } from "react"
-import { useAdminStore } from "../../store/TBI/adminStore.js"
 import { useAcademicStore } from "../../store/academic.js";
 
 export function StudentManagement() {
-
-  const { students, fetchStudents,
+  const { students, courses, fetchCourses, fetchStudents,
     createStudent,
     updateStudent,
     deleteStudent } = useAcademicStore();
@@ -58,10 +55,9 @@ export function StudentManagement() {
     name: "",
     email: "",
     studentId: "",
-    department: "",
-    year: "",
-    phone: "",
-    address: "",
+    course: "",
+    year: 0,
+    phone: ""
   })
 
   const bgColor = useColorModeValue("white", "gray.800")
@@ -69,8 +65,9 @@ export function StudentManagement() {
 
   useEffect(() => {
     fetchStudents();
+    fetchCourses();
   }, [])
-  console.log("🚀 ~ StudentManagement ~ students:", students)
+
 
   let filteredStudents = students.filter((student) => {
     const matchesSearch =
@@ -88,21 +85,24 @@ export function StudentManagement() {
       name: "",
       email: "",
       studentId: "",
-      department: "",
+      course: "",
       year: "",
-      phone: "",
-      address: "",
+      phone: ""
     })
     setSelectedStudent(null)
     onClose()
   }
 
   const handleEdit = (student) => {
-
-    console.log("delete user")
-
     setSelectedStudent(student)
-    setFormData(student)
+    setFormData({
+      name: student.userId.name,
+      email: student.userId.email,
+      studentId: student._id,
+      course: student.intakeCourseId.courseId._id,
+      year: student.year,
+      phone: student.userId.phoneNumber
+    })
     onOpen()
   }
 
@@ -121,12 +121,12 @@ export function StudentManagement() {
 
   const exportStudents = () => {
     const csvContent = [
-      ["Name", "Email", "Student ID", "Department", "Year", "Status"],
+      ["Name", "Email", "Student ID", "Course", "Year", "Status"],
       ...filteredStudents.map((student) => [
         student.userId.name,
         student.userId.email,
         student.studentId,
-        student.department,
+        student.intakeCourseId.courseId.courseName,
         student.year,
         student.status,
       ]),
@@ -324,7 +324,14 @@ export function StudentManagement() {
         <Modal isOpen={isOpen} onClose={onClose} size="lg">
           <ModalOverlay />
           <ModalContent>
-            <ModalHeader>{selectedStudent ? "Edit Student" : "Add New Student"}</ModalHeader>
+            <ModalHeader>
+              <VStack align={"start"}>
+                <Text>
+                  {selectedStudent ? "Edit Student" : "Add New Student"}
+                </Text>
+                <Text fontSize={"sm"} fontWeight={300}>{selectedStudent ? `ID: ${formData.studentId}` : ""}</Text>
+              </VStack >
+            </ModalHeader>
             <ModalCloseButton />
             <ModalBody>
               <VStack spacing={4}>
@@ -340,46 +347,33 @@ export function StudentManagement() {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </FormControl>
-                <FormControl isRequired>
-                  <FormLabel>Student ID</FormLabel>
-                  <Input
-                    value={formData.studentId}
-                    onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                  />
-                </FormControl>
                 <FormControl>
-                  <FormLabel>Department</FormLabel>
+                  <FormLabel>Phone</FormLabel>
+                  <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                </FormControl>
+                <Divider />
+                <FormControl>
+                  <FormLabel>Course</FormLabel>
                   <Select
-                    value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    value={formData.course}
+                    onChange={(e) => setFormData({ ...formData, course: e.target.value })}
                   >
-                    <option value="">Select Department</option>
-                    <option value="Computer Science">Computer Science</option>
-                    <option value="Engineering">Engineering</option>
-                    <option value="Business">Business</option>
-                    <option value="Arts">Arts</option>
+                    <option value="">Select Course</option>
+                    {courses.map((course) => {
+                      // console.log(course);
+                      return (<option value={course._id}>{course.courseName}</option>)})}
                   </Select>
                 </FormControl>
                 <FormControl>
                   <FormLabel>Year</FormLabel>
                   <Select value={formData.year} onChange={(e) => setFormData({ ...formData, year: e.target.value })}>
                     <option value="">Select Year</option>
-                    <option value="Freshman">Freshman</option>
-                    <option value="Sophomore">Sophomore</option>
-                    <option value="Junior">Junior</option>
-                    <option value="Senior">Senior</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
                   </Select>
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Phone</FormLabel>
-                  <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Address</FormLabel>
-                  <Input
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  />
                 </FormControl>
               </VStack>
             </ModalBody>

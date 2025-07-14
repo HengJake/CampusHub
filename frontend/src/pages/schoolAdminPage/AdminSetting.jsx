@@ -1,5 +1,3 @@
-"use client"
-
 import {
   Box,
   Card,
@@ -22,13 +20,9 @@ import {
 } from "@chakra-ui/react"
 import { FiSave, FiDownload, FiUpload, FiShield, FiBell, FiDatabase } from "react-icons/fi"
 import { useState } from "react"
-import { useAdminStore } from "../../store/TBI/adminStore.js"
+
 
 export function AdminSetting() {
-  const { systemSettings, updateSystemSettings } = useAdminStore()
-  console.log("🚀 ~ AdminSetting ~ systemSettings:", systemSettings)
-
-
 
   const toast = useToast()
   const [settings, setSettings] = useState(systemSettings)

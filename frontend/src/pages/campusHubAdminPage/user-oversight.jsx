@@ -31,82 +31,14 @@ import {
 import { useState } from "react";
 import { Download, TrendingUp, Users, GraduationCap } from "lucide-react";
 
-const mockUserData = [
-  {
-    id: 1,
-    schoolName: "Lincoln High School",
-    totalUsers: 1335,
-    students: 1250,
-    teachers: 65,
-    staff: 20,
-    activeUsers: 1180,
-    growthRate: 8.5,
-    lastActive: "2 hours ago",
-  },
-  {
-    id: 2,
-    schoolName: "Roosevelt Elementary",
-    totalUsers: 695,
-    students: 650,
-    teachers: 35,
-    staff: 10,
-    activeUsers: 620,
-    growthRate: 12.3,
-    lastActive: "1 hour ago",
-  },
-  {
-    id: 3,
-    schoolName: "Washington Middle School",
-    totalUsers: 952,
-    students: 890,
-    teachers: 52,
-    staff: 10,
-    activeUsers: 845,
-    growthRate: -2.1,
-    lastActive: "30 minutes ago",
-  },
-  {
-    id: 4,
-    schoolName: "Jefferson Academy",
-    totalUsers: 445,
-    students: 420,
-    teachers: 20,
-    staff: 5,
-    activeUsers: 398,
-    growthRate: 15.7,
-    lastActive: "5 minutes ago",
-  },
-];
+
 
 export default function UserOversight() {
   const [selectedSchool, setSelectedSchool] = useState("all");
   const [sortBy, setSortBy] = useState("totalUsers");
 
-  const totalStats = {
-    totalUsers: mockUserData.reduce(
-      (sum, school) => sum + school.totalUsers,
-      0
-    ),
-    totalStudents: mockUserData.reduce(
-      (sum, school) => sum + school.students,
-      0
-    ),
-    totalTeachers: mockUserData.reduce(
-      (sum, school) => sum + school.teachers,
-      0
-    ),
-    totalStaff: mockUserData.reduce((sum, school) => sum + school.staff, 0),
-    avgGrowthRate:
-      mockUserData.reduce((sum, school) => sum + school.growthRate, 0) /
-      mockUserData.length,
-  };
+ 
 
-  const filteredData =
-    selectedSchool === "all"
-      ? mockUserData
-      : mockUserData.filter(
-          (school) => school.id.toString() === selectedSchool
-        );
 
   const handleDownloadStats = () => {
     // Mock download functionality

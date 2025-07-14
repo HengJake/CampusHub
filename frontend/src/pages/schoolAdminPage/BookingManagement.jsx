@@ -1,5 +1,3 @@
-"use client"
-
 import {
   Box,
   Card,
@@ -27,10 +25,8 @@ import {
 } from "@chakra-ui/react"
 import { FiCheck, FiX, FiCalendar, FiClock } from "react-icons/fi"
 import { useState } from "react"
-import { useAdminStore } from "../../store/TBI/adminStore.js"
 
 export function BookingManagement() {
-  const { bookings, updateBookingStatus } = useAdminStore()
   const toast = useToast()
   const [statusFilter, setStatusFilter] = useState("All")
   const [facilityFilter, setFacilityFilter] = useState("All")

@@ -1,5 +1,3 @@
-"use client"
-
 import {
   Box,
   Button,
@@ -41,7 +39,6 @@ import {
 } from "@chakra-ui/react"
 import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiEye, FiDownload } from "react-icons/fi"
 import { useState } from "react"
-import { useAcademicStore } from "../../store/TBI/academicStore.js"
 
 export function CourseManagement() {
   const { courses, addCourse, updateCourse, deleteCourse } = useAcademicStore()
