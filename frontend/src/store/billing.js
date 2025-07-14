@@ -94,7 +94,6 @@ export const useBillingStore = create((set) => ({
     },
     // payment
     createPayment: async (paymentDetails) => {
-        console.log("🚀 ~ createPayment: ~ paymentDetails:", paymentDetails)
         
         try {
             const res = await fetch(`/api/payment`, {

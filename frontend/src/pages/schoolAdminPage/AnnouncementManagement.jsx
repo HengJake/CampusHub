@@ -1,5 +1,3 @@
-"use client"
-
 import {
   Box,
   Button,
@@ -43,10 +41,8 @@ import {
 } from "@chakra-ui/react"
 import { FiPlus, FiBell, FiEdit, FiTrash2, FiMoreVertical, FiEye } from "react-icons/fi"
 import { useState } from "react"
-import { useAdminStore } from "../../store/TBI/adminStore.js"
 
 export function AnnouncementManagement() {
-  const { announcements, addAnnouncement } = useAdminStore()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
   const [statusFilter, setStatusFilter] = useState("All")

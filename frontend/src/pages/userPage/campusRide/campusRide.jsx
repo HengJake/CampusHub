@@ -57,7 +57,6 @@ function campusRide() {
   ];
   return (
     <Flex
-      bgColor="white"
       width="100%"
       position="relative"
       overflowY="hidden"
@@ -105,7 +104,7 @@ function campusRide() {
             display={"flex"}
             boxShadow={"sm"}
             flexDirection={"column"}
-            position="relative" 
+            position="relative"
           >
             <Menu isLazy>
               <MenuButton textAlign={"left"} width={"100%"} p={5}>
@@ -119,7 +118,7 @@ function campusRide() {
             </Menu>
             <hr />
             <Menu isLazy>
-              <MenuButton textAlign={"left"}  width={"100%"}  p={5}>
+              <MenuButton textAlign={"left"} width={"100%"} p={5}>
                 To
               </MenuButton>
               <MenuList width="440%">

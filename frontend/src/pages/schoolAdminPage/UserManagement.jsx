@@ -1,24 +1,20 @@
-"use client"
-
 import {
   Box,
   Button,
   Card,
   CardBody,
+  HStack,
+  Input,
+  Select,
   Table,
   Thead,
   Tbody,
   Tr,
   Th,
   Td,
-  Text,
-  Input,
-  Select,
-  HStack,
-  VStack,
   Badge,
   Avatar,
-  IconButton,
+  Text,
   useDisclosure,
   Modal,
   ModalOverlay,
@@ -30,48 +26,55 @@ import {
   FormControl,
   FormLabel,
   useToast,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
   useColorModeValue,
-  InputGroup,
-  InputLeftElement,
+  VStack,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Flex,
+  Spacer,
+  Divider
 } from "@chakra-ui/react"
 import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiDownload } from "react-icons/fi"
-import { useState } from "react"
-import { useAdminStore } from "../../store/TBI/adminStore.js"
+import { useEffect, useState } from "react"
 import { useAcademicStore } from "../../store/academic.js";
 
 export function StudentManagement() {
-
-  const { students, createStudent } = useAcademicStore();
-
-  // const { students, addStudent, updateStudent, deleteStudent } = useAdminStore()
+  const { students, courses, fetchCourses, fetchStudents,
+    createStudent,
+    updateStudent,
+    deleteStudent } = useAcademicStore();
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("All")
+  const [statusFilter, setStatusFilter] = useState("all") // Changed from "All" to "all"
   const [selectedStudent, setSelectedStudent] = useState(null)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     studentId: "",
-    department: "",
-    year: "",
-    phone: "",
-    address: "",
+    course: "",
+    year: 0,
+    phone: ""
   })
 
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
 
-  const filteredStudents = students.filter((student) => {
+  useEffect(() => {
+    fetchStudents();
+    fetchCourses();
+  }, [])
+
+
+  let filteredStudents = students.filter((student) => {
     const matchesSearch =
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "All" || student.status === statusFilter
+      student.userId.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.userId.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student._id.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === "all" || student.status.toLowerCase() === statusFilter.toLowerCase()
     return matchesSearch && matchesStatus
   })
 
@@ -82,21 +85,24 @@ export function StudentManagement() {
       name: "",
       email: "",
       studentId: "",
-      department: "",
+      course: "",
       year: "",
-      phone: "",
-      address: "",
+      phone: ""
     })
     setSelectedStudent(null)
     onClose()
   }
 
   const handleEdit = (student) => {
-
-    console.log("delete user")
-
     setSelectedStudent(student)
-    setFormData(student)
+    setFormData({
+      name: student.userId.name,
+      email: student.userId.email,
+      studentId: student._id,
+      course: student.intakeCourseId.courseId._id,
+      year: student.year,
+      phone: student.userId.phoneNumber
+    })
     onOpen()
   }
 
@@ -115,12 +121,12 @@ export function StudentManagement() {
 
   const exportStudents = () => {
     const csvContent = [
-      ["Name", "Email", "Student ID", "Department", "Year", "Status"],
+      ["Name", "Email", "Student ID", "Course", "Year", "Status"],
       ...filteredStudents.map((student) => [
-        student.name,
-        student.email,
+        student.userId.name,
+        student.userId.email,
         student.studentId,
-        student.department,
+        student.intakeCourseId.courseId.courseName,
         student.year,
         student.status,
       ]),
@@ -161,23 +167,26 @@ export function StudentManagement() {
         {/* Filters */}
         <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
           <CardBody>
-            <HStack spacing={4}>
-              <Box flex="1">
-                <InputGroup>
-                  <InputLeftElement>
-                    <FiSearch />
-                  </InputLeftElement>
-                  <Input
-                    placeholder="Search students..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </InputGroup>
+            <HStack spacing={4} mb={4} flexWrap="wrap" gap={2}>
+              <Box flex="1" minW="200px">
+                <Input
+                  placeholder="Search students..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  size="md"
+                />
               </Box>
-              <Select w="200px" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                <option value="All">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+              <Select
+                w={{ base: "full", sm: "200px" }}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="graduated">Graduated</option>
+                <option value="dropped">Dropped</option>
+                <option value="suspended">Suspended</option>
               </Select>
             </HStack>
           </CardBody>
@@ -186,54 +195,128 @@ export function StudentManagement() {
         {/* Students Table */}
         <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
           <CardBody>
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Student</Th>
-                  <Th>Student ID</Th>
-                  <Th>Department</Th>
-                  <Th>Year</Th>
-                  <Th>Status</Th>
-                  <Th>Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {filteredStudents.map((student) => (
-                  <Tr key={student.id}>
-                    <Td>
-                      <HStack>
-                        <Avatar size="sm" name={student.name} />
-                        <Box>
-                          <Text fontWeight="medium">{student.name}</Text>
-                          <Text fontSize="sm" color="gray.600">
-                            {student.email}
-                          </Text>
-                        </Box>
-                      </HStack>
-                    </Td>
-                    <Td>{student.studentId}</Td>
-                    <Td>{student.department}</Td>
-                    <Td>{student.year}</Td>
-                    <Td>
-                      <Badge colorScheme={student.status === "Active" ? "green" : "red"}>{student.status}</Badge>
-                    </Td>
-                    <Td>
-                      <Menu>
-                        <MenuButton as={IconButton} icon={<FiMoreVertical />} variant="ghost" size="sm" />
-                        <MenuList>
-                          <MenuItem icon={<FiEdit />} onClick={() => handleEdit(student)}>
-                            Edit
-                          </MenuItem>
-                          <MenuItem icon={<FiTrash2 />} onClick={() => handleDelete(student.id)} color="red.500">
-                            Delete
-                          </MenuItem>
-                        </MenuList>
-                      </Menu>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
+            {/* Desktop Table View */}
+            <Box display={{ base: "none", lg: "block" }}>
+              {filteredStudents.length === 0 ? (
+                <Box textAlign="center" py={8}>
+                  <Text color="gray.500">No students found</Text>
+                </Box>
+              ) : (
+                <Table variant="simple">
+                  <Thead>
+                    <Tr>
+                      <Th>Student</Th>
+                      <Th>Student ID</Th>
+                      <Th>Course</Th>
+                      <Th>Intake</Th>
+                      <Th>Year</Th>
+                      <Th>Status</Th>
+                      <Th>Actions</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {filteredStudents.map((student) => (
+                      <Tr key={student._id}>
+                        <Td>
+                          <HStack>
+                            <Avatar size="sm" name={student.userId.name} />
+                            <Box>
+                              <Text fontWeight="medium">{student.userId.name}</Text>
+                              <Text fontSize="sm" color="gray.600">
+                                {student.userId.email}
+                              </Text>
+                            </Box>
+                          </HStack>
+                        </Td>
+                        <Td>{student._id}</Td>
+                        <Td>{student.intakeCourseId.courseId.courseName}</Td>
+                        <Td>{student.intakeCourseId.intakeId.intakeName}</Td>
+                        <Td>{student.year}</Td>
+                        <Td>
+                          <Badge colorScheme={student.status === "active" ? "green" : "red"}>{student.status}</Badge>
+                        </Td>
+                        <Td>
+                          <HStack spacing={2}>
+                            <Button size="sm" colorScheme="blue" onClick={() => handleEdit(student)}>
+                              <FiEdit />
+                            </Button>
+                            <Button size="sm" colorScheme="red" onClick={() => handleDelete(student._id)}>
+                              <FiTrash2 />
+                            </Button>
+                          </HStack>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              )}
+            </Box>
+
+            {/* Mobile Accordion View */}
+            <Box display={{ base: "block", lg: "none" }}>
+              {filteredStudents.length === 0 ? (
+                <Box textAlign="center" py={8}>
+                  <Text color="gray.500">No students found</Text>
+                </Box>
+              ) : (
+                <Accordion allowMultiple>
+                  {filteredStudents.map((student) => (
+                    <AccordionItem key={student._id}>
+                      <h2>
+                        <AccordionButton>
+                          <Box as="span" flex="1" textAlign="left">
+                            <HStack>
+                              <Avatar size="sm" name={student.userId.name} />
+                              <Box>
+                                <Text fontWeight="medium">{student.userId.name}</Text>
+                                <Text fontSize="sm" color="gray.600">
+                                  {student.userId.email}
+                                </Text>
+                              </Box>
+                            </HStack>
+                          </Box>
+                          <AccordionIcon />
+                        </AccordionButton>
+                      </h2>
+                      <AccordionPanel pb={4}>
+                        <VStack spacing={3} align="stretch">
+                          <Flex justify="space-between">
+                            <Text fontWeight="medium">Student ID:</Text>
+                            <Text>{student._id}</Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text fontWeight="medium">Course:</Text>
+                            <Text>{student.intakeCourseId.courseId.courseName}</Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text fontWeight="medium">Intake:</Text>
+                            <Text>{student.intakeCourseId.intakeId.intakeName}</Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text fontWeight="medium">Year:</Text>
+                            <Text>{student.year}</Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text fontWeight="medium">Status:</Text>
+                            <Badge colorScheme={student.status === "active" ? "green" : "red"}>
+                              {student.status}
+                            </Badge>
+                          </Flex>
+                          <HStack spacing={2} justify="center" pt={2}>
+                            <Button size="sm" colorScheme="blue" onClick={() => handleEdit(student)}>
+                              <FiEdit />
+                            </Button>
+                            <Button size="sm" colorScheme="red" onClick={() => handleDelete(student._id)}>
+                              <FiTrash2 />
+                            </Button>
+                          </HStack>
+                        </VStack>
+                      </AccordionPanel>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
+            </Box>
           </CardBody>
         </Card>
 
@@ -241,7 +324,14 @@ export function StudentManagement() {
         <Modal isOpen={isOpen} onClose={onClose} size="lg">
           <ModalOverlay />
           <ModalContent>
-            <ModalHeader>{selectedStudent ? "Edit Student" : "Add New Student"}</ModalHeader>
+            <ModalHeader>
+              <VStack align={"start"}>
+                <Text>
+                  {selectedStudent ? "Edit Student" : "Add New Student"}
+                </Text>
+                <Text fontSize={"sm"} fontWeight={300}>{selectedStudent ? `ID: ${formData.studentId}` : ""}</Text>
+              </VStack >
+            </ModalHeader>
             <ModalCloseButton />
             <ModalBody>
               <VStack spacing={4}>
@@ -257,46 +347,33 @@ export function StudentManagement() {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </FormControl>
-                <FormControl isRequired>
-                  <FormLabel>Student ID</FormLabel>
-                  <Input
-                    value={formData.studentId}
-                    onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                  />
-                </FormControl>
                 <FormControl>
-                  <FormLabel>Department</FormLabel>
+                  <FormLabel>Phone</FormLabel>
+                  <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                </FormControl>
+                <Divider />
+                <FormControl>
+                  <FormLabel>Course</FormLabel>
                   <Select
-                    value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    value={formData.course}
+                    onChange={(e) => setFormData({ ...formData, course: e.target.value })}
                   >
-                    <option value="">Select Department</option>
-                    <option value="Computer Science">Computer Science</option>
-                    <option value="Engineering">Engineering</option>
-                    <option value="Business">Business</option>
-                    <option value="Arts">Arts</option>
+                    <option value="">Select Course</option>
+                    {courses.map((course) => {
+                      // console.log(course);
+                      return (<option value={course._id}>{course.courseName}</option>)})}
                   </Select>
                 </FormControl>
                 <FormControl>
                   <FormLabel>Year</FormLabel>
                   <Select value={formData.year} onChange={(e) => setFormData({ ...formData, year: e.target.value })}>
                     <option value="">Select Year</option>
-                    <option value="Freshman">Freshman</option>
-                    <option value="Sophomore">Sophomore</option>
-                    <option value="Junior">Junior</option>
-                    <option value="Senior">Senior</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
                   </Select>
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Phone</FormLabel>
-                  <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Address</FormLabel>
-                  <Input
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  />
                 </FormControl>
               </VStack>
             </ModalBody>
@@ -314,3 +391,4 @@ export function StudentManagement() {
     </Box>
   )
 }
+

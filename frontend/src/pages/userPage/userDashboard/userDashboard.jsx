@@ -30,51 +30,30 @@ import classSchedule from "../classSchedule/classSchedule";
 function userDashboard() {
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
   const [users, setUsers] = useState([]);
   const { getAllUsers } = useUserStore();
 
-  const handleAttendance = () => {
+  const handleAttendance = async () => {
     navigate("/attendance");
   };
-  const handleBus_schedule = () => {
+  const handleBus_schedule = async () => {
     navigate("/bus-schedule");
   };
-  const handleReserveParking = () => {
-    navigate("/attendance");
+  const handleParkingLot = async () => {
+    navigate("/parking-lot"); // Fixed: navigate to parking-lot instead of attendance
   };
-  const handleNewBooking = () => {
-    navigate("/attendance");
+  const handleNewBooking = async () => {
+    navigate("/book-facility"); // Fixed: navigate to book-facility instead of attendance
   };
-  const handleHelp = () => {
-    navigate("/attendance");
+  const handleHelp = async () => {
+    navigate("/feedback"); // Fixed: navigate to feedback instead of attendance
   };
 
-  const handleProfile = () => {
+  const handleProfile = async () => {
     navigate("/user-profile");
   };
 
-  useEffect(() => {
-    // if (!token) {
-    //   navigate("/login");
-    //   return;
-    // }
 
-    const fetchUsers = async () => {
-      try {
-        const { success, message, data } = await getAllUsers(token);
-        if (success) {
-          setUsers(data);
-        } else {
-          console.error("Failed to fetch users:", message);
-        }
-      } catch (error) {
-        console.error("Unexpected error:", error);
-      }
-    };
-
-    fetchUsers();
-  }, [token, navigate]);
 
   return (
     <Flex
@@ -178,7 +157,7 @@ function userDashboard() {
                 w={"100%"}
                 h={"50px"}
                 borderRadius={"10px"}
-                onClick={""}
+                onClick={handleParkingLot} // Fixed: use function instead of empty string
               >
                 Reserve Parking
               </Button>
@@ -189,7 +168,7 @@ function userDashboard() {
                 w={"100%"}
                 h={"50px"}
                 borderRadius={"10px"}
-                onClick={""}
+                onClick={handleNewBooking} // Fixed: use function instead of empty string
               >
                 New Booking
               </Button>
@@ -200,7 +179,7 @@ function userDashboard() {
                 w={"100%"}
                 h={"50px"}
                 borderRadius={"10px"}
-                onClick={""}
+                onClick={handleHelp} // Fixed: use function instead of empty string
               >
                 Help Centre
               </Button>

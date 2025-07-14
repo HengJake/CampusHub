@@ -33,7 +33,6 @@ function navBar() {
         gap={"10"}
       >
         <CampusHubLogo />
-
         <InputGroup>
           <Input placeholder="Search..." bg="white" />
           <InputRightElement width="3rem">

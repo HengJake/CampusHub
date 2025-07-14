@@ -36,7 +36,6 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts"
-import { useAdminStore } from "../../store/TBI/adminStore.js"
 
 const COLORS = ["#344E41", "#A4C3A2", "#48BB78", "#ED8936"]
 
