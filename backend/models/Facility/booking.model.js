@@ -15,7 +15,7 @@ const BookingSchema = new mongoose.Schema({
     endTime: { type: String, required: true },   // e.g., "15:00"
     status: {
         type: String,
-        enum: ['pending', 'approved', 'rejected', 'cancelled'],
+        enum: ['pending', 'confirmed', 'cancelled', 'completed'],
         default: 'pending',
     },
 });

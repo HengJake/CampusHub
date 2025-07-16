@@ -2,6 +2,7 @@ import Attendance from "../../models/Academic/attendance.model.js";
 import Student from "../../models/Academic/student.model.js";
 import ClassSchedule from "../../models/Academic/classSchedule.model.js";
 import School from "../../models/Billing/school.model.js";
+
 import {
     createRecord,
     getAllRecords,

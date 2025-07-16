@@ -24,8 +24,8 @@ const eHailingSchema = new mongoose.Schema(
     },
     Status: {
       type: String,
-      enum: ["pending", "confirmed", "in_progress", "completed", "cancelled"],
-      default: "pending",
+      enum: ["waiting", "in_progress", "completed", "cancelled", "delayed"],
+      default: "waiting",
     },
     RequestAt: {
       type: Date,

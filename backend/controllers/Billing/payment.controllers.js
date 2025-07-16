@@ -72,24 +72,6 @@ export const getPaymentById = controllerWrapper(async (req, res) => {
     );
 });
 
-// Update Payment
-export const updatePayment = controllerWrapper(async (req, res) => {
-    const { id } = req.params;
-    return await updateRecord(
-        Payment,
-        id,
-        req.body,
-        "payment",
-        validatePaymentData
-    );
-});
-
-// Delete Payment
-export const deletePayment = controllerWrapper(async (req, res) => {
-    const { id } = req.params;
-    return await deleteRecord(Payment, id, "payment");
-});
-
 // Get Payments by School
 export const getPaymentsBySchool = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
@@ -111,3 +93,44 @@ export const getPaymentsByUser = controllerWrapper(async (req, res) => {
         { UserID: userId }
     );
 });
+
+// Get Payments by Subscription
+export const getPaymentsBySubscription = controllerWrapper(async (req, res) => {
+    const { subscriptionId } = req.params;
+    return await getAllRecords(
+        Payment,
+        "payments",
+        ['SchoolID', 'UserID', 'SubscriptionID'],
+        { SubscriptionID: subscriptionId }
+    );
+});
+
+// Get Payments by Payment Method
+export const getPaymentsByPaymentMethod = controllerWrapper(async (req, res) => {
+    const { paymentMethod } = req.params;
+    return await getAllRecords(
+        Payment,
+        "payments",
+        ['SchoolID', 'UserID', 'SubscriptionID'],
+        { PaymentMethod: paymentMethod }
+    );
+});
+
+// Update Payment
+export const updatePayment = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await updateRecord(
+        Payment,
+        id,
+        req.body,
+        "payment",
+        validatePaymentData
+    );
+});
+
+// Delete Payment
+export const deletePayment = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await deleteRecord(Payment, id, "payment");
+});
+
