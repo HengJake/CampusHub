@@ -88,7 +88,8 @@ export function BookingDialog({ isOpen, onClose, lockerId }) {
         h={"50%"}
         display={"flex"}
         flexDirection={"column"}
-        bgColor={""}
+        backdropFilter="blur(10px)"
+        bgColor={"rgba(255, 255, 255, 0.3)"}
       >
         <ModalHeader pb={0}>
           <Flex justifyContent="space-between" alignItems="center">
@@ -107,6 +108,7 @@ export function BookingDialog({ isOpen, onClose, lockerId }) {
             <FormControl>
               <FormLabel fontSize={"18px"}>Booking Date</FormLabel>
               <Input
+                border={"none"}
                 type="date"
                 value={format(date, "yyyy-MM-dd")}
                 onChange={(e) => setDate(new Date(e.target.value))}
@@ -130,6 +132,7 @@ export function BookingDialog({ isOpen, onClose, lockerId }) {
                   value={hour}
                   bg="#FF5656"
                   color="white"
+                  border={"none"}
                 >
                   {hours.map((h) => (
                     <option key={h} value={h}>
@@ -145,6 +148,7 @@ export function BookingDialog({ isOpen, onClose, lockerId }) {
                   value={minute}
                   bg="#FF5656"
                   color="white"
+                  border={"none"}
                 >
                   {minutes.map((m) => (
                     <option key={m} value={m}>
@@ -152,11 +156,13 @@ export function BookingDialog({ isOpen, onClose, lockerId }) {
                     </option>
                   ))}
                 </Select>
-                <Flex borderRadius="md" bg="#FF5656" p={1}>
+                <Flex borderRadius="md" bg="black" p={1}>
                   <Button
                     variant="ghost"
+                    borderRadius={"full"}
                     size="sm"
                     h={8}
+                    w={5}
                     px={2}
                     color={ampm === "AM" ? "#E74C3C" : "white"}
                     bg={ampm === "AM" ? "white" : "transparent"}
@@ -168,11 +174,14 @@ export function BookingDialog({ isOpen, onClose, lockerId }) {
                   <Button
                     variant="ghost"
                     size="sm"
+                    borderRadius={"full"}
                     h={8}
+                    w={5}
+
                     px={2}
                     color={ampm === "PM" ? "#E74C3C" : "white"}
                     bg={ampm === "PM" ? "white" : "transparent"}
-                    _hover={{ bg: ampm === "PM" ? "white" : "#C0392B" }}
+                    _hover={{ bg: ampm === "PM" ? "black" : "#C0392B" }}
                     onClick={() => setAmpm("PM")}
                   >
                     PM
