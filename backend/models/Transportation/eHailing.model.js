@@ -3,22 +3,22 @@ import mongoose from "mongoose";
 const eHailingSchema = new mongoose.Schema(
   {
     StudentID: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
       required: true,
     },
     RouteID: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Route",
       required: true,
     },
     PickupLocation: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Stop",
       required: true,
     },
     DropOffLocation: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Stop",
       required: true,
     },
@@ -32,7 +32,7 @@ const eHailingSchema = new mongoose.Schema(
       default: Date.now,
     },
     VehicleID: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Vehicle",
     },
   },

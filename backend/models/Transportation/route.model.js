@@ -10,7 +10,7 @@ const routeSchema = new mongoose.Schema(
     },
     StopID: [
       {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Stop",
         required: true,
       },

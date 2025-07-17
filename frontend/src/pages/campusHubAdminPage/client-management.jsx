@@ -1,6 +1,5 @@
 "use client";
 
-
 import React, { useEffect, useState } from "react";
 
 import {
@@ -48,7 +47,7 @@ export default function ClientManagement() {
     city: "",
     country: "",
     status: "Active",
-    userId: ""
+    userId: "",
   });
   const [schoolAdmins, setSchoolAdmins] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -74,37 +73,19 @@ export default function ClientManagement() {
     fetchLecturersBySchoolId,
   } = useAcademicStore();
 
+  const students = useAcademicStore((state) => state.students);
 
   // Load data on component mount
   useEffect(() => {
-    // loadData();
     fetchSchools();
-  }, []);
-
+    fetchStudents();
+  }, [fetchSchools, fetchStudents]);
 
   const loadData = async () => {
     try {
       // Fetch all students and lecturers to get user counts
       await fetchStudents();
       await fetchLecturers();
-      
-      // Mock school admins data
-      setSchoolAdmins([
-        {
-          _id: "admin1",
-          name: "Dr. Sarah Johnson",
-          email: "sarah.johnson@apu.edu.my",
-          role: "schoolAdmin",
-          clients: ["Asia Pacific University"]
-        },
-        {
-          _id: "admin2", 
-          name: "Prof. Michael Chen",
-          email: "michael.chen@bpu.edu.my",
-          role: "schoolAdmin",
-          clients: ["Borneo Pacific University"]
-        }
-      ]);
     } catch (error) {
       toast({
         title: "Error loading data",
@@ -130,7 +111,7 @@ export default function ClientManagement() {
       city: school.city,
       country: school.country,
       status: school.status,
-      userId: school.userId
+      userId: school.userId,
     });
     onOpen();
   };
@@ -190,7 +171,7 @@ export default function ClientManagement() {
         city: "",
         country: "",
         status: "Active",
-        userId: ""
+        userId: "",
       });
     } catch (error) {
       toast({
@@ -203,16 +184,19 @@ export default function ClientManagement() {
     }
   };
 
+  const getStudentCount = (schoolId) =>
+    students.filter((student) => student.schoolId === schoolId).length;
+
   const getSchoolStats = (schoolId) => {
     // This fetch from academic store by schoolId
     return {
-      students: Math.floor(Math.random() * 1000) + 500,
-      staff: Math.floor(Math.random() * 100) + 50
+      students: Math.floor(Math.random() * 100) + 50,
+      staff: Math.floor(Math.random() * 100) + 50,
     };
   };
 
   const getSchoolAdmin = (userId) => {
-    const admin = schoolAdmins.find(admin => admin._id === userId);
+    const admin = schoolAdmins.find((admin) => admin._id === userId);
     return admin ? admin.name : "Unassigned";
   };
 
@@ -228,7 +212,7 @@ export default function ClientManagement() {
             Manage school clients and their information
           </Text>
         </Box>
-        <Spacer/>
+        <Spacer />
         <HStack>
           <Button leftIcon={<Plus />} colorScheme="blue" onClick={onOpen}>
             Add Client
@@ -240,7 +224,7 @@ export default function ClientManagement() {
       </Flex>
 
       {/* Search and Filters */}
-      <Card  w={"100%"}>
+      <Card w={"100%"}>
         <CardBody>
           <HStack spacing={4}>
             <Box position="relative" flex={1}>
@@ -277,70 +261,50 @@ export default function ClientManagement() {
                   <Th>School Name</Th>
                   <Th>Location</Th>
                   <Th>Sub-Admin</Th>
-                  <Th>Users</Th>
                   <Th>Status</Th>
+                  <Th>Users</Th>
                   <Th>Actions</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {filteredSchools.map((school) => {
-                  const stats = getSchoolStats(school._id);
-                  return (
-                    <Tr key={school._id}>
-                      <Td>
-                        <VStack align="start" spacing={1}>
-                          <Text fontWeight="medium">{school.name}</Text>
-                          <Text fontSize="sm" color="gray.500">
-                            {school.address}
-                          </Text>
-                        </VStack>
-                      </Td>
-                      <Td>
-                        <VStack align="start" spacing={1}>
-                          <Text fontSize="sm">{school.city}</Text>
-                          <Text fontSize="sm" color="gray.500">
-                            {school.country}
-                          </Text>
-                        </VStack>
-                      </Td>
-                      <Td>{getSchoolAdmin(school.userId)}</Td>
-                      <Td>
-                        <VStack align="start" spacing={1}>
-                          <Text fontSize="sm">Students: {stats.students}</Text>
-                          <Text fontSize="sm" color="gray.500">
-                            Staff: {stats.staff}
-                          </Text>
-                        </VStack>
-                      </Td>
-                      <Td>
-                        <Badge
-                          colorScheme={
-                            school.status === "Active" ? "green" : "red"
-                          }
-                        >
-                          {school.status}
-                        </Badge>
-                      </Td>
-                      <Td>
-                        <HStack>
-                          <IconButton
-                            icon={<Edit />}
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(school)}
-                          />
-                          <IconButton
-                            icon={<Trash2 />}
-                            size="sm"
-                            variant="ghost"
-                            colorScheme="red"
-                            onClick={() => handleDelete(school._id)}
-                          />
-                        </HStack>
-                      </Td>
-                    </Tr>
-                  );
-                })}
+                {filteredSchools.map((school) => (
+                  <Tr key={school._id}>
+                    <Td>
+                      <VStack align="start" spacing={1}>
+                        <Text fontWeight="medium">{school.name}</Text>
+                        <Text fontSize="sm" color="gray.500">
+                          {school.address}
+                        </Text>
+                      </VStack>
+                    </Td>
+                    <Td>
+                      <VStack align="start" spacing={1}>
+                        <Text fontSize="sm">{school.city}</Text>
+                        <Text fontSize="sm" color="gray.500">
+                          {school.country}
+                        </Text>
+                      </VStack>
+                    </Td>
+                    <Td>{getSchoolAdmin(school.userId)}</Td>
+                    <Td>
+                      <Badge
+                        colorScheme={
+                          school.status === "Active" ? "green" : "red"
+                        }
+                      >
+                        {school.status}
+                      </Badge>
+                    </Td>
+                    <Td>
+                      <VStack align="start" spacing={1}>
+                        <Text fontSize="sm">
+                          Students: {getStudentCount(school._id)}
+                        </Text>
+                      </VStack>
+                    </Td>
+                    <Td>{/* Actions */}</Td>
+                  </Tr>
+                ))}
               </Tbody>
             </Table>
           </TableContainer>
@@ -359,41 +323,51 @@ export default function ClientManagement() {
             <VStack spacing={4}>
               <FormControl>
                 <FormLabel>School Name</FormLabel>
-                <Input 
-                  placeholder="Enter school name" 
+                <Input
+                  placeholder="Enter school name"
                   value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                 />
               </FormControl>
               <FormControl>
                 <FormLabel>Address</FormLabel>
-                <Input 
-                  placeholder="Enter address" 
+                <Input
+                  placeholder="Enter address"
                   value={formData.address}
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
                 />
               </FormControl>
               <FormControl>
                 <FormLabel>City</FormLabel>
-                <Input 
-                  placeholder="Enter city" 
+                <Input
+                  placeholder="Enter city"
                   value={formData.city}
-                  onChange={(e) => setFormData({...formData, city: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, city: e.target.value })
+                  }
                 />
               </FormControl>
               <FormControl>
                 <FormLabel>Country</FormLabel>
-                <Input 
-                  placeholder="Enter country" 
+                <Input
+                  placeholder="Enter country"
                   value={formData.country}
-                  onChange={(e) => setFormData({...formData, country: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, country: e.target.value })
+                  }
                 />
               </FormControl>
               <FormControl>
                 <FormLabel>Status</FormLabel>
-                <Select 
+                <Select
                   value={formData.status}
-                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value })
+                  }
                 >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
@@ -401,10 +375,12 @@ export default function ClientManagement() {
               </FormControl>
               <FormControl>
                 <FormLabel>Assign School Admin</FormLabel>
-                <Select 
+                <Select
                   placeholder="Select school admin"
                   value={formData.userId}
-                  onChange={(e) => setFormData({...formData, userId: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, userId: e.target.value })
+                  }
                 >
                   {schoolAdmins.map((admin) => (
                     <option key={admin._id} value={admin._id}>
@@ -476,7 +452,14 @@ export default function ClientManagement() {
             </TableContainer>
           </ModalBody>
           <ModalFooter>
-            <Button onClick={onSubAdminClose} fontWeight={"bold"} w={"100%"} _hover={{bgColor:"red", color:"white"}}>Close</Button>
+            <Button
+              onClick={onSubAdminClose}
+              fontWeight={"bold"}
+              w={"100%"}
+              _hover={{ bgColor: "red", color: "white" }}
+            >
+              Close
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

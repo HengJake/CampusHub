@@ -65,6 +65,7 @@ export default function SubscriptionTracking() {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedSubscription, setSelectedSubscription] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [sortOrder, setSortOrder] = useState("az"); // 'az' for A-Z, 'za' for Z-A
 
   // Only after all hooks, do your conditional returns:
   if (loading.schools) {
@@ -147,20 +148,17 @@ export default function SubscriptionTracking() {
     }
   };
 
-  const paymentHistory = [
-    {
-      id: 1,
-      school: "Lincoln High School",
-      date: "2024-02-15",
-      amount: 299,
-      method: "Credit Card",
-      status: "Completed",
-    },
-    // ...rest of the data
-  ];
+  // Sort filteredSubscriptions by school name according to sortOrder
+  const sortedSubscriptions = [...filteredSubscriptions].sort((a, b) => {
+    if (sortOrder === "az") {
+      return (a.schoolName || "").localeCompare(b.schoolName || "");
+    } else {
+      return (b.schoolName || "").localeCompare(a.schoolName || "");
+    }
+  });
 
   return (
-    <VStack spacing={6} align="stretch">
+    <VStack spacing={4} align="stretch" pl={8} pr={10}>
       {/* Header */}
       <Flex>
         <Box>
@@ -320,6 +318,20 @@ export default function SubscriptionTracking() {
                       <option value="pending">Pending</option>
                     </Select>
                   </Box>
+                  <Box >
+                    <Text fontSize="sm" mb={2}>
+                      Sort by:
+                    </Text>
+                    <Select
+                      value={sortOrder}
+                      onChange={(e) => setSortOrder(e.target.value)}
+                      w="120px"
+                      size="md"
+                    >
+                      <option value="az">A-Z</option>
+                      <option value="za">Z-A</option>
+                    </Select>
+                  </Box>
                 </HStack>
               </CardBody>
             </Card>
@@ -341,7 +353,7 @@ export default function SubscriptionTracking() {
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {filteredSubscriptions.map((subscription) => (
+                      {sortedSubscriptions.map((subscription) => (
                         <Tr key={subscription.id}>
                           <Td>
                             <Text fontWeight="medium">
@@ -489,31 +501,14 @@ export default function SubscriptionTracking() {
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {paymentHistory.map((payment) => (
-                        <Tr key={payment.id}>
-                          <Td>
-                            <Text fontWeight="medium">{payment.school}</Text>
-                          </Td>
-                          <Td>
-                            <Text fontSize="sm">{payment.date}</Text>
-                          </Td>
-                          <Td>
-                            <Text fontWeight="semibold">${payment.amount}</Text>
-                          </Td>
-                          <Td>
-                            <Badge variant="outline">{payment.method}</Badge>
-                          </Td>
-                          <Td>
-                            <Badge
-                              colorScheme={
-                                payment.status === "Completed" ? "green" : "red"
-                              }
-                            >
-                              {payment.status}
-                            </Badge>
-                          </Td>
-                        </Tr>
-                      ))}
+                      {/* Replace with real payment data from backend/store when available */}
+                      <Tr>
+                        <Td colSpan={5}>
+                          <Text color="gray.500" align="center">
+                            No payment history data available.
+                          </Text>
+                        </Td>
+                      </Tr>
                     </Tbody>
                   </Table>
                 </TableContainer>
