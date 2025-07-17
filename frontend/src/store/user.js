@@ -1,6 +1,29 @@
 import { create } from "zustand";
 
 export const useUserStore = create((set) => ({
+  createUser: async (user) => {
+    try {
+      const res = await fetch(`/api/user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(user),
+      })
+
+      const data = await res.json();
+
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to fetch user");
+      }
+
+      return { success: true, message: data.message, data: data.data };
+    } catch (error) {
+      console.error("Error creating user", error.message);
+      return { success: false, message: error.message };
+    }
+  },
   getUser: async (id) => {
     try {
       const res = await fetch(`/api/user/${id}`, {

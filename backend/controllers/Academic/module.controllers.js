@@ -80,7 +80,7 @@ export const getModulesBySchool = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Module,
         "modules",
-        ["schoolId"],
+        ["schoolId", ["courseId"], ["prerequisites"]],
         { schoolId }
     );
 });

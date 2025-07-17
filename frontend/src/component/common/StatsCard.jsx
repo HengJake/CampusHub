@@ -35,7 +35,7 @@ export function StatCard({ title, value, change, icon, color }) {
                             {change && (
                                 <StatHelpText>
                                     <StatArrow type={change > 0 ? "increase" : "decrease"} />
-                                    {Math.abs(change)}%
+                                    <Text as={"span"} fontWeight={700}>{Math.abs(change)}%</Text> from last month
                                 </StatHelpText>
                             )}
                         </Box>

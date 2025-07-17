@@ -23,7 +23,7 @@ const moduleSchema = new mongoose.Schema({
     },
 
     courseId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: [mongoose.Schema.Types.ObjectId],
         ref: "Course",
         required: true,
         // Course this module belongs to

@@ -17,21 +17,18 @@ import {
 
 // Custom validation for student data
 const validateStudentData = async (data) => {
-    const { userId, schoolId, intakeCourseId, year, currentSemester } = data;
+    const { userId, schoolId, intakeCourseId, currentYear, currentSemester } = data;
 
-    // Check required fields
-    if (!userId || !schoolId || !intakeCourseId || year === undefined || currentSemester === undefined) {
-        return { isValid: false, message: "userId, schoolId, intakeCourseId, year, and currentSemester are required" };
-    }
+    // Collect missing fields
+    const missingFields = [];
+    if (!userId) missingFields.push("userId");
+    if (!schoolId) missingFields.push("schoolId");
+    if (!intakeCourseId) missingFields.push("intakeCourseId");
+    if (currentYear === undefined || currentYear === "") missingFields.push("currentYear");
+    if (currentSemester === undefined || currentSemester === "") missingFields.push("currentSemester");
 
-    // Validate year
-    if (!Number.isInteger(Number(year)) || Number(year) < 1 || Number(year) > 5) {
-        return { isValid: false, message: "year must be an integer between 1 and 5" };
-    }
-
-    // Validate currentSemester
-    if (!Number.isInteger(Number(currentSemester)) || Number(currentSemester) < 1) {
-        return { isValid: false, message: "currentSemester must be an integer >= 1" };
+    if (missingFields.length > 0) {
+        return { isValid: false, message: `Missing required field(s): ${missingFields.join(", ")}` };
     }
 
     // Validate references
@@ -103,6 +100,7 @@ export const deleteStudent = controllerWrapper(async (req, res) => {
 // Get Students by School ID
 export const getStudentsBySchool = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
+
     return await getAllRecords(
         Student,
         "students",
@@ -114,7 +112,8 @@ export const getStudentsBySchool = controllerWrapper(async (req, res) => {
                 populate: [{ path: "intakeId" }, { path: "courseId" }]
             }
         ],
-        { schoolId }
+        { schoolId: schoolId }
+
     );
 });
 

@@ -15,14 +15,16 @@ const intakeSchema = new mongoose.Schema({
         // Month when the intake starts (Malaysian academic calendar)
     },
 
-    academicYear: {
-        type: String,
-        required: true,
-    },
-
-    semester: {
+    totalYear: {
         type: Number,
         required: true,
+        // total Year
+    },
+
+    totalSemester: {
+        type: Number,
+        required: true,
+        //total semester
     },
 
     // Academic Calendar Dates
@@ -42,18 +44,6 @@ const intakeSchema = new mongoose.Schema({
         type: Date,
         required: true,
         // Date of student orientation program
-    },
-
-    classesStartDate: {
-        type: Date,
-        required: true,
-        // Date when classes begin
-    },
-
-    classesEndDate: {
-        type: Date,
-        required: true,
-        // Date when classes end
     },
 
     examinationStartDate: {
@@ -96,7 +86,12 @@ const intakeSchema = new mongoose.Schema({
         ref: 'School',
         required: true,
         // Each intake belongs to a specific school
-    }
+    },
+
+    completionDate: {
+        type: Date,
+        required: true
+    },
 }, {
     timestamps: true
 });

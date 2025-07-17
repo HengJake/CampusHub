@@ -43,7 +43,7 @@ const AuthTest = () => {
             role: 'companyAdmin'
         },
         schoolAdmin: {
-            email: 'admin2@apu.edu.my',
+            email: 'admin@apu.edu.my',
             password: 'password123',
             name: 'School Administrator',
             role: 'schoolAdmin'

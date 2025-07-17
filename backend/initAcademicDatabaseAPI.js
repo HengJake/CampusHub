@@ -281,6 +281,8 @@ async function createSchoolData({
         {
             intakeName: "January 2024 Intake",
             intakeMonth: "January",
+            totalYear: 4, // Added for schema compliance
+            totalSemester: 8, // Added for schema compliance
             academicYear: "2024/2025",
             semester: 1,
             registrationStartDate: "2024-01-01T00:00:00.000Z",
@@ -300,11 +302,14 @@ async function createSchoolData({
             ],
             isActive: true,
             status: "registration_open",
-            schoolId: createdIds.school
+            schoolId: createdIds.school,
+            completionDate: "2024-06-15T23:59:59.000Z"
         },
         {
             intakeName: "May 2024 Intake",
             intakeMonth: "May",
+            totalYear: 4, // Added for schema compliance
+            totalSemester: 8, // Added for schema compliance
             academicYear: "2024/2025",
             semester: 2,
             registrationStartDate: "2024-05-01T00:00:00.000Z",
@@ -324,11 +329,14 @@ async function createSchoolData({
             ],
             isActive: true,
             status: "registration_open",
-            schoolId: createdIds.school
+            schoolId: createdIds.school,
+            completionDate: "2024-10-15T23:59:59.000Z"
         },
         {
             intakeName: "September 2024 Intake",
             intakeMonth: "September",
+            totalYear: "4", // Added for schema compliance
+            totalSemester: 8, // Added for schema compliance
             academicYear: "2024/2025",
             semester: 3,
             registrationStartDate: "2024-09-01T00:00:00.000Z",
@@ -348,7 +356,8 @@ async function createSchoolData({
             ],
             isActive: true,
             status: "registration_open",
-            schoolId: createdIds.school
+            schoolId: createdIds.school,
+            completionDate: "2025-02-15T23:59:59.000Z"
         }
     ];
     for (let i = 0; i < intakesData.length; i++) {
@@ -619,7 +628,6 @@ async function createSchoolData({
                                 currentSemester: sem,
                                 cgpa: 0,
                                 status: st,
-                                enrollmentDate: "2024-01-15T00:00:00.000Z",
                                 totalCreditHours: 0,
                                 completedCreditHours: 0,
                                 academicStanding: as
@@ -689,10 +697,10 @@ async function createSchoolData({
 }
 
 // Toggle which school to create: "APU" or "BPU"
-const SCHOOL_TO_CREATE = "BPU"; // Change to "BPU" to create the second school
+const SCHOOL_TO_CREATE = "APU"; // Change to "BPU" to create the second school
 const clearDB = false;
 // Main execution 
-const main = async () => { 
+const main = async () => {
     try {
         console.log('🔗 Testing API connection...');
         await apiCall('GET', '/api/school');

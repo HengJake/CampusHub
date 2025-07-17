@@ -57,13 +57,15 @@ function campusRide() {
   ];
   return (
     <Flex
+      flex={1}
+      height={"calc(100% - 60px)"}
       width="100%"
       position="relative"
       overflowY="hidden"
       display={"flex"}
       justifyContent={"center"}
     >
-      <Box width="100%" height="100%" position="absolute" top={0} left={0}>
+      <Box width="100%" height="100%" position="fixed" top={"60px"} left={0} zIndex={-1}>
         <iframe
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3984.14662745759!2d101.69798647602784!3d3.0554056969203773!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc4abb795025d9%3A0x1c37182a714ba968!2sAsia%20Pacific%20University%20of%20Technology%20%26%20Innovation%20(APU)!5e0!3m2!1sen!2smy!4v1751102964249!5m2!1sen!2smy"
           width="100%"

@@ -1,14 +1,7 @@
-"use client"
-
 import {
   Box,
   Grid,
   Text,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  StatArrow,
   Card,
   CardBody,
   VStack,
@@ -31,6 +24,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useAcademicStore } from "../../store/academic.js";
 import { useEffect } from "react";
 import { StatCard } from "../../component/common/statsCard.jsx";
+
 import {
   FiCheckCircle,
   FiTrendingUp,

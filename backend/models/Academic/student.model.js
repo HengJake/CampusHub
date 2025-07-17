@@ -35,22 +35,11 @@ const studentSchema = new mongoose.Schema({
         required: true,
     },
 
-    completionDate: {
-        type: Date,
-    },
-
-    year: {
+    currentYear: {
         type: Number,
         required: true,
         min: 1,
         max: 5,
-        // Current year of study (1st year, 2nd year, etc.)
-        validate: {
-            validator: function (v) {
-                return Number.isInteger(v);
-            },
-            message: props => `${props.value} is not a valid year!`
-        }
     },
 
     currentSemester: {
@@ -73,12 +62,6 @@ const studentSchema = new mongoose.Schema({
         enum: ['enrolled', 'active', 'graduated', 'dropped', 'suspended'],
         default: 'enrolled',
         // Current status of the student
-    },
-
-    enrollmentDate: {
-        type: Date,
-        default: Date.now,
-        // Date when student was enrolled
     },
 
     totalCreditHours: {

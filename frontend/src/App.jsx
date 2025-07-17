@@ -39,7 +39,7 @@ import UserProfile from "./pages/userPage/userProfile/userProfile.jsx";
 
 // School Admin Pages
 import { Dashboard as AdminDashboard } from "./pages/schoolAdminPage/Dashboard.jsx";
-import { StudentManagement } from "./pages/schoolAdminPage/UserManagement.jsx";
+import { UserManagement } from "./pages/schoolAdminPage/UserManagement.jsx";
 import { FacilityManagement } from "./pages/schoolAdminPage/FacilityManagement.jsx";
 import { ParkingManagement } from "./pages/schoolAdminPage/ParkingManagement.jsx";
 import { LockerManagement } from "./pages/schoolAdminPage/LockerManagement.jsx";
@@ -48,8 +48,7 @@ import { FeedbackManagement } from "./pages/schoolAdminPage/FeedbackManagement.j
 import { AnnouncementManagement } from "./pages/schoolAdminPage/AnnouncementManagement.jsx";
 import { AdminSetting } from "./pages/schoolAdminPage/AdminSetting.jsx";
 import { AdminProfile } from "./pages/schoolAdminPage/AdminProfile.jsx";
-import { CourseManagement } from "./pages/schoolAdminPage/CourseManagement.jsx";
-import { LecturerManagement } from "./pages/schoolAdminPage/LecturerManagement.jsx";
+import { CourseManagementPage } from "./pages/schoolAdminPage/CourseManagement.jsx";
 import { AcademicOverview } from "./pages/schoolAdminPage/AcademicOverview.jsx";
 
 // CampusHub Admin Pages
@@ -282,27 +281,26 @@ function App() {
 
           {/* School Admin Pages - Require school admin authentication */}
           <Route path="/admin-dashboard" element={wrapWithAuth(<AdminDashboard />)} />
-          <Route path="/student-management" element={wrapWithAuth(<StudentManagement />)} />
+          <Route path="/student-management" element={wrapWithAuth(<UserManagement />)} />
           <Route path="/facility-management" element={wrapWithAuth(<FacilityManagement />)} />
           <Route path="/locker-management" element={wrapWithAuth(<LockerManagement />)} />
           <Route path="/parking-management" element={wrapWithAuth(<ParkingManagement />)} />
           <Route path="/booking-management" element={wrapWithAuth(<BookingManagement />)} />
           <Route path="/feedback-management" element={wrapWithAuth(<FeedbackManagement />)} />
           <Route path="/academic-overview" element={wrapWithAuth(<AcademicOverview />)} />
-          <Route path="/course-management" element={wrapWithAuth(<CourseManagement />)} />
-          <Route path="/lecturer-management" element={wrapWithAuth(<LecturerManagement />)} />
+          <Route path="/course-management" element={wrapWithAuth(<CourseManagementPage />)} />
           <Route path="/announcement-management" element={wrapWithAuth(<AnnouncementManagement />)} />
           <Route path="/admin-setting" element={wrapWithAuth(<AdminSetting />)} />
           <Route path="/admin-profile" element={wrapWithAuth(<AdminProfile />)} />
 
           {/* CampusHub Admin Pages - Require company admin authentication */}
-        <Route path="/campushub-dashboard" element={wrapWithAuth(<CampushubDashboard />)} />
-        <Route path="/subscription" element={wrapWithAuth(<Subscription />)} />
-        <Route path="/analytical-report" element={wrapWithAuth(<AnalyticalReport />)} />
-        <Route path="/client-management" element={wrapWithAuth(<ClientManagement />)} />
-        <Route path="/user-oversight" element={wrapWithAuth(<UserOversight />)} />
-        <Route path="/campushub-setting" element={wrapWithAuth(<CampushubSetting />)} />
-        {/* <Route path="/campushub-profile" element={wrapWithAuth(<CampushubProfile />)} /> */}
+          <Route path="/campushub-dashboard" element={wrapWithAuth(<CampushubDashboard />)} />
+          <Route path="/subscription" element={wrapWithAuth(<Subscription />)} />
+          <Route path="/analytical-report" element={wrapWithAuth(<AnalyticalReport />)} />
+          <Route path="/client-management" element={wrapWithAuth(<ClientManagement />)} />
+          <Route path="/user-oversight" element={wrapWithAuth(<UserOversight />)} />
+          <Route path="/campushub-setting" element={wrapWithAuth(<CampushubSetting />)} />
+          {/* <Route path="/campushub-profile" element={wrapWithAuth(<CampushubProfile />)} /> */}
         </Routes>
       </Box>
     </Box>

@@ -191,7 +191,7 @@ export const getRecordById = async (Model, id, entityName = "record", populateFi
         }
 
         const record = await query;
-
+        
         if (!record) {
             return {
                 success: false,
@@ -236,7 +236,7 @@ export const updateRecord = async (Model, id, updates, entityName = "record", va
                 };
             }
         }
-
+        
         const updatedRecord = await Model.findByIdAndUpdate(id, updates, {
             new: true,
             runValidators: true

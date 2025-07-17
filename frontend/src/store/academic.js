@@ -51,6 +51,7 @@ export const useAcademicStore = create((set, get) => ({
         schools: null, // Add schools error state
     },
 
+    // ======================
     // Helper to get schoolId from auth store
     getSchoolId: () => {
         const authStore = useAuthStore.getState();
@@ -84,6 +85,65 @@ export const useAcademicStore = create((set, get) => ({
         }
 
         return url;
+    },
+
+    buildPUT: async (endpoint, id, updates) => {
+        const authStore = useAuthStore.getState();
+        const user = authStore.getCurrentUser();
+
+        // Automatically add schoolId for schoolAdmin and student
+        if (user.role === 'schoolAdmin' || user.role === 'student') {
+            const schoolId = authStore.getSchoolId();
+            updates = { ...updates, "schoolId": schoolId }
+        }
+
+        const res = await fetch(`${endpoint}/${id}`, {
+            method: "PUT",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updates),
+        })
+
+        return res;
+    },
+
+    buildPOST: async (endpoint, data) => {
+        const res = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+
+        return res
+    },
+
+    buildDELETE: async (endpoint, id, localstorage) => {
+        try {
+            const res = await fetch(`${endpoint}/${id}`, {
+                method: "DELETE",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete");
+            }
+
+            // Remove from local state
+            set(state => ({
+                localstorage: state.localstorage.filter(item => item._id !== id)
+            }));
+
+            return res;
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
     },
 
     // Add a helper to check if user is authenticated
@@ -154,6 +214,7 @@ export const useAcademicStore = create((set, get) => ({
 
     createSchool: async (schoolData) => {
         try {
+
             const res = await fetch('/api/school', {
                 method: 'POST',
                 headers: {
@@ -174,8 +235,11 @@ export const useAcademicStore = create((set, get) => ({
             }));
 
             return { success: true, data: data.data };
+
         } catch (error) {
+
             return { success: false, message: error.message };
+
         }
     },
 
@@ -273,15 +337,11 @@ export const useAcademicStore = create((set, get) => ({
                 if (schoolId) {
                     studentData.schoolId = schoolId;
                 }
+            } else {
+                return { success: false, message: "Only school can create student" };
             }
 
-            const res = await fetch('/api/student', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(studentData),
-            });
+            const res = await get().buildPOST('/api/student', studentData)
 
             const data = await res.json();
 
@@ -302,13 +362,8 @@ export const useAcademicStore = create((set, get) => ({
 
     updateStudent: async (id, updates) => {
         try {
-            const res = await fetch(`/api/student/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(updates),
-            });
+
+            const res = await get().buildPUT('/api/student/', id, updates)
 
             const data = await res.json();
 
@@ -414,6 +469,29 @@ export const useAcademicStore = create((set, get) => ({
             }));
 
             return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteCourse: async (id) => {
+        try {
+            const res = await fetch(`/api/course/${id}`, {
+                method: 'DELETE',
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete course");
+            }
+
+            // Remove from local state
+            set(state => ({
+                courses: state.courses.filter(course => course._id !== id)
+            }));
+
+            return { success: true };
         } catch (error) {
             return { success: false, message: error.message };
         }

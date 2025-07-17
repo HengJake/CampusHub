@@ -90,11 +90,6 @@ function Sidebar() {
               <Icon as={MdClass} boxSize={6} color="white" zIndex={2} />
             </Button>
           </Link>
-          <Link to="/lecturer-management">
-            <Button sx={sidebarButtonStyle("Lecturer")}>
-              <Icon as={FaChalkboardTeacher} boxSize={6} color="white" zIndex={2} />
-            </Button>
-          </Link>
         </VStack>
 
         {/* Group 2 */}

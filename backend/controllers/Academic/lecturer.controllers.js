@@ -58,7 +58,7 @@ export const getLecturers = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Lecturer,
         "lecturers",
-        ['departmentId']
+        ['departmentId', 'userId']
     );
 });
 
@@ -69,7 +69,7 @@ export const getLecturerById = controllerWrapper(async (req, res) => {
         Lecturer,
         id,
         "lecturer",
-        ['departmentId']
+        ['departmentId', 'userId']
     );
 });
 
@@ -100,7 +100,7 @@ export const getLecturersBySchool = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Lecturer,
         "lecturers",
-        ["departmentId", "schoolId"],
+        ["departmentId", "schoolId", "userId"],
         { schoolId }
     );
 });
