@@ -65,6 +65,28 @@ export const getInvoiceById = controllerWrapper(async (req, res) => {
     return await getRecordById(Invoice, id, "invoice", ["paymentID", "subscriptionID"]);
 });
 
+// Get Invoices by Payment ID
+export const getInvoicesByPaymentId = controllerWrapper(async (req, res) => {
+    const { paymentID } = req.params;
+    return await getAllRecords(
+        Invoice,
+        "invoices",
+        ["paymentID", "subscriptionID"],
+        { paymentID }
+    );
+});
+
+// Get Invoices by Subscription ID
+export const getInvoicesBySubscriptionId = controllerWrapper(async (req, res) => {
+    const { subscriptionID } = req.params;
+    return await getAllRecords(
+        Invoice,
+        "invoices",
+        ["paymentID", "subscriptionID"],
+        { subscriptionID }
+    );
+});
+
 export const updateInvoice = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await updateRecord(Invoice, id, req.body, "invoice", validateInvoiceData);
@@ -74,3 +96,4 @@ export const deleteInvoice = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(Invoice, id, "invoice");
 });
+

@@ -1,5 +1,7 @@
 import Course from '../../models/Academic/course.model.js';
 import Module from '../../models/Academic/module.model.js';
+import Department from '../../models/Academic/department.model.js';
+
 import {
     createRecord,
     getAllRecords,

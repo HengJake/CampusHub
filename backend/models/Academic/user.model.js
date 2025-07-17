@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
     
     role: {
         type: String,
-        enum: ["student", "lecturer", "companyAdmin", "schoolAdmin"],
+        enum: ["student", "lecturer", "companyAdmin", "schoolAdmin", "researcher", "staff", "guest"],
         required: true,
         // User role determines access permissions and functionality
     },

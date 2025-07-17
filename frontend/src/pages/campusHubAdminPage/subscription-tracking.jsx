@@ -50,106 +50,42 @@ import {
   Clock,
   Eye,
 } from "lucide-react";
-
-const subscriptionData = [
-  {
-    id: 1,
-    schoolName: "Lincoln High School",
-    plan: "Premium",
-    status: "Active",
-    renewalDate: "2024-03-15",
-    monthlyFee: 299,
-    users: 1335,
-    daysUntilRenewal: 45,
-    paymentMethod: "Credit Card",
-    lastPayment: "2024-02-15",
-  },
-  {
-    id: 2,
-    schoolName: "Roosevelt Elementary",
-    plan: "Standard",
-    status: "Active",
-    renewalDate: "2024-02-28",
-    monthlyFee: 199,
-    users: 695,
-    daysUntilRenewal: 15,
-    paymentMethod: "Bank Transfer",
-    lastPayment: "2024-01-28",
-  },
-  {
-    id: 3,
-    schoolName: "Washington Middle School",
-    plan: "Standard",
-    status: "Expired",
-    renewalDate: "2024-01-20",
-    monthlyFee: 199,
-    users: 952,
-    daysUntilRenewal: -10,
-    paymentMethod: "Credit Card",
-    lastPayment: "2023-12-20",
-  },
-  {
-    id: 4,
-    schoolName: "Jefferson Academy",
-    plan: "Free",
-    status: "Active",
-    renewalDate: "N/A",
-    monthlyFee: 0,
-    users: 445,
-    daysUntilRenewal: null,
-    paymentMethod: "N/A",
-    lastPayment: "N/A",
-  },
-];
-
-const paymentHistory = [
-  {
-    id: 1,
-    school: "Lincoln High School",
-    date: "2024-02-15",
-    amount: 299,
-    method: "Credit Card",
-    status: "Completed",
-  },
-  {
-    id: 2,
-    school: "Roosevelt Elementary",
-    date: "2024-01-28",
-    amount: 199,
-    method: "Bank Transfer",
-    status: "Completed",
-  },
-  {
-    id: 3,
-    school: "Lincoln High School",
-    date: "2024-01-15",
-    amount: 299,
-    method: "Credit Card",
-    status: "Completed",
-  },
-  {
-    id: 4,
-    school: "Washington Middle School",
-    date: "2023-12-20",
-    amount: 199,
-    method: "Credit Card",
-    status: "Failed",
-  },
-  {
-    id: 5,
-    school: "Roosevelt Elementary",
-    date: "2023-12-28",
-    amount: 199,
-    method: "Bank Transfer",
-    status: "Completed",
-  },
-];
+import { useAcademicStore } from "../../store/academic";
+import { useEffect } from "react";
 
 export default function SubscriptionTracking() {
+  // All hooks at the top!
+  const { schools, loading, errors, fetchSchools } = useAcademicStore();
+
+  useEffect(() => {
+    fetchSchools();
+  }, [fetchSchools]);
+
   const [selectedSchool, setSelectedSchool] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedSubscription, setSelectedSubscription] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  // Only after all hooks, do your conditional returns:
+  if (loading.schools) {
+    return <Text>Loading schools...</Text>;
+  }
+  if (errors.schools) {
+    return <Alert status="error">{errors.schools}</Alert>;
+  }
+
+  const subscriptionData = schools.map((school) => ({
+    id: school._id,
+    schoolName: school.name,
+    plan: school.subscription?.plan || "N/A",
+    status: school.subscription?.status || "N/A",
+    renewalDate: school.subscription?.renewalDate || "N/A",
+    monthlyFee: school.subscription?.monthlyFee || 0,
+    users: school.userCount || 0,
+    daysUntilRenewal: school.subscription?.daysUntilRenewal ?? null,
+    paymentMethod: school.subscription?.paymentMethod || "N/A",
+    lastPayment: school.subscription?.lastPayment || "N/A",
+  }));
 
   const filteredSubscriptions = subscriptionData.filter((sub) => {
     const schoolMatch =
@@ -210,6 +146,18 @@ export default function SubscriptionTracking() {
         return "gray";
     }
   };
+
+  const paymentHistory = [
+    {
+      id: 1,
+      school: "Lincoln High School",
+      date: "2024-02-15",
+      amount: 299,
+      method: "Credit Card",
+      status: "Completed",
+    },
+    // ...rest of the data
+  ];
 
   return (
     <VStack spacing={6} align="stretch">

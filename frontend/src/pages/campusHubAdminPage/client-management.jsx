@@ -60,43 +60,27 @@ export default function ClientManagement() {
   const toast = useToast();
 
   // Get academic store functions
-  const { 
-    students, 
-    lecturers, 
-    fetchStudents, 
+  const {
+    schools,
+    fetchSchools,
+    createSchool,
+    updateSchool,
+    deleteSchool,
+    loading,
+    errors,
+    fetchStudents,
     fetchLecturers,
     fetchStudentsBySchoolId,
     fetchLecturersBySchoolId,
-    loading,
-    errors 
   } = useAcademicStore();
 
-  // Mock schools data (since we don't have school store in academic.js)
-  const [schools, setSchools] = useState([
-    {
-      _id: "1",
-      name: "Asia Pacific University",
-      address: "Technology Park Malaysia, Bukit Jalil",
-      city: "Kuala Lumpur",
-      country: "Malaysia",
-      status: "Active",
-      userId: "admin1"
-    },
-    {
-      _id: "2", 
-      name: "Borneo Pacific University",
-      address: "Borneo Tech Park, Kota Kinabalu",
-      city: "Kota Kinabalu", 
-      country: "Malaysia",
-      status: "Active",
-      userId: "admin2"
-    }
-  ]);
 
   // Load data on component mount
   useEffect(() => {
-    loadData();
+    // loadData();
+    fetchSchools();
   }, []);
+
 
   const loadData = async () => {
     try {
@@ -153,7 +137,8 @@ export default function ClientManagement() {
 
   const handleDelete = async (schoolId) => {
     try {
-      setSchools(schools.filter((s) => s._id !== schoolId));
+      const result = await deleteSchool(schoolId);
+      if (!result.success) throw new Error(result.message);
       toast({
         title: "School deleted",
         description: "School has been successfully deleted",
@@ -176,12 +161,8 @@ export default function ClientManagement() {
     try {
       if (selectedClient) {
         // Update existing school
-        const updatedSchools = schools.map(school =>
-          school._id === selectedClient._id 
-            ? { ...school, ...formData }
-            : school
-        );
-        setSchools(updatedSchools);
+        const result = await updateSchool(selectedClient._id, formData);
+        if (!result.success) throw new Error(result.message);
         toast({
           title: "School updated",
           description: "School has been successfully updated",
@@ -191,11 +172,8 @@ export default function ClientManagement() {
         });
       } else {
         // Create new school
-        const newSchool = {
-          _id: Date.now().toString(),
-          ...formData
-        };
-        setSchools([...schools, newSchool]);
+        const result = await createSchool(formData);
+        if (!result.success) throw new Error(result.message);
         toast({
           title: "School created",
           description: "School has been successfully created",
@@ -226,8 +204,7 @@ export default function ClientManagement() {
   };
 
   const getSchoolStats = (schoolId) => {
-    // This would normally fetch from academic store by schoolId
-    // For now, return mock data
+    // This fetch from academic store by schoolId
     return {
       students: Math.floor(Math.random() * 1000) + 500,
       staff: Math.floor(Math.random() * 100) + 50

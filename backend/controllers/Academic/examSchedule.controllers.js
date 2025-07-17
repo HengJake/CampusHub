@@ -122,7 +122,7 @@ export const getExamSchedules = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         ExamSchedule,
         "exam schedules",
-        ['RoomID', 'ModuleID', 'LecturerID', 'IntakeID']
+        ['RoomID', 'ModuleID', 'CourseID', 'intakeCourseID']
     );
 });
 
@@ -133,7 +133,7 @@ export const getExamScheduleById = controllerWrapper(async (req, res) => {
         ExamSchedule,
         id,
         "exam schedule",
-        ['RoomID', 'ModuleID', 'LecturerID', 'IntakeID']
+        ['RoomID', 'ModuleID', 'CourseID', 'intakeCourseID']
     );
 });
 

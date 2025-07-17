@@ -4,7 +4,7 @@ import {
   getAllVehicles,
   getVehicleById,
   updateVehicle,
-  deleteVehicle,
+  deleteVehicle
 } from "../../controllers/Transportation/vehicle.controllers.js";
 
 const router = express.Router();
