@@ -251,6 +251,33 @@ export function ModuleManagement() {
     closeDeleteDialog();
   };
 
+  const exportModules = () => {
+    const csvContent = [
+      ["Module Code", "Module Name", "Description", "Credit Hours", "Courses", "Assessment Methods", "Status"],
+      ...filteredModules.map((module) => [
+        module.code || "N/A",
+        module.moduleName || "N/A",
+        module.moduleDescription || "N/A",
+        module.totalCreditHour || "N/A",
+        Array.isArray(module.courseId)
+          ? module.courseId.map(c => c.courseName || c).join("; ")
+          : "N/A",
+        (module.assessmentMethods || []).join("; "),
+        module.isActive ? "Active" : "Inactive",
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n")
+
+    const blob = new Blob([csvContent], { type: "text/csv" })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "modules.csv"
+    a.click()
+    window.URL.revokeObjectURL(url)
+  }
+
   const assessmentOptions = [
     { value: "exam", label: "Exam" },
     { value: "assignment", label: "Assignment" },
@@ -275,7 +302,7 @@ export function ModuleManagement() {
             <Text color="gray.600">Manage modules and curriculum</Text>
           </Box>
           <HStack>
-            <Button leftIcon={<FiDownload />} variant="outline">
+            <Button leftIcon={<FiDownload />} variant="outline" onClick={exportModules}>
               Export
             </Button>
             <Button

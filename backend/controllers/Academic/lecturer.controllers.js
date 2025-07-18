@@ -15,22 +15,13 @@ import {
 
 // Custom validation function for lecturer data
 const validateLecturerData = async (data) => {
-    const { LecturerName, LecturerEmail, DepartmentID } = data;
+    const { departmentId, schoolId } = data;
 
     // Check required fields
-    if (!LecturerName || !LecturerEmail || !DepartmentID) {
+    if (!departmentId  || !schoolId) {
         return {
             isValid: false,
-            message: "Please provide all required fields (LecturerName, LecturerEmail, DepartmentID)"
-        };
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(LecturerEmail)) {
-        return {
-            isValid: false,
-            message: "Please provide a valid email address"
+            message: "Please provide all required fields (schoolId, departmentId)"
         };
     }
 

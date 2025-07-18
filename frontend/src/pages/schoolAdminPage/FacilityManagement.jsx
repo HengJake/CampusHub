@@ -28,6 +28,8 @@ import {
 } from "@chakra-ui/react"
 import { FiPlus, FiEdit, FiTrash2, FiMoreVertical, FiHome, FiUsers, FiTool } from "react-icons/fi"
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
+import { useAcademicStore } from "../../store/academic.js";
+import { useEffect } from "react";
 
 const COLORS = ["#344E41", "#A4C3A2", "#48BB78", "#ED8936"]
 
@@ -39,6 +41,15 @@ const usageData = [
 ]
 
 export function FacilityManagement() {
+
+  const { facilities, fetchFacilities } = useAcademicStore();
+
+  useEffect(() => {
+    fetchFacilities();
+  }, [])
+
+  console.log(facilities);
+
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
 

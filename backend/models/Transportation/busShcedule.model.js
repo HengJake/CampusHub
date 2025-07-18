@@ -4,13 +4,13 @@ const busScheduleSchema = new mongoose.Schema(
   {
     RouteID: [
       {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Route",
         required: true,
       },
     ],
     VehicleID: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Vehicles",
       required: true,
     },

@@ -200,6 +200,31 @@ export function CourseManagement() {
         closeDeleteDialog();
     };
 
+    const exportCourses = () => {
+        const csvContent = [
+            ["Course Code", "Course Name", "Description", "Credits", "Department", "Duration", "Status"],
+            ...filteredCourses.map((course) => [
+                course.courseCode || "N/A",
+                course.courseName || "N/A",
+                course.description || "N/A",
+                course.credits || course.totalCreditHours || "N/A",
+                course.departmentId?.departmentName || course.department || "N/A",
+                course.duration || "N/A",
+                course.isActive ? "Active" : "Inactive",
+            ]),
+        ]
+            .map((row) => row.join(","))
+            .join("\n")
+
+        const blob = new Blob([csvContent], { type: "text/csv" })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = "courses.csv"
+        a.click()
+        window.URL.revokeObjectURL(url)
+    }
+
     return (
         <Box p={6} minH="100vh" flex={1}>
             <Tabs variant="enclosed" colorScheme="blue">
@@ -220,7 +245,7 @@ export function CourseManagement() {
                                     <Text color="gray.600">Manage courses and curriculum</Text>
                                 </Box>
                                 <HStack>
-                                    <Button leftIcon={<FiDownload />} variant="outline">
+                                    <Button leftIcon={<FiDownload />} variant="outline" onClick={exportCourses}>
                                         Export
                                     </Button>
                                     <Button
