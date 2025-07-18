@@ -1,12 +1,12 @@
-import { 
-    createRecord,
-    getAllRecords,
-    getRecordById,
-    updateRecord,
-    deleteRecord,
-    validateReferenceExists,
-    validateMultipleReferences,
-    controllerWrapper 
+import {
+  createRecord,
+  getAllRecords,
+  getRecordById,
+  updateRecord,
+  deleteRecord,
+  validateReferenceExists,
+  validateMultipleReferences,
+  controllerWrapper
 } from "../../utils/reusable.js";
 
 import Resource from "../../models/Facility/resource.model.js";
@@ -14,20 +14,20 @@ import School from "../../models/Billing/school.model.js";
 
 // Custom validation function for resource data
 const validateResourceData = async (data) => {
-  const { schoolID, type } = data;
+  const { schoolId, type } = data;
 
   // Check required fields
-  if (!schoolID) {
+  if (!schoolId) {
     return {
       isValid: false,
-      message: "schoolID is required"
+      message: "schoolId is required"
     };
   }
 
 
   // Validate references exist
   const referenceValidation = await validateMultipleReferences({
-    schoolID: { id: schoolID, Model: School }
+    schoolId: { id: schoolId, Model: School }
   });
 
   if (referenceValidation) {
@@ -64,10 +64,10 @@ export const getResourceById = controllerWrapper(async (req, res) => {
 export const getResourcesBySchoolId = controllerWrapper(async (req, res) => {
   const { schoolID } = req.params;
   return await getAllRecords(
-      Resource,
-      "resources",
-      [],
-      { schoolID }
+    Resource,
+    "resources",
+    [],
+    { schoolID }
   );
 });
 
@@ -86,5 +86,14 @@ export const updateResource = controllerWrapper(async (req, res) => {
 export const deleteResource = controllerWrapper(async (req, res) => {
   return await deleteRecord(Resource, req.params.id);
 });
+
+export const deleteAllResources = async (req, res) => {
+  try {
+    await Resource.deleteMany({});
+    res.status(200).json({ message: 'All resources deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting all resources', error: error.message });
+  }
+};
 
 

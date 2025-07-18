@@ -5,7 +5,8 @@ import {
   getRespondById,
   getRespondsByFeedbackId,
   updateRespond,
-  deleteRespond
+  deleteRespond,
+  deleteAllResponds
 } from "../../controllers/Service/respond.controllers.js";
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.get("/", getAllResponds);
 router.get("/:id", getRespondById);
 router.get("/feedback/:feedbackId", getRespondsByFeedbackId);
 router.put("/:id", updateRespond);
+router.delete("/all", deleteAllResponds);
 router.delete("/:id", deleteRespond);
 
 export default router; 

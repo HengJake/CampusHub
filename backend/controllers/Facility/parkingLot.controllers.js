@@ -40,12 +40,12 @@ export const getParkingLotById = controllerWrapper(async (req, res) => {
 export const getParkingLotsBySchoolId = controllerWrapper(async (req, res) => {
   const { schoolId } = req.params;
   return await getAllRecords(
-      ParkingLot,
-      "parkingLots",
-      ["schoolId"],
-      { schoolId }
+    ParkingLot,
+    "parkingLots",
+    ["schoolId"],
+    { schoolId }
   );
-}); 
+});
 
 export const updateParkingLot = controllerWrapper(async (req, res) => {
   const { id } = req.params;
@@ -56,4 +56,13 @@ export const deleteParkingLot = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(ParkingLot, id, "parkingLot");
 });
+
+export const deleteAllParkingLots = async (req, res) => {
+  try {
+    await ParkingLot.deleteMany({});
+    res.status(200).json({ message: 'All parking lots deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting all parking lots', error: error.message });
+  }
+};
 

@@ -40,12 +40,12 @@ export const getTimeslotById = controllerWrapper(async (req, res) => {
 export const getTimeslotsByResourceId = controllerWrapper(async (req, res) => {
   const { resourceId } = req.params;
   return await getAllRecords(
-      Timeslot,
-      "timeslots",
-      ["resourceId"],
-      { resourceId }
+    Timeslot,
+    "timeslots",
+    ["resourceId"],
+    { resourceId }
   );
-}); 
+});
 
 export const updateTimeslot = controllerWrapper(async (req, res) => {
   const { id } = req.params;
@@ -56,3 +56,12 @@ export const deleteTimeslot = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(Timeslot, id, "timeslot");
 });
+
+export const deleteAllTimeSlots = async (req, res) => {
+  try {
+    await Timeslot.deleteMany({});
+    res.status(200).json({ message: 'All time slots deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting all time slots', error: error.message });
+  }
+};

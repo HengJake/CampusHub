@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const vehiclesSchema = new mongoose.Schema(
+const vehicleSchema = new mongoose.Schema(
   {
     plateNumber: {
       type: String,
@@ -25,11 +25,16 @@ const vehiclesSchema = new mongoose.Schema(
       enum: ["available", "in_service", "under_maintenance", "inactive"],
       default: "available",
     },
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-const Vehicle = mongoose.model("Vehicle", vehiclesSchema);
+const Vehicle = mongoose.model("Vehicle", vehicleSchema);
 export default Vehicle;

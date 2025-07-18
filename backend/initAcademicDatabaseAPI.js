@@ -36,32 +36,8 @@ const apiCall = async (method, endpoint, data = null) => {
     }
 };
 
-// Clear existing data (optional)
-const clearDatabase = async () => {
-    console.log('🗑️  Clearing existing Academic data...');
-    try {
-        await apiCall('DELETE', '/api/result/all');
-        await apiCall('DELETE', '/api/attendance/all');
-        await apiCall('DELETE', '/api/student/all');
-        await apiCall('DELETE', '/api/exam-schedule/all');
-        await apiCall('DELETE', '/api/class-schedule/all');
-        await apiCall('DELETE', '/api/intake-course/all');
-        await apiCall('DELETE', '/api/module/all');
-        await apiCall('DELETE', '/api/lecturer/all');
-        await apiCall('DELETE', '/api/intake/all');
-        await apiCall('DELETE', '/api/course/all');
-        await apiCall('DELETE', '/api/department/all');
-        await apiCall('DELETE', '/api/room/all');
-        await apiCall('DELETE', '/api/school/all');
-        await apiCall('DELETE', '/api/user/all');
-        console.log('✅ All Academic data cleared successfully');
-    } catch (error) {
-        console.error('❌ Error clearing database:', error.message);
-    }
-};
-
 // Helper function to create all data for a school
-async function createSchoolData({
+async function createFullSchoolData({
     schoolName,
     schoolEmailDomain,
     schoolAddress,
@@ -86,7 +62,28 @@ async function createSchoolData({
         examSchedules: [],
         students: [],
         attendance: [],
-        results: []
+        results: [],
+        // Billing
+        subscription: null,
+        payment: null,
+        invoice: null,
+        // Facility
+        resources: [],
+        bookings: [],
+        lockerUnits: [],
+        timeSlots: [],
+        parkingLots: [],
+        // Transportation
+        stops: [],
+        vehicles: [],
+        routes: [],
+        busSchedules: [],
+        eHailings: [],
+        // Service
+        feedbacks: [],
+        responds: [],
+        foundItems: [],
+        lostItems: []
     };
 
     console.log(`\n==============================`);
@@ -624,7 +621,7 @@ async function createSchoolData({
                                 schoolId: createdIds.school,
                                 intakeCourseId: createdIds.intakeCourses[i],
                                 completionStatus: cs,
-                                year: y,
+                                currentYear: y,
                                 currentSemester: sem,
                                 cgpa: 0,
                                 status: st,
@@ -661,8 +658,7 @@ async function createSchoolData({
                 };
                 const attendanceResponse = await apiCall('POST', '/api/attendance', attendanceData);
                 createdIds.attendance.push(attendanceResponse.data._id);
-                console.log("🚀 ~ attendanceResponse:", attendanceResponse)
-                // Optionally log each attendance record
+                console.log((attendanceResponse.data._id))
             }
         }
     }
@@ -687,6 +683,206 @@ async function createSchoolData({
     }
     console.log(`[${schoolPrefix}] ✅ Results created: ${createdIds.results.length}`);
 
+    // 2. Billing
+    console.log(`[${schoolPrefix}] Billing: Creating Subscription...`);
+    const subscriptionData = {
+        schoolId: createdIds.school,
+        plan: "Standard",
+        price: 1000,
+        billingInterval: "Yearly"
+    };
+    const subscriptionRes = await apiCall('POST', '/api/subscription', subscriptionData);
+    createdIds.subscription = subscriptionRes.data._id;
+
+    console.log(`[${schoolPrefix}] Billing: Creating Payment...`);
+    const paymentData = {
+        schoolId: createdIds.school,
+        cardHolderName: `${schoolPrefix} Admin User`,
+        last4Digit: "1234",
+        expiryDate: "12/29",
+        paymentMethod: "VISA",
+        status: "success"
+    };
+    const paymentRes = await apiCall('POST', '/api/payment', paymentData);
+    createdIds.payment = paymentRes.data._id;
+
+    console.log(`[${schoolPrefix}] Billing: Creating Invoice...`);
+    const invoiceData = {
+        paymentId: createdIds.payment,
+        subscriptionId: createdIds.subscription,
+        schoolId: createdIds.school,
+        amount: 1000,
+        status: "paid"
+    };
+    const invoiceRes = await apiCall('POST', '/api/invoice', invoiceData);
+    createdIds.invoice = invoiceRes.data._id;
+
+    // 3. Facility
+    console.log(`[${schoolPrefix}] Facility: Creating Resource...`);
+    const resourceData = {
+        schoolId: createdIds.school,
+        name: "Main Library",
+        location: "Block D",
+        type: "study_room",
+        capacity: 50,
+        status: true
+    };
+    const resourceRes = await apiCall('POST', '/api/resource', resourceData);
+    createdIds.resources.push(resourceRes.data._id);
+
+    console.log(`[${schoolPrefix}] Facility: Creating Booking...`);
+    const bookingData = {
+        studentId: createdIds.students[0],
+        resourceId: createdIds.resources[0],
+        schoolId: createdIds.school,
+        startTime: "09:00",
+        endTime: "11:00",
+        status: "confirmed"
+    };
+    const bookingRes = await apiCall('POST', '/api/booking', bookingData);
+    createdIds.bookings.push(bookingRes.data._id);
+
+    console.log(`[${schoolPrefix}] Facility: Creating LockerUnit...`);
+    const lockerUnitData = {
+        resourceId: createdIds.resources[0],
+        schoolId: createdIds.school,
+        isAvailable: true
+    };
+    const lockerUnitRes = await apiCall('POST', '/api/locker-unit', lockerUnitData);
+    createdIds.lockerUnits.push(lockerUnitRes.data._id);
+
+    console.log(`[${schoolPrefix}] Facility: Creating TimeSlot...`);
+    const timeSlotData = {
+        resourceId: createdIds.resources[0],
+        schoolId: createdIds.school,
+        dayOfWeek: 1,
+        timeslot: [{ start: "09:00", end: "10:00" }]
+    };
+    const timeSlotRes = await apiCall('POST', '/api/time-slot', timeSlotData);
+    createdIds.timeSlots.push(timeSlotRes.data._id);
+
+    console.log(`[${schoolPrefix}] Facility: Creating ParkingLot...`);
+    const parkingLotData = {
+        schoolId: createdIds.school,
+        zone: "A",
+        slotNumber: 10,
+        active: true
+    };
+    const parkingLotRes = await apiCall('POST', '/api/parking-lot', parkingLotData);
+    createdIds.parkingLots.push(parkingLotRes.data._id);
+
+    // 4. Transportation
+    console.log(`[${schoolPrefix}] Transportation: Creating Stop...`);
+    const stopData = {
+        name: "Main Gate",
+        type: "campus",
+        schoolId: createdIds.school
+    };
+    const stopRes = await apiCall('POST', '/api/stop', stopData);
+    createdIds.stops.push(stopRes.data._id);
+    const stopData1 = {
+        name: "Goo goo Gate",
+        type: "campus",
+        schoolId: createdIds.school
+    };
+    const stopRes1 = await apiCall('POST', '/api/stop', stopData1);
+    createdIds.stops.push(stopRes1.data._id);
+
+    console.log(`[${schoolPrefix}] Transportation: Creating Vehicle...`);
+    const vehicleData = {
+        plateNumber: `${schoolPrefix}-BUS-1234`, // e.g., "APU-BUS-1234", "BPU-BUS-1234"
+        type: "bus",
+        capacity: 40,
+        status: "available",
+        schoolId: createdIds.school
+    };
+    const vehicleRes = await apiCall('POST', '/api/vehicle', vehicleData);
+    createdIds.vehicles.push(vehicleRes.data._id);
+
+    console.log(`[${schoolPrefix}] Transportation: Creating Route...`);
+    const routeData = {
+        name: "Campus Loop",
+        stopIds: [createdIds.stops[0], createdIds.stops[1]],
+        estimateTimeMinute: 30,
+        fare: 2,
+        schoolId: createdIds.school
+    };
+
+    const routeRes = await apiCall('POST', '/api/route', routeData);
+    createdIds.routes.push(routeRes.data._id);
+
+    console.log(`[${schoolPrefix}] Transportation: Creating BusSchedule...`);
+    const busScheduleData = {
+        routeId: [createdIds.routes[0]],
+        vehicleId: createdIds.vehicles[0],
+        departureTime: new Date().toISOString(),
+        arrivalTime: new Date(Date.now() + 3600000).toISOString(),
+        dayActive: 1,
+        active: true
+    };
+    const busScheduleRes = await apiCall('POST', '/api/bus-schedule', busScheduleData);
+    createdIds.busSchedules.push(busScheduleRes.data._id);
+
+    console.log(`[${schoolPrefix}] Transportation: Creating EHailing...`);
+    const eHailingData = {
+        studentId: createdIds.students[0],
+        routeId: createdIds.routes[0],
+        status: "waiting",
+        requestAt: new Date().toISOString(),
+        vehicleId: createdIds.vehicles[0],
+        schoolId: createdIds.school
+    };
+    const eHailingRes = await apiCall('POST', '/api/e-hailing', eHailingData);
+    createdIds.eHailings.push(eHailingRes.data._id);
+
+    // 5. Service
+    console.log(`[${schoolPrefix}] Service: Creating Feedback...`);
+    const feedbackData = {
+        studentId: createdIds.students[0],
+        schoolId: createdIds.school,
+        feedbackType: "complaint",
+        message: "Air conditioning not working in the library.",
+        status: "open"
+    };
+    const feedbackRes = await apiCall('POST', '/api/feedback', feedbackData);
+    createdIds.feedbacks.push(feedbackRes.data._id);
+
+    console.log(`[${schoolPrefix}] Service: Creating Respond...`);
+    const respondData = {
+        feedbackId: createdIds.feedbacks[0],
+        schoolId: createdIds.school,
+        responderId: createdIds.users.schoolAdmin[0],
+        message: "We are looking into the issue.",
+    };
+    const respondRes = await apiCall('POST', '/api/respond', respondData);
+    createdIds.responds.push(respondRes.data._id);
+
+    console.log(`[${schoolPrefix}] Service: Creating FoundItem...`);
+    const foundItemData = {
+        submittedBy: createdIds.users.schoolAdmin[0],
+        schoolId: createdIds.school,
+        name: "Wallet",
+        description: "Black leather wallet found in the cafeteria.",
+        foundLocation: "cafeteria",
+        foundDate: new Date().toISOString(),
+        status: "unclaimed"
+    };
+    const foundItemRes = await apiCall('POST', '/api/found-item', foundItemData);
+    createdIds.foundItems.push(foundItemRes.data._id);
+
+    console.log(`[${schoolPrefix}] Service: Creating LostItem...`);
+    const lostItemData = {
+        ownerId: createdIds.students[0],
+        schoolId: createdIds.school,
+        name: "Wallet",
+        description: "Lost black leather wallet.",
+        lostLocation: "cafeteria",
+        lostDate: new Date().toISOString(),
+        status: "reported"
+    };
+    const lostItemRes = await apiCall('POST', '/api/lost-item', lostItemData);
+    createdIds.lostItems.push(lostItemRes.data._id);
+
     // Save IDs to file for reference
     const fs = await import('fs');
     fs.writeFileSync(`created_ids_${schoolPrefix}.json`, JSON.stringify(createdIds, null, 2));
@@ -696,23 +892,64 @@ async function createSchoolData({
     console.log(`==============================\n`);
 }
 
-// Toggle which school to create: "APU" or "BPU"
-const SCHOOL_TO_CREATE = "APU"; // Change to "BPU" to create the second school
-const clearDB = false;
-// Main execution 
+// Clear all data from all collections
+const clearDatabase = async () => {
+    console.log('🗑️  Clearing all data from all domains...');
+    try {
+        // Academic
+        await apiCall('DELETE', '/api/result/all');
+        await apiCall('DELETE', '/api/attendance/all');
+        await apiCall('DELETE', '/api/student/all');
+        await apiCall('DELETE', '/api/exam-schedule/all');
+        await apiCall('DELETE', '/api/class-schedule/all');
+        await apiCall('DELETE', '/api/intake-course/all');
+        await apiCall('DELETE', '/api/module/all');
+        await apiCall('DELETE', '/api/lecturer/all');
+        await apiCall('DELETE', '/api/intake/all');
+        await apiCall('DELETE', '/api/course/all');
+        await apiCall('DELETE', '/api/department/all');
+        await apiCall('DELETE', '/api/room/all');
+        await apiCall('DELETE', '/api/user/all');
+        // Billing
+        await apiCall('DELETE', '/api/invoice/all');
+        await apiCall('DELETE', '/api/payment/all');
+        await apiCall('DELETE', '/api/subscription/all');
+        await apiCall('DELETE', '/api/school/all');
+        // Facility
+        await apiCall('DELETE', '/api/booking/all');
+        await apiCall('DELETE', '/api/resource/all');
+        await apiCall('DELETE', '/api/locker-unit/all');
+        await apiCall('DELETE', '/api/time-slot/all');
+        await apiCall('DELETE', '/api/parking-lot/all');
+        // Transportation
+        await apiCall('DELETE', '/api/bus-schedule/all');
+        await apiCall('DELETE', '/api/vehicle/all');
+        await apiCall('DELETE', '/api/route/all');
+        await apiCall('DELETE', '/api/stop/all');
+        await apiCall('DELETE', '/api/e-hailing/all');
+        // Service
+        await apiCall('DELETE', '/api/feedback/all');
+        await apiCall('DELETE', '/api/respond/all');
+        await apiCall('DELETE', '/api/found-item/all');
+        await apiCall('DELETE', '/api/lost-item/all');
+        console.log('✅ All data cleared successfully');
+    } catch (error) {
+        console.error('❌ Error clearing database:', error.message);
+    }
+};
+
 const main = async () => {
     try {
         console.log('🔗 Testing API connection...');
         await apiCall('GET', '/api/school');
         console.log('✅ API connection successful\n');
 
-        if (clearDB) {
-            await clearDatabase();
-        }
+        // Clear all data before seeding (optional: only if you want to clear before both)
+        await clearDatabase();
 
-        if (SCHOOL_TO_CREATE === "APU") {
-            // Create Asia Pacific University
-            await createSchoolData({
+        // Define both schools' data
+        const schools = [
+            {
                 schoolName: "Asia Pacific University",
                 schoolEmailDomain: "apu.edu.my",
                 schoolAddress: "Technology Park Malaysia, Bukit Jalil",
@@ -722,10 +959,8 @@ const main = async () => {
                 lecturerPhoneBase: 60123456790,
                 studentPhoneBase: 60123456800,
                 schoolPrefix: "APU"
-            });
-        } else if (SCHOOL_TO_CREATE === "BPU") {
-            // Create Borneo Pacific University
-            await createSchoolData({
+            },
+            {
                 schoolName: "Borneo Pacific University",
                 schoolEmailDomain: "bpu.edu.my",
                 schoolAddress: "Borneo Tech Park, Kota Kinabalu",
@@ -735,13 +970,15 @@ const main = async () => {
                 lecturerPhoneBase: 60133456790,
                 studentPhoneBase: 60133456800,
                 schoolPrefix: "BPU"
-            });
-        } else {
-            console.error('❌ Invalid SCHOOL_TO_CREATE value. Use "APU" or "BPU".');
-            process.exit(1);
-        }
+            }
+        ];
 
-        console.log(`\n✅ API-based database initialization for ${SCHOOL_TO_CREATE} completed successfully!`);
+        // Create both schools in parallel
+        await Promise.all(
+            schools.map(schoolData => createFullSchoolData(schoolData))
+        );
+
+        console.log(`\n✅ API-based database initialization for both schools completed successfully!`);
         process.exit(0);
     } catch (error) {
         console.error('❌ API-based database initialization failed:', error.message);

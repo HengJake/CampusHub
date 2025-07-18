@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 
 const subscriptionSchema = new mongoose.Schema({
+  schoolId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'School',
+    required: true,
+  },
   plan: {
     type: String,
     enum: ["Basic", "Standard", "Premium"],
@@ -15,7 +20,7 @@ const subscriptionSchema = new mongoose.Schema({
     enum: ["Monthly", "Yearly"],
     required: true,
   },
-});
+}, { timestamps: true });
 
 export default mongoose.model("Subscription", subscriptionSchema);
 

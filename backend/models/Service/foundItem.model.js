@@ -6,6 +6,11 @@ const foundItemSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true
+    },
     name: {
         type: String,
         required: true,
@@ -40,7 +45,17 @@ const foundItemSchema = new mongoose.Schema({
         required: true,
         enum: ['unclaimed', 'claimed', 'pending', 'archived'],
         default: 'unclaimed'
+    },
+    matchedLostItem: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'LostItem',
+        default: null
+    },
+    notes: {
+        type: String
     }
+}, {
+    timestamps: true
 });
 
 const FoundItem = mongoose.model('FoundItem', foundItemSchema);

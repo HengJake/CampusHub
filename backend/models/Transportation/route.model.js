@@ -8,7 +8,7 @@ const routeSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    StopID: [
+    stopIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Stop",
@@ -24,6 +24,11 @@ const routeSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0,
+    },
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
     },
   },
   {

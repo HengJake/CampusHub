@@ -11,17 +11,18 @@ import {
 import LostItem from "../../models/Service/lostItem.model.js";
 import User from "../../models/Academic/user.model.js";
 import FoundItem from "../../models/Service/foundItem.model.js";
+import Student from "../../models/Academic/student.model.js";
 
 const validateLostItemData = async (data) => {
-  const { Owner, Name, Description, Lostlocation, MatchedItem } = data;
-  if (!Owner) return { isValid: false, message: "Owner is required" };
-  if (!Name) return { isValid: false, message: "Name is required" };
-  if (!Description) return { isValid: false, message: "Description is required" };
-  if (!Lostlocation) return { isValid: false, message: "Lostlocation is required" };
-  if (!['library', 'cafeteria', 'classroom', 'court', 'parking lot', 'other'].includes(Lostlocation)) return { isValid: false, message: "Invalid Lostlocation value" };
+  const { ownerId, name, description, lostLocation, matchedItem } = data;
+  if (!ownerId) return { isValid: false, message: "ownerId is required" };
+  if (!name) return { isValid: false, message: "name is required" };
+  if (!description) return { isValid: false, message: "description is required" };
+  if (!lostLocation) return { isValid: false, message: "lostLocation is required" };
+  if (!['library', 'cafeteria', 'classroom', 'court', 'parking lot', 'other'].includes(lostLocation)) return { isValid: false, message: "Invalid lostLocation value" };
   const referenceValidation = await validateMultipleReferences({
-    Owner: { id: Owner, Model: User },
-    ...(MatchedItem && { MatchedItem: { id: MatchedItem, Model: FoundItem } })
+    ownerId: { id: ownerId, Model: Student },
+    ...(matchedItem && { matchedItem: { id: matchedItem, Model: FoundItem } })
   });
   if (referenceValidation) {
     return { isValid: false, message: referenceValidation.message };
@@ -34,36 +35,35 @@ export const createLostItem = controllerWrapper(async (req, res) => {
 });
 
 export const getAllLostItems = controllerWrapper(async (req, res) => {
-  return await getAllRecords(LostItem, "lostItem", ["Owner", "MatchedItem"]);
+  return await getAllRecords(LostItem, "lostItem", ["ownerId", "matchedItem"]);
 });
 
 export const getLostItemById = controllerWrapper(async (req, res) => {
   const { id } = req.params;
-  return await getRecordById(LostItem, id, "lostItem", ["Owner", "MatchedItem"]);
+  return await getRecordById(LostItem, id, "lostItem", ["ownerId", "matchedItem"]);
 });
 
-
-// Get LostItems by Owner
+// Get LostItems by owner
 export const getLostItemsByOwner = controllerWrapper(async (req, res) => {
-  const { owner } = req.params;
+  const { ownerId } = req.params;
   return await getAllRecords(
-      LostItem,
-      "lostItems",
-      ["Owner", "MatchedItem"],
-      { Owner: owner }
+    LostItem,
+    "lostItems",
+    ["ownerId", "matchedItem"],
+    { ownerId: ownerId }
   );
 });
 
-// Get LostItems by MatchedItem
+// Get LostItems by matchedItem
 export const getLostItemsByMatchedItem = controllerWrapper(async (req, res) => {
   const { matchedItem } = req.params;
   return await getAllRecords(
-      LostItem,
-      "lostItems",
-      ["Owner", "MatchedItem"],
-      { MatchedItem: matchedItem }
+    LostItem,
+    "lostItems",
+    ["ownerId", "matchedItem"],
+    { matchedItem: matchedItem }
   );
-}); 
+});
 
 export const updateLostItem = controllerWrapper(async (req, res) => {
   const { id } = req.params;
@@ -74,3 +74,12 @@ export const deleteLostItem = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(LostItem, id, "lostItem");
 });
+
+export const deleteAllLostItems = async (req, res) => {
+  try {
+    await LostItem.deleteMany({});
+    res.status(200).json({ message: 'All lost items deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting all lost items', error: error.message });
+  }
+};

@@ -6,6 +6,11 @@ const feedbackSchema = new mongoose.Schema({
     ref: 'Student',
     required: true
   },
+  schoolId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'School',
+    required: true
+  },
   feedbackType: {
     type: String,
     enum: ['complaint', 'compliment', 'suggestion', 'query', 'issue'],
@@ -15,10 +20,13 @@ const feedbackSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  submittedAt: {
-    type: Date,
-    default: Date.now
+  status: {
+    type: String,
+    enum: ['open', 'in_progress', 'resolved', 'closed'],
+    default: 'open',
   }
+}, {
+  timestamps: true
 });
 
 const Feedback = mongoose.model('Feedback', feedbackSchema);

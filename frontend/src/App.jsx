@@ -22,20 +22,13 @@ import About from "./pages/commonPage/about/about.jsx";
 import AuthTest from "./pages/authTest.jsx";
 
 // User Pages
-import UserDashboard from "./pages/userPage/userDashboard/userDashboard.jsx";
-import BookFacility from "./pages/userPage/bookFacility/bookFacility.jsx";
-import BookLocker from "./pages/userPage/bookLocker/bookLocker.jsx";
-import ParkingLot from "./pages/userPage/parkingLot/parkingLot.jsx";
-import ClassroomFinder from "./pages/userPage/classroomFinder/classroomFinder.jsx";
-import ClassSchedule from "./pages/userPage/classSchedule/classSchedule.jsx";
-import Result from "./pages/userPage/result/result.jsx";
-import Attendance from "./pages/userPage/attendance/attendance.jsx";
-import BusSchedule from "./pages/userPage/busSchedule/busSchedule.jsx";
-import CampusRide from "./pages/userPage/campusRide/campusRide.jsx";
-import RideDetail from "./pages/userPage/campusRide/RideDetail.jsx";
-import Feedback from "./pages/userPage/feedback/feedback.jsx";
-import UserSetting from "./pages/userPage/userSetting/userSetting.jsx";
-import UserProfile from "./pages/userPage/userProfile/userProfile.jsx";
+import StudentDashboard from "./pages/userPage/StudentDashboard.jsx";
+import Profile from "./pages/userPage/Profile.jsx";
+import Feedback from "./pages/userPage/Feedback.jsx";
+import Academic from "./pages/userPage/Academic.jsx";
+import Transportation from "./pages/userPage/Transportation.jsx";
+import SFacilityManagement from "./pages/userPage/FacilityManagement.jsx";
+
 
 // School Admin Pages
 import { Dashboard as AdminDashboard } from "./pages/schoolAdminPage/Dashboard.jsx";
@@ -99,19 +92,11 @@ function App() {
     // User pages - exact matches and specific patterns
     if (
       path === "/user-dashboard" ||
-      path === "/book-facility" ||
-      path === "/book-locker" ||
-      path === "/parking-lot" ||
-      path === "/classroom-finder" ||
-      path === "/class-schedule" ||
-      path === "/result" ||
-      path === "/attendance" ||
-      path === "/bus-schedule" ||
-      path === "/campus-ride" ||
-      path === "/ride-detail" ||
-      path === "/feedback" ||
-      path === "/user-setting" ||
-      path === "/user-profile"
+      path === "/user-profile" ||
+      path === "/feedbac" ||
+      path === "/academic" ||
+      path === "/facility-management" ||
+      path === "/transportation"
     ) {
       return "user";
     }
@@ -264,20 +249,12 @@ function App() {
           <Route path="/test" element={<AuthTest />} />
 
           {/* User Pages - Require student authentication */}
-          <Route path="/user-dashboard" element={wrapWithAuth(<UserDashboard />)} />
-          <Route path="/book-facility" element={wrapWithAuth(<BookFacility />)} />
-          <Route path="/book-locker" element={wrapWithAuth(<BookLocker />)} />
-          <Route path="/parking-lot" element={wrapWithAuth(<ParkingLot />)} />
-          <Route path="/classroom-finder" element={wrapWithAuth(<ClassroomFinder />)} />
-          <Route path="/class-schedule" element={wrapWithAuth(<ClassSchedule />)} />
-          <Route path="/result" element={wrapWithAuth(<Result />)} />
-          <Route path="/attendance" element={wrapWithAuth(<Attendance />)} />
-          <Route path="/bus-schedule" element={wrapWithAuth(<BusSchedule />)} />
-          <Route path="/campus-ride" element={wrapWithAuth(<CampusRide />)} />
-          <Route path="/ride-detail" element={wrapWithAuth(<RideDetail />)} />
+          <Route path="/user-dashboard" element={wrapWithAuth(<StudentDashboard />)} />
+          <Route path="/user-profile" element={wrapWithAuth(<Profile />)} />
           <Route path="/feedback" element={wrapWithAuth(<Feedback />)} />
-          <Route path="/user-setting" element={wrapWithAuth(<UserSetting />)} />
-          <Route path="/user-profile" element={wrapWithAuth(<UserProfile />)} />
+          <Route path="/academic" element={wrapWithAuth(<Academic />)} />
+          <Route path="/facility-management" element={wrapWithAuth(<SFacilityManagement />)} />
+          <Route path="/transportation" element={wrapWithAuth(<Transportation />)} />
 
           {/* School Admin Pages - Require school admin authentication */}
           <Route path="/admin-dashboard" element={wrapWithAuth(<AdminDashboard />)} />

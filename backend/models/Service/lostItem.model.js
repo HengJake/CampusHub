@@ -1,9 +1,14 @@
 import mongoose from 'mongoose';
 
 const lostItemSchema = new mongoose.Schema({
-    owner: {
+    ownerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Student',
+        required: true
+    },
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
         required: true
     },
     name: {
@@ -37,7 +42,12 @@ const lostItemSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'FoundItem',
         default: null
+    },
+    notes: {
+        type: String
     }
+}, {
+    timestamps: true
 });
 
 const LostItem = mongoose.model('LostItem', lostItemSchema);
