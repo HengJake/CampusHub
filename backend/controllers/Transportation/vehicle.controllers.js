@@ -15,7 +15,7 @@ const validateVehicleData = async (data) => {
   if (!type) return { isValid: false, message: "type is required" };
   if (!capacity) return { isValid: false, message: "capacity is required" };
   if (!["bus", "car"].includes(type)) return { isValid: false, message: "type must be either 'bus' or 'car'" };
-  if (status && !["active", "inactive", "maintenance", "repair"].includes(status)) return { isValid: false, message: "Invalid status value" };
+  if (status && !["available", "in_service", "under_maintenance", "inactive"].includes(status)) return { isValid: false, message: "Invalid status value" };
   if (capacity < 1) return { isValid: false, message: "capacity must be at least 1" };
   return { isValid: true };
 };
@@ -42,3 +42,12 @@ export const deleteVehicle = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(Vehicle, id, "vehicle");
 });
+
+export const deleteAllVehicles = async (req, res) => {
+  try {
+    await Vehicle.deleteMany({});
+    res.status(200).json({ message: 'All vehicles deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting all vehicles', error: error.message });
+  }
+};

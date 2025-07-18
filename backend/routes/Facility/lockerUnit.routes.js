@@ -5,7 +5,8 @@ import {
   getLockerUnitById,
   getLockerUnitsByResourceId,
   updateLockerUnit,
-  deleteLockerUnit
+  deleteLockerUnit,
+  deleteAllLockerUnits
 } from "../../controllers/Facility/lockerUnit.controllers.js";
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.get("/", getAllLockerUnit);
 router.get("/resource/:resourceId", getLockerUnitsByResourceId);
 router.get("/:id", getLockerUnitById);
 router.put("/:id", updateLockerUnit);
+router.delete('/all', deleteAllLockerUnits);
 router.delete("/:id", deleteLockerUnit);
 
 export default router; 

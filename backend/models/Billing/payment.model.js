@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const paymentSchema = new mongoose.Schema(
   {
-    schoolID: {
+    schoolId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "School",
       required: true,
@@ -12,7 +12,7 @@ const paymentSchema = new mongoose.Schema(
       required: true,
     },
     last4Digit: {
-      type: Number,
+      type: String,
       required: true,
     },
     expiryDate: {
@@ -24,6 +24,11 @@ const paymentSchema = new mongoose.Schema(
       enum: ["VISA", "MasterCard", "PayPal"],
       required: true,
     },
+    status: {
+      type: String,
+      enum: ["success", "failed", "refunded"],
+      default: "success"
+    }
   },
   { timestamps: true }
 );

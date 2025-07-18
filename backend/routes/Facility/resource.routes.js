@@ -5,7 +5,8 @@ import {
   getResourceById,
   getResourcesBySchoolId,
   updateResource,
-  deleteResource
+  deleteResource,
+  deleteAllResources
 } from "../../controllers/Facility/resource.controllers.js";
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.get("/", getAllResource);
 router.get("/school/:schoolID", getResourcesBySchoolId);
 router.get("/:id", getResourceById);
 router.put("/:id", updateResource);
+router.delete('/all', deleteAllResources);
 router.delete("/:id", deleteResource);
 
 export default router;

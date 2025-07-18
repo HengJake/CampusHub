@@ -15,21 +15,21 @@ import {
 
 // Custom validation function for payment data
 const validatePaymentData = async (data) => {
-    const { schoolID, userID, subscriptionID } = data;
+    const { schoolId, userId, subscriptionId } = data;
 
     // Check required fields
-    if (!schoolID) {
+    if (!schoolId) {
         return {
             isValid: false,
-            message: "schoolID is required"
+            message: "schoolId is required"
         };
     }
 
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
-        schoolID: { id: schoolID, Model: School },
-        userID: { id: userID, Model: User },
-        subscriptionID: { id: subscriptionID, Model: Subscription }
+        schoolId: { id: schoolId, Model: School },
+        userId: { id: userId, Model: User },
+        subscriptionId: { id: subscriptionId, Model: Subscription }
     });
 
     if (referenceValidation) {
@@ -133,4 +133,13 @@ export const deletePayment = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(Payment, id, "payment");
 });
+
+export const deleteAllPayments = async (req, res) => {
+    try {
+        await Payment.deleteMany({});
+        res.status(200).json({ message: 'All payments deleted' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting all payments', error: error.message });
+    }
+};
 

@@ -17,7 +17,7 @@ const validateBookingData = async (data) => {
   if (!resourceId) return { isValid: false, message: "resourceId is required" };
   if (!startTime) return { isValid: false, message: "startTime is required" };
   if (!endTime) return { isValid: false, message: "endTime is required" };
-  if (status && !['pending', 'approved', 'rejected', 'cancelled'].includes(status)) return { isValid: false, message: "Invalid status value" };
+  if (status && !['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) return { isValid: false, message: "Invalid status value" };
   const referenceValidation = await validateMultipleReferences({
     studentId: { id: studentId, Model: Student },
     resourceId: { id: resourceId, Model: Resource }
@@ -45,10 +45,10 @@ export const getBookingById = controllerWrapper(async (req, res) => {
 export const getBookingsByStudentId = controllerWrapper(async (req, res) => {
   const { studentId } = req.params;
   return await getAllRecords(
-      Booking,
-      "bookings",
-      ["studentId", "resourceId"],
-      { studentId }
+    Booking,
+    "bookings",
+    ["studentId", "resourceId"],
+    { studentId }
   );
 });
 
@@ -56,12 +56,12 @@ export const getBookingsByStudentId = controllerWrapper(async (req, res) => {
 export const getBookingsByResourceId = controllerWrapper(async (req, res) => {
   const { resourceId } = req.params;
   return await getAllRecords(
-      Booking,
-      "bookings",
-      ["studentId", "resourceId"],
-      { resourceId }
+    Booking,
+    "bookings",
+    ["studentId", "resourceId"],
+    { resourceId }
   );
-}); 
+});
 
 export const updateBooking = controllerWrapper(async (req, res) => {
   const { id } = req.params;
@@ -72,3 +72,12 @@ export const deleteBooking = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(Booking, id, "booking");
 });
+
+export const deleteAllBookings = async (req, res) => {
+  try {
+    await Booking.deleteMany({});
+    res.status(200).json({ message: 'All bookings deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting all bookings', error: error.message });
+  }
+};

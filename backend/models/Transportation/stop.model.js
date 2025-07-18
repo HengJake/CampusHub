@@ -12,6 +12,11 @@ const stopSchema = new mongoose.Schema(
       enum: ["dorm", "campus", "shopping_mall", "airport", "train_station"],
       required: true,
     },
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
+    },
   },
   {
     timestamps: true,

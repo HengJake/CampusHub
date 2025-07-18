@@ -11,6 +11,11 @@ const BookingSchema = new mongoose.Schema({
         ref: 'Resource',
         required: true,
     },
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true,
+    },
     startTime: { type: String, required: true }, // e.g., "14:00"
     endTime: { type: String, required: true },   // e.g., "15:00"
     status: {

@@ -49,7 +49,7 @@ const AuthTest = () => {
             role: 'schoolAdmin'
         },
         lecturer: {
-            email: 'jane.lee@apu.edu.my',
+            email: 'john.smith@bpu.edu.my',
             password: 'password123',
             name: 'Jane Lee',
             role: 'lecturer'

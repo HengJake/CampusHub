@@ -6,7 +6,8 @@ import {
   getFeedbacksByStudentId,
   getFeedbacksByFeedbackType,
   updateFeedback,
-  deleteFeedback
+  deleteFeedback,
+  deleteAllFeedbacks
 } from "../../controllers/Service/feedback.controllers.js";
 
 const router = express.Router();
@@ -17,6 +18,7 @@ router.get("/:id", getFeedbackById);
 router.get("/student/:studentId", getFeedbacksByStudentId);
 router.get("/type/:feedbackType", getFeedbacksByFeedbackType);
 router.put("/:id", updateFeedback);
+router.delete('/all', deleteAllFeedbacks);
 router.delete("/:id", deleteFeedback);
 
 export default router; 

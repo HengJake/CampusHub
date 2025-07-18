@@ -87,6 +87,14 @@ export function CourseManagement() {
             fetchLecturers();
         }
     }, [])
+    
+    
+    useEffect(() => {
+        fetchCourses();
+    },[])
+    console.log("🚀 ~ useEffect ~ courses:", courses)
+    
+
 
     const bgColor = useColorModeValue("white", "gray.800")
     const borderColor = useColorModeValue("gray.200", "gray.600")

@@ -14,23 +14,19 @@ import Stop from "../../models/Transportation/stop.model.js";
 import Vehicle from "../../models/Transportation/vehicle.model.js";
 
 const validateEHailingData = async (data) => {
-  const { StudentID, RouteID, PickupLocation, DropOffLocation, Status, VehicleID } = data;
+  const { studentId, routeId, status, vehicleId } = data;
   // Required fields
-  if (!StudentID) return { isValid: false, message: "StudentID is required" };
-  if (!RouteID) return { isValid: false, message: "RouteID is required" };
-  if (!PickupLocation) return { isValid: false, message: "PickupLocation is required" };
-  if (!DropOffLocation) return { isValid: false, message: "DropOffLocation is required" };
+  if (!studentId) return { isValid: false, message: "studentId is required" };
+  if (!routeId) return { isValid: false, message: "routeId is required" };
   // Status enum
-  if (Status && !["pending", "confirmed", "in_progress", "completed", "cancelled"].includes(Status)) {
+  if (status && !["waiting", "in_progress", "completed", "cancelled", "delayed"].includes(status)) {
     return { isValid: false, message: "Invalid status value" };
   }
   // Reference validation
   const referenceValidation = await validateMultipleReferences({
-    StudentID: { id: StudentID, Model: Student },
-    RouteID: { id: RouteID, Model: Route },
-    PickupLocation: { id: PickupLocation, Model: Stop },
-    DropOffLocation: { id: DropOffLocation, Model: Stop },
-    ...(VehicleID && { VehicleID: { id: VehicleID, Model: Vehicle } })
+    studentId: { id: studentId, Model: Student },
+    routeId: { id: routeId, Model: Route },
+    ...(vehicleId && { vehicleId: { id: vehicleId, Model: Vehicle } })
   });
   if (referenceValidation) {
     return { isValid: false, message: referenceValidation.message };
@@ -43,22 +39,22 @@ export const createEHailing = controllerWrapper(async (req, res) => {
 });
 
 export const getAllEHailing = controllerWrapper(async (req, res) => {
-  return await getAllRecords(EHailing, "eHailing", ["StudentID", "RouteID", "PickupLocation", "DropOffLocation", "VehicleID"]);
+  return await getAllRecords(EHailing, "eHailing", ["studentId", "routeId", "pickupLocation", "dropOffLocation", "vehicleId"]);
 });
 
 export const getEHailingById = controllerWrapper(async (req, res) => {
   const { id } = req.params;
-  return await getRecordById(EHailing, id, "eHailing", ["StudentID", "RouteID", "PickupLocation", "DropOffLocation", "VehicleID"]);
+  return await getRecordById(EHailing, id, "eHailing", ["studentId", "routeId", "pickupLocation", "dropOffLocation", "vehicleId"]);
 });
 
 // Get EHailings by Student ID
 export const getEHailingsByStudentId = controllerWrapper(async (req, res) => {
   const { studentId } = req.params;
   return await getAllRecords(
-      EHailing,
-      "eHailings",
-      ["StudentID", "RouteID", "PickupLocation", "DropOffLocation", "VehicleID"],
-      { StudentID: studentId }
+    EHailing,
+    "eHailings",
+    ["studentId", "routeId", "pickupLocation", "dropOffLocation", "vehicleId"],
+    { studentId: studentId }
   );
 });
 
@@ -66,10 +62,10 @@ export const getEHailingsByStudentId = controllerWrapper(async (req, res) => {
 export const getEHailingsByRouteId = controllerWrapper(async (req, res) => {
   const { routeId } = req.params;
   return await getAllRecords(
-      EHailing,
-      "eHailings",
-      ["StudentID", "RouteID", "PickupLocation", "DropOffLocation", "VehicleID"],
-      { RouteID: routeId }
+    EHailing,
+    "eHailings",
+    ["studentId", "routeId", "pickupLocation", "dropOffLocation", "vehicleId"],
+    { routeId: routeId }
   );
 });
 
@@ -77,13 +73,12 @@ export const getEHailingsByRouteId = controllerWrapper(async (req, res) => {
 export const getEHailingsByVehicleId = controllerWrapper(async (req, res) => {
   const { vehicleId } = req.params;
   return await getAllRecords(
-      EHailing,
-      "eHailings",
-      ["StudentID", "RouteID", "PickupLocation", "DropOffLocation", "VehicleID"],
-      { VehicleID: vehicleId }
+    EHailing,
+    "eHailings",
+    ["studentId", "routeId", "pickupLocation", "dropOffLocation", "vehicleId"],
+    { vehicleId: vehicleId }
   );
 });
-
 
 export const updateEHailing = controllerWrapper(async (req, res) => {
   const { id } = req.params;
@@ -94,5 +89,14 @@ export const deleteEHailing = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(EHailing, id, "eHailing");
 });
+
+export const deleteAllEHailings = async (req, res) => {
+  try {
+    await EHailing.deleteMany({});
+    res.status(200).json({ message: 'All e-hailing records deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting all e-hailing records', error: error.message });
+  }
+};
 
 

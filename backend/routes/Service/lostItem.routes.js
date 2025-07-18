@@ -6,7 +6,8 @@ import {
   getLostItemsByOwner,
   getLostItemsByMatchedItem,
   updateLostItem,
-  deleteLostItem
+  deleteLostItem,
+  deleteAllLostItems
 } from "../../controllers/Service/lostItem.controllers.js";
 
 const router = express.Router();
@@ -17,6 +18,7 @@ router.get("/:id", getLostItemById);
 router.get("/owner/:owner", getLostItemsByOwner);
 router.get("/matchedItem/:matchedItem", getLostItemsByMatchedItem);
 router.put("/:id", updateLostItem);
+router.delete("/all", deleteAllLostItems);
 router.delete("/:id", deleteLostItem);
 
 export default router; 

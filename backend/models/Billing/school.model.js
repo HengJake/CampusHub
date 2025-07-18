@@ -6,9 +6,14 @@ const schoolSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  adminIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
   name: {
     type: String,
     required: true,
+    unique: true,
   },
   address: {
     type: String,

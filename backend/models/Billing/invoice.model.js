@@ -1,14 +1,19 @@
 import mongoose from "mongoose";
 
 const invoiceSchema = new mongoose.Schema({
-    paymentID: {
+    paymentId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Payment",
         required: true,
     },
-    subscriptionID: {
+    subscriptionId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Subscription",
+        required: true,
+    },
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "School",
         required: true,
     },
     amount: {
