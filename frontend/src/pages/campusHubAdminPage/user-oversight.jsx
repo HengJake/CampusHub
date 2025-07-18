@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 
 import {
   Box,
@@ -30,12 +30,69 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { Download, TrendingUp, Users, GraduationCap } from "lucide-react";
-
+import { useAcademicStore } from "../../store/academic";
 
 
 export default function UserOversight() {
   const [selectedSchool, setSelectedSchool] = useState("all");
   const [sortBy, setSortBy] = useState("totalUsers");
+  const [sortOrder, setSortOrder] = useState("az"); // 'az' for A-Z, 'za' for Z-A
+
+  // Get schools and students from the store
+  const schools = useAcademicStore((state) => state.schools);
+  const students = useAcademicStore((state) => state.students);
+  const loadingSchools = useAcademicStore((state) => state.loading.schools);
+  const fetchSchools = useAcademicStore((state) => state.fetchSchools);
+  const fetchStudents = useAcademicStore((state) => state.fetchStudents);
+
+  useEffect(() => {
+    fetchSchools();
+    fetchStudents();
+  }, [fetchSchools, fetchStudents]);
+
+  // Helper: count students per school
+  const getStudentCount = (schoolId) =>
+    students.filter((student) => student.schoolId === schoolId).length;
+
+  // Calculate overall stats
+  const totalStats = {
+    totalUsers: students.length, 
+    totalStudents: students.length, 
+    totalTeachers: schools.reduce((sum, s) => sum + (s.teachers || 0), 0),
+    avgGrowthRate:
+      schools.length > 0
+        ? schools.reduce((sum, s) => sum + (s.growthRate || 0), 0) / schools.length
+        : 0,
+  };
+
+  // Filter and sort data
+  const filteredData = schools
+    .filter((school) =>
+      selectedSchool === "all" ? true : school.id?.toString() === selectedSchool
+    )
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "totalUsers":
+          return (b.totalUsers || 0) - (a.totalUsers || 0);
+        case "growthRate":
+          return (b.growthRate || 0) - (a.growthRate || 0);
+        case "activeUsers":
+          return (b.activeUsers || 0) - (a.activeUsers || 0);
+        case "schoolName":
+          return (a.schoolName || "").localeCompare(b.schoolName || "");
+        default:
+          return 0;
+      }
+    });
+
+  // Filter and sort data
+  const sortedSchools = [...schools].sort((a, b) => {
+    if (sortOrder === "az") {
+      return (a.name || "").localeCompare(b.name || "");
+    } else {
+      return (b.name || "").localeCompare(a.name || "");
+    }
+  });
 
  
 
@@ -45,10 +102,14 @@ export default function UserOversight() {
     console.log("Downloading user statistics...");
   };
 
+  if (loadingSchools) {
+    return <div>Loading schools...</div>;
+  }
+
   return (
-    <VStack spacing={6} align="stretch">
+    <VStack spacing={4} align="stretch" pl={8} pr={10} h={"100%"}>
       {/* Header */}
-      <Flex>
+      <Flex >
         <Box>
           <Text fontSize="2xl" fontWeight="bold">
             User Oversight
@@ -140,11 +201,13 @@ export default function UserOversight() {
                 onChange={(e) => setSelectedSchool(e.target.value)}
               >
                 <option value="all">All Schools</option>
-                {mockUserData.map((school) => (
-                  <option key={school.id} value={school.id.toString()}>
-                    {school.schoolName}
-                  </option>
-                ))}
+                {schools
+                  .filter((school) => school && school.id !== undefined && school.id !== null)
+                  .map((school) => (
+                    <option key={school.id} value={school.id.toString()}>
+                      {school.schoolName}
+                    </option>
+                  ))}
               </Select>
             </Box>
             <Box>
@@ -161,81 +224,52 @@ export default function UserOversight() {
                 <option value="schoolName">School Name</option>
               </Select>
             </Box>
+            <Box>
+              <Text fontSize="sm" mb={2}>
+                Sort Order:
+              </Text>
+              <Select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                w="120px"
+                size="md"
+              >
+                <option value="az">A-Z</option>
+                <option value="za">Z-A</option>
+              </Select>
+            </Box>
           </HStack>
         </CardBody>
       </Card>
 
-      {/* User Distribution Table */}
+      {/* User Distribution by School - Add sort dropdown */}
       <Card>
         <CardBody>
-          <Text fontSize="lg" fontWeight="semibold" mb={4}>
-            User Distribution by School
-          </Text>
+          <Flex justify="space-between" align="center" mb={4}>
+            <Text fontSize="lg" fontWeight="semibold">
+              User Distribution by School
+            </Text>
+          </Flex>
           <TableContainer>
             <Table variant="simple">
               <Thead>
                 <Tr>
                   <Th>School Name</Th>
                   <Th>Total Users</Th>
-                  <Th>Role Breakdown</Th>
                   <Th>Active Users</Th>
-                  <Th>Growth Rate</Th>
                   <Th>Last Activity</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {filteredData.map((school) => (
-                  <Tr key={school.id}>
+                {sortedSchools.map((school) => (
+                  <Tr key={school._id}>
                     <Td>
-                      <Text fontWeight="medium">{school.schoolName}</Text>
+                      <Text fontWeight="medium">{school.name}</Text>
                     </Td>
-                    <Td>
-                      <Text fontSize="lg" fontWeight="semibold">
-                        {school.totalUsers.toLocaleString()}
-                      </Text>
-                    </Td>
-                    <Td>
-                      <VStack align="start" spacing={1}>
-                        <HStack>
-                          <Badge colorScheme="blue" size="sm">
-                            Students: {school.students}
-                          </Badge>
-                        </HStack>
-                        <HStack>
-                          <Badge colorScheme="green" size="sm">
-                            Teachers: {school.teachers}
-                          </Badge>
-                          <Badge colorScheme="purple" size="sm">
-                            Staff: {school.staff}
-                          </Badge>
-                        </HStack>
-                      </VStack>
-                    </Td>
-                    <Td>
-                      <VStack align="start" spacing={2}>
-                        <Text>{school.activeUsers.toLocaleString()}</Text>
-                        <Progress
-                          value={(school.activeUsers / school.totalUsers) * 100}
-                          size="sm"
-                          colorScheme="green"
-                          w="100px"
-                        />
-                      </VStack>
-                    </Td>
-                    <Td>
-                      <Badge
-                        colorScheme={school.growthRate > 0 ? "green" : "red"}
-                        variant="subtle"
-                      >
-                        {school.growthRate > 0 ? "+" : ""}
-                        {school.growthRate}%
-                      </Badge>
-                    </Td>
-                    <Td>
-                      <Text fontSize="sm" color="gray.600">
-                        {school.lastActive}
-                      </Text>
-                    </Td>
+                    {/* Total Users = number of students */}
+                    <Td>{getStudentCount(school._id)}</Td>
+                    <Td>{school.activeUsers}</Td>
+                    <Td>{school.lastActive}</Td>
                   </Tr>
                 ))}
               </Tbody>
@@ -252,8 +286,8 @@ export default function UserOversight() {
               Top Performing Schools
             </Text>
             <VStack spacing={3}>
-              {mockUserData
-                .sort((a, b) => b.growthRate - a.growthRate)
+              {schools
+                .sort((a, b) => (b.growthRate || 0) - (a.growthRate || 0))
                 .slice(0, 3)
                 .map((school, index) => (
                   <Box
@@ -291,8 +325,8 @@ export default function UserOversight() {
                   <Text fontSize="sm">High Engagement (80%+)</Text>
                   <Text fontSize="sm" color="green.500">
                     {
-                      mockUserData.filter(
-                        (s) => s.activeUsers / s.totalUsers >= 0.8
+                      schools.filter(
+                        (s) => (s.activeUsers || 0) / (s.totalUsers || 0) >= 0.8
                       ).length
                     }{" "}
                     schools
@@ -300,10 +334,10 @@ export default function UserOversight() {
                 </HStack>
                 <Progress
                   value={
-                    (mockUserData.filter(
-                      (s) => s.activeUsers / s.totalUsers >= 0.8
+                    (schools.filter(
+                      (s) => (s.activeUsers || 0) / (s.totalUsers || 0) >= 0.8
                     ).length /
-                      mockUserData.length) *
+                      schools.length) *
                     100
                   }
                   colorScheme="green"
@@ -314,10 +348,10 @@ export default function UserOversight() {
                   <Text fontSize="sm">Medium Engagement (60-79%)</Text>
                   <Text fontSize="sm" color="yellow.500">
                     {
-                      mockUserData.filter(
+                      schools.filter(
                         (s) =>
-                          s.activeUsers / s.totalUsers >= 0.6 &&
-                          s.activeUsers / s.totalUsers < 0.8
+                          (s.activeUsers || 0) / (s.totalUsers || 0) >= 0.6 &&
+                          (s.activeUsers || 0) / (s.totalUsers || 0) < 0.8
                       ).length
                     }{" "}
                     schools
@@ -325,12 +359,12 @@ export default function UserOversight() {
                 </HStack>
                 <Progress
                   value={
-                    (mockUserData.filter(
+                    (schools.filter(
                       (s) =>
-                        s.activeUsers / s.totalUsers >= 0.6 &&
-                        s.activeUsers / s.totalUsers < 0.8
+                        (s.activeUsers || 0) / (s.totalUsers || 0) >= 0.6 &&
+                        (s.activeUsers || 0) / (s.totalUsers || 0) < 0.8
                     ).length /
-                      mockUserData.length) *
+                      schools.length) *
                     100
                   }
                   colorScheme="yellow"
@@ -341,8 +375,8 @@ export default function UserOversight() {
                   <Text fontSize="sm">Low Engagement ({"<"}60%)</Text>
                   <Text fontSize="sm" color="red.500">
                     {
-                      mockUserData.filter(
-                        (s) => s.activeUsers / s.totalUsers < 0.6
+                      schools.filter(
+                        (s) => (s.activeUsers || 0) / (s.totalUsers || 0) < 0.6
                       ).length
                     }{" "}
                     schools
@@ -350,10 +384,10 @@ export default function UserOversight() {
                 </HStack>
                 <Progress
                   value={
-                    (mockUserData.filter(
-                      (s) => s.activeUsers / s.totalUsers < 0.6
+                    (schools.filter(
+                      (s) => (s.activeUsers || 0) / (s.totalUsers || 0) < 0.6
                     ).length /
-                      mockUserData.length) *
+                      schools.length) *
                     100
                   }
                   colorScheme="red"

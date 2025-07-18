@@ -1,5 +1,7 @@
 "use client";
 import React from "react";
+import { useAcademicStore } from "../../store/academic";
+import { useEffect } from "react";
 
 import {
   Box,
@@ -18,88 +20,51 @@ import {
 } from "@chakra-ui/react";
 import { Building2, Users, TrendingUp, CreditCard } from "lucide-react";
 
-const stats = [
-  {
-    label: "Total Clients",
-    value: "24",
-    change: 12,
-    icon: Building2,
-    color: "blue",
-  },
-  {
-    label: "Active Users",
-    value: "12,847",
-    change: 8.2,
-    icon: Users,
-    color: "green",
-  },
-  {
-    label: "Revenue",
-    value: "$45,230",
-    change: 15.3,
-    icon: TrendingUp,
-    color: "purple",
-  },
-  {
-    label: "Active Subscriptions",
-    value: "21",
-    change: -2.1,
-    icon: CreditCard,
-    color: "orange",
-  },
-];
-
-const recentActivity = [
-  {
-    school: "Lincoln High School",
-    action: "New subscription activated",
-    time: "2 hours ago",
-  },
-  {
-    school: "Roosevelt Elementary",
-    action: "User limit increased",
-    time: "4 hours ago",
-  },
-  {
-    school: "Washington Middle",
-    action: "Payment received",
-    time: "6 hours ago",
-  },
-  {
-    school: "Jefferson Academy",
-    action: "Sub-admin assigned",
-    time: "1 day ago",
-  },
-];
-
 export default function Dashboard() {
+  const schools = useAcademicStore((state) => state.schools);
+  const students = useAcademicStore((state) => state.students);
+  const fetchSchools = useAcademicStore((state) => state.fetchSchools);
+  const fetchStudents = useAcademicStore((state) => state.fetchStudents);
+
+  useEffect(() => {
+    fetchSchools();
+    fetchStudents();
+  }, [fetchSchools, fetchStudents]);
+
+  const totalClients = schools.length;
+  const totalUsers = students.length;
+
   return (
-    <VStack spacing={6} align="stretch" w={"100%"} p={10}>
+    <VStack spacing={4} align="stretch" w={"100%"} pr={10} pl={8}>
 
       {/* Stats Grid */}
       <Grid templateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={6}>
-        {stats.map((stat, index) => (
-          <Card key={index}>
-            <CardBody>
-              <Stat>
-                <HStack justify="space-between" mb={2}>
-                  <StatLabel color="gray.500">{stat.label}</StatLabel>
-                  <Box p={2} bg={`${stat.color}.100`} borderRadius="md">
-                    <stat.icon
-                      size={20}
-                      color={`var(--chakra-colors-${stat.color}-500)`}
-                    />
-                  </Box>
-                </HStack>
-                <StatNumber fontSize="2xl">{stat.value}</StatNumber>
-                <StatHelpText>
-                  <StatArrow type={stat.change > 0 ? "increase" : "decrease"} />
-                  {Math.abs(stat.change)}% from last month
-                </StatHelpText>
-              </Stat>
-            </CardBody>
-          </Card>
-        ))}
+        <Card>
+          <CardBody>
+            <Stat>
+              <HStack justify="space-between" mb={2}>
+                <StatLabel color="gray.500">Total Schools</StatLabel>
+                <Box p={2} bg="blue.100" borderRadius="md">
+                  <Building2 size={20} color="var(--chakra-colors-blue-500)" />
+                </Box>
+              </HStack>
+              <StatNumber fontSize="2xl">{totalClients}</StatNumber>
+            </Stat>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardBody>
+            <Stat>
+              <HStack justify="space-between" mb={2}>
+                <StatLabel color="gray.500">Total Users</StatLabel>
+                <Box p={2} bg="green.100" borderRadius="md">
+                  <Users size={20} color="var(--chakra-colors-green-500)" />
+                </Box>
+              </HStack>
+              <StatNumber fontSize="2xl">{totalUsers}</StatNumber>
+            </Stat>
+          </CardBody>
+        </Card>
       </Grid>
 
       <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={6}>
@@ -142,19 +107,9 @@ export default function Dashboard() {
               Recent Activity
             </Text>
             <VStack spacing={3} align="stretch">
-              {recentActivity.map((activity, index) => (
-                <Box key={index} p={3} bg="gray.50" borderRadius="md">
-                  <Text fontWeight="medium" fontSize="sm">
-                    {activity.school}
-                  </Text>
-                  <Text fontSize="xs" color="gray.600" mb={1}>
-                    {activity.action}
-                  </Text>
-                  <Text fontSize="xs" color="gray.500">
-                    {activity.time}
-                  </Text>
-                </Box>
-              ))}
+              <Text color="gray.500" align="center">
+                No recent activity data available.
+              </Text>
             </VStack>
           </CardBody>
         </Card>
