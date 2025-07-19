@@ -37,6 +37,10 @@ import {
   Tooltip,
 } from "recharts"
 
+import { useFacilityStore } from "../../store/facility"
+import { useShowToast } from "../../store/utils/toast"
+import React, { useState, useEffect } from "react"
+
 const COLORS = ["#344E41", "#A4C3A2", "#48BB78", "#ED8936"]
 
 const weeklyData = [
@@ -50,19 +54,116 @@ const weeklyData = [
 ]
 
 export function ParkingManagement() {
-  const { parkingLots } = useAdminStore()
+  const {
+    parkingLots,
+    fetchParkingLots,
+    createParkingLot,
+    updateParkingLot,
+    deleteParkingLot,
+    loading,
+  } = useFacilityStore();
+  const showToast = useShowToast();
+
+  // Modal/form state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [formData, setFormData] = useState({
+    zone: "",
+    slotNumber: 0,
+    active: true
+  });
+  const [editId, setEditId] = useState(null);
+
+  // Fetch parking lots on mount
+  useEffect(() => {
+    fetchParkingLots().then(res => {
+      if (res.success) {
+        showToast.success("Parking lots loaded");
+        console.log("Parking lots loaded", res.data);
+      } else {
+        showToast.error("Failed to load parking lots", res.message);
+        console.error("Failed to load parking lots", res.message);
+      }
+    });
+  }, []);
+
+  // Handlers
+  const handleOpenAdd = () => {
+    setFormData({ zone: "", slotNumber: 0, active: true });
+    setIsEdit(false);
+    setEditId(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (lot) => {
+    setFormData({
+      zone: lot.zone,
+      slotNumber: lot.slotNumber,
+      active: lot.active
+    });
+    setIsEdit(true);
+    setEditId(lot.id || lot._id);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setIsEdit(false);
+    setEditId(null);
+  };
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : (name === "slotNumber" ? Number(value) : value)
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isEdit) {
+      // Update
+      const res = await updateParkingLot(editId, formData);
+      if (res.success) {
+        showToast.success("Parking lot updated");
+        console.log("Parking lot updated", res.data);
+        handleCloseModal();
+      } else {
+        showToast.error("Update failed", res.message);
+        console.error("Update failed", res.message);
+      }
+    } else {
+      // Create
+      const res = await createParkingLot(formData);
+      if (res.success) {
+        showToast.success("Parking lot created");
+        console.log("Parking lot created", res.data);
+        handleCloseModal();
+      } else {
+        showToast.error("Creation failed", res.message);
+        console.error("Creation failed", res.message);
+      }
+    }
+    // Refresh list
+    fetchParkingLots();
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this parking lot?")) return;
+    const res = await deleteParkingLot(id);
+    if (res.success) {
+      showToast.success("Parking lot deleted");
+      console.log("Parking lot deleted", id);
+      fetchParkingLots();
+    } else {
+      showToast.error("Delete failed", res.message);
+      console.error("Delete failed", res.message);
+    }
+  };
+
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
-
-  const totalSpots = parkingLots.reduce((sum, lot) => sum + lot.totalSpots, 0)
-  const totalOccupied = parkingLots.reduce((sum, lot) => sum + lot.occupiedSpots, 0)
-  const overallOccupancy = Math.round((totalOccupied / totalSpots) * 100)
-
-  const pieData = parkingLots.map((lot, index) => ({
-    name: lot.name,
-    value: lot.occupiedSpots,
-    color: COLORS[index % COLORS.length],
-  }))
 
   return (
     <Box p={6} minH="100vh" flex={1}>
@@ -75,133 +176,10 @@ export function ParkingManagement() {
             </Text>
             <Text color="gray.600">Monitor parking lots and manage permits</Text>
           </Box>
-          <Button leftIcon={<FiPlus />} bg="#344E41" color="white" _hover={{ bg: "#2a3d33" }}>
+          <Button leftIcon={<FiPlus />} bg="#344E41" color="white" _hover={{ bg: "#2a3d33" }} onClick={handleOpenAdd}>
             Add Parking Lot
           </Button>
         </HStack>
-
-        {/* Overview Stats */}
-        <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={6}>
-          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-            <CardBody>
-              <Stat>
-                <HStack justify="space-between">
-                  <Box>
-                    <StatLabel color="gray.600">Total Spots</StatLabel>
-                    <StatNumber color="#344E41">{totalSpots}</StatNumber>
-                    <StatHelpText>Across all lots</StatHelpText>
-                  </Box>
-                  <Box color="#344E41" fontSize="2xl">
-                    <FiMapPin />
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
-
-          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-            <CardBody>
-              <Stat>
-                <HStack justify="space-between">
-                  <Box>
-                    <StatLabel color="gray.600">Occupied</StatLabel>
-                    <StatNumber color="#A4C3A2">{totalOccupied}</StatNumber>
-                    <StatHelpText>{overallOccupancy}% occupancy</StatHelpText>
-                  </Box>
-                  <CircularProgress value={overallOccupancy} color="#A4C3A2" size="50px">
-                    <CircularProgressLabel fontSize="xs">{overallOccupancy}%</CircularProgressLabel>
-                  </CircularProgress>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
-
-          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-            <CardBody>
-              <Stat>
-                <HStack justify="space-between">
-                  <Box>
-                    <StatLabel color="gray.600">Available</StatLabel>
-                    <StatNumber color="#48BB78">{totalSpots - totalOccupied}</StatNumber>
-                    <StatHelpText>Ready for use</StatHelpText>
-                  </Box>
-                  <Box color="#48BB78" fontSize="2xl">
-                    <FiUsers />
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
-
-          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-            <CardBody>
-              <Stat>
-                <HStack justify="space-between">
-                  <Box>
-                    <StatLabel color="gray.600">Violations</StatLabel>
-                    <StatNumber color="#ED8936">12</StatNumber>
-                    <StatHelpText>This week</StatHelpText>
-                  </Box>
-                  <Box color="#ED8936" fontSize="2xl">
-                    <FiAlertTriangle />
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
-        </Grid>
-
-        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={6}>
-          {/* Occupancy Distribution */}
-          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-            <CardBody>
-              <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
-                Occupancy Distribution
-              </Text>
-              <Box h="300px">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardBody>
-          </Card>
-
-          {/* Weekly Occupancy Trend */}
-          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-            <CardBody>
-              <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
-                Weekly Occupancy Trend
-              </Text>
-              <Box h="300px">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={weeklyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="occupancy" stroke="#344E41" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardBody>
-          </Card>
-        </Grid>
 
         {/* Parking Lots Table */}
         <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
@@ -212,102 +190,65 @@ export function ParkingManagement() {
             <Table variant="simple">
               <Thead>
                 <Tr>
-                  <Th>Parking Lot</Th>
-                  <Th>Type</Th>
-                  <Th>Total Spots</Th>
-                  <Th>Occupied</Th>
-                  <Th>Available</Th>
-                  <Th>Occupancy Rate</Th>
-                  <Th>Status</Th>
+                  <Th>ID</Th>
+                  <Th>School ID</Th>
+                  <Th>Zone</Th>
+                  <Th>Slot Number</Th>
+                  <Th>Active</Th>
+                  <Th>Created At</Th>
+                  <Th>Updated At</Th>
+                  <Th>Actions</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {parkingLots.map((lot) => {
-                  const occupancyRate = Math.round((lot.occupiedSpots / lot.totalSpots) * 100)
-                  const available = lot.totalSpots - lot.occupiedSpots
-
-                  return (
-                    <Tr key={lot.id}>
-                      <Td>
-                        <Box>
-                          <Text fontWeight="medium">{lot.name}</Text>
-                          <Text fontSize="sm" color="gray.600">
-                            {lot.location}
-                          </Text>
-                        </Box>
-                      </Td>
-                      <Td>
-                        <Badge colorScheme="blue">{lot.type}</Badge>
-                      </Td>
-                      <Td>{lot.totalSpots}</Td>
-                      <Td>{lot.occupiedSpots}</Td>
-                      <Td>{available}</Td>
-                      <Td>
-                        <VStack spacing={1}>
-                          <Text fontWeight="medium">{occupancyRate}%</Text>
-                          <Progress
-                            value={occupancyRate}
-                            size="sm"
-                            colorScheme={occupancyRate > 90 ? "red" : occupancyRate > 70 ? "yellow" : "green"}
-                            w="80px"
-                          />
-                        </VStack>
-                      </Td>
-                      <Td>
-                        <Badge colorScheme={occupancyRate > 90 ? "red" : occupancyRate > 70 ? "yellow" : "green"}>
-                          {occupancyRate > 90 ? "Full" : occupancyRate > 70 ? "Busy" : "Available"}
-                        </Badge>
-                      </Td>
-                    </Tr>
-                  )
-                })}
+                {parkingLots.map((lot) => (
+                  <Tr key={lot.id || lot._id}>
+                    <Td>{lot._id}</Td>
+                    <Td>{lot.schoolId}</Td>
+                    <Td>{lot.zone}</Td>
+                    <Td>{lot.slotNumber}</Td>
+                    <Td>
+                      <Badge colorScheme={lot.active ? "green" : "red"}>{lot.active ? "Active" : "Inactive"}</Badge>
+                    </Td>
+                    <Td>{lot.createdAt ? new Date(lot.createdAt).toLocaleString() : ""}</Td>
+                    <Td>{lot.updatedAt ? new Date(lot.updatedAt).toLocaleString() : ""}</Td>
+                    <Td>
+                      <Button size="xs" colorScheme="yellow" mr={2} onClick={() => handleOpenEdit(lot)}>
+                        Edit
+                      </Button>
+                      <Button size="xs" colorScheme="red" onClick={() => handleDelete(lot.id || lot._id)}>
+                        Delete
+                      </Button>
+                    </Td>
+                  </Tr>
+                ))}
               </Tbody>
             </Table>
           </CardBody>
         </Card>
 
-        {/* Recent Violations */}
-        <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-          <CardBody>
-            <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
-              Recent Violations
-            </Text>
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Date</Th>
-                  <Th>Vehicle</Th>
-                  <Th>Violation Type</Th>
-                  <Th>Location</Th>
-                  <Th>Fine</Th>
-                  <Th>Status</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                <Tr>
-                  <Td>2024-01-20</Td>
-                  <Td>ABC-123</Td>
-                  <Td>Expired Permit</Td>
-                  <Td>Main Parking Lot</Td>
-                  <Td>$25</Td>
-                  <Td>
-                    <Badge colorScheme="red">Unpaid</Badge>
-                  </Td>
-                </Tr>
-                <Tr>
-                  <Td>2024-01-19</Td>
-                  <Td>XYZ-789</Td>
-                  <Td>No Permit</Td>
-                  <Td>Faculty Parking</Td>
-                  <Td>$50</Td>
-                  <Td>
-                    <Badge colorScheme="green">Paid</Badge>
-                  </Td>
-                </Tr>
-              </Tbody>
-            </Table>
-          </CardBody>
-        </Card>
+        {/* Modal for Add/Edit Parking Lot */}
+        <Box>
+          <Card display={isModalOpen ? "block" : "none"} position="fixed" top="50%" left="50%" transform="translate(-50%, -50%)" zIndex={1000} minW="350px">
+            <CardBody>
+              <form onSubmit={handleSubmit}>
+                <VStack spacing={4} align="stretch">
+                  <Text fontSize="lg" fontWeight="bold">{isEdit ? "Edit" : "Add"} Parking Lot</Text>
+                  <input name="zone" placeholder="Zone" value={formData.zone} onChange={handleChange} required style={{ padding: 8, borderRadius: 4, border: "1px solid #ccc" }} />
+                  <input name="slotNumber" type="number" placeholder="Slot Number" value={formData.slotNumber} onChange={handleChange} min={0} required style={{ padding: 8, borderRadius: 4, border: "1px solid #ccc" }} />
+                  <label style={{ display: "flex", alignItems: "center" }}>
+                    <input name="active" type="checkbox" checked={formData.active} onChange={handleChange} style={{ marginRight: 8 }} />
+                    Active
+                  </label>
+                  <HStack justify="flex-end">
+                    <Button onClick={handleCloseModal} variant="ghost">Cancel</Button>
+                    <Button type="submit" colorScheme="green">{isEdit ? "Update" : "Create"}</Button>
+                  </HStack>
+                </VStack>
+              </form>
+            </CardBody>
+          </Card>
+        </Box>
       </VStack>
     </Box>
   )
