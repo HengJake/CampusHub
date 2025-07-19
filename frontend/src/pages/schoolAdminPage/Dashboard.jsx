@@ -6,6 +6,9 @@ import { QuickActions } from "../../component/schoolAdminDashboard/QuickActions"
 import { FiUsers, FiMapPin, FiLock, FiCalendar } from "react-icons/fi"
 import { useAdminStore } from "../../store/TBI/adminStore.js"
 import { useAcademicStore } from "../../store/academic.js";
+import { useFacilityStore } from "../../store/facility.js";
+import { useServiceStore } from "../../store/service.js";
+import { useTransportationStore } from "../../store/transportation.js";
 import { useEffect } from "react";
 import { StatCard } from "../../component/common/StatsCard.jsx"
 
@@ -13,7 +16,24 @@ import { StatCard } from "../../component/common/StatsCard.jsx"
 export function Dashboard() {
   const bgColor = useColorModeValue("white", "gray.800")
   const { dashboardStats } = useAdminStore()
-  const { students, fetchStudents } = useAcademicStore();
+  const {
+    students, fetchStudents,
+    courses, fetchCourses,
+    intakes, fetchIntakes,
+    intakeCourses, fetchIntakeCourses,
+    departments, fetchDepartments,
+    lecturers, fetchLecturers,
+    modules, fetchModules,
+    classSchedules, fetchClassSchedules,
+    examSchedules, fetchExamSchedules,
+    attendance, fetchAttendance,
+    results, fetchResults,
+    rooms, fetchRooms,
+    schools, fetchSchools
+  } = useAcademicStore();
+  const { facilities, fetchFacilities, bookings, fetchBookings, resources, fetchResources, timeSlots, fetchTimeSlots } = useFacilityStore();
+  const { feedback, fetchFeedback, foundItems, fetchFoundItems, lostItems, fetchLostItems, responds, fetchResponds } = useServiceStore();
+  const { busSchedules, fetchBusSchedules, eHailings, fetchEHailings, routes, fetchRoutes, stops, fetchStops, vehicles, fetchVehicles } = useTransportationStore();
 
   const stats = {
     studentChange: 0,
@@ -39,8 +59,54 @@ export function Dashboard() {
 
 
   useEffect(() => {
-    fetchStudents();
-  }, [])
+    // =====================
+    // Academic Store Fetches
+    // =====================
+    fetchStudents().then(() => console.log("Fetched students"));
+    fetchCourses().then(() => console.log("Fetched courses"));
+    fetchIntakes().then(() => console.log("Fetched intakes"));
+    fetchIntakeCourses().then(() => console.log("Fetched intakeCourses"));
+    fetchDepartments().then(() => console.log("Fetched departments"));
+    fetchLecturers().then(() => console.log("Fetched lecturers"));
+    fetchModules().then(() => console.log("Fetched modules"));
+    fetchClassSchedules().then(() => console.log("Fetched classSchedules"));
+    fetchExamSchedules().then(() => console.log("Fetched examSchedules"));
+    fetchAttendance().then(() => console.log("Fetched attendance"));
+    fetchResults().then(() => console.log("Fetched results"));
+    fetchRooms().then(() => console.log("Fetched rooms"));
+    fetchSchools().then(() => console.log("Fetched schools"));
+
+    // =====================
+    // Facility Store Fetches
+    // =====================
+    fetchFacilities().then(() => console.log("Fetched facilities"));
+    fetchBookings().then(() => console.log("Fetched bookings"));
+    fetchResources().then(() => console.log("Fetched resources"));
+    fetchTimeSlots().then(() => console.log("Fetched timeSlots"));
+
+    // =====================
+    // Service Store Fetches
+    // =====================
+    fetchFeedback().then(() => console.log("Fetched feedback"));
+    fetchFoundItems().then(() => console.log("Fetched foundItems"));
+    fetchLostItems().then(() => console.log("Fetched lostItems"));
+    fetchResponds().then(() => console.log("Fetched responds"));
+
+    // =====================
+    // Transportation Store Fetches
+    // =====================
+    fetchBusSchedules().then(() => console.log("Fetched busSchedules"));
+    fetchEHailings().then(() => console.log("Fetched eHailings"));
+    fetchRoutes().then(() => console.log("Fetched routes"));
+    fetchStops().then(() => console.log("Fetched stops"));
+    fetchVehicles().then(() => console.log("Fetched vehicles"));
+
+  }, [
+    students, courses, intakes, intakeCourses, departments, lecturers, modules, classSchedules, examSchedules, attendance, results, rooms, schools,
+    facilities, bookings, resources, timeSlots,
+    feedback, foundItems, lostItems, responds,
+    busSchedules, eHailings, routes, stops, vehicles
+  ])
 
   return (
     <Box flex={1} p={6}>
