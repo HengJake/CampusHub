@@ -14,7 +14,7 @@ import School from "../../models/Billing/school.model.js";
 
 // Custom validation function for resource data
 const validateResourceData = async (data) => {
-  const { schoolId, type } = data;
+  const { schoolId } = data;
 
   // Check required fields
   if (!schoolId) {
@@ -62,12 +62,12 @@ export const getResourceById = controllerWrapper(async (req, res) => {
 
 // Get Resources by School ID
 export const getResourcesBySchoolId = controllerWrapper(async (req, res) => {
-  const { schoolID } = req.params;
+  const { schoolId } = req.params;
   return await getAllRecords(
     Resource,
     "resources",
     [],
-    { schoolID }
+    { schoolId : schoolId}
   );
 });
 

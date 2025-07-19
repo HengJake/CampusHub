@@ -11,7 +11,7 @@ import {
   InputRightElement,
   Box,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { useState } from "react";
 import Sidebar from "../sidebar/studentSidebar.jsx";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -22,12 +22,14 @@ import { CampusHubLogo } from "../campusHubLogo.jsx";
 import { FaSearch } from "react-icons/fa";
 import { IoIosNotifications } from "react-icons/io";
 import { IoIosSettings } from "react-icons/io";
+import { FiMenu } from "react-icons/fi";
 
 import "../generalComponent.scss";
 
 function navBar() {
   // const { colorMode, toggleColorMode } = useColorMode();
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogOut = () => {
     localStorage.removeItem("token");
@@ -63,6 +65,17 @@ function navBar() {
           </InputGroup>
 
           <HStack spacing={2} className="utility">
+            {/* Sidebar Toggle Button */}
+            <Button
+              bg="transparent"
+              padding={0}
+              _hover={{ bg: "gray.100" }}
+              onClick={() => setSidebarOpen((open) => !open)}
+              display={{ base: "inline-flex", md: "inline-flex" }}
+              aria-label="Toggle Sidebar"
+            >
+              <Icon as={FiMenu} boxSize={6} color="white" />
+            </Button>
             <Button
               bg="transparent"
               padding={0}
@@ -106,8 +119,7 @@ function navBar() {
           </HStack>
         </Flex>
       </Container>
-
-      <Sidebar />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
     </Box>
   );
 }

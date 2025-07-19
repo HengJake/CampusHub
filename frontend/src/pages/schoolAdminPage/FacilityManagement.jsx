@@ -25,61 +25,154 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  FormControl,
+  FormLabel,
+  Input,
+  Select,
+  NumberInput,
+  NumberInputField,
+  useToast,
 } from "@chakra-ui/react"
-import { FiPlus, FiEdit, FiTrash2, FiMoreVertical, FiHome, FiUsers, FiTool } from "react-icons/fi"
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
-import { useAcademicStore } from "../../store/academic.js";
+import { FiPlus, FiEdit, FiTrash2, FiMoreVertical, FiHome, FiUsers } from "react-icons/fi"
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { useFacilityStore } from "../../store/facility.js";
 import { useEffect } from "react";
+import React from "react";
+import ComfirmationMessage from "../../component/common/ComfirmationMessage.jsx";
 
-const COLORS = ["#344E41", "#A4C3A2", "#48BB78", "#ED8936"]
+const COLORS = ["#344E41", "#A4C3A2", "#48BB78", "#ED8936", "#4299E1", "#F6AD55", "#9F7AEA"];
 
-const usageData = [
-  { name: "Sports", value: 35, bookings: 45 },
-  { name: "Academic", value: 40, bookings: 78 },
-  { name: "Meeting", value: 15, bookings: 12 },
-  { name: "Recreation", value: 10, bookings: 23 },
-]
+const FACILITY_TYPES = [
+  { value: "court", label: "Court" },
+  { value: "study_room", label: "Study Room" },
+  { value: "meeting_room", label: "Meeting Room" },
+  { value: "seminar_room", label: "Seminar Room" },
+];
 
 export function FacilityManagement() {
-
-  const { facilities, fetchFacilities } = useAcademicStore();
+  const { resources, fetchResources, lockerUnits, fetchLockerUnits, bookings, fetchBookings, createResource, updateResource, deleteResource } = useFacilityStore();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
+  const [form, setForm] = React.useState({
+    name: "",
+    location: "",
+    type: "study_room",
+    capacity: 1,
+  });
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [selectedFacility, setSelectedFacility] = React.useState(null);
+  const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
+  const [facilityToDelete, setFacilityToDelete] = React.useState(null);
 
   useEffect(() => {
-    fetchFacilities();
-  }, [])
+    fetchResources();
+    fetchLockerUnits();
+    fetchBookings();
+  }, []);
+  console.log("🚀 ~ FacilityManagement ~ bookings:", bookings)
+  console.log("🚀 ~ FacilityManagement ~ lockerUnits:", lockerUnits)
+  console.log("🚀 ~ FacilityManagement ~ resources:", resources)
 
-  console.log(facilities);
 
-  const bgColor = useColorModeValue("white", "gray.800")
-  const borderColor = useColorModeValue("gray.200", "gray.600")
+  // Helper: status badge color
+  const getStatusColor = (status) => (status ? "green" : "red");
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Available":
-        return "green"
-      case "Occupied":
-        return "blue"
-      case "Maintenance":
-        return "red"
-      default:
-        return "gray"
+  // Filter out lockers from all resource displays
+  const filteredResources = resources.filter(r => r.type !== "locker");
+
+  // Use filteredResources instead of resources throughout the component
+  // For stats, pie chart, and table:
+  // - totalFacilities, avgCapacity, typeCounts, pieData, and the table rows should all use filteredResources
+
+  // Example replacements:
+  // const totalFacilities = resources.length;
+  const totalFacilities = filteredResources.length;
+  const avgCapacity = totalFacilities > 0 ? Math.round(filteredResources.reduce((sum, f) => sum + (f.capacity || 0), 0) / totalFacilities) : 0;
+  const typeCounts = filteredResources.reduce((acc, curr) => {
+    acc[curr.type] = (acc[curr.type] || 0) + 1;
+    return acc;
+  }, {});
+  const pieData = Object.entries(typeCounts).map(([type, count]) => ({ name: type.replace("_", " "), value: count }));
+
+  // Helper: count related locker units/bookings for a resource
+  const getBookingCount = (resourceId) => bookings.filter(b => b.resourceId === resourceId).length;
+
+  // In the table, map over filteredResources instead of resources
+  // {filteredResources.map((facility) => ( ... ))}
+
+  const openAddModal = () => {
+    setForm({ name: "", location: "", type: "study_room", capacity: 1 });
+    setIsEditing(false);
+    setSelectedFacility(null);
+    onOpen();
+  };
+
+  const openEditModal = (facility) => {
+    setForm({
+      name: facility.name || "",
+      location: facility.location || "",
+      type: facility.type || "study_room",
+      capacity: facility.capacity || 1,
+    });
+    setIsEditing(true);
+    setSelectedFacility(facility);
+    onOpen();
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      let res;
+      if (isEditing && selectedFacility) {
+        res = await updateResource(selectedFacility._id, form);
+      } else {
+        res = await createResource(form);
+      }
+      if (res.success) {
+        toast({ title: isEditing ? "Facility updated!" : "Facility added!", status: "success", duration: 2000, isClosable: true });
+        fetchResources();
+        onClose();
+        setForm({ name: "", location: "", type: "study_room", capacity: 1 });
+        setIsEditing(false);
+        setSelectedFacility(null);
+      } else {
+        toast({ title: "Error", description: res.message, status: "error", duration: 3000, isClosable: true });
+      }
+    } catch (err) {
+      toast({ title: "Error", description: err.message, status: "error", duration: 3000, isClosable: true });
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  const getMaintenanceColor = (maintenance) => {
-    switch (maintenance) {
-      case "Excellent":
-        return "green"
-      case "Good":
-        return "blue"
-      case "Fair":
-        return "yellow"
-      case "Under Repair":
-        return "red"
-      default:
-        return "gray"
+  const openDeleteDialog = (facility) => {
+    setFacilityToDelete(facility);
+    setIsDeleteOpen(true);
+  };
+  const closeDeleteDialog = () => {
+    setIsDeleteOpen(false);
+    setFacilityToDelete(null);
+  };
+  const handleDelete = async () => {
+    if (!facilityToDelete) return;
+    const res = await deleteResource(facilityToDelete._id);
+    if (res.success) {
+      toast({ title: "Facility deleted!", status: "success", duration: 2000, isClosable: true });
+      fetchResources();
+    } else {
+      toast({ title: "Error", description: res.message, status: "error", duration: 3000, isClosable: true });
     }
-  }
+    closeDeleteDialog();
+  };
 
   return (
     <Box p={6} minH="100vh" flex={1}>
@@ -90,22 +183,61 @@ export function FacilityManagement() {
             <Text fontSize="2xl" fontWeight="bold" color="#333333">
               Facility Management
             </Text>
-            <Text color="gray.600">Monitor and manage campus facilities</Text>
+            <Text color="gray.600">Monitor and manage campus resources</Text>
           </Box>
-          <Button leftIcon={<FiPlus />} bg="#344E41" color="white" _hover={{ bg: "#2a3d33" }}>
+          <Button leftIcon={<FiPlus />} bg="#344E41" color="white" _hover={{ bg: "#2a3d33" }} onClick={openAddModal}>
             Add Facility
           </Button>
         </HStack>
 
+        {/* Add/Edit Facility Modal */}
+        <Modal isOpen={isOpen} onClose={onClose}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>{isEditing ? "Edit Facility" : "Add New Facility"}</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <FormControl isRequired mb={3}>
+                <FormLabel>Name</FormLabel>
+                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Facility Name" />
+              </FormControl>
+              <FormControl isRequired mb={3}>
+                <FormLabel>Location</FormLabel>
+                <Input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Location" />
+              </FormControl>
+              <FormControl isRequired mb={3}>
+                <FormLabel>Type</FormLabel>
+                <Select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
+                  {FACILITY_TYPES.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl isRequired mb={3}>
+                <FormLabel>Capacity</FormLabel>
+                <NumberInput min={1} value={form.capacity} onChange={(_, v) => setForm(f => ({ ...f, capacity: v }))}>
+                  <NumberInputField />
+                </NumberInput>
+              </FormControl>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onClose}>Cancel</Button>
+              <Button colorScheme="green" onClick={handleSubmit} isLoading={isSubmitting}>
+                {isEditing ? "Update Facility" : "Add Facility"}
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
         {/* Stats Cards */}
-        <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={6}>
-          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
+        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
+          <Card bg="white">
             <CardBody>
               <Stat>
                 <HStack justify="space-between">
                   <Box>
                     <StatLabel color="gray.600">Total Facilities</StatLabel>
-                    <StatNumber color="#344E41">{facilities.length}</StatNumber>
+                    <StatNumber color="#344E41">{totalFacilities}</StatNumber>
                     <StatHelpText>Across campus</StatHelpText>
                   </Box>
                   <Box color="#344E41" fontSize="2xl">
@@ -115,16 +247,13 @@ export function FacilityManagement() {
               </Stat>
             </CardBody>
           </Card>
-
-          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
+          <Card bg="white">
             <CardBody>
               <Stat>
                 <HStack justify="space-between">
                   <Box>
                     <StatLabel color="gray.600">Average Capacity</StatLabel>
-                    <StatNumber color="#A4C3A2">
-                      {Math.round(facilities.reduce((sum, f) => sum + f.capacity, 0) / facilities.length)}
-                    </StatNumber>
+                    <StatNumber color="#A4C3A2">{avgCapacity}</StatNumber>
                     <StatHelpText>People per facility</StatHelpText>
                   </Box>
                   <Box color="#A4C3A2" fontSize="2xl">
@@ -134,81 +263,40 @@ export function FacilityManagement() {
               </Stat>
             </CardBody>
           </Card>
-
-          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-            <CardBody>
-              <Stat>
-                <HStack justify="space-between">
-                  <Box>
-                    <StatLabel color="gray.600">Maintenance Required</StatLabel>
-                    <StatNumber color="#ED8936">
-                      {facilities.filter((f) => f.maintenance === "Under Repair").length}
-                    </StatNumber>
-                    <StatHelpText>Facilities need attention</StatHelpText>
-                  </Box>
-                  <Box color="#ED8936" fontSize="2xl">
-                    <FiTool />
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
         </Grid>
 
-        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={6}>
-          {/* Facility Usage Chart */}
-          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-            <CardBody>
-              <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
-                Facility Usage by Type
-              </Text>
-              <Box h="300px">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={usageData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {usageData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardBody>
-          </Card>
-
-          {/* Booking Statistics */}
-          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-            <CardBody>
-              <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
-                Booking Statistics
-              </Text>
-              <Box h="300px">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={usageData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="bookings" fill="#344E41" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardBody>
-          </Card>
-        </Grid>
+        {/* Facility Type Pie Chart */}
+        <Card bg="white">
+          <CardBody>
+            <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
+              Facility Types Distribution
+            </Text>
+            <Box h={{ base: "250px", md: "350px" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {pieData.map((entry, idx) => (
+                      <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </Box>
+          </CardBody>
+        </Card>
 
         {/* Facilities Table */}
-        <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
+        <Card bg="white">
           <CardBody>
             <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
               All Facilities
@@ -216,49 +304,36 @@ export function FacilityManagement() {
             <Table variant="simple">
               <Thead>
                 <Tr>
-                  <Th>Facility Name</Th>
+                  <Th>Name</Th>
+                  <Th>Location</Th>
                   <Th>Type</Th>
                   <Th>Capacity</Th>
                   <Th>Status</Th>
-                  <Th>Maintenance</Th>
                   <Th>Bookings</Th>
                   <Th>Actions</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {facilities.map((facility) => (
-                  <Tr key={facility.id}>
+                {filteredResources.map((facility) => (
+                  <Tr key={facility._id}>
+                    <Td>{facility.name}</Td>
+                    <Td>{facility.location}</Td>
                     <Td>
-                      <Box>
-                        <Text fontWeight="medium">{facility.name}</Text>
-                        <Text fontSize="sm" color="gray.600">
-                          {facility.location}
-                        </Text>
-                      </Box>
-                    </Td>
-                    <Td>
-                      <Badge colorScheme="blue">{facility.type}</Badge>
+                      <Badge colorScheme="blue">{facility.type.replace("_", " ")}</Badge>
                     </Td>
                     <Td>{facility.capacity}</Td>
                     <Td>
-                      <Badge colorScheme={getStatusColor(facility.status)}>{facility.status}</Badge>
+                      <Badge colorScheme={getStatusColor(facility.status)}>
+                        {facility.status ? "Active" : "Inactive"}
+                      </Badge>
                     </Td>
-                    <Td>
-                      <Badge colorScheme={getMaintenanceColor(facility.maintenance)}>{facility.maintenance}</Badge>
-                    </Td>
-                    <Td>
-                      <VStack spacing={1}>
-                        <Text fontWeight="medium">{facility.bookings}</Text>
-                        <Progress value={(facility.bookings / 100) * 100} size="sm" colorScheme="green" w="60px" />
-                      </VStack>
-                    </Td>
+                    <Td>{getBookingCount(facility._id)}</Td>
                     <Td>
                       <Menu>
                         <MenuButton as={IconButton} icon={<FiMoreVertical />} variant="ghost" size="sm" />
                         <MenuList>
-                          <MenuItem icon={<FiEdit />}>Edit</MenuItem>
-                          <MenuItem icon={<FiTool />}>Schedule Maintenance</MenuItem>
-                          <MenuItem icon={<FiTrash2 />} color="red.500">
+                          <MenuItem icon={<FiEdit />} onClick={() => openEditModal(facility)}>Edit</MenuItem>
+                          <MenuItem icon={<FiTrash2 />} color="red.500" onClick={() => openDeleteDialog(facility)}>
                             Delete
                           </MenuItem>
                         </MenuList>
@@ -270,7 +345,14 @@ export function FacilityManagement() {
             </Table>
           </CardBody>
         </Card>
+        <ComfirmationMessage
+          title="Confirm delete facility?"
+          description="This facility will be permanently deleted and cannot be restored."
+          isOpen={isDeleteOpen}
+          onClose={closeDeleteDialog}
+          onConfirm={handleDelete}
+        />
       </VStack>
     </Box>
-  )
+  );
 }

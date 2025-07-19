@@ -74,7 +74,7 @@ export default function FacilityManagement() {
   }
 
   return (
-    <Box p={6} bg="gray.50" minH="100vh" ml="280px">
+    <Box p={6} bg="gray.50" minH="100vh">
       <VStack spacing={6} align="stretch">
         {/* Header */}
         <HStack justify="space-between">

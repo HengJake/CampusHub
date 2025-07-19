@@ -13,7 +13,7 @@ const router = express.Router();
 
 router.post("/", createResource);
 router.get("/", getAllResource);
-router.get("/school/:schoolID", getResourcesBySchoolId);
+router.get("/school/:schoolId", getResourcesBySchoolId);
 router.get("/:id", getResourceById);
 router.put("/:id", updateResource);
 router.delete('/all', deleteAllResources);

@@ -95,7 +95,7 @@ function App() {
       path === "/user-profile" ||
       path === "/feedbac" ||
       path === "/academic" ||
-      path === "/facility-management" ||
+      path === "/facility" ||
       path === "/transportation"
     ) {
       return "user";
@@ -253,7 +253,7 @@ function App() {
           <Route path="/user-profile" element={wrapWithAuth(<Profile />)} />
           <Route path="/feedback" element={wrapWithAuth(<Feedback />)} />
           <Route path="/academic" element={wrapWithAuth(<Academic />)} />
-          <Route path="/facility-management" element={wrapWithAuth(<SFacilityManagement />)} />
+          <Route path="/facility" element={wrapWithAuth(<SFacilityManagement />)} />
           <Route path="/transportation" element={wrapWithAuth(<Transportation />)} />
 
           {/* School Admin Pages - Require school admin authentication */}

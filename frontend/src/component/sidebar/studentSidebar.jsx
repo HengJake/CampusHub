@@ -1,4 +1,4 @@
-import { Box, VStack, Button, Icon } from "@chakra-ui/react";
+import { Box, VStack, Button, Icon, CloseButton } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 import { PiCourtBasketballBold } from "react-icons/pi";
 import { PiLockersFill } from "react-icons/pi";
@@ -9,10 +9,11 @@ import { GoGraph } from "react-icons/go";
 import { FaUserCheck } from "react-icons/fa";
 import { BiBus } from "react-icons/bi";
 import { IoCarSharp } from "react-icons/io5";
-import { FiHome, FiBookOpen, FiSettings, FiMessageSquare, FiMapPin} from "react-icons/fi";
+import { FiHome, FiBookOpen, FiSettings, FiMessageSquare, FiMapPin } from "react-icons/fi";
 import "../generalComponent.scss";
+import React from "react";
 
-function Sidebar() {
+function Sidebar({ isOpen, onClose }) {
   const sidebarButtonStyle = (isLast = false, label = "", isWrap = false) => ({
     padding: 0,
     flex: 1,
@@ -63,8 +64,8 @@ function Sidebar() {
           <Link to="/academic">
             <Button sx={sidebarButtonStyle(false, "Academic")}> <Icon as={FiBookOpen} boxSize={6} color="white" zIndex={2} /> </Button>
           </Link>
-          <Link to="/facility-management">
-            <Button sx={sidebarButtonStyle(false, "Facility Mgmt")}> <Icon as={FiMapPin} boxSize={6} color="white" zIndex={2} /> </Button>
+          <Link to="/facility">
+            <Button sx={sidebarButtonStyle(false, "Facility Management")}> <Icon as={FiMapPin} boxSize={6} color="white" zIndex={2} /> </Button>
           </Link>
           <Link to="/transportation">
             <Button sx={sidebarButtonStyle(false, "Transportation")}> <Icon as={FiBus2} boxSize={6} color="white" zIndex={2} /> </Button>

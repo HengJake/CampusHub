@@ -63,6 +63,16 @@ export const getBookingsByResourceId = controllerWrapper(async (req, res) => {
   );
 });
 
+export const getBookingsBySchoolId = controllerWrapper(async (req, res) => {
+  const { schoolId } = req.params;
+  return await getAllRecords(
+    Booking,
+    "bookings",
+    ["studentId", "resourceId"],
+    { schoolId }
+  );
+});
+
 export const updateBooking = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await updateRecord(Booking, id, req.body, "booking", validateBookingData);

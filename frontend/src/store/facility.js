@@ -3,25 +3,28 @@ import { useAuthStore } from "./auth.js";
 
 export const useFacilityStore = create((set, get) => ({
     // State - Store data for each entity
-    facilities: [],
     bookings: [],
     resources: [],
     timeSlots: [],
+    parkingLots: [],
+    lockerUnits: [],
 
     // Loading states
     loading: {
-        facilities: false,
         bookings: false,
         resources: false,
         timeSlots: false,
+        parkingLots: false,
+        lockerUnits: false,
     },
 
     // Error states
     errors: {
-        facilities: null,
         bookings: null,
         resources: null,
         timeSlots: null,
+        parkingLots: null,
+        lockerUnits: null,
     },
 
     // Helper to get schoolId from auth store (reference @auth.js)
@@ -85,95 +88,6 @@ export const useFacilityStore = create((set, get) => ({
             throw new Error("School ID not available - authentication incomplete");
         }
         return schoolId;
-    },
-
-    // ===== FACILITY OPERATIONS =====
-    fetchFacilities: async (filters = {}) => {
-        set((state) => ({ loading: { ...state.loading, facilities: true } }));
-        try {
-            await get().waitForAuth();
-            const url = get().buildUrl("/api/facility", filters);
-            const res = await fetch(url);
-            const data = await res.json();
-            if (!data.success) {
-                throw new Error(data.message || "Failed to fetch facilities");
-            }
-            set((state) => ({
-                facilities: data.data,
-                loading: { ...state.loading, facilities: false },
-                errors: { ...state.errors, facilities: null },
-            }));
-            return { success: true, data: data.data };
-        } catch (error) {
-            set((state) => ({
-                loading: { ...state.loading, facilities: false },
-                errors: { ...state.errors, facilities: error.message },
-            }));
-            return { success: false, message: error.message };
-        }
-    },
-    createFacility: async (facilityData) => {
-        try {
-            const authStore = useAuthStore.getState();
-            const userContext = authStore.getCurrentUser();
-            if (userContext.role === "schoolAdmin") {
-                const schoolId = authStore.getSchoolId();
-                if (schoolId) {
-                    facilityData.schoolId = schoolId;
-                }
-            }
-            const res = await fetch("/api/facility", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(facilityData),
-            });
-            const data = await res.json();
-            if (!data.success) {
-                throw new Error(data.message || "Failed to create facility");
-            }
-            set((state) => ({ facilities: [...state.facilities, data.data] }));
-            return { success: true, data: data.data };
-        } catch (error) {
-            return { success: false, message: error.message };
-        }
-    },
-    updateFacility: async (id, updates) => {
-        try {
-            const res = await fetch(`/api/facility/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updates),
-            });
-            const data = await res.json();
-            if (!data.success) {
-                throw new Error(data.message || "Failed to update facility");
-            }
-            set((state) => ({
-                facilities: state.facilities.map((facility) =>
-                    facility._id === id ? data.data : facility
-                ),
-            }));
-            return { success: true, data: data.data };
-        } catch (error) {
-            return { success: false, message: error.message };
-        }
-    },
-    deleteFacility: async (id) => {
-        try {
-            const res = await fetch(`/api/facility/${id}`, {
-                method: "DELETE",
-            });
-            const data = await res.json();
-            if (!data.success) {
-                throw new Error(data.message || "Failed to delete facility");
-            }
-            set((state) => ({
-                facilities: state.facilities.filter((facility) => facility._id !== id),
-            }));
-            return { success: true };
-        } catch (error) {
-            return { success: false, message: error.message };
-        }
     },
 
     // ===== BOOKING OPERATIONS =====
@@ -443,6 +357,184 @@ export const useFacilityStore = create((set, get) => ({
         }
     },
 
+    // ===== PARKING LOT OPERATIONS =====
+    fetchParkingLots: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, parkingLots: true } }));
+        try {
+            await get().waitForAuth();
+            const url = get().buildUrl("/api/parkingLot", filters);
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch parking lots");
+            }
+            set((state) => ({
+                parkingLots: data.data,
+                loading: { ...state.loading, parkingLots: false },
+                errors: { ...state.errors, parkingLots: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, parkingLots: false },
+                errors: { ...state.errors, parkingLots: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+    createParkingLot: async (parkingLotData) => {
+        try {
+            const authStore = useAuthStore.getState();
+            const userContext = authStore.getCurrentUser();
+            if (userContext.role === "schoolAdmin") {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    parkingLotData.schoolId = schoolId;
+                }
+            }
+            const res = await fetch("/api/parkingLot", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(parkingLotData),
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to create parking lot");
+            }
+            set((state) => ({ parkingLots: [...state.parkingLots, data.data] }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+    updateParkingLot: async (id, updates) => {
+        try {
+            const res = await fetch(`/api/parkingLot/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updates),
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update parking lot");
+            }
+            set((state) => ({
+                parkingLots: state.parkingLots.map((parkingLot) =>
+                    parkingLot._id === id ? data.data : parkingLot
+                ),
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+    deleteParkingLot: async (id) => {
+        try {
+            const res = await fetch(`/api/parkingLot/${id}`, {
+                method: "DELETE",
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete parking lot");
+            }
+            set((state) => ({
+                parkingLots: state.parkingLots.filter((parkingLot) => parkingLot._id !== id),
+            }));
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    // ===== LOCKER UNIT OPERATIONS =====
+    fetchLockerUnits: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, lockerUnits: true } }));
+        try {
+            await get().waitForAuth();
+            const url = get().buildUrl("/api/locker-unit", filters);
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch locker units");
+            }
+            set((state) => ({
+                lockerUnits: data.data,
+                loading: { ...state.loading, lockerUnits: false },
+                errors: { ...state.errors, lockerUnits: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, lockerUnits: false },
+                errors: { ...state.errors, lockerUnits: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+    createLockerUnit: async (lockerUnitData) => {
+        try {
+            const authStore = useAuthStore.getState();
+            const userContext = authStore.getCurrentUser();
+            if (userContext.role === "schoolAdmin") {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    lockerUnitData.schoolId = schoolId;
+                }
+            }
+            const res = await fetch("/api/lockerUnit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(lockerUnitData),
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to create locker unit");
+            }
+            set((state) => ({ lockerUnits: [...state.lockerUnits, data.data] }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+    updateLockerUnit: async (id, updates) => {
+        try {
+            const res = await fetch(`/api/lockerUnit/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updates),
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update locker unit");
+            }
+            set((state) => ({
+                lockerUnits: state.lockerUnits.map((lockerUnit) =>
+                    lockerUnit._id === id ? data.data : lockerUnit
+                ),
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+    deleteLockerUnit: async (id) => {
+        try {
+            const res = await fetch(`/api/lockerUnit/${id}`, {
+                method: "DELETE",
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete locker unit");
+            }
+            set((state) => ({
+                lockerUnits: state.lockerUnits.filter((lockerUnit) => lockerUnit._id !== id),
+            }));
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
     // ===== UTILITY FUNCTIONS =====
     clearErrors: () => {
         set({ errors: {} });
@@ -450,19 +542,23 @@ export const useFacilityStore = create((set, get) => ({
     clearAllErrors: () => {
         set((state) => ({
             errors: {
-                facilities: null,
+                resources: null,
                 bookings: null,
                 resources: null,
                 timeSlots: null,
+                parkingLots: null,
+                lockerUnits: null,
             },
         }));
     },
     clearData: () => {
         set({
-            facilities: [],
+            resources: [],
             bookings: [],
             resources: [],
             timeSlots: [],
+            parkingLots: [],
+            lockerUnits: [],
         });
     },
 }));

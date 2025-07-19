@@ -63,6 +63,15 @@ export const getLockerUnitsByResourceId = controllerWrapper(async (req, res) => 
         { resourceId }
     );
 });
+export const getLockerUnitsBySchoolId = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(
+        LockerUnit,
+        "lockerUnits",
+        ["resourceId"],
+        { schoolId }
+    );
+});
 export const updateLockerUnit = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await updateRecord(LockerUnit, id, req.body, "lockerUnit", validateLockerUnitData);
