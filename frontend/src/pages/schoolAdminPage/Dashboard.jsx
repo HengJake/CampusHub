@@ -31,7 +31,7 @@ export function Dashboard() {
     rooms, fetchRooms,
     schools, fetchSchools
   } = useAcademicStore();
-  const { facilities, fetchFacilities, bookings, fetchBookings, resources, fetchResources, timeSlots, fetchTimeSlots } = useFacilityStore();
+  const { bookings, fetchBookings, resources, fetchResources, timeSlots, fetchTimeSlots } = useFacilityStore();
   const { feedback, fetchFeedback, foundItems, fetchFoundItems, lostItems, fetchLostItems, responds, fetchResponds } = useServiceStore();
   const { busSchedules, fetchBusSchedules, eHailings, fetchEHailings, routes, fetchRoutes, stops, fetchStops, vehicles, fetchVehicles } = useTransportationStore();
 
@@ -79,7 +79,6 @@ export function Dashboard() {
     // =====================
     // Facility Store Fetches
     // =====================
-    fetchFacilities().then(() => console.log("Fetched facilities"));
     fetchBookings().then(() => console.log("Fetched bookings"));
     fetchResources().then(() => console.log("Fetched resources"));
     fetchTimeSlots().then(() => console.log("Fetched timeSlots"));
@@ -101,12 +100,7 @@ export function Dashboard() {
     fetchStops().then(() => console.log("Fetched stops"));
     fetchVehicles().then(() => console.log("Fetched vehicles"));
 
-  }, [
-    students, courses, intakes, intakeCourses, departments, lecturers, modules, classSchedules, examSchedules, attendance, results, rooms, schools,
-    facilities, bookings, resources, timeSlots,
-    feedback, foundItems, lostItems, responds,
-    busSchedules, eHailings, routes, stops, vehicles
-  ])
+  }, [])
 
   return (
     <Box flex={1} p={6}>

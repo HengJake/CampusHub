@@ -1,6 +1,6 @@
 import { Box, Text, useColorModeValue } from "@chakra-ui/react"
 
-export function Reports() {
+export default function Reports() {
   const bgColor = useColorModeValue("white", "gray.800")
 
   return (

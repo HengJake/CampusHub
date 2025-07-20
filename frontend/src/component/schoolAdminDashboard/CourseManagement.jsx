@@ -53,7 +53,7 @@ import { useShowToast } from "../../store/utils/toast";
 import ComfirmationMessage from "../common/ComfirmationMessage.jsx";
 
 export function CourseManagement() {
-    const { 
+    const {
         courses,
         addCourse,
         updateCourse,

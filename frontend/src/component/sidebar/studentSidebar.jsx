@@ -1,79 +1,83 @@
-import { Box, VStack, Button, Icon, CloseButton } from "@chakra-ui/react";
+import { Box, VStack, Button, Icon, CloseButton, HStack, Input, InputGroup, InputLeftElement, Divider, Text } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
-import { PiCourtBasketballBold } from "react-icons/pi";
-import { PiLockersFill } from "react-icons/pi";
-import { FaParking, FaUser } from "react-icons/fa";
-import { SiGoogleclassroom } from "react-icons/si";
-import { FaCalendarAlt, FaBus as FiBus2 } from "react-icons/fa";
-import { GoGraph } from "react-icons/go";
-import { FaUserCheck } from "react-icons/fa";
-import { BiBus } from "react-icons/bi";
-import { IoCarSharp } from "react-icons/io5";
-import { FiHome, FiBookOpen, FiSettings, FiMessageSquare, FiMapPin } from "react-icons/fi";
-import "../generalComponent.scss";
+import { FiHome, FiMessageSquare, FiUser, FiLogOut, FiBookOpen, FiMapPin } from "react-icons/fi";
+import { FaBus } from "react-icons/fa";
 import React from "react";
+import "../generalComponent.scss";
 
 function Sidebar({ isOpen, onClose }) {
-  const sidebarButtonStyle = (isLast = false, label = "", isWrap = false) => ({
-    padding: 0,
-    flex: 1,
-    position: "relative",
-    background: "transparent",
-    _hover: {
-      background: "none",
+  // Only include routes that exist in App.jsx for students
+  const navGroups = [
+    {
+      label: "Main",
+      items: [
+        { label: "Dashboard", icon: FiHome, to: "/user-dashboard" },
+        { label: "Profile", icon: FiUser, to: "/user-profile" },
+      ],
     },
-    "&::after": {
-      pointerEvents: "none",
-      content: `"${label}"`,
-      opacity: 0,
-      position: "absolute",
-      top: "50%",
-      left: "0",
-      transform: "translateY(-50%)",
-      backgroundColor: "blue.800",
-      fontSize: "1rem",
-      color: "white",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      borderRadius: "0 15px 15px 0",
-      transition: "all 0.3s ease-in-out",
-      zIndex: 1,
-      textAlign: "center",
-      padding: "0.25rem 0.75rem",
-      width: "max-content",
-      minHeight: "100%",
+    {
+      label: "Features",
+      items: [
+        { label: "Feedback", icon: FiMessageSquare, to: "/feedback" },
+        { label: "Academic", icon: FiBookOpen, to: "/academic" },
+        { label: "Facility", icon: FiMapPin, to: "/facility" },
+        { label: "Transportation", icon: FaBus, to: "/transportation" },
+      ],
     },
-    "&:hover::after": {
-      left: "100%",
-      opacity: 1,
+    {
+      label: "Account",
+      items: [
+        { label: "Log Out", icon: FiLogOut, to: "/logout" },
+      ],
     },
-  });
+  ];
 
   return (
-    <Box pos="fixed" top="64px" left="0" zIndex="100" height="100%">
-      <VStack height="calc(100vh - 64px)" justify="center" p={3} spacing={4}>
-        {/* Main Navigation */}
-        <VStack bg="blue.800" borderRadius="15px" justifyContent={"center"} p={2}>
-          <Link to="/user-dashboard">
-            <Button sx={sidebarButtonStyle(false, "Dashboard")}> <Icon as={FiHome} boxSize={6} color="white" zIndex={2} /> </Button>
-          </Link>
-          <Link to="/user-profile">
-            <Button sx={sidebarButtonStyle(false, "Profile")}> <Icon as={FaUser} boxSize={6} color="white" zIndex={2} /> </Button>
-          </Link>
-          <Link to="/academic">
-            <Button sx={sidebarButtonStyle(false, "Academic")}> <Icon as={FiBookOpen} boxSize={6} color="white" zIndex={2} /> </Button>
-          </Link>
-          <Link to="/facility">
-            <Button sx={sidebarButtonStyle(false, "Facility Management")}> <Icon as={FiMapPin} boxSize={6} color="white" zIndex={2} /> </Button>
-          </Link>
-          <Link to="/transportation">
-            <Button sx={sidebarButtonStyle(false, "Transportation")}> <Icon as={FiBus2} boxSize={6} color="white" zIndex={2} /> </Button>
-          </Link>
-          <Link to="/feedback">
-            <Button sx={sidebarButtonStyle(false, "Feedback")}> <Icon as={FiMessageSquare} boxSize={6} color="white" zIndex={2} /> </Button>
-          </Link>
-        </VStack>
+    <Box
+      pos="fixed"
+      top="64px"
+      left={isOpen ? "0" : "-300px"}
+      transition="left 0.3s cubic-bezier(0.4,0,0.2,1)"
+      zIndex="100"
+      height="100%"
+      width="300px"
+      bg="white"
+      boxShadow={isOpen ? "-2px 0 8px rgba(0,0,0,0.08)" : "none"}
+      display="flex"
+      flexDirection="column"
+    >
+      <Divider />
+      {/* Navigation Groups */}
+      <VStack align="stretch" spacing={1} flex={1} overflowY="auto" py={2} px={2}>
+        {navGroups.map((group, idx) => (
+          <Box key={group.label} mb={2}>
+            <Text fontSize="sm" fontWeight="bold" color="blue.800" mb={1} pl={2}>
+              {group.label}
+            </Text>
+            <VStack align="stretch" spacing={0}>
+              {group.items.map((item) => (
+                <Link to={item.to} key={item.label} style={{ textDecoration: "none" }}>
+                  <Button
+                    variant="ghost"
+                    justifyContent="flex-start"
+                    leftIcon={<Icon as={item.icon} boxSize={5} />}
+                    width="100%"
+                    fontWeight="normal"
+                    fontSize="md"
+                    color="gray.700"
+                    _hover={{ bg: "blue.50", color: "blue.800" }}
+                    borderRadius="md"
+                    py={2}
+                    px={3}
+                    onClick={item.label === "Log Out" ? () => { localStorage.clear(); window.location.href = "/login"; } : undefined}
+                  >
+                    {item.label}
+                  </Button>
+                </Link>
+              ))}
+            </VStack>
+          </Box>
+        ))}
       </VStack>
     </Box>
   );
