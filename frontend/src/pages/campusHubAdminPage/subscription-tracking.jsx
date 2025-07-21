@@ -53,6 +53,48 @@ import {
 import { useAcademicStore } from "../../store/academic";
 import { useEffect } from "react";
 
+
+// Get user counts for each school
+export const getUserCountsPerSchool = async (req, res) => {
+  try {
+    // Count students per school
+    const studentCounts = await Student.aggregate([
+      { $group: { _id: "$schoolId", studentCount: { $sum: 1 } } }
+    ]);
+
+    // Count lecturers per school
+    const lecturerCounts = await Lecturer.aggregate([
+      { $group: { _id: "$schoolId", lecturerCount: { $sum: 1 } } }
+    ]);
+
+    // Merge counts by schoolId
+    const countsMap = {};
+
+    studentCounts.forEach(({ _id, studentCount }) => {
+      countsMap[_id.toString()] = { studentCount, lecturerCount: 0 };
+    });
+
+    lecturerCounts.forEach(({ _id, lecturerCount }) => {
+      if (!countsMap[_id.toString()]) {
+        countsMap[_id.toString()] = { studentCount: 0, lecturerCount };
+      } else {
+        countsMap[_id.toString()].lecturerCount = lecturerCount;
+      }
+    });
+
+    // Convert to array for response
+    const result = Object.entries(countsMap).map(([schoolId, counts]) => ({
+      schoolId,
+      ...counts,
+      totalUsers: counts.studentCount + counts.lecturerCount,
+    }));
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export default function SubscriptionTracking() {
   // All hooks at the top!
   const { schools, loading, errors, fetchSchools } = useAcademicStore();

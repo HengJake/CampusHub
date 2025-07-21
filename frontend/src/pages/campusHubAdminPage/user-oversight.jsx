@@ -32,7 +32,6 @@ import { useState } from "react";
 import { Download, TrendingUp, Users, GraduationCap } from "lucide-react";
 import { useAcademicStore } from "../../store/academic";
 
-
 export default function UserOversight() {
   const [selectedSchool, setSelectedSchool] = useState("all");
   const [sortBy, setSortBy] = useState("totalUsers");
@@ -48,7 +47,7 @@ export default function UserOversight() {
   useEffect(() => {
     fetchSchools();
     fetchStudents();
-  }, [fetchSchools, fetchStudents]);
+  }, []);
 
   // Helper: count students per school
   const getStudentCount = (schoolId) =>
@@ -56,12 +55,13 @@ export default function UserOversight() {
 
   // Calculate overall stats
   const totalStats = {
-    totalUsers: students.length, 
-    totalStudents: students.length, 
+    totalUsers: students.length,
+    totalStudents: students.length,
     totalTeachers: schools.reduce((sum, s) => sum + (s.teachers || 0), 0),
     avgGrowthRate:
       schools.length > 0
-        ? schools.reduce((sum, s) => sum + (s.growthRate || 0), 0) / schools.length
+        ? schools.reduce((sum, s) => sum + (s.growthRate || 0), 0) /
+          schools.length
         : 0,
   };
 
@@ -94,9 +94,6 @@ export default function UserOversight() {
     }
   });
 
- 
-
-
   const handleDownloadStats = () => {
     // Mock download functionality
     console.log("Downloading user statistics...");
@@ -109,7 +106,7 @@ export default function UserOversight() {
   return (
     <VStack spacing={4} align="stretch" pl={8} pr={10} h={"100%"}>
       {/* Header */}
-      <Flex >
+      <Flex>
         <Box>
           <Text fontSize="2xl" fontWeight="bold">
             User Oversight
@@ -202,7 +199,10 @@ export default function UserOversight() {
               >
                 <option value="all">All Schools</option>
                 {schools
-                  .filter((school) => school && school.id !== undefined && school.id !== null)
+                  .filter(
+                    (school) =>
+                      school && school.id !== undefined && school.id !== null
+                  )
                   .map((school) => (
                     <option key={school.id} value={school.id.toString()}>
                       {school.schoolName}

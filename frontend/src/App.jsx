@@ -23,7 +23,7 @@ import AuthTest from "./pages/authTest.jsx";
 
 // User Pages
 import UserDashboard from "./pages/userPage/userDashboard/userDashboard.jsx";
-import BookFacility from "./pages/userPage/bookFacility/bookFacility.jsx";
+// import BookFacility from "./pages/userPage/bookFacility/bookFacility.jsx";
 import BookLocker from "./pages/userPage/bookLocker/bookLocker.jsx";
 import ParkingLot from "./pages/userPage/parkingLot/parkingLot.jsx";
 import ClassroomFinder from "./pages/userPage/classroomFinder/classroomFinder.jsx";
