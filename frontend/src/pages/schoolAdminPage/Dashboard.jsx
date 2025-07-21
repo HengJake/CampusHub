@@ -103,7 +103,7 @@ export function Dashboard() {
   }, [])
 
   return (
-    <Box flex={1} p={6}>
+    <Box flex={1}>
       {/* KPI Cards */}
       <Grid templateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={6} mb={8}>
         <StatCard

@@ -537,7 +537,7 @@ export function StudentManagement() {
     const handleBack = () => setStep(s => s - 1);
 
     return (
-        <Box p={6} flex={1} minH="100vh">
+        <Box flex={1} minH="100vh">
             <VStack spacing={6} align="stretch">
                 {/* Header */}
                 <HStack justify="space-between">
@@ -640,7 +640,7 @@ export function StudentManagement() {
                                             <Th>Actions</Th>
                                         </Tr>
                                     </Thead>
-                                    <Tbody>
+                                    <Tbody  fontSize={12}>
                                         {sortedStudents.map((student) => {
                                             if (student) {
 
@@ -668,7 +668,7 @@ export function StudentManagement() {
                                                                 ? student.intakeCourseId.intakeId.intakeName
                                                                 : "N/A"}
                                                         </Td>
-                                                        <Td>{student.year}</Td>
+                                                        <Td>{student.currentYear}</Td>
                                                         <Td>
                                                             <Badge colorScheme={student.status === "active" ? "green" : "red"}>{student.status}</Badge>
                                                         </Td>
@@ -734,7 +734,7 @@ export function StudentManagement() {
                                                     </Flex>
                                                     <Flex justify="space-between">
                                                         <Text fontWeight="medium">Year:</Text>
-                                                        <Text>{student.year}</Text>
+                                                        <Text>{student.currentYear}</Text>
                                                     </Flex>
                                                     <Flex justify="space-between">
                                                         <Text fontWeight="medium">Status:</Text>

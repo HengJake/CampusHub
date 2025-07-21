@@ -1,9 +1,11 @@
-import { FiHome, FiLock, FiCalendar, FiClipboard, FiUsers, FiFileText, FiBook, FiBarChart2, FiList, FiInfo, FiGift, FiBookmark } from "react-icons/fi";
+import { FiHome, FiLock, FiCalendar, FiClipboard, FiUsers, FiFileText, FiBook, FiBarChart2, FiList, FiInfo, FiGift, FiBookmark, FiSettings, FiTrendingUp, FiUserCheck, FiDollarSign } from "react-icons/fi";
 import { FaCar } from "react-icons/fa"
+import { MdMeetingRoom } from "react-icons/md";
 
 const navConfig = {
     student: [
         { label: "Dashboard", path: "/user-dashboard", icon: FiHome },
+        { label: "Class Finder", path: "/class-finder", icon: MdMeetingRoom },
         {
             label: "Facility",
             icon: FaCar,
@@ -57,9 +59,10 @@ const navConfig = {
 
     companyAdmin: [
         { label: "Dashboard", path: "/campushub-dashboard", icon: FiHome },
-        { label: "Company Info", path: "/company/info", icon: FiInfo },
-        { label: "Offers", path: "/company/offers", icon: FiGift },
-        { label: "Bookings", path: "/company/bookings", icon: FiBookmark }
+        { label: "Subscription", path: "/subscription", icon: FiDollarSign },
+        { label: "Analytics", path: "/analytical-report", icon: FiTrendingUp },
+        { label: "Client Management", path: "/client-management", icon: FiUsers },
+        { label: "User Oversight", path: "/user-oversight", icon: FiUserCheck }
     ]
 };
 

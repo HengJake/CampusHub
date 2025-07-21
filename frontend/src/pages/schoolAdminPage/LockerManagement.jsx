@@ -26,16 +26,17 @@ import { useEffect } from "react";
 
 export function LockerManagement() {
     const {
-        lockerUnits,
         fetchLockerUnits,
+        lockerUnits,
         createLockerUnit,
         deleteLockerUnit,
         // ...other locker unit actions
     } = useFacilityStore();
-    
+
     useEffect(() => {
         fetchLockerUnits();
     }, []);
+    console.log("🚀 ~ LockerManagement ~ lockerUnits:", lockerUnits)
 
     const [selectedFloor, setSelectedFloor] = useState("All")
     const [selectedSection, setSelectedSection] = useState("All")
@@ -45,12 +46,22 @@ export function LockerManagement() {
     const borderColor = useColorModeValue("gray.200", "gray.600")
 
     const filteredLockers = lockerUnits.filter((locker) => {
-        const matchesFloor = selectedFloor === "All" || locker.floor.toString() === selectedFloor
-        const matchesSection = selectedSection === "All" || locker.section === selectedSection
+        const matchesFloor =
+            selectedFloor === "All" ||
+            (locker.floor !== undefined && locker.floor !== null && locker.floor.toString() === selectedFloor);
+
+        const matchesSection =
+            selectedSection === "All" ||
+            (typeof locker.section === "string" && locker.section === selectedSection);
+
+        const numberStr = typeof locker.number === "string" ? locker.number : String(locker.number ?? "");
+        const assignedToStr = typeof locker.assignedTo === "string" ? locker.assignedTo : String(locker.assignedTo ?? "");
+
         const matchesSearch =
-            locker.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (locker.assignedTo && locker.assignedTo.toLowerCase().includes(searchTerm.toLowerCase()))
-        return matchesFloor && matchesSection && matchesSearch
+            numberStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            assignedToStr.toLowerCase().includes(searchTerm.toLowerCase());
+
+        return matchesFloor && matchesSection && matchesSearch;
     })
 
     const occupiedCount = lockerUnits.filter((l) => l.status === "Occupied").length
@@ -91,7 +102,7 @@ export function LockerManagement() {
     )
 
     return (
-        <Box p={6} minH="100vh" flex={1}>
+        <Box minH="100vh" flex={1}>
             <VStack spacing={6} align="stretch">
                 {/* Header */}
                 <HStack justify="space-between">

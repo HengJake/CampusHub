@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 // import secretKey from '../config/jwtConfig.js';
 
 export default function generateToken(user, extraPayload = {}) {
+    
     const payload = {
         id: user._id,
         email: user.email,

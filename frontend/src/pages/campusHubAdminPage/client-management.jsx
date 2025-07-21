@@ -242,7 +242,7 @@ export default function ClientManagement() {
   };
 
   return (
-    <VStack w={"100%"} h={"100%"} pr={10} pl={7} gap={8}>
+    <VStack w={"100%"} h={"100%"} pl={2} gap={8}>
       {/* Header */}
       <Flex w={"100%"}>
         <Box>

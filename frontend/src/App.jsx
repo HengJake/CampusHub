@@ -22,20 +22,14 @@ import About from "./pages/commonPage/about/about.jsx";
 import AuthTest from "./pages/authTest.jsx";
 
 // User Pages
-// import UserDashboard from "./pages/userPage/userDashboard/userDashboard.jsx";
-// import BookFacility from "./pages/userPage/bookFacility/bookFacility.jsx";
-// import BookLocker from "./pages/userPage/bookLocker/bookLocker.jsx";
-// import ParkingLot from "./pages/userPage/parkingLot/parkingLot.jsx";
-// import ClassroomFinder from "./pages/userPage/classroomFinder/classroomFinder.jsx";
-// import ClassSchedule from "./pages/userPage/classSchedule/classSchedule.jsx";
-// import Result from "./pages/userPage/result/result.jsx";
-// import Attendance from "./pages/userPage/attendance/attendance.jsx";
-// import BusSchedule from "./pages/userPage/busSchedule/busSchedule.jsx";
-// import CampusRide from "./pages/userPage/campusRide/campusRide.jsx";
-// import RideDetail from "./pages/userPage/campusRide/RideDetail.jsx";
-// import Feedback from "./pages/userPage/feedback/feedback.jsx";
-// import UserSetting from "./pages/userPage/userSetting/userSetting.jsx";
-// import UserProfile from "./pages/userPage/userProfile/userProfile.jsx";
+import ClassFinder from "./pages/userPage/ClassFinder.jsx";
+import StudentDashboard from "./pages/userPage/StudentDashboard.jsx";
+import Profile from "./pages/userPage/Profile.jsx";
+import Feedback from "./pages/userPage/Feedback.jsx";
+import Academic from "./pages/userPage/Academic.jsx";
+import Transportation from "./pages/userPage/Transportation.jsx";
+import SFacilityManagement from "./pages/userPage/FacilityManagement.jsx";
+
 
 // School Admin Pages
 import { Dashboard as AdminDashboard } from "./pages/schoolAdminPage/Dashboard.jsx";
@@ -79,14 +73,6 @@ import Courts from "./pages/userPage/Courts.jsx";
 import Schedule from "./pages/userPage/Schedule.jsx";
 import Exams from "./pages/userPage/Exams.jsx";
 import Attendance from "./pages/userPage/Attendance.jsx";
-import StudentDashboard from "./pages/userPage/StudentDashboard.jsx";
-import Profile from "./pages/userPage/Profile.jsx";
-import Feedback from "./pages/userPage/Feedback.jsx";
-import Academic from "./pages/userPage/Academic.jsx";
-
-import CompanyInfo from "./pages/campusHubAdminPage/CompanyInfo.jsx";
-import Offers from "./pages/campusHubAdminPage/Offers.jsx";
-import Bookings from "./pages/campusHubAdminPage/Bookings.jsx";
 
 function App() {
   const path = useLocation().pathname;
@@ -102,14 +88,14 @@ function App() {
     "/user-profile",
     "/feedback",
     "/academic",
-    "/facility",
     "/transportation",
     "/facility/parking",
     "/facility/locker",
     "/facility/courts",
     "/academic/schedule",
     "/academic/exams",
-    "/academic/attendance"
+    "/academic/attendance",
+    "/class-finder"
   ];
   const adminRoutes = [
     "/admin-dashboard",
@@ -192,19 +178,19 @@ function App() {
         break;
       case "user":
         setRenderedNavbar(<HeaderNavbar role="student" />);
-        setMargin("80px");
+        setMargin("88px");
         setBgColor("brand.userBg");
         setAuthComponent(<StudentComponent />);
         break;
       case "admin":
         setRenderedNavbar(<HeaderNavbar role="schoolAdmin" />);
-        setMargin("80px");
+        setMargin("88px");
         setBgColor("brand.adminBg");
         setAuthComponent(<SchoolAdminComponent />);
         break;
       case "company":
         setRenderedNavbar(<HeaderNavbar role="companyAdmin" />);
-        setMargin("80px");
+        setMargin("88px");
         setBgColor("brand.companyBg");
         setAuthComponent(<CompanyAdminComponent />);
         break;
@@ -248,6 +234,9 @@ function App() {
         display={"flex"}
         // mt={userRole === "student" ? "64px" : ""}
         mt={"64px"}
+        pr={2}
+        pl={2}
+        pt={6}
       >
         {/* <Button
           bg={"gray.900"}
@@ -287,10 +276,10 @@ function App() {
 
           {/* User Pages - Require student authentication */}
           <Route path="/user-dashboard" element={wrapWithAuth(<StudentDashboard />)} />
+          <Route path="/class-finder" element={wrapWithAuth(<ClassFinder />)} />
           <Route path="/user-profile" element={wrapWithAuth(<Profile />)} />
           <Route path="/feedback" element={wrapWithAuth(<Feedback />)} />
           <Route path="/academic" element={wrapWithAuth(<Academic />)} />
-          <Route path="/facility" element={wrapWithAuth(<SFacilityManagement />)} />
           <Route path="/transportation" element={wrapWithAuth(<Transportation />)} />
 
           {/* User Pages - Facility/Academic subpages */}
@@ -331,10 +320,6 @@ function App() {
           <Route path="/campushub-setting" element={wrapWithAuth(<CampushubSetting />)} />
           {/* <Route path="/campushub-profile" element={wrapWithAuth(<CampushubProfile />)} /> */}
 
-          {/* Company Admin Pages - Additional */}
-          <Route path="/company/info" element={wrapWithAuth(<CompanyInfo />)} />
-          <Route path="/company/offers" element={wrapWithAuth(<Offers />)} />
-          <Route path="/company/bookings" element={wrapWithAuth(<Bookings />)} />
         </Routes>
       </Box>
     </Box>

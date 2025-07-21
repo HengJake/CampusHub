@@ -35,7 +35,7 @@ export default function Dashboard() {
   const totalUsers = students.length;
 
   return (
-    <VStack spacing={4} align="stretch" w={"100%"} pr={10} pl={8}>
+    <VStack spacing={4} align="stretch" w={"100%"}>
 
       {/* Stats Grid */}
       <Grid templateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={6}>

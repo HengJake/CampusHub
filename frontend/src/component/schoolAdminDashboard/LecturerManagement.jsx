@@ -331,7 +331,7 @@ export function LecturerManagement() {
     };
 
     return (
-        <Box p={6} flex={1} minH="100vh">
+        <Box flex={1} minH="100vh">
             <VStack spacing={6} align="stretch">
                 {/* Header */}
                 <HStack justify="space-between">
@@ -419,12 +419,11 @@ export function LecturerManagement() {
                                         <Th>Department</Th>
                                         <Th>Specializations</Th>
                                         <Th>Qualification</Th>
-                                        <Th>Experience</Th>
                                         <Th>Status</Th>
                                         <Th>Actions</Th>
                                     </Tr>
                                 </Thead>
-                                <Tbody>
+                                <Tbody fontSize={"12px"}>
                                     {filteredLecturers.map((lecturer) => (
                                         <Tr key={lecturer._id}>
                                             <Td>{lecturer.userId?.name || "N/A"}</Td>
@@ -433,7 +432,6 @@ export function LecturerManagement() {
                                             <Td>{lecturer.departmentId?.departmentName || "N/A"}</Td>
                                             <Td>{(lecturer.specialization || []).join(", ")}</Td>
                                             <Td>{lecturer.qualification}</Td>
-                                            <Td>{lecturer.experience}</Td>
                                             <Td>
                                                 <Badge colorScheme={lecturer.isActive ? "green" : "red"}>{lecturer.isActive ? "Active" : "Inactive"}</Badge>
                                             </Td>
