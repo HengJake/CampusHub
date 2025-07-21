@@ -1,0 +1,266 @@
+{
+  "school": "6879eea831c9d05bb6413857",
+  "users": {
+    "schoolAdmin": [
+      "6879eea631c9d05bb641383f",
+      "6879eea731c9d05bb6413845"
+    ],
+    "lecturer": [
+      "6879eea731c9d05bb6413849",
+      "6879eea731c9d05bb641384d",
+      "6879eea731c9d05bb6413851"
+    ]
+  },
+  "rooms": {
+    "office": "6879eea831c9d05bb641385b",
+    "classroom": "6879eea831c9d05bb641385f",
+    "tech_lab": "6879eea831c9d05bb6413863"
+  },
+  "departments": [
+    "6879eea831c9d05bb6413869",
+    "6879eea831c9d05bb641386f"
+  ],
+  "courses": [
+    "6879eea831c9d05bb6413873",
+    "6879eea831c9d05bb6413877"
+  ],
+  "intakes": [
+    "6879eea831c9d05bb641387e",
+    "6879eea831c9d05bb6413886",
+    "6879eea831c9d05bb641388e"
+  ],
+  "lecturers": [
+    "6879eea831c9d05bb641389a",
+    "6879eea831c9d05bb64138a9"
+  ],
+  "modules": [
+    "6879eea831c9d05bb64138b1",
+    "6879eea831c9d05bb64138b5",
+    "6879eea831c9d05bb64138b8"
+  ],
+  "intakeCourses": [
+    "6879eea831c9d05bb64138c4",
+    "6879eea831c9d05bb64138d0",
+    "6879eea831c9d05bb64138d8"
+  ],
+  "classSchedules": [
+    "6879eea831c9d05bb64138df",
+    "6879eea931c9d05bb64138f5"
+  ],
+  "examSchedules": [
+    "6879eea931c9d05bb6413909",
+    "6879eea931c9d05bb641391b"
+  ],
+  "students": [
+    "6879eeab31c9d05bb6413975",
+    "6879eeab31c9d05bb6413981",
+    "6879eeab31c9d05bb641398b",
+    "6879eeab31c9d05bb6413997",
+    "6879eeab31c9d05bb64139a3",
+    "6879eeab31c9d05bb64139af",
+    "6879eeab31c9d05bb64139bb",
+    "6879eeab31c9d05bb64139c6",
+    "6879eeab31c9d05bb64139d2",
+    "6879eeab31c9d05bb64139dd",
+    "6879eeac31c9d05bb64139e9",
+    "6879eeac31c9d05bb64139f5",
+    "6879eeac31c9d05bb6413a02",
+    "6879eeac31c9d05bb6413a0d",
+    "6879eeac31c9d05bb6413a19",
+    "6879eeac31c9d05bb6413a24",
+    "6879eeac31c9d05bb6413a30",
+    "6879eeac31c9d05bb6413a3b",
+    "6879eeac31c9d05bb6413a47",
+    "6879eeac31c9d05bb6413a51"
+  ],
+  "attendance": [
+    "6879eeac31c9d05bb6413a5f",
+    "6879eeac31c9d05bb6413a68",
+    "6879eead31c9d05bb6413a72",
+    "6879eead31c9d05bb6413a7c",
+    "6879eead31c9d05bb6413a85",
+    "6879eead31c9d05bb6413a8f",
+    "6879eead31c9d05bb6413a99",
+    "6879eead31c9d05bb6413aa3",
+    "6879eead31c9d05bb6413aad",
+    "6879eead31c9d05bb6413ab6",
+    "6879eead31c9d05bb6413ac0",
+    "6879eeae31c9d05bb6413ad8",
+    "6879eeae31c9d05bb6413ae2",
+    "6879eeae31c9d05bb6413afb",
+    "6879eeae31c9d05bb6413b05",
+    "6879eeae31c9d05bb6413b0f",
+    "6879eeae31c9d05bb6413b19",
+    "6879eeae31c9d05bb6413b23",
+    "6879eeae31c9d05bb6413b2b",
+    "6879eeae31c9d05bb6413b35",
+    "6879eeae31c9d05bb6413b3f",
+    "6879eeaf31c9d05bb6413b47",
+    "6879eeaf31c9d05bb6413b4c",
+    "6879eeaf31c9d05bb6413b51",
+    "6879eeaf31c9d05bb6413b66",
+    "6879eeaf31c9d05bb6413b71",
+    "6879eeaf31c9d05bb6413b7b",
+    "6879eeaf31c9d05bb6413b85",
+    "6879eeaf31c9d05bb6413b9d",
+    "6879eeb031c9d05bb6413ba7",
+    "6879eeb031c9d05bb6413bb2",
+    "6879eeb031c9d05bb6413bbc",
+    "6879eeb031c9d05bb6413bc4",
+    "6879eeb031c9d05bb6413bc9",
+    "6879eeb031c9d05bb6413bce",
+    "6879eeb031c9d05bb6413bd3",
+    "6879eeb031c9d05bb6413bdd",
+    "6879eeb031c9d05bb6413be7",
+    "6879eeb031c9d05bb6413bf1",
+    "6879eeb031c9d05bb6413bf6",
+    "6879eeb031c9d05bb6413bfb",
+    "6879eeb031c9d05bb6413c00",
+    "6879eeb031c9d05bb6413c09",
+    "6879eeb031c9d05bb6413c13",
+    "6879eeb131c9d05bb6413c1d",
+    "6879eeb131c9d05bb6413c27",
+    "6879eeb131c9d05bb6413c31",
+    "6879eeb131c9d05bb6413c3b",
+    "6879eeb131c9d05bb6413c45",
+    "6879eeb131c9d05bb6413c50",
+    "6879eeb131c9d05bb6413c5a",
+    "6879eeb131c9d05bb6413c64",
+    "6879eeb131c9d05bb6413c70",
+    "6879eeb131c9d05bb6413c7a",
+    "6879eeb131c9d05bb6413c84",
+    "6879eeb131c9d05bb6413c8e",
+    "6879eeb131c9d05bb6413c98",
+    "6879eeb131c9d05bb6413ca2",
+    "6879eeb231c9d05bb6413cac",
+    "6879eeb231c9d05bb6413cb6",
+    "6879eeb231c9d05bb6413cc2",
+    "6879eeb231c9d05bb6413cca",
+    "6879eeb231c9d05bb6413cd6",
+    "6879eeb231c9d05bb6413ce0",
+    "6879eeb231c9d05bb6413cea",
+    "6879eeb231c9d05bb6413cf4",
+    "6879eeb231c9d05bb6413cfe",
+    "6879eeb231c9d05bb6413d08",
+    "6879eeb231c9d05bb6413d12",
+    "6879eeb231c9d05bb6413d1c",
+    "6879eeb331c9d05bb6413d26",
+    "6879eeb331c9d05bb6413d31",
+    "6879eeb331c9d05bb6413d3a",
+    "6879eeb331c9d05bb6413d46",
+    "6879eeb331c9d05bb6413d51",
+    "6879eeb331c9d05bb6413d5b",
+    "6879eeb331c9d05bb6413d67",
+    "6879eeb331c9d05bb6413d71",
+    "6879eeb331c9d05bb6413d7b",
+    "6879eeb331c9d05bb6413d87"
+  ],
+  "results": [
+    "6879eeb431c9d05bb6413d8f",
+    "6879eeb431c9d05bb6413d95",
+    "6879eeb431c9d05bb6413d9d",
+    "6879eeb431c9d05bb6413da7",
+    "6879eeb431c9d05bb6413dad",
+    "6879eeb431c9d05bb6413db7",
+    "6879eeb431c9d05bb6413dbd",
+    "6879eeb531c9d05bb6413dc5",
+    "6879eeb531c9d05bb6413dcf",
+    "6879eeb531c9d05bb6413dd7",
+    "6879eeb531c9d05bb6413ddf",
+    "6879eeb531c9d05bb6413de7",
+    "6879eeb531c9d05bb6413def",
+    "6879eeb531c9d05bb6413df8",
+    "6879eeb531c9d05bb6413e00",
+    "6879eeb531c9d05bb6413e0b",
+    "6879eeb531c9d05bb6413e11",
+    "6879eeb531c9d05bb6413e18",
+    "6879eeb531c9d05bb6413e20",
+    "6879eeb531c9d05bb6413e28",
+    "6879eeb631c9d05bb6413e2d",
+    "6879eeb631c9d05bb6413e31",
+    "6879eeb631c9d05bb6413e35",
+    "6879eeb631c9d05bb6413e39",
+    "6879eeb631c9d05bb6413e41",
+    "6879eeb631c9d05bb6413e48",
+    "6879eeb631c9d05bb6413e50",
+    "6879eeb631c9d05bb6413e57",
+    "6879eeb631c9d05bb6413e5f",
+    "6879eeb631c9d05bb6413e67",
+    "6879eeb631c9d05bb6413e6f",
+    "6879eeb631c9d05bb6413e77",
+    "6879eeb631c9d05bb6413e7f",
+    "6879eeb731c9d05bb6413e87",
+    "6879eeb731c9d05bb6413e8f",
+    "6879eeb731c9d05bb6413e93",
+    "6879eeb731c9d05bb6413e97",
+    "6879eeb731c9d05bb6413ea0",
+    "6879eeb731c9d05bb6413ea9",
+    "6879eeb731c9d05bb6413eb1",
+    "6879eeb731c9d05bb6413ebb",
+    "6879eeb731c9d05bb6413ec1",
+    "6879eeb731c9d05bb6413ec9",
+    "6879eeb831c9d05bb6413ed7",
+    "6879eeb831c9d05bb6413eef",
+    "6879eeb831c9d05bb6413ef7",
+    "6879eeb831c9d05bb6413eff",
+    "6879eeb831c9d05bb6413f07",
+    "6879eeb931c9d05bb6413f0f",
+    "6879eeb931c9d05bb6413f17",
+    "6879eeb931c9d05bb6413f1f",
+    "6879eeb931c9d05bb6413f27",
+    "6879eeb931c9d05bb6413f2c",
+    "6879eeb931c9d05bb6413f30",
+    "6879eeb931c9d05bb6413f37",
+    "6879eeb931c9d05bb6413f40",
+    "6879eeb931c9d05bb6413f48",
+    "6879eeb931c9d05bb6413f4f",
+    "6879eeb931c9d05bb6413f59",
+    "6879eeba31c9d05bb6413f60"
+  ],
+  "subscription": "6879eeba31c9d05bb6413f63",
+  "payment": "6879eeba31c9d05bb6413f6a",
+  "invoice": "6879eeba31c9d05bb6413f72",
+  "resources": [
+    "6879eeba31c9d05bb6413f78"
+  ],
+  "bookings": [
+    "6879eeba31c9d05bb6413f82"
+  ],
+  "lockerUnits": [
+    "6879eeba31c9d05bb6413f88"
+  ],
+  "timeSlots": [
+    "6879eeba31c9d05bb6413f8f"
+  ],
+  "parkingLots": [
+    "6879eeba31c9d05bb6413f96"
+  ],
+  "stops": [
+    "6879eeba31c9d05bb6413f99",
+    "6879eeba31c9d05bb6413f9c"
+  ],
+  "vehicles": [
+    "6879eeba31c9d05bb6413fa2"
+  ],
+  "routes": [
+    "6879eeba31c9d05bb6413fab"
+  ],
+  "busSchedules": [
+    "6879eeba31c9d05bb6413fb2"
+  ],
+  "eHailings": [
+    "6879eeba31c9d05bb6413fbe"
+  ],
+  "feedbacks": [
+    "6879eeba31c9d05bb6413fc1"
+  ],
+  "responds": [
+    "6879eeba31c9d05bb6413fc5"
+  ],
+  "foundItems": [
+    "6879eeba31c9d05bb6413fc8"
+  ],
+  "lostItems": [
+    "6879eeba31c9d05bb6413fcb"
+  ]
+}

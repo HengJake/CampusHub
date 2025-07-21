@@ -21,10 +21,22 @@ import {
 } from "@chakra-ui/react"
 import { FiPlus, FiSearch, FiLock, FiUnlock, FiTool } from "react-icons/fi"
 import { useState } from "react"
-import { useAdminStore } from "../../store/TBI/adminStore.js"
+import { useFacilityStore } from "../../store/facility.js";
+import { useEffect } from "react";
 
 export function LockerManagement() {
-    const { lockers } = useAdminStore()
+    const {
+        lockerUnits,
+        fetchLockerUnits,
+        createLockerUnit,
+        deleteLockerUnit,
+        // ...other locker unit actions
+    } = useFacilityStore();
+    
+    useEffect(() => {
+        fetchLockerUnits();
+    }, []);
+
     const [selectedFloor, setSelectedFloor] = useState("All")
     const [selectedSection, setSelectedSection] = useState("All")
     const [searchTerm, setSearchTerm] = useState("")
@@ -32,7 +44,7 @@ export function LockerManagement() {
     const bgColor = useColorModeValue("white", "gray.800")
     const borderColor = useColorModeValue("gray.200", "gray.600")
 
-    const filteredLockers = lockers.filter((locker) => {
+    const filteredLockers = lockerUnits.filter((locker) => {
         const matchesFloor = selectedFloor === "All" || locker.floor.toString() === selectedFloor
         const matchesSection = selectedSection === "All" || locker.section === selectedSection
         const matchesSearch =
@@ -41,9 +53,9 @@ export function LockerManagement() {
         return matchesFloor && matchesSection && matchesSearch
     })
 
-    const occupiedCount = lockers.filter((l) => l.status === "Occupied").length
-    const availableCount = lockers.filter((l) => l.status === "Available").length
-    const occupancyRate = Math.round((occupiedCount / lockers.length) * 100)
+    const occupiedCount = lockerUnits.filter((l) => l.status === "Occupied").length
+    const availableCount = lockerUnits.filter((l) => l.status === "Available").length
+    const occupancyRate = Math.round((occupiedCount / lockerUnits.length) * 100)
 
     const getLockerColor = (status) => {
         switch (status) {
@@ -100,7 +112,7 @@ export function LockerManagement() {
                         <CardBody>
                             <Stat>
                                 <StatLabel color="gray.600">Total Lockers</StatLabel>
-                                <StatNumber color="#344E41">{lockers.length}</StatNumber>
+                                <StatNumber color="#344E41">{lockerUnits.length}</StatNumber>
                                 <StatHelpText>Campus wide</StatHelpText>
                             </Stat>
                         </CardBody>
@@ -130,7 +142,7 @@ export function LockerManagement() {
                         <CardBody>
                             <Stat>
                                 <StatLabel color="gray.600">Maintenance</StatLabel>
-                                <StatNumber color="#ED8936">{lockers.filter((l) => l.status === "Maintenance").length}</StatNumber>
+                                <StatNumber color="#ED8936">{lockerUnits.filter((l) => l.status === "Maintenance").length}</StatNumber>
                                 <StatHelpText>Need attention</StatHelpText>
                             </Stat>
                         </CardBody>

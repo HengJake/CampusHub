@@ -22,20 +22,20 @@ import About from "./pages/commonPage/about/about.jsx";
 import AuthTest from "./pages/authTest.jsx";
 
 // User Pages
-import UserDashboard from "./pages/userPage/userDashboard/userDashboard.jsx";
+// import UserDashboard from "./pages/userPage/userDashboard/userDashboard.jsx";
 // import BookFacility from "./pages/userPage/bookFacility/bookFacility.jsx";
-import BookLocker from "./pages/userPage/bookLocker/bookLocker.jsx";
-import ParkingLot from "./pages/userPage/parkingLot/parkingLot.jsx";
-import ClassroomFinder from "./pages/userPage/classroomFinder/classroomFinder.jsx";
-import ClassSchedule from "./pages/userPage/classSchedule/classSchedule.jsx";
-import Result from "./pages/userPage/result/result.jsx";
-import Attendance from "./pages/userPage/attendance/attendance.jsx";
-import BusSchedule from "./pages/userPage/busSchedule/busSchedule.jsx";
-import CampusRide from "./pages/userPage/campusRide/campusRide.jsx";
-import RideDetail from "./pages/userPage/campusRide/RideDetail.jsx";
-import Feedback from "./pages/userPage/feedback/feedback.jsx";
-import UserSetting from "./pages/userPage/userSetting/userSetting.jsx";
-import UserProfile from "./pages/userPage/userProfile/userProfile.jsx";
+// import BookLocker from "./pages/userPage/bookLocker/bookLocker.jsx";
+// import ParkingLot from "./pages/userPage/parkingLot/parkingLot.jsx";
+// import ClassroomFinder from "./pages/userPage/classroomFinder/classroomFinder.jsx";
+// import ClassSchedule from "./pages/userPage/classSchedule/classSchedule.jsx";
+// import Result from "./pages/userPage/result/result.jsx";
+// import Attendance from "./pages/userPage/attendance/attendance.jsx";
+// import BusSchedule from "./pages/userPage/busSchedule/busSchedule.jsx";
+// import CampusRide from "./pages/userPage/campusRide/campusRide.jsx";
+// import RideDetail from "./pages/userPage/campusRide/RideDetail.jsx";
+// import Feedback from "./pages/userPage/feedback/feedback.jsx";
+// import UserSetting from "./pages/userPage/userSetting/userSetting.jsx";
+// import UserProfile from "./pages/userPage/userProfile/userProfile.jsx";
 
 // School Admin Pages
 import { Dashboard as AdminDashboard } from "./pages/schoolAdminPage/Dashboard.jsx";
@@ -62,13 +62,31 @@ import CampushubSetting from "./pages/campusHubAdminPage/profile-settings.jsx";
 
 
 // set different bar for different pages
-import SANavbar from "./component/navBar/schoolAdminNavBar.jsx";
-import CANavbar from "./component/navBar/campusHubAdminNavBar.jsx";
-
 import LNavbar from "./component/navBar/landingNavBar";
 import RNavBar from "./component/navBar/registrationNavBar";
-import SNavBar from "./component/navBar/studentNavBar";
+import HeaderNavbar from "./component/navBar/HeaderNavbar";
+import Sidebar from "./component/navBar/Sidebar";
 
+import AdminLogs from "./pages/schoolAdminPage/AdminLogs.jsx";
+import CourtsManagement from "./pages/schoolAdminPage/CourtsManagement.jsx";
+import ResultsManagement from "./pages/schoolAdminPage/ResultsManagement.jsx";
+import ExamsManagement from "./pages/schoolAdminPage/ExamsManagement.jsx";
+import Reports from "./pages/schoolAdminPage/Reports.jsx";
+
+import Parking from "./pages/userPage/Parking.jsx";
+import Locker from "./pages/userPage/Locker.jsx";
+import Courts from "./pages/userPage/Courts.jsx";
+import Schedule from "./pages/userPage/Schedule.jsx";
+import Exams from "./pages/userPage/Exams.jsx";
+import Attendance from "./pages/userPage/Attendance.jsx";
+import StudentDashboard from "./pages/userPage/StudentDashboard.jsx";
+import Profile from "./pages/userPage/Profile.jsx";
+import Feedback from "./pages/userPage/Feedback.jsx";
+import Academic from "./pages/userPage/Academic.jsx";
+
+import CompanyInfo from "./pages/campusHubAdminPage/CompanyInfo.jsx";
+import Offers from "./pages/campusHubAdminPage/Offers.jsx";
+import Bookings from "./pages/campusHubAdminPage/Bookings.jsx";
 
 function App() {
   const path = useLocation().pathname;
@@ -77,8 +95,55 @@ function App() {
   const [bgColor, setBgColor] = useState("brand.defaultBg");
   const [authComponent, setAuthComponent] = useState(null);
   const [userRole, setUserRole] = useState(Cookies.get("role") || null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Determine role from path
+  const userRoutes = [
+    "/user-dashboard",
+    "/user-profile",
+    "/feedback",
+    "/academic",
+    "/facility",
+    "/transportation",
+    "/facility/parking",
+    "/facility/locker",
+    "/facility/courts",
+    "/academic/schedule",
+    "/academic/exams",
+    "/academic/attendance"
+  ];
+  const adminRoutes = [
+    "/admin-dashboard",
+    "/student-management",
+    "/facility-management",
+    "/locker-management",
+    "/parking-management",
+    "/booking-management",
+    "/feedback-management",
+    "/academic-management",
+    "/course-management",
+    "/lecturer-management",
+    "/admin-setting",
+    "/admin-profile",
+    "/academic-overview",
+    "/admin/logs",
+    "/admin/courts",
+    "/admin/results",
+    "/admin/exams",
+    "/admin/reports"
+  ];
+  const companyRoutes = [
+    "/campushub-dashboard",
+    "/subscription",
+    "/client-management",
+    "/analytical-report",
+    "/user-oversight",
+    "/campushub-setting",
+    "/campushub-profile",
+    "/company/info",
+    "/company/offers",
+    "/company/bookings"
+  ];
+
   const detectRoleFromPath = (path) => {
     // Registration pages
     if (path === "/login" || path === "/signup") {
@@ -86,65 +151,22 @@ function App() {
     }
 
     // Landing pages
-    if (
-      path === "/" ||
-      path === "/service" ||
-      path === "/contact-us" ||
-      path === "/pricing" ||
-      path === "/about"
-    ) {
+    if (["/", "/service", "/contact-us", "/pricing", "/about"].includes(path)) {
       return "landing";
     }
 
-    // User pages - exact matches and specific patterns
-    if (
-      path === "/user-dashboard" ||
-      path === "/book-facility" ||
-      path === "/book-locker" ||
-      path === "/parking-lot" ||
-      path === "/classroom-finder" ||
-      path === "/class-schedule" ||
-      path === "/result" ||
-      path === "/attendance" ||
-      path === "/bus-schedule" ||
-      path === "/campus-ride" ||
-      path === "/ride-detail" ||
-      path === "/feedback" ||
-      path === "/user-setting" ||
-      path === "/user-profile"
-    ) {
+    // User pages
+    if (userRoutes.includes(path)) {
       return "user";
     }
 
-    // Admin pages - exact matches and specific patterns
-    if (
-      path === "/admin-dashboard" ||
-      path === "/student-management" ||
-      path === "/facility-management" ||
-      path === "/locker-management" ||
-      path === "/parking-management" ||
-      path === "/booking-management" ||
-      path === "/feedback-management" ||
-      path === "/academic-management" ||
-      path === "/course-management" ||
-      path === "/lecturer-management" ||
-      path === "/admin-setting" ||
-      path === "/admin-profile" ||
-      path === "/academic-overview"
-    ) {
+    // Admin pages
+    if (adminRoutes.includes(path)) {
       return "admin";
     }
 
-    // CampusHub Admin pages - exact matches and specific patterns
-    if (
-      path === "/campushub-dashboard" ||
-      path === "/subscription" ||
-      path === "/client-management" ||
-      path === "/analytical-report" ||
-      path === "/user-oversight" ||
-      path === "/campushub-setting" ||
-      path === "/campushub-profile"
-    ) {
+    // Company pages
+    if (companyRoutes.includes(path)) {
       return "company";
     }
 
@@ -169,19 +191,19 @@ function App() {
         setAuthComponent(null);
         break;
       case "user":
-        setRenderedNavbar(<SNavBar />);
+        setRenderedNavbar(<HeaderNavbar role="student" />);
         setMargin("80px");
         setBgColor("brand.userBg");
         setAuthComponent(<StudentComponent />);
         break;
       case "admin":
-        setRenderedNavbar(<SANavbar />);
+        setRenderedNavbar(<HeaderNavbar role="schoolAdmin" />);
         setMargin("80px");
         setBgColor("brand.adminBg");
         setAuthComponent(<SchoolAdminComponent />);
         break;
       case "company":
-        setRenderedNavbar(<CANavbar />);
+        setRenderedNavbar(<HeaderNavbar role="companyAdmin" />);
         setMargin("80px");
         setBgColor("brand.companyBg");
         setAuthComponent(<CompanyAdminComponent />);
@@ -264,20 +286,20 @@ function App() {
           <Route path="/test" element={<AuthTest />} />
 
           {/* User Pages - Require student authentication */}
-          <Route path="/user-dashboard" element={wrapWithAuth(<UserDashboard />)} />
-          <Route path="/book-facility" element={wrapWithAuth(<BookFacility />)} />
-          <Route path="/book-locker" element={wrapWithAuth(<BookLocker />)} />
-          <Route path="/parking-lot" element={wrapWithAuth(<ParkingLot />)} />
-          <Route path="/classroom-finder" element={wrapWithAuth(<ClassroomFinder />)} />
-          <Route path="/class-schedule" element={wrapWithAuth(<ClassSchedule />)} />
-          <Route path="/result" element={wrapWithAuth(<Result />)} />
-          <Route path="/attendance" element={wrapWithAuth(<Attendance />)} />
-          <Route path="/bus-schedule" element={wrapWithAuth(<BusSchedule />)} />
-          <Route path="/campus-ride" element={wrapWithAuth(<CampusRide />)} />
-          <Route path="/ride-detail" element={wrapWithAuth(<RideDetail />)} />
+          <Route path="/user-dashboard" element={wrapWithAuth(<StudentDashboard />)} />
+          <Route path="/user-profile" element={wrapWithAuth(<Profile />)} />
           <Route path="/feedback" element={wrapWithAuth(<Feedback />)} />
-          <Route path="/user-setting" element={wrapWithAuth(<UserSetting />)} />
-          <Route path="/user-profile" element={wrapWithAuth(<UserProfile />)} />
+          <Route path="/academic" element={wrapWithAuth(<Academic />)} />
+          <Route path="/facility" element={wrapWithAuth(<SFacilityManagement />)} />
+          <Route path="/transportation" element={wrapWithAuth(<Transportation />)} />
+
+          {/* User Pages - Facility/Academic subpages */}
+          <Route path="/facility/parking" element={wrapWithAuth(<Parking />)} />
+          <Route path="/facility/locker" element={wrapWithAuth(<Locker />)} />
+          <Route path="/facility/courts" element={wrapWithAuth(<Courts />)} />
+          <Route path="/academic/schedule" element={wrapWithAuth(<Schedule />)} />
+          <Route path="/academic/exams" element={wrapWithAuth(<Exams />)} />
+          <Route path="/academic/attendance" element={wrapWithAuth(<Attendance />)} />
 
           {/* School Admin Pages - Require school admin authentication */}
           <Route path="/admin-dashboard" element={wrapWithAuth(<AdminDashboard />)} />
@@ -293,6 +315,13 @@ function App() {
           <Route path="/admin-setting" element={wrapWithAuth(<AdminSetting />)} />
           <Route path="/admin-profile" element={wrapWithAuth(<AdminProfile />)} />
 
+          {/* School Admin Pages - Additional */}
+          <Route path="/admin/logs" element={wrapWithAuth(<AdminLogs />)} />
+          <Route path="/admin/courts" element={wrapWithAuth(<CourtsManagement />)} />
+          <Route path="/admin/results" element={wrapWithAuth(<ResultsManagement />)} />
+          <Route path="/admin/exams" element={wrapWithAuth(<ExamsManagement />)} />
+          <Route path="/admin/reports" element={wrapWithAuth(<Reports />)} />
+
           {/* CampusHub Admin Pages - Require company admin authentication */}
           <Route path="/campushub-dashboard" element={wrapWithAuth(<CampushubDashboard />)} />
           <Route path="/subscription" element={wrapWithAuth(<Subscription />)} />
@@ -301,6 +330,11 @@ function App() {
           <Route path="/user-oversight" element={wrapWithAuth(<UserOversight />)} />
           <Route path="/campushub-setting" element={wrapWithAuth(<CampushubSetting />)} />
           {/* <Route path="/campushub-profile" element={wrapWithAuth(<CampushubProfile />)} /> */}
+
+          {/* Company Admin Pages - Additional */}
+          <Route path="/company/info" element={wrapWithAuth(<CompanyInfo />)} />
+          <Route path="/company/offers" element={wrapWithAuth(<Offers />)} />
+          <Route path="/company/bookings" element={wrapWithAuth(<Bookings />)} />
         </Routes>
       </Box>
     </Box>

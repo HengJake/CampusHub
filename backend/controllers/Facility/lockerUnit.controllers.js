@@ -14,19 +14,19 @@ import LockerUnit from "../../models/Facility/lockerUnit.model.js";
 
 // Custom validation function for payment data
 const validateLockerUnitData = async (data) => {
-    const { schoolID } = data;
+    const { schoolId } = data;
 
     // Check required fields
-    if (!schoolID) {
+    if (!schoolId) {
         return {
             isValid: false,
-            message: "schoolID is required"
+            message: "schoolId is required"
         };
     }
 
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
-        schoolID: { id: schoolID, Model: School },
+        schoolId: { id: schoolId, Model: School },
     });
 
     if (referenceValidation) {
@@ -63,6 +63,15 @@ export const getLockerUnitsByResourceId = controllerWrapper(async (req, res) => 
         { resourceId }
     );
 });
+export const getLockerUnitsBySchoolId = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(
+        LockerUnit,
+        "lockerUnits",
+        ["resourceId"],
+        { schoolId }
+    );
+});
 export const updateLockerUnit = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await updateRecord(LockerUnit, id, req.body, "lockerUnit", validateLockerUnitData);
@@ -71,6 +80,15 @@ export const deleteLockerUnit = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(LockerUnit, id, "lockerUnit");
 });
+
+export const deleteAllLockerUnits = async (req, res) => {
+    try {
+        await LockerUnit.deleteMany({});
+        res.status(200).json({ message: 'All locker units deleted' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting all locker units', error: error.message });
+    }
+};
 
 
 

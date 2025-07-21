@@ -6,6 +6,11 @@ const TimeslotSchema = new mongoose.Schema({
         ref: 'Resource',
         required: true,
     },
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true,
+    },
     dayOfWeek: { type: Number, required: true }, // 0 = Sunday, 6 = Saturday
     timeslot: [
         {

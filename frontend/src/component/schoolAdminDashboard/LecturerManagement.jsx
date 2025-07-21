@@ -41,8 +41,11 @@ import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiDownload } from "
 import { useEffect, useState } from "react"
 import { useAcademicStore } from "../../store/academic.js";
 import ComfirmationMessage from "../common/ComfirmationMessage.jsx";
-import MultiSelectPopover from "./CourseMultiSelect.jsx";
+// import MultiSelectPopover from "../common/MultiSelect.jsx";
 import { useUserStore } from "../../store/user.js";
+import TitleInputList from "../common/TitleInputList";
+import { IoIosRemoveCircle } from "react-icons/io";
+import { useShowToast } from "../../store/utils/toast.js"
 
 export function LecturerManagement() {
     const {
@@ -58,7 +61,7 @@ export function LecturerManagement() {
     } = useAcademicStore();
 
     const { isOpen, onOpen, onClose } = useDisclosure();
-    const showToast = useToast();
+    const showToast = useShowToast();
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [departmentFilter, setDepartmentFilter] = useState("all");
@@ -87,24 +90,27 @@ export function LecturerManagement() {
 
     }, []);
 
+
     const [formData, setFormData] = useState({
-        // User fields
         name: "",
         email: "",
         password: "",
         phoneNumber: "",
-        // Lecturer fields...
         userId: "",
         title: [],
+        titleInput: "",
         departmentId: "",
         moduleIds: [],
         specialization: [],
+        specializationInput: "",
         qualification: "",
         experience: 0,
         isActive: true,
-        officeHours: [],
+        officeHours: [
+        ],
         schoolId: ""
     });
+
 
     // Filtering
     const filteredLecturers = lecturers.filter((lecturer) => {
@@ -161,17 +167,23 @@ export function LecturerManagement() {
 
         // Now create/update lecturer with userId
         const submitData = { ...formData, userId };
-        // if (isEdit) {
-        //     const res = await updateLecturer(submitData);
-        // }
-
-        const res = await createLecturer(submitData);
-        if (!res.success) {
-            showToast({ title: "Error", description: res.message, status: "error" });
-            return;
+        console.log("🚀 ~ handleSubmit ~ submitData:", submitData)
+        let res;
+        if (isEdit) {
+            res = await updateLecturer(selectedLecturer._id, submitData);
+        } else {
+            res = await createLecturer(submitData);
         }
 
-        showToast({ title: "Success", description: "Lecturer updated successfully", status: "success" });
+        if (!res.success) {
+            showToast.error("Error", res.message);
+            return;
+        } else if (isEdit) {
+            showToast.success("Successfully update lecturer", res.message, "edit")
+        } else {
+            showToast.success("Successfully created lecturer", res.message, "edit")
+        }
+
         setFormData({
             name: "",
             email: "",
@@ -235,15 +247,69 @@ export function LecturerManagement() {
         closeDeleteDialog();
     };
 
+    const exportLecturers = () => {
+        const csvContent = [
+            ["Name", "Email", "Phone Number", "Titles", "Department", "Specializations", "Qualification", "Experience", "Status"],
+            ...filteredLecturers.map((lecturer) => [
+                lecturer.userId?.name || "N/A",
+                lecturer.userId?.email || "N/A",
+                lecturer.userId?.phoneNumber || "N/A",
+                (lecturer.title || []).join("; "),
+                lecturer.departmentId?.departmentName || "N/A",
+                (lecturer.specialization || []).join("; "),
+                lecturer.qualification || "N/A",
+                lecturer.experience || "N/A",
+                lecturer.isActive ? "Active" : "Inactive",
+            ]),
+        ]
+            .map((row) => row.join(","))
+            .join("\n")
+
+        const blob = new Blob([csvContent], { type: "text/csv" })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = "lecturers.csv"
+        a.click()
+        window.URL.revokeObjectURL(url)
+    }
+
     // Office hours management (simple add/remove)
     const addOfficeHour = () => {
+        // Check if there are any available days (not already used)
+        const usedDays = formData.officeHours.map(oh => oh.day);
+        const availableDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].filter(day => !usedDays.includes(day));
+
+        if (availableDays.length === 0) {
+            showToast({
+                title: "No available days",
+                description: "All weekdays already have office hours assigned",
+                status: "warning"
+            });
+            return;
+        }
+
         setFormData({
             ...formData,
-            officeHours: [...formData.officeHours, { day: "Monday", startTime: "09:00", endTime: "10:00" }]
+            officeHours: [...formData.officeHours, { day: availableDays[0], startTime: "09:00", endTime: "10:00" }]
         });
     };
     const updateOfficeHour = (idx, field, value) => {
         const updated = [...formData.officeHours];
+
+        // If updating the day field, check for duplicates
+        if (field === "day") {
+            const usedDays = formData.officeHours.map((oh, i) => i !== idx ? oh.day : null).filter(day => day !== null);
+            if (usedDays.includes(value)) {
+                showToast({
+                    title: "Duplicate day",
+                    description: `Office hours for ${value} already exist`,
+                    status: "error"
+                });
+                return;
+            }
+        }
+
         updated[idx][field] = value;
         setFormData({ ...formData, officeHours: updated });
     };
@@ -276,7 +342,7 @@ export function LecturerManagement() {
                         <Text color="gray.600">Manage lecturer accounts and assignments</Text>
                     </Box>
                     <HStack>
-                        <Button leftIcon={<FiDownload />} variant="outline">
+                        <Button leftIcon={<FiDownload />} variant="outline" onClick={exportLecturers}>
                             Export
                         </Button>
                         <Button leftIcon={<FiPlus />} bg="#344E41" color="white" _hover={{ bg: "#2a3d33" }} onClick={() => {
@@ -470,36 +536,20 @@ export function LecturerManagement() {
                                     <Input value={formData.phoneNumber} onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })} />
                                 </FormControl>
 
-                                <FormControl isRequired>
-                                    <FormLabel>Titles</FormLabel>
-                                    <HStack>
-                                        <Input
-                                            placeholder="Add title (e.g., Dr.)"
-                                            value={formData.titleInput || ""}
-                                            onChange={e => setFormData({ ...formData, titleInput: e.target.value })}
-                                        />
-                                        <Button
-                                            onClick={() => {
-                                                if (formData.titleInput && !formData.title.includes(formData.titleInput)) {
-                                                    setFormData({ ...formData, title: [...formData.title, formData.titleInput], titleInput: "" });
-                                                }
-                                            }}
-                                        >
-                                            Add
-                                        </Button>
-                                    </HStack>
-                                    <HStack wrap="wrap" mt={2}>
-                                        {formData.title.map((t, idx) => (
-                                            <Badge key={idx} colorScheme="purple" mr={1}>
-                                                {t}
-                                                <Button size="xs" ml={1} onClick={() => removeFromArrayField("title", idx)}>
-                                                    x
-                                                </Button>
-                                            </Badge>
-                                        ))}
-                                    </HStack>
-                                </FormControl>
-                                
+                                <TitleInputList
+                                    label="Titles"
+                                    placeholder="Add title (e.g., Dr.)"
+                                    values={formData.title}
+                                    inputValue={formData.titleInput || ""}
+                                    setInputValue={val => setFormData({ ...formData, titleInput: val })}
+                                    onAdd={val => {
+                                        if (val && !formData.title.includes(val)) {
+                                            setFormData({ ...formData, title: [...formData.title, val], titleInput: "" });
+                                        }
+                                    }}
+                                    onRemove={idx => removeFromArrayField("title", idx)}
+                                />
+
                                 <FormControl isRequired>
                                     <FormLabel>Department</FormLabel>
                                     <Select
@@ -514,8 +564,8 @@ export function LecturerManagement() {
                                 </FormControl>
 
                                 <FormControl>
-                                    <FormLabel>Modules</FormLabel>
                                     <MultiSelectPopover
+                                        label={"Modules"}
                                         items={modules}
                                         selectedIds={formData.moduleIds}
                                         onChange={selected => setFormData({ ...formData, moduleIds: selected })}
@@ -526,35 +576,19 @@ export function LecturerManagement() {
                                 </FormControl>
 
 
-                                <FormControl>
-                                    <FormLabel>Specializations</FormLabel>
-                                    <HStack>
-                                        <Input
-                                            placeholder="Add specialization"
-                                            value={formData.specializationInput || ""}
-                                            onChange={e => setFormData({ ...formData, specializationInput: e.target.value })}
-                                        />
-                                        <Button
-                                            onClick={() => {
-                                                if (formData.specializationInput && !formData.specialization.includes(formData.specializationInput)) {
-                                                    setFormData({ ...formData, specialization: [...formData.specialization, formData.specializationInput], specializationInput: "" });
-                                                }
-                                            }}
-                                        >
-                                            Add
-                                        </Button>
-                                    </HStack>
-                                    <HStack wrap="wrap" mt={2}>
-                                        {formData.specialization.map((s, idx) => (
-                                            <Badge key={idx} colorScheme="blue" mr={1}>
-                                                {s}
-                                                <Button size="xs" ml={1} onClick={() => removeFromArrayField("specialization", idx)}>
-                                                    x
-                                                </Button>
-                                            </Badge>
-                                        ))}
-                                    </HStack>
-                                </FormControl>
+                                <TitleInputList
+                                    label="Specializations"
+                                    placeholder="Add specialization"
+                                    values={formData.specialization}
+                                    inputValue={formData.specializationInput || ""}
+                                    setInputValue={val => setFormData({ ...formData, specializationInput: val })}
+                                    onAdd={val => {
+                                        if (val && !formData.specialization.includes(val)) {
+                                            setFormData({ ...formData, specialization: [...formData.specialization, val], specializationInput: "" });
+                                        }
+                                    }}
+                                    onRemove={idx => removeFromArrayField("specialization", idx)}
+                                />
                                 <FormControl isRequired>
                                     <FormLabel>Qualification</FormLabel>
                                     <Input
@@ -594,7 +628,7 @@ export function LecturerManagement() {
                                                 </Select>
                                                 <Input type="time" value={oh.startTime} onChange={e => updateOfficeHour(idx, "startTime", e.target.value)} />
                                                 <Input type="time" value={oh.endTime} onChange={e => updateOfficeHour(idx, "endTime", e.target.value)} />
-                                                <Button size="xs" colorScheme="red" onClick={() => removeOfficeHour(idx)}>Remove</Button>
+                                                <Button size="xs" colorScheme="red" onClick={() => removeOfficeHour(idx)}><IoIosRemoveCircle size={50} /></Button>
                                             </HStack>
                                         ))}
                                     </VStack>

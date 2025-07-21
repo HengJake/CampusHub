@@ -8,6 +8,7 @@ import {
     getPaymentsBySchool,
     getPaymentsByUser
 } from "../../controllers/Billing/payment.controllers.js";
+import { deleteAllPayments } from '../../controllers/Billing/payment.controllers.js';
 
 const router = e.Router();
 
@@ -23,6 +24,7 @@ router.get("/:id", getPaymentById);
 // Update payment by ID
 router.put("/:id", updatePayment);
 
+router.delete('/all', deleteAllPayments);
 // Delete payment by ID
 router.delete("/:id", deletePayment);
 

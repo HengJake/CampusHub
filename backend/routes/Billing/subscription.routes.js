@@ -6,6 +6,8 @@ import {
     updateSubscription,
     deleteSubscription
 } from "../../controllers/Billing/subscription.controllers.js";
+import { deleteAllSubscriptions } from '../../controllers/Billing/subscription.controllers.js';
+
 
 const router = e.Router();
 
@@ -21,6 +23,7 @@ router.get("/:id", getSubscriptionById);
 // Update subscription by ID
 router.put("/:id", updateSubscription);
 
+router.delete('/all', deleteAllSubscriptions);
 // Delete subscription by ID
 router.delete("/:id", deleteSubscription);
 

@@ -4,7 +4,8 @@ import {
     getAllInvoice,
     getInvoiceById,
     updateInvoice,
-    deleteInvoice
+    deleteInvoice,
+    deleteAllInvoices
 } from "../../controllers/Billing/invoice.controllers.js";
 
 const router = e.Router();
@@ -21,6 +22,7 @@ router.get("/:id", getInvoiceById);
 // Update invoice by ID
 router.put("/:id", updateInvoice);
 
+router.delete("/all", deleteAllInvoices);
 // Delete invoice by ID
 router.delete("/:id", deleteInvoice);
 

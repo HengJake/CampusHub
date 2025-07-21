@@ -92,7 +92,6 @@ export const createRecord = async (Model, data, entityName = "record", validatio
     try {
         console.log(`[reusable.js] Creating ${entityName} with data:`, data);
 
-
         // Custom validation if provided
         if (validationFn) {
             const validationResult = await validationFn(data);

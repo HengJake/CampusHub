@@ -6,6 +6,11 @@ const LockerUnitSchema = new mongoose.Schema({
         ref: 'Resource',
         required: true,
     },
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true,
+    },
     isAvailable: {
         type: Boolean,
         default: true,

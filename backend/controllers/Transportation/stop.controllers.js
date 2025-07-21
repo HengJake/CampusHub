@@ -50,3 +50,12 @@ export const deleteStop = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(Stop, id, "stop");
 });
+
+export const deleteAllStops = async (req, res) => {
+  try {
+    await Stop.deleteMany({});
+    res.status(200).json({ message: 'All stops deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting all stops', error: error.message });
+  }
+};

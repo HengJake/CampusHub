@@ -15,26 +15,26 @@ import {
 import { get } from "mongoose";
 
 const validateInvoiceData = async (data) => {
-    const { paymentID, subscriptionID } = data;
+    const { paymentId, subscriptionId } = data;
 
     // Check required fields
-    if (!paymentID) {
+    if (!paymentId) {
         return {
             isValid: false,
-            message: "paymentID is required"
+            message: "paymentId is required"
         };
     }
-    if (!subscriptionID) {
+    if (!subscriptionId) {
         return {
             isValid: false,
-            message: "subscriptionID is required"
+            message: "subscriptionId is required"
         };
     }
 
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
-        paymentID: { id: paymentID, Model: Payment },
-        subscriptionID: { id: subscriptionID, Model: Subscription }
+        paymentId: { id: paymentId, Model: Payment },
+        subscriptionId: { id: subscriptionId, Model: Subscription }
     });
 
     if (referenceValidation) {
@@ -96,4 +96,13 @@ export const deleteInvoice = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(Invoice, id, "invoice");
 });
+
+export const deleteAllInvoices = async (req, res) => {
+    try {
+        await Invoice.deleteMany({});
+        res.status(200).json({ message: 'All invoices deleted' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting all invoices', error: error.message });
+    }
+};
 

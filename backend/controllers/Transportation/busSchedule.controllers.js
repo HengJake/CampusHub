@@ -12,17 +12,17 @@ import Route from "../../models/Transportation/route.model.js";
 import Vehicle from "../../models/Transportation/vehicle.model.js";
 
 const validateBusScheduleData = async (data) => {
-  const { RouteID, VehicleID, DepartureTime, ArrivalTime, DayActive } = data;
-  if (!RouteID || !Array.isArray(RouteID) || RouteID.length === 0) return { isValid: false, message: "RouteID array is required" };
-  if (!VehicleID) return { isValid: false, message: "VehicleID is required" };
-  if (!DepartureTime) return { isValid: false, message: "DepartureTime is required" };
-  if (!ArrivalTime) return { isValid: false, message: "ArrivalTime is required" };
-  if (DayActive == null) return { isValid: false, message: "DayActive is required" };
-  if (![1,2,3,4,5,6,7].includes(DayActive)) return { isValid: false, message: "DayActive must be a number from 1 (Mon) to 7 (Sun)" };
+  const { routeId, vehicleId, departureTime, arrivalTime, dayActive } = data;
+  if (!routeId || !Array.isArray(routeId) || routeId.length === 0) return { isValid: false, message: "routeId array is required" };
+  if (!vehicleId) return { isValid: false, message: "vehicleId is required" };
+  if (!departureTime) return { isValid: false, message: "departureTime is required" };
+  if (!arrivalTime) return { isValid: false, message: "arrivalTime is required" };
+  if (dayActive == null) return { isValid: false, message: "dayActive is required" };
+  if (![1, 2, 3, 4, 5, 6, 7].includes(dayActive)) return { isValid: false, message: "dayActive must be a number from 1 (Mon) to 7 (Sun)" };
   // Validate references
   const referenceValidation = await validateMultipleReferences({
-    VehicleID: { id: VehicleID, Model: Vehicle },
-    ...Object.fromEntries(RouteID.map(id => [id, { id, Model: Route }]))
+    vehicleId: { id: vehicleId, Model: Vehicle },
+    ...Object.fromEntries(routeId.map(id => [id, { id, Model: Route }]))
   });
   if (referenceValidation) {
     return { isValid: false, message: referenceValidation.message };
@@ -35,33 +35,33 @@ export const createBusSchedule = controllerWrapper(async (req, res) => {
 });
 
 export const getAllBusSchedules = controllerWrapper(async (req, res) => {
-  return await getAllRecords(BusSchedule, "busSchedule", ["RouteID", "VehicleID"]);
+  return await getAllRecords(BusSchedule, "busSchedule", ["routeID", "vehicleID"]);
 });
 
 export const getBusScheduleById = controllerWrapper(async (req, res) => {
   const { id } = req.params;
-  return await getRecordById(BusSchedule, id, "busSchedule", ["RouteID", "VehicleID"]);
+  return await getRecordById(BusSchedule, id, "busSchedule", ["routeID", "vehicleID"]);
 });
 
 // Get BusSchedules by Route ID
 export const getBusSchedulesByRouteId = controllerWrapper(async (req, res) => {
-  const { routeId } = req.params;
+  const { routeID } = req.params;
   return await getAllRecords(
-      BusSchedule,
-      "busSchedules",
-      ["RouteID", "VehicleID"],
-      { RouteID: routeId }
+    BusSchedule,
+    "busSchedules",
+    ["routeID", "vehicleID"],
+    { routeID: routeID }
   );
 });
 
 // Get BusSchedules by Vehicle ID
 export const getBusSchedulesByVehicleId = controllerWrapper(async (req, res) => {
-  const { vehicleId } = req.params;
+  const { vehicleID } = req.params;
   return await getAllRecords(
-      BusSchedule,
-      "busSchedules",
-      ["RouteID", "VehicleID"],
-      { VehicleID: vehicleId }
+    BusSchedule,
+    "busSchedules",
+    ["routeID", "vehicleID"],
+    { vehicleID: vehicleID }
   );
 });
 
@@ -75,3 +75,12 @@ export const deleteBusSchedule = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(BusSchedule, id, "busSchedule");
 });
+
+export const deleteAllBusSchedules = async (req, res) => {
+  try {
+    await BusSchedule.deleteMany({});
+    res.status(200).json({ message: 'All bus schedules deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting all bus schedules', error: error.message });
+  }
+};

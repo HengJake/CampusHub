@@ -90,3 +90,12 @@ export const deleteSubscription = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await deleteRecord(Subscription, id, "subscription");
 });
+
+export const deleteAllSubscriptions = async (req, res) => {
+  try {
+    await Subscription.deleteMany({});
+    res.status(200).json({ message: 'All subscriptions deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting all subscriptions', error: error.message });
+  }
+};

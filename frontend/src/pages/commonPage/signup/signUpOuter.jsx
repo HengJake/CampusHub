@@ -1,4 +1,4 @@
-import React from "react";
+  import React from "react";
 import { Box, Button, Image } from "@chakra-ui/react";
 import { useState } from "react";
 import UserDetails from "./signupProcess/signup.jsx";

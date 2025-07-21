@@ -11,8 +11,13 @@ const BookingSchema = new mongoose.Schema({
         ref: 'Resource',
         required: true,
     },
-    startTime: { type: String, required: true }, // e.g., "14:00"
-    endTime: { type: String, required: true },   // e.g., "15:00"
+    schoolId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'School',
+        required: true,
+    },
+    startTime: { type: Date, required: true },
+    endTime: { type: Date, required: true },
     status: {
         type: String,
         enum: ['pending', 'confirmed', 'cancelled', 'completed'],

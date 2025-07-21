@@ -73,7 +73,7 @@ const RoleBasedComponent = ({
         if (showLoading) {
             return loadingComponent || (
                 <Box flex={1}>
-                    <Spinner size="lg" color="blue.500" />
+                    <Spinner size="lg" color="blue.500" pos={"fixed"} top={"50%"} left={"50%"} transform={"transform(-50%,-50%)"} />
                 </Box>
             );
         }

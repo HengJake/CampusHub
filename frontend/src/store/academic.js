@@ -1173,6 +1173,8 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+    // =======
+
     // ===GET BY SCHOOL ID====
     // ===== GET BY SCHOOL ID METHODS =====
 
@@ -1512,6 +1514,36 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+    // ===== ROOM OPERATIONS =====
+    fetchRooms: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, rooms: true } }));
+        try {
+            await get().waitForAuth();
+
+            const url = get().buildUrl("/api/room", filters);
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch rooms");
+            }
+
+            set((state) => ({
+                rooms: data.data,
+                loading: { ...state.loading, rooms: false },
+                errors: { ...state.errors, rooms: null },
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, rooms: false },
+                errors: { ...state.errors, rooms: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
     // ===== ANALYTICS FUNCTIONS =====
     getCourseCompletionRate: (intakeCourseId) => {
         const { students } = get();
@@ -1601,5 +1633,35 @@ export const useAcademicStore = create((set, get) => ({
             rooms: [],
             schools: [],
         });
+    },
+
+    // ===== EXAM SCHEDULE OPERATIONS =====
+    fetchExamSchedules: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, examSchedules: true } }));
+        try {
+            await get().waitForAuth();
+
+            const url = get().buildUrl("/api/examSchedule", filters);
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch exam schedules");
+            }
+
+            set((state) => ({
+                examSchedules: data.data,
+                loading: { ...state.loading, examSchedules: false },
+                errors: { ...state.errors, examSchedules: null },
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, examSchedules: false },
+                errors: { ...state.errors, examSchedules: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
     },
 }));

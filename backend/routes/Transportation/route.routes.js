@@ -5,7 +5,8 @@ import {
   getRouteById,
   getRoutesByStopId,
   updateRoute,
-  deleteRoute
+  deleteRoute,
+  deleteAllRoutes
 } from "../../controllers/Transportation/route.controllers.js";
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.get("/", getAllRoutes);
 router.get("/stop/:stopId", getRoutesByStopId);
 router.get("/:id", getRouteById);
 router.put("/:id", updateRoute);
+router.delete('/all', deleteAllRoutes);
 router.delete("/:id", deleteRoute);
 
 export default router; 
