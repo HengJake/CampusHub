@@ -107,7 +107,7 @@ export default function UserOversight() {
   }
 
   return (
-    <VStack spacing={4} align="stretch" pl={8} pr={10} h={"100%"}>
+    <VStack spacing={4} align="stretch" pl={2} h={"100%"}>
       {/* Header */}
       <Flex >
         <Box>

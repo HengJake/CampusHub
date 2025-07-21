@@ -195,7 +195,7 @@ export default function ProfileSettings() {
   };
 
   return (
-    <VStack spacing={6} align="stretch">
+    <VStack spacing={6} align="stretch" pl={2}>
       {/* Header */}
       <Flex>
         <Box>

@@ -22,6 +22,7 @@ import About from "./pages/commonPage/about/about.jsx";
 import AuthTest from "./pages/authTest.jsx";
 
 // User Pages
+import ClassFinder from "./pages/userPage/ClassFinder.jsx";
 import StudentDashboard from "./pages/userPage/StudentDashboard.jsx";
 import Profile from "./pages/userPage/Profile.jsx";
 import Feedback from "./pages/userPage/Feedback.jsx";
@@ -73,10 +74,6 @@ import Schedule from "./pages/userPage/Schedule.jsx";
 import Exams from "./pages/userPage/Exams.jsx";
 import Attendance from "./pages/userPage/Attendance.jsx";
 
-import CompanyInfo from "./pages/campusHubAdminPage/CompanyInfo.jsx";
-import Offers from "./pages/campusHubAdminPage/Offers.jsx";
-import Bookings from "./pages/campusHubAdminPage/Bookings.jsx";
-
 function App() {
   const path = useLocation().pathname;
   const [RenderedNavbar, setRenderedNavbar] = useState(null);
@@ -91,14 +88,14 @@ function App() {
     "/user-profile",
     "/feedback",
     "/academic",
-    "/facility",
     "/transportation",
     "/facility/parking",
     "/facility/locker",
     "/facility/courts",
     "/academic/schedule",
     "/academic/exams",
-    "/academic/attendance"
+    "/academic/attendance",
+    "/class-finder"
   ];
   const adminRoutes = [
     "/admin-dashboard",
@@ -181,19 +178,19 @@ function App() {
         break;
       case "user":
         setRenderedNavbar(<HeaderNavbar role="student" />);
-        setMargin("80px");
+        setMargin("88px");
         setBgColor("brand.userBg");
         setAuthComponent(<StudentComponent />);
         break;
       case "admin":
         setRenderedNavbar(<HeaderNavbar role="schoolAdmin" />);
-        setMargin("80px");
+        setMargin("88px");
         setBgColor("brand.adminBg");
         setAuthComponent(<SchoolAdminComponent />);
         break;
       case "company":
         setRenderedNavbar(<HeaderNavbar role="companyAdmin" />);
-        setMargin("80px");
+        setMargin("88px");
         setBgColor("brand.companyBg");
         setAuthComponent(<CompanyAdminComponent />);
         break;
@@ -237,6 +234,9 @@ function App() {
         display={"flex"}
         // mt={userRole === "student" ? "64px" : ""}
         mt={"64px"}
+        pr={2}
+        pl={2}
+        pt={6}
       >
         {/* <Button
           bg={"gray.900"}
@@ -276,10 +276,10 @@ function App() {
 
           {/* User Pages - Require student authentication */}
           <Route path="/user-dashboard" element={wrapWithAuth(<StudentDashboard />)} />
+          <Route path="/class-finder" element={wrapWithAuth(<ClassFinder />)} />
           <Route path="/user-profile" element={wrapWithAuth(<Profile />)} />
           <Route path="/feedback" element={wrapWithAuth(<Feedback />)} />
           <Route path="/academic" element={wrapWithAuth(<Academic />)} />
-          <Route path="/facility" element={wrapWithAuth(<SFacilityManagement />)} />
           <Route path="/transportation" element={wrapWithAuth(<Transportation />)} />
 
           {/* User Pages - Facility/Academic subpages */}
@@ -320,10 +320,6 @@ function App() {
           <Route path="/campushub-setting" element={wrapWithAuth(<CampushubSetting />)} />
           {/* <Route path="/campushub-profile" element={wrapWithAuth(<CampushubProfile />)} /> */}
 
-          {/* Company Admin Pages - Additional */}
-          <Route path="/company/info" element={wrapWithAuth(<CompanyInfo />)} />
-          <Route path="/company/offers" element={wrapWithAuth(<Offers />)} />
-          <Route path="/company/bookings" element={wrapWithAuth(<Bookings />)} />
         </Routes>
       </Box>
     </Box>

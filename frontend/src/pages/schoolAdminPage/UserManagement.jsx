@@ -11,8 +11,8 @@ export function UserManagement() {
       </TabList>
 
       <TabPanels>
-        <TabPanel><LecturerManagement /></TabPanel>
-        <TabPanel><StudentManagement /></TabPanel>
+        <TabPanel p={0} pt={4}><LecturerManagement /></TabPanel>
+        <TabPanel p={0} pt={4}><StudentManagement /></TabPanel>
       </TabPanels>
     </Tabs>
   )

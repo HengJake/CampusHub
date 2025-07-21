@@ -5,12 +5,14 @@ import { IoIosSettings } from "react-icons/io";
 import { RiLogoutBoxRLine } from "react-icons/ri";
 import NavItem from "./NavItem";
 import navConfig from "../../config/navConfig";
+import { useNavigate } from "react-router-dom";
 
 const Sidebar = ({ role = "student", sidebarColors, glassBG }) => {
     const [isCollapsed, setIsCollapsed] = useState(true);
     const navItems = navConfig[role] || [];
     const colors = sidebarColors[role] || sidebarColors.student;
     const items = navItems;
+    const navigate = useNavigate();
 
     const toggleSidebar = () => setIsCollapsed((prev) => !prev);
 
@@ -55,7 +57,7 @@ const Sidebar = ({ role = "student", sidebarColors, glassBG }) => {
                 <Box flex="1" overflowY="auto" overflowX={"hidden"} p={2}>
                     <VStack spacing={1} align="stretch">
                         {items.map((item, idx) => (
-                            <NavItem key={idx} item={item} isCollapsed={isCollapsed} accentColor={colors.accent} primaryColor={colors.primary} toggleSidebar={toggleSidebar}/>
+                            <NavItem key={idx} item={item} isCollapsed={isCollapsed} accentColor={colors.accent} primaryColor={colors.primary} toggleSidebar={toggleSidebar} />
                         ))}
                     </VStack>
                 </Box>
@@ -63,6 +65,7 @@ const Sidebar = ({ role = "student", sidebarColors, glassBG }) => {
                 <VStack p={2} borderTop={"1px solid rgba(229, 231, 235, 1)"} gap={1}  >
                     {isCollapsed ? (
                         <Button w={"full"} py={2} variant={"ghost"} _hover={{ bg: "#374151" + "33" }}
+                            onClick={() => { role === "companyAdmin" ? navigate("/campushub-setting") : "" }}
                             color={"gray.700"}>
                             <IoIosSettings />
                         </Button>) : (

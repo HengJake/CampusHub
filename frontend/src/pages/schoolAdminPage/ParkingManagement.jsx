@@ -166,7 +166,7 @@ export function ParkingManagement() {
   const borderColor = useColorModeValue("gray.200", "gray.600")
 
   return (
-    <Box p={6} minH="100vh" flex={1}>
+    <Box minH="100%" flex={1}>
       <VStack spacing={6} align="stretch">
         {/* Header */}
         <HStack justify="space-between">

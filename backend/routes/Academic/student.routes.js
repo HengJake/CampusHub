@@ -16,8 +16,8 @@ import { userAuth, authRole } from "../../utils/authMiddleware.js";
 const router = e.Router();
 
 // Create a new student (both roles can create)
-// router.post("/", userAuth, authRole(["companyAdmin", "schoolAdmin"]), createStudent);
-router.post("/", createStudent);
+router.post("/", userAuth, authRole(["companyAdmin", "schoolAdmin"]), createStudent);
+// router.post("/", createStudent);
 
 // Get all students (company admin only)
 // router.get("/", userAuth, authRole("companyAdmin"), getAllStudents);

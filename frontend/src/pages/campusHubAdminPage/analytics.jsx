@@ -88,7 +88,7 @@ export default function Analytics() {
   }
 
   return (
-    <VStack spacing={6} align="stretch">
+    <VStack spacing={6} align="stretch" >
       {/* Header */}
       <Flex>
         <Box>

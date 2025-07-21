@@ -158,7 +158,7 @@ export default function SubscriptionTracking() {
   });
 
   return (
-    <VStack spacing={4} align="stretch" pl={8} pr={10}>
+    <VStack spacing={4} align="stretch">
       {/* Header */}
       <Flex>
         <Box>
