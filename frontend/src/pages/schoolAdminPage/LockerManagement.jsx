@@ -29,14 +29,22 @@ export function LockerManagement() {
         fetchLockerUnits,
         lockerUnits,
         createLockerUnit,
+        updateLockerUnit,
         deleteLockerUnit,
-        // ...other locker unit actions
     } = useFacilityStore();
 
+    const [isEdit, setIsEdit] = useState(false);  
+    const [formData, setFormData] = useState({
+      resourceId: "",
+      schoolId: "",
+      isAvailable: true,
+    });
+    
     useEffect(() => {
         fetchLockerUnits();
-    }, []);
+    }, [fetchLockerUnits]);
     console.log("🚀 ~ LockerManagement ~ lockerUnits:", lockerUnits)
+
 
     const [selectedFloor, setSelectedFloor] = useState("All")
     const [selectedSection, setSelectedSection] = useState("All")
@@ -58,8 +66,7 @@ export function LockerManagement() {
         const assignedToStr = typeof locker.assignedTo === "string" ? locker.assignedTo : String(locker.assignedTo ?? "");
 
         const matchesSearch =
-            numberStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            assignedToStr.toLowerCase().includes(searchTerm.toLowerCase());
+            locker.resourceId.name.toLowerCase().includes(searchTerm.toLowerCase());
 
         return matchesFloor && matchesSection && matchesSearch;
     })
@@ -100,6 +107,38 @@ export function LockerManagement() {
             </Card>
         </Tooltip>
     )
+
+      // Handle form submit for creating/updating locker units
+  const handleSubmit = async () => {
+    if (isEdit) {
+      await updateLockerUnit(formData._id, formData);  
+    } else {
+      await createLockerUnit(formData);  
+    }
+    fetchLockerUnits();  
+    resetForm();  
+  };
+
+  // Reset form data
+  const resetForm = () => {
+    setFormData({
+      resourceId: "",
+      schoolId: "",
+      isAvailable: true,
+    });
+    setIsEdit(false);  
+  };
+
+  // Handle edit for a specific locker
+  const handleEdit = (locker) => {
+    setFormData({ ...locker });  
+    setIsEdit(true);  
+  };
+
+  const handleDelete = async (lockerId) => {
+    await deleteLockerUnit(lockerId); 
+    fetchLockerUnits();  
+  };
 
     return (
         <Box minH="100vh" flex={1}>
