@@ -58,7 +58,7 @@ const FACILITY_TYPES = [
 ];
 
 export function FacilityManagement() {
-  const { resources, fetchResources, createResource, updateResource, deleteResource, lockerUnits, fetchLockerUnits, createLockerUnit, updateLockerUnits, deleteLockerUnits, bookings, fetchBookings, createLockerUnit, updateLockerUnits, deleteLockerUnits} = useFacilityStore();
+  const { resources, fetchResources, createResource, updateResource, deleteResource, lockerUnits, fetchLockerUnits, createLockerUnit, updateLockerUnits, deleteLockerUnits, bookings, fetchBookings, createBooking, updateBooking, deleteBooking} = useFacilityStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [facilityType, setFacilityType] = useState("All");
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -96,7 +96,7 @@ export function FacilityManagement() {
   const getStatusColor = (status) => (status ? "green" : "red");
 
   // Filter out lockers from all resource displays
-  const filteredResources = resources.filter(r => r.type !== "locker");
+  
 
   // Use filteredResources instead of resources throughout the component
   // For stats, pie chart, and table:
