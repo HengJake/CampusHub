@@ -17,26 +17,42 @@ import {
     useColorModeValue,
     Tooltip,
     InputLeftElement,
-    InputGroup
+    InputGroup,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalFooter,
+    ModalBody,
+    ModalCloseButton,
 } from "@chakra-ui/react"
 import { FiPlus, FiSearch, FiLock, FiUnlock, FiTool } from "react-icons/fi"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useFacilityStore } from "../../store/facility.js";
-import { useEffect } from "react";
+import { useDisclosure } from "@chakra-ui/react";
 
 export function LockerManagement() {
     const {
         fetchLockerUnits,
         lockerUnits,
         createLockerUnit,
+        updateLockerUnit,
         deleteLockerUnit,
-        // ...other locker unit actions
     } = useFacilityStore();
+
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [isEdit, setIsEdit] = useState(false);
+    const [formData, setFormData] = useState({
+        resourceId: "",
+        schoolId: "",
+        isAvailable: true,
+    });
 
     useEffect(() => {
         fetchLockerUnits();
-    }, []);
+    }, [fetchLockerUnits]);
     console.log("🚀 ~ LockerManagement ~ lockerUnits:", lockerUnits)
+
 
     const [selectedFloor, setSelectedFloor] = useState("All")
     const [selectedSection, setSelectedSection] = useState("All")
@@ -58,8 +74,7 @@ export function LockerManagement() {
         const assignedToStr = typeof locker.assignedTo === "string" ? locker.assignedTo : String(locker.assignedTo ?? "");
 
         const matchesSearch =
-            numberStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            assignedToStr.toLowerCase().includes(searchTerm.toLowerCase());
+            locker.resourceId.name.toLowerCase().includes(searchTerm.toLowerCase());
 
         return matchesFloor && matchesSection && matchesSearch;
     })
@@ -101,6 +116,43 @@ export function LockerManagement() {
         </Tooltip>
     )
 
+    // Handle form submit for creating/updating locker units
+    const handleSubmit = async () => {
+        if (isEdit) {
+            await updateLockerUnit(formData._id, formData);
+        } else {
+            await createLockerUnit(formData);
+        }
+        fetchLockerUnits();
+        resetForm();
+    };
+
+    // Reset form data
+    const resetForm = () => {
+        setFormData({
+            resourceId: "",
+            schoolId: "",
+            isAvailable: true,
+        });
+        setIsEdit(false);
+    };
+
+    // Handle edit for a specific locker
+    const handleEdit = (locker) => {
+        setFormData({ ...locker });
+        setIsEdit(true);
+    };
+
+    const handleDelete = async (lockerId) => {
+        await deleteLockerUnit(lockerId);
+        fetchLockerUnits();
+    };
+
+    // Handle bulk actions
+    const handleBulkAssignment = (action) => {
+        // Logic for bulk actions like assigning, releasing, marking for maintenance
+    };
+
     return (
         <Box minH="100vh" flex={1}>
             <VStack spacing={6} align="stretch">
@@ -112,7 +164,7 @@ export function LockerManagement() {
                         </Text>
                         <Text color="gray.600">Manage locker assignments and availability</Text>
                     </Box>
-                    <Button leftIcon={<FiPlus />} bg="#344E41" color="white" _hover={{ bg: "#2a3d33" }}>
+                    <Button leftIcon={<FiPlus />} bg="#344E41" color="white" _hover={{ bg: "#2a332a" }} onClick={onOpen}>
                         Bulk Assignment
                     </Button>
                 </HStack>
@@ -249,6 +301,25 @@ export function LockerManagement() {
                     </CardBody>
                 </Card>
             </VStack>
+
+
+            <Modal isOpen={isOpen} onClose={onClose}>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Modal Title</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <Text>hello</Text>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <Button variant='ghost' mr={3} onClick={onClose}>
+                            Close
+                        </Button>
+                        <Button colorScheme='green' onClick={handleBulkAssignment}>Add</Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
         </Box>
     )
 }

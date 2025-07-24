@@ -58,8 +58,11 @@ const FACILITY_TYPES = [
 ];
 
 export function FacilityManagement() {
-  const { resources, fetchResources, lockerUnits, fetchLockerUnits, bookings, fetchBookings, createResource, updateResource, deleteResource } = useFacilityStore();
+  const { resources, fetchResources, createResource, updateResource, deleteResource, lockerUnits, fetchLockerUnits, createLockerUnit, updateLockerUnits, deleteLockerUnits, bookings, fetchBookings, createBooking, updateBooking, deleteBooking} = useFacilityStore();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [facilityType, setFacilityType] = useState("All");
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isEdit, setIsEdit] = useState(false);
   const toast = useToast();
   const [form, setForm] = React.useState({
     name: "",
@@ -67,6 +70,8 @@ export function FacilityManagement() {
     type: "study_room",
     capacity: 1,
   });
+
+
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isEditing, setIsEditing] = React.useState(false);
   const [selectedFacility, setSelectedFacility] = React.useState(null);
@@ -77,17 +82,21 @@ export function FacilityManagement() {
     fetchResources();
     fetchLockerUnits();
     fetchBookings();
-  }, []);
+  }, [fetchResources, fetchLockerUnits, fetchBookings]);
   console.log("🚀 ~ FacilityManagement ~ bookings:", bookings)
   console.log("🚀 ~ FacilityManagement ~ lockerUnits:", lockerUnits)
   console.log("🚀 ~ FacilityManagement ~ resources:", resources)
 
-
+  const filteredResources = resources.filter((resource) => {
+    const matchesType = facilityType === "All" || resource.type === facilityType;
+    const matchesSearch = resource.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesType && matchesSearch;
+  });
   // Helper: status badge color
   const getStatusColor = (status) => (status ? "green" : "red");
 
   // Filter out lockers from all resource displays
-  const filteredResources = resources.filter(r => r.type !== "locker");
+  
 
   // Use filteredResources instead of resources throughout the component
   // For stats, pie chart, and table:

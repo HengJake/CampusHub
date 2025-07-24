@@ -1,6 +1,8 @@
 "use client"
 
 import React from "react";
+import { useAcademicStore } from "../../store/academic";
+import { useEffect } from "react";
 
 import {
   Box,
@@ -82,6 +84,17 @@ const COLORS = ["#3182CE", "#38A169", "#D69E2E", "#E53E3E", "#805AD5"]
 export default function Analytics() {
   const [selectedSchool, setSelectedSchool] = useState("all")
   const [dateRange, setDateRange] = useState("6months")
+  const [schoolSortOrder, setSchoolSortOrder] = useState("asc");
+
+  const schools = useAcademicStore((state) => state.schools);
+  const fetchSchools = useAcademicStore((state) => state.fetchSchools);
+  const students = useAcademicStore((state) => state.students);
+  const fetchStudents = useAcademicStore((state) => state.fetchStudents);
+
+  useEffect(() => {
+    fetchSchools();
+    fetchStudents();
+  }, []);
 
   const handleExportReport = (format) => {
     console.log(`Exporting report in ${format} format...`)
@@ -118,10 +131,9 @@ export default function Analytics() {
               </Text>
               <Select value={selectedSchool} onChange={(e) => setSelectedSchool(e.target.value)}>
                 <option value="all">All Schools</option>
-                <option value="lincoln">Lincoln High School</option>
-                <option value="roosevelt">Roosevelt Elementary</option>
-                <option value="washington">Washington Middle</option>
-                <option value="jefferson">Jefferson Academy</option>
+                {schools.map((school) => (
+                  <option key={school._id} value={school._id}>{school.name}</option>
+                ))}
               </Select>
             </Box>
             <Box>
@@ -226,6 +238,16 @@ export default function Analytics() {
                 <Text fontSize="lg" fontWeight="semibold" mb={4}>
                   Academic Performance Metrics
                 </Text>
+                <HStack mb={4} justify="flex-end">
+                  <Button
+                    size="sm"
+                    onClick={() => setSchoolSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
+                    leftIcon={schoolSortOrder === "asc" ? <span>&uarr;</span> : <span>&darr;</span>}
+                    variant="outline"
+                  >
+                    Sort: {schoolSortOrder === "asc" ? "A-Z" : "Z-A"}
+                  </Button>
+                </HStack>
                 <TableContainer>
                   <Table variant="simple">
                     <Thead>
@@ -238,37 +260,31 @@ export default function Analytics() {
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {academicData.map((school, index) => (
-                        <Tr key={index}>
-                          <Td fontWeight="medium">{school.school}</Td>
+                      {schools.sort((a, b) => {
+                        if (!a.name || !b.name) return 0;
+                        if (schoolSortOrder === "asc") {
+                          return a.name.localeCompare(b.name);
+                        } else {
+                          return b.name.localeCompare(a.name);
+                        }
+                      }).map((school) => (
+                        <Tr key={school._id}>
+                          <Td fontWeight="medium">{school.name}</Td>
                           <Td>
-                            <HStack>
-                              <Text>{school.avgGrade}%</Text>
-                              <Progress value={school.avgGrade} size="sm" colorScheme="blue" w="60px" />
-                            </HStack>
+                            {/* Calculate or fetch avgGrade for this school */}
+                            <Text>--</Text>
                           </Td>
                           <Td>
-                            <HStack>
-                              <Text>{school.attendance}%</Text>
-                              <Progress value={school.attendance} size="sm" colorScheme="green" w="60px" />
-                            </HStack>
+                            {/* Calculate or fetch attendance for this school */}
+                            <Text>--</Text>
                           </Td>
                           <Td>
-                            <HStack>
-                              <Text>{school.assignments}%</Text>
-                              <Progress value={school.assignments} size="sm" colorScheme="purple" w="60px" />
-                            </HStack>
+                            {/* Calculate or fetch assignments for this school */}
+                            <Text>--</Text>
                           </Td>
                           <Td>
-                            <Badge
-                              colorScheme={school.avgGrade >= 90 ? "green" : school.avgGrade >= 80 ? "yellow" : "red"}
-                            >
-                              {school.avgGrade >= 90
-                                ? "Excellent"
-                                : school.avgGrade >= 80
-                                  ? "Good"
-                                  : "Needs Improvement"}
-                            </Badge>
+                            {/* Badge logic based on avgGrade */}
+                            <Badge colorScheme="gray">N/A</Badge>
                           </Td>
                         </Tr>
                       ))}

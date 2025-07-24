@@ -60,7 +60,9 @@ export default function ClientManagement() {
 
   // Get academic store functions
   const {
+    students,
     schools,
+    lecturers,
     fetchSchools,
     createSchool,
     updateSchool,
@@ -73,13 +75,31 @@ export default function ClientManagement() {
     fetchLecturersBySchoolId,
   } = useAcademicStore();
 
-  const students = useAcademicStore((state) => state.students);
-
   // Load data on component mount
   useEffect(() => {
     fetchSchools();
     fetchStudents();
-  }, [fetchSchools, fetchStudents]);
+    fetchLecturers();
+  }, [fetchSchools, fetchStudents, fetchLecturers]);
+
+  // Monitor data loading for debugging
+  useEffect(() => {
+    console.log('Schools loaded:', schools.length);
+    console.log('Students loaded:', students.length);
+    console.log('Lecturers loaded:', lecturers.length);
+    
+    if (students.length > 0) {
+      console.log('Sample student:', students[0]);
+      console.log('Student schoolId:', students[0].schoolId);
+    }
+    
+    if (schools.length > 0) {
+      console.log('Sample school:', schools[0]);
+      console.log('School _id:', schools[0]._id);
+    }
+  }, [schools, students, lecturers]);
+
+  // Remove debug console.log
 
   const loadData = async () => {
     try {
@@ -184,14 +204,35 @@ export default function ClientManagement() {
     }
   };
 
-  const getStudentCount = (schoolId) =>
-    students.filter((student) => student.schoolId === schoolId).length;
+  const getStudentCount = (schoolId) => {
+    // Filter students by schoolId to get actual count
+    // Convert ObjectIds to strings for proper comparison
+    const studentCount = students.filter((student) => 
+      student.schoolId && student.schoolId.toString() === schoolId.toString()
+    ).length;
+    
+    // Debug logging to see what's happening
+    console.log(`School ${schoolId}: ${studentCount} students`);
+    console.log(`Total students loaded: ${students.length}`);
+    
+    return studentCount;
+  };
+
+  const getLecturerCount = (schoolId) => {
+    return lecturers.filter((lecturer) => 
+      lecturer.schoolId && lecturer.schoolId.toString() === schoolId.toString()
+    ).length;
+  };
 
   const getSchoolStats = (schoolId) => {
-    // This fetch from academic store by schoolId
+    // Get actual student count
+    const studentCount = getStudentCount(schoolId);
+    // For staff count, we can use lecturers count if available
+    const lecturerCount = getLecturerCount(schoolId);
+
     return {
-      students: Math.floor(Math.random() * 100) + 50,
-      staff: Math.floor(Math.random() * 100) + 50,
+      students: studentCount,
+      staff: lecturerCount,
     };
   };
 
@@ -254,60 +295,74 @@ export default function ClientManagement() {
       {/* Schools Table */}
       <Card w={"100%"} h={"fit-content"}>
         <CardBody>
-          <TableContainer>
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>School Name</Th>
-                  <Th>Location</Th>
-                  <Th>Sub-Admin</Th>
-                  <Th>Status</Th>
-                  <Th>Users</Th>
-                  <Th>Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {filteredSchools.map((school) => (
-                  <Tr key={school._id}>
-                    <Td>
-                      <VStack align="start" spacing={1}>
-                        <Text fontWeight="medium">{school.name}</Text>
-                        <Text fontSize="sm" color="gray.500">
-                          {school.address}
-                        </Text>
-                      </VStack>
-                    </Td>
-                    <Td>
-                      <VStack align="start" spacing={1}>
-                        <Text fontSize="sm">{school.city}</Text>
-                        <Text fontSize="sm" color="gray.500">
-                          {school.country}
-                        </Text>
-                      </VStack>
-                    </Td>
-                    <Td>{getSchoolAdmin(school.userId)}</Td>
-                    <Td>
-                      <Badge
-                        colorScheme={
-                          school.status === "Active" ? "green" : "red"
-                        }
-                      >
-                        {school.status}
-                      </Badge>
-                    </Td>
-                    <Td>
-                      <VStack align="start" spacing={1}>
-                        <Text fontSize="sm">
-                          Students: {getStudentCount(school._id)}
-                        </Text>
-                      </VStack>
-                    </Td>
-                    <Td>{/* Actions */}</Td>
+          {loading.schools || loading.students || loading.lecturers ? (
+            <Text textAlign="center" py={4}>
+              Loading schools and user data...
+            </Text>
+          ) : (
+            <TableContainer>
+              <Table variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>School Name</Th>
+                    <Th>Location</Th>
+                    <Th>Sub-Admin</Th>
+                    <Th>Status</Th>
+                    <Th>Users</Th>
+                    <Th>Actions</Th>
                   </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </TableContainer>
+                </Thead>
+                <Tbody>
+                  {filteredSchools.map((school) => (
+                    <Tr key={school._id}>
+                      <Td>
+                        <VStack align="start" spacing={1}>
+                          <Text fontWeight="medium">{school.name}</Text>
+                          <Text fontSize="sm" color="gray.500">
+                            {school.address}
+                          </Text>
+                        </VStack>
+                      </Td>
+                      <Td>
+                        <VStack align="start" spacing={1}>
+                          <Text fontSize="sm">{school.city}</Text>
+                          <Text fontSize="sm" color="gray.500">
+                            {school.country}
+                          </Text>
+                        </VStack>
+                      </Td>
+                      <Td>{getSchoolAdmin(school.userId)}</Td>
+                      <Td>
+                        <Badge
+                          colorScheme={
+                            school.status === "Active" ? "green" : "red"
+                          }
+                        >
+                          {school.status}
+                        </Badge>
+                      </Td>
+                      <Td>
+                        <VStack align="start" spacing={1}>
+                          <Text fontSize="sm">
+                            Students: {getStudentCount(school._id)}
+                          </Text>
+                          <Text fontSize="sm">
+                            Staff: {getLecturerCount(school._id)}
+                          </Text>
+                          {students.length === 0 && (
+                            <Text fontSize="xs" color="gray.400">
+                              No student data loaded
+                            </Text>
+                          )}
+                        </VStack>
+                      </Td>
+                      <Td>{/* Actions */}</Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </TableContainer>
+          )}
         </CardBody>
       </Card>
 
