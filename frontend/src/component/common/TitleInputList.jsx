@@ -6,8 +6,8 @@ const TitleInputList = ({
     label,
     placeholder,
     values,
-    inputValue,
-    setInputValue,
+    inputValue = [],
+    setInputValue = "",
     onAdd,
     onRemove
 }) => (
@@ -24,7 +24,7 @@ const TitleInputList = ({
             </Button>
         </HStack>
         <HStack wrap="wrap" mt={2}>
-            {values.map((t, idx) => (
+            {(values).map((t, idx) => (
                 <Tag key={idx} colorScheme="purple" mr={1}>
                     {t}
                     <TagCloseButton onClick={() => onRemove(idx)} />

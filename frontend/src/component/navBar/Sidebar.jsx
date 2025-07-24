@@ -6,24 +6,36 @@ import { RiLogoutBoxRLine } from "react-icons/ri";
 import NavItem from "./NavItem";
 import navConfig from "../../config/navConfig";
 import { useNavigate } from "react-router-dom";
+import { useBreakpointValue } from "@chakra-ui/react";
 
-const Sidebar = ({ role = "student", sidebarColors, glassBG }) => {
+const Sidebar = ({ isOpen, onClose, role = "student", sidebarColors, glassBG }) => {
     const [isCollapsed, setIsCollapsed] = useState(true);
     const navItems = navConfig[role] || [];
     const colors = sidebarColors[role] || sidebarColors.student;
     const items = navItems;
+    const isMobile = useBreakpointValue({ base: true, lg: false });
     const navigate = useNavigate();
+
+    let navigateTo;
+    if (role === "companyAdmin") {
+        navigateTo = () => navigate("/campushub-setting");
+    } else if (role === "schoolAdmin") {
+        navigateTo = () => navigate("/admin-setting");
+    } else {
+        navigateTo = () => navigate("/user-profile");
+    }
 
     const toggleSidebar = () => setIsCollapsed((prev) => !prev);
 
     return (
         <Box
-            left={2}
-            top={2}
+            left={isMobile ? (isOpen ? 2 : "-100%") : 2}
+            right={isMobile ? 2 : "auto"}
+            width={isMobile ? "calc(100% - 1rem)" : isCollapsed ? "80px" : "16rem"}
+            top={{ base: 20, lg: 2 }}
             bottom={2}
-            w={isCollapsed ? "80px" : "64"}
             borderRadius={10}
-            transition="width 0.2s"
+            transition={isMobile ? ("all 0.5s ease-in") : ("all 0.2s")}
             position="fixed"
             zIndex={101}
             bg={glassBG}
@@ -36,7 +48,7 @@ const Sidebar = ({ role = "student", sidebarColors, glassBG }) => {
         >
             <VStack spacing={0} align="stretch" h={"100%"}>
                 {/* Header */}
-                <Box py={3} px={isCollapsed ? 2 : 3} borderColor={colors.primary} borderBottom={"1px"}>
+                <Box py={3} px={isCollapsed ? 2 : 3} borderColor={colors.primary} borderBottom={"1px"} display={{ base: "none", lg: "block" }}>
                     <HStack justify={isCollapsed ? "center" : "space-between"} >
                         {!isCollapsed && (
                             <Text fontWeight="semibold" fontSize="sm" color={colors.primary}>
@@ -57,36 +69,34 @@ const Sidebar = ({ role = "student", sidebarColors, glassBG }) => {
                 <Box flex="1" overflowY="auto" overflowX={"hidden"} p={2}>
                     <VStack spacing={1} align="stretch">
                         {items.map((item, idx) => (
-                            <NavItem key={idx} item={item} isCollapsed={isCollapsed} accentColor={colors.accent} primaryColor={colors.primary} toggleSidebar={toggleSidebar} />
+                            <NavItem key={idx} item={item} isCollapsed={isCollapsed} isMobile={isMobile} accentColor={colors.accent} primaryColor={colors.primary} toggleSidebar={toggleSidebar} />
                         ))}
                     </VStack>
                 </Box>
                 {/* Bottom Items */}
                 <VStack p={2} borderTop={"1px solid rgba(229, 231, 235, 1)"} gap={1}  >
-                    {isCollapsed ? (
-                        <Button w={"full"} py={2} variant={"ghost"} _hover={{ bg: "#374151" + "33" }}
-                            onClick={() => { role === "companyAdmin" ? navigate("/campushub-setting") : "" }}
-                            color={"gray.700"}>
-                            <IoIosSettings />
-                        </Button>) : (
-                        <Button
-                            justifyContent={"start"}
-                            w={"full"}
-                            variant="ghost"
-                            py={2}
-                            px={4}
-                            leftIcon={<IoIosSettings />}
-                            _hover={{ bg: "#374151" + "33" }}
-                            color={"gray.700"}
-                        >
-                            Setting
-                        </Button>
-                    )}
-                    {isCollapsed ? (
-                        <Button w={"full"} py={2} variant={"ghost"} _hover={{ bg: "#ef4444" + "33" }}
-                            color={"red.700"} >
-                            <RiLogoutBoxRLine />
-                        </Button>) : (
+                    {(!isCollapsed || isMobile) ?
+                        (
+                            <Button
+                                justifyContent={"start"}
+                                w={"full"}
+                                variant="ghost"
+                                py={2}
+                                px={4}
+                                leftIcon={<IoIosSettings />}
+                                _hover={{ bg: "#374151" + "33" }}
+                                color={"gray.700"}
+                            >
+                                Setting
+                            </Button>
+                        ) : (
+                            <Button w={"full"} py={2} variant={"ghost"} _hover={{ bg: "#374151" + "33" }}
+                                onClick={() => { navigateTo() }}
+                                color={"gray.700"}>
+                                <IoIosSettings />
+                            </Button>
+                        )}
+                    {(!isCollapsed || isMobile) ? (
                         <Button
                             justifyContent={"start"}
                             w={"full"}
@@ -98,6 +108,11 @@ const Sidebar = ({ role = "student", sidebarColors, glassBG }) => {
                             color={"red.700"}
                         >
                             Log Out
+                        </Button>
+                    ) : (
+                        <Button w={"full"} py={2} variant={"ghost"} _hover={{ bg: "#ef4444" + "33" }}
+                            color={"red.700"} >
+                            <RiLogoutBoxRLine />
                         </Button>
                     )}
                 </VStack>

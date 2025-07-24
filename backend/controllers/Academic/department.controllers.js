@@ -54,7 +54,7 @@ export const getDepartments = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Department,
         "departments",
-        ['RoomID']
+        ['roomId']
     );
 });
 
@@ -65,7 +65,7 @@ export const getDepartmentById = controllerWrapper(async (req, res) => {
         Department,
         id,
         "department",
-        ['RoomID']
+        ['roomId']
     );
 });
 

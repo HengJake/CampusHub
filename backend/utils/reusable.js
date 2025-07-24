@@ -149,7 +149,11 @@ export const getAllRecords = async (Model, entityName = "records", populateField
         // Populate fields if provided
         if (populateFields.length > 0) {
             populateFields.forEach(field => {
-                query = query.populate(field);
+                if (typeof field === "string") {
+                    query = query.populate(field);
+                } else if (typeof field === 'object' && field !== null) {
+                    query = query.populate(field);
+                }
             });
         }
 

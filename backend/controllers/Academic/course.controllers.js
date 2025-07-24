@@ -17,10 +17,10 @@ import {
 // Custom validation function for course data
 const validateCourseData = async (data) => {
     // CORRECT - Using camelCase
-    const { courseName, duration } = data;
+    const { courseName, duration, departmentId } = data;
 
     // Check required fields
-    if (!courseName || !duration) {
+    if (!courseName || !duration || !departmentId) {
         return {
             isValid: false,
             message: "Please provide all required fields (CourseName, Duration)"

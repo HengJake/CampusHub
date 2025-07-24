@@ -1,4 +1,4 @@
-import { useToast } from "@chakra-ui/react";
+import { position, useToast } from "@chakra-ui/react";
 
 export function useShowToast() {
   const toast = useToast();
@@ -14,6 +14,7 @@ export function useShowToast() {
     if (!id || !toast.isActive(id)) {
       toast({
         id,
+        position: "top",
         title,
         description,
         status,

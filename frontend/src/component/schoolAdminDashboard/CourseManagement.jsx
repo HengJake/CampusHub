@@ -51,18 +51,22 @@ import { useEffect, useState } from "react"
 import { useAcademicStore } from "../../store/academic";
 import { useShowToast } from "../../store/utils/toast";
 import ComfirmationMessage from "../common/ComfirmationMessage.jsx";
+import TitleInputList from "../common/TitleInputList.jsx";
+import MultiSelectPopover from "../common/MultiSelect.jsx";
 
 export function CourseManagement() {
     const {
         courses,
-        addCourse,
+        createCourse,
         updateCourse,
         deleteCourse,
         fetchCourses,
         fetchModules,
         modules,
         fetchLecturers,
-        lecturers
+        lecturers,
+        fetchDepartments,
+        departments
     } = useAcademicStore()
 
     const { isOpen, onOpen, onClose } = useDisclosure()
@@ -75,14 +79,22 @@ export function CourseManagement() {
     const [selectedCourse, setSelectedCourse] = useState(null)
     const [isEditing, setIsEditing] = useState(false)
     const [formData, setFormData] = useState({
-        courseCode: "",
-        courseName: "",
-        description: "",
-        credits: "",
-        department: "",
-        duration: "",
-        isActive: true,
-    })
+        courseName: "",            // String
+        courseCode: "",            // String
+        courseDescription: "",     // String
+        courseLevel: "",           // 'Diploma' | 'Bachelor' | 'Master' | 'PhD'
+        courseType: "Full Time",   // 'Full Time' | 'Part Time' | 'Distance Learning'
+        totalCreditHours: 0,      // Number
+        minimumCGPA: 2.0,          // Number (default)
+        departmentId: "",          // ObjectId (select from Department list)
+        duration: "",              // Number (in months)
+        entryRequirements: [],     // Array of strings
+        entryRequirementsInput: "",     // helper value
+        careerProspects: [],       // Array of strings
+        careerProspectsInput: "",       // helper
+        isActive: true,            // Boolean
+        schoolId: "",              // ObjectId (select from School list)
+    });
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [courseToDelete, setCourseToDelete] = useState(null);
 
@@ -96,15 +108,24 @@ export function CourseManagement() {
         if (lecturers.length == 0) {
             fetchLecturers();
         }
+        if (departments.length == 0) {
+            fetchDepartments();
+        }
     }, [])
+    // console.log(courses)
 
 
-    useEffect(() => {
-        fetchCourses();
-    }, [])
-    // console.log("🚀 ~ useEffect ~ courses:", courses)
+    // useEffect(() => {
+    //     console.log(formData);
+    // }, [formData])
+    console.log("🚀 ~ useEffect ~ courses:", courses)
 
-
+    // helper function
+    const removeFromArrayField = (field, idx) => {
+        const updated = [...formData[field]];
+        updated.splice(idx, 1);
+        setFormData({ ...formData, [field]: updated });
+    };
 
     const bgColor = useColorModeValue("white", "gray.800")
     const borderColor = useColorModeValue("gray.200", "gray.600")
@@ -126,44 +147,78 @@ export function CourseManagement() {
             (statusFilter === "true" && course.isActive === true) ||
             (statusFilter === "false" && course.isActive === false)
 
-        const department = course.departmentId && course.departmentId.departmentName ? course.departmentId.departmentName : "";
+        const department = course.departmentId._id && course.departmentId.departmentName ? course.departmentId.departmentName : "";
         const matchesDepartment = departmentFilter === "All" || department === departmentFilter
 
         return matchesSearch && matchesStatus && matchesDepartment
     })
 
-    const handleSubmit = () => {
-        if (!formData.courseCode || !formData.courseName || !formData.credits) {
+    const handleSubmit = async () => {
+        if (!formData.courseCode || !formData.courseName || !formData.minimumCGPA) {
             showToast.error("Error", "Please fill in all required fields", "course-validation");
             return
         }
 
         if (isEditing) {
-            if (!selectedCourse || !selectedCourse.id) {
+            if (!selectedCourse || !selectedCourse._id) {
                 showToast.error("Error", "No course selected for editing", "course-edit-error");
                 return;
             }
 
-            updateCourse(selectedCourse.id, formData)
+            const res = await updateCourse(selectedCourse._id, formData)
+            if (!res || !res.success) {
+                showToast.error("Error", res.message, "id-2")
+                return;
+            }
+
             showToast.success("Success", "Course updated successfully", "course-update");
         } else {
-            addCourse({ ...formData, modules: [], lecturers: [], students: [] })
+            // TODO:check for values
+            const newCourse = {
+                courseName: formData.courseName,
+                courseCode: formData.courseCode,
+                courseDescription: formData.courseDescription,
+                courseLevel: formData.courseLevel,
+                courseType: formData.courseType,
+                totalCreditHours: Number(formData.totalCreditHours),
+                minimumCGPA: parseFloat(formData.minimumCGPA), // force float
+                departmentId: formData.departmentId,
+                duration: Number(formData.duration),
+                entryRequirements: formData.entryRequirements,
+                careerProspects: formData.careerProspects,
+                isActive: formData.isActive,
+                schoolId: formData.schoolId,
+            };
+            const res = await createCourse(newCourse)
+            if (!res || !res.success) {
+                showToast.error("Error", res.message, "id-2")
+                return;
+            }
             showToast.success("Success", "Course added successfully", "course-add");
         }
 
+        await fetchCourses();
         resetForm()
         onClose()
     }
 
     const resetForm = () => {
         setFormData({
-            courseCode: "",
-            courseName: "",
-            description: "",
-            credits: "",
-            department: "",
-            duration: "",
-            isActive: true,
+            courseName: "",            // String
+            courseCode: "",            // String
+            courseDescription: "",     // String
+            courseLevel: "",           // 'Diploma' | 'Bachelor' | 'Master' | 'PhD'
+            courseType: "Full Time",   // 'Full Time' | 'Part Time' | 'Distance Learning'
+            totalCreditHours: 0,      // Number
+            minimumCGPA: 2.0,          // Number (default)
+            departmentId: "",          // ObjectId (select from Department list)
+            duration: "",              // Number (in months)
+            entryRequirements: [],     // Array of strings
+            entryRequirementsInput: "",     // helper value
+            careerProspects: [],       // Array of strings
+            careerProspectsInput: "",       // helper
+            isActive: true,            // Boolean
+            schoolId: "",              // ObjectId (select from School list)
         })
         setSelectedCourse(null)
         setIsEditing(false)
@@ -176,15 +231,22 @@ export function CourseManagement() {
         }
 
         setSelectedCourse(course)
+        // TODO:change the form value
         setFormData({
-            courseCode: course.courseCode || "",
             courseName: course.courseName || "",
-            description: course.description || "",
-            credits: course.credits || course.totalCreditHours || "",
-            department: course.department || "",
-            duration: course.duration || "",
+            courseCode: course.courseCode || "",
+            courseDescription: course.courseDescription || "",
+            courseLevel: course.courseLevel || "",                 // e.g., 'Diploma'
+            courseType: course.courseType || "Full Time",          // default fallback
+            totalCreditHours: course.totalCreditHours || "",       // Number
+            minimumCGPA: course.minimumCGPA ?? 2.0,                // Allow 0 as valid
+            departmentId: course.departmentId._id || "",               // ObjectId
+            duration: course.duration || "",                       // Number
+            entryRequirements: course.entryRequirements || [],     // Array
+            careerProspects: course.careerProspects || [],         // Array
             isActive: course.isActive !== undefined ? course.isActive : true,
-        })
+            schoolId: course.schoolId || "",                       // ObjectId
+        });
         setIsEditing(true)
         onOpen()
     }
@@ -218,6 +280,7 @@ export function CourseManagement() {
         closeDeleteDialog();
     };
 
+    // change csv with the new attribute
     const exportCourses = () => {
         const csvContent = [
             ["Course Code", "Course Name", "Description", "Credits", "Department", "Duration", "Status"],
@@ -342,9 +405,7 @@ export function CourseManagement() {
                                                     </Box>
                                                 </Td>
                                                 <Td>
-                                                    {course.departmentId && course.departmentId.departmentName
-                                                        ? course.departmentId.departmentName
-                                                        : course.department || "N/A"}
+                                                    {course.departmentId.departmentName}
                                                 </Td>
                                                 <Td>{course.totalCreditHours || course.credits || "N/A"}</Td>
                                                 <Td>{course.duration || "N/A"}</Td>
@@ -462,67 +523,145 @@ export function CourseManagement() {
                                     <Input
                                         value={formData.courseCode}
                                         onChange={(e) => setFormData({ ...formData, courseCode: e.target.value })}
-                                        placeholder="CS101"
+                                        placeholder="BCS"
                                     />
                                 </FormControl>
                                 <FormControl isRequired>
-                                    <FormLabel>Credits</FormLabel>
+                                    <FormLabel>Course Name</FormLabel>
                                     <Input
-                                        type="number"
-                                        value={formData.credits}
-                                        onChange={(e) => setFormData({ ...formData, credits: e.target.value })}
-                                        placeholder="3"
+                                        value={formData.courseName}
+                                        onChange={(e) => setFormData({ ...formData, courseName: e.target.value })}
+                                        placeholder="Bachelor of Computer Science (Hons)"
                                     />
                                 </FormControl>
+
+                                <FormControl isRequired>
+                                    <FormLabel>Course Level</FormLabel>
+                                    <Select
+                                        value={formData.courseLevel}
+                                        onChange={(e) => setFormData({ ...formData, courseLevel: e.target.value })}
+                                    >
+                                        <option value="">Select Level</option>
+                                        <option value="Diploma">Diploma</option>
+                                        <option value="Bachelor">Bachelor</option>
+                                        <option value="Master">Master</option>
+                                        <option value="PhD">PhD</option>
+                                    </Select>
+                                </FormControl>
+
+                                <FormControl isRequired>
+                                    <FormLabel>Course Type</FormLabel>
+                                    <Select
+                                        value={formData.courseType}
+                                        onChange={(e) => setFormData({ ...formData, courseType: e.target.value })}
+                                    >
+                                        <option value="Full Time">Full Time</option>
+                                        <option value="Part Time">Part Time</option>
+                                        <option value="Distance Learning">Distance Learning</option>
+                                    </Select>
+                                </FormControl>
+
+                                <FormControl isRequired>
+                                    <FormLabel>Total Credit Hours</FormLabel>
+                                    <Input
+                                        type="number"
+                                        value={formData.totalCreditHours}
+                                        onChange={(e) => setFormData({ ...formData, totalCreditHours: e.target.value })}
+                                        placeholder="120"
+                                    />
+                                </FormControl>
+
+                                <FormControl>
+                                    <FormLabel>Minimum CGPA</FormLabel>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        max="4"
+                                        value={formData.minimumCGPA}
+                                        onChange={(e) => setFormData({ ...formData, minimumCGPA: e.target.value })}
+                                        placeholder="2.0"
+                                    />
+                                </FormControl>
+
                                 <FormControl isRequired>
                                     <FormLabel>Department</FormLabel>
                                     <Select
-                                        value={formData.department}
-                                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                                        value={formData.departmentId}
+                                        onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
                                     >
                                         <option value="">Select Department</option>
-                                        <option value="Computer Science">Computer Science</option>
-                                        <option value="Information Technology">Information Technology</option>
-                                        <option value="Engineering">Engineering</option>
-                                        <option value="Business">Business</option>
-                                        <option value="Arts">Arts</option>
+                                        {departments.map((dept) => (
+                                            <option key={dept._id} value={dept._id}>
+                                                {dept.departmentName}
+                                            </option>
+                                        ))}
                                     </Select>
                                 </FormControl>
+
                                 <FormControl>
-                                    <FormLabel>Duration</FormLabel>
+                                    <FormLabel>Duration (Months)</FormLabel>
                                     <Select
                                         value={formData.duration}
                                         onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                                     >
                                         <option value="">Select Duration</option>
-                                        <option value="1 Semester">1 Semester</option>
-                                        <option value="2 Semesters">2 Semesters</option>
-                                        <option value="1 Year">1 Year</option>
+                                        <option value="12">1 Year</option>
+                                        <option value="24">2 Years</option>
+                                        <option value="36">3 Years</option>
+                                        <option value="48">4 Years</option>
+                                        <option value="60">5 Years</option>
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <FormControl mt={4} isRequired>
-                                <FormLabel>Course Name</FormLabel>
-                                <Input
-                                    value={formData.courseName}
-                                    onChange={(e) => setFormData({ ...formData, courseName: e.target.value })}
-                                    placeholder="Introduction to Computer Science"
-                                />
-                            </FormControl>
+
                             <FormControl mt={4}>
-                                <FormLabel>Description</FormLabel>
+                                <FormLabel>Course Description</FormLabel>
                                 <Textarea
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    placeholder="Course description..."
+                                    value={formData.courseDescription}
+                                    onChange={(e) => setFormData({ ...formData, courseDescription: e.target.value })}
+                                    placeholder="Detailed course description..."
                                     rows={3}
                                 />
                             </FormControl>
+
+                            <FormControl mt={4}>
+                                {/*TODO:use multie select */}
+                                <MultiSelectPopover
+                                    label={"Entry Requirement"}
+                                    items={modules}
+                                    selectedIds={formData.entryRequirements}
+                                    onChange={selected => setFormData({ ...formData, entryRequirements: selected })}
+                                    isRequired={false}
+                                    getLabel={module => module.moduleName}
+                                    getId={module => module._id}
+                                />
+                            </FormControl>
+
+                            <FormControl mt={4}>
+                                <TitleInputList
+                                    label="Career Prospects"
+                                    placeholder="Add Prospects"
+                                    values={formData.careerProspects.length === 0 ? [] : formData.careerProspects}
+                                    inputValue={formData.careerProspectsInput || ""}
+                                    setInputValue={val => setFormData({ ...formData, careerProspectsInput: val })}
+                                    onAdd={val => {
+                                        if (val && !formData.careerProspects.includes(val)) {
+                                            setFormData({ ...formData, careerProspects: [...formData.careerProspects, val], careerProspectsInput: "" });
+                                        }
+                                    }}
+                                    onRemove={idx => removeFromArrayField("careerProspects", idx)}
+                                />
+                            </FormControl>
+
                             <FormControl mt={4}>
                                 <FormLabel>Status</FormLabel>
-                                <Select value={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.value === "true" })}>
-                                    <option value={true}>Active</option>
-                                    <option value={false}>Inactive</option>
+                                <Select
+                                    value={formData.isActive}
+                                    onChange={(e) => setFormData({ ...formData, isActive: e.target.value === "true" })}
+                                >
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
                                 </Select>
                             </FormControl>
                         </ModalBody>

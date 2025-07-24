@@ -4,7 +4,7 @@ import { Button, HStack, Text, Badge, Box, Collapse, VStack } from "@chakra-ui/r
 import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
-const NavItem = ({ item, isCollapsed, level = 0, accentColor, primaryColor, toggleSidebar }) => {
+const NavItem = ({ item, isCollapsed, level = 0, accentColor, primaryColor, toggleSidebar, isMobile }) => {
     // Set isOpen to false by default for all levels
     const [isOpen, setIsOpen] = useState(false);
     const hasChildren = item.children && item.children.length > 0;
@@ -55,7 +55,7 @@ const NavItem = ({ item, isCollapsed, level = 0, accentColor, primaryColor, togg
             >
                 <HStack spacing={3} w="full" justify={isCollapsed ? "center" : ""}>
                     {item.icon && <item.icon size={level === 0 ? 18 : 16} color={primary} />}
-                    {!isCollapsed && (
+                    {(!isCollapsed || isMobile) && (
                         <>
                             <Text flex="1" textAlign="left" color={textColor}>
                                 {item.name || item.label}

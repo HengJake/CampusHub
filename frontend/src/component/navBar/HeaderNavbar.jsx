@@ -3,6 +3,7 @@ import { Flex, Text, Box, IconButton, InputGroup, Input, InputLeftElement, HStac
 import { HamburgerIcon, BellIcon, SearchIcon } from "@chakra-ui/icons";
 import Sidebar from "./Sidebar";
 import navConfig from "../../config/navConfig";
+import { useNavigate } from "react-router-dom";
 
 const headerColors = {
     student: {
@@ -24,8 +25,19 @@ const headerColors = {
 
 const HeaderNavbar = ({ role }) => {
     const getRgba = (rgb, alpha) => `rgba(${rgb}, ${alpha})`;
-    const isMobile = useBreakpointValue({ base: true, md: false });
+    const isMobile = useBreakpointValue({ base: true, lg: false });
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const navigate = useNavigate();
+
+    let navigateTo;
+    if (role === "student") {
+        navigateTo = () => navigate("/user-profile");
+    } else if (role === "schoolAdmin") {
+        navigateTo = () => navigate("/admin-profile");
+    } else {
+        navigateTo = () => navigate("/campushub-setting");
+    }
+
 
     const navItems = navConfig[role] || [];
     const colors = headerColors[role] || headerColors.student;
@@ -36,7 +48,7 @@ const HeaderNavbar = ({ role }) => {
             <Sidebar isOpen={isOpen} onClose={onClose} role={role} sidebarColors={headerColors} glassBG={glassBG} />
             <Flex
                 as="header"
-                h={{ base: "56px", md: "64px" }}
+                h={"64px"}
                 align="center"
                 justify="space-between"
                 px={4}
@@ -45,10 +57,10 @@ const HeaderNavbar = ({ role }) => {
                 color="white"
                 position="fixed"
                 top={2}
-                left={"96px"}
+                left={{ base: "8px", lg: "96px" }}
                 right={"8px"}
                 zIndex={100}
-                direction={{ base: "column", md: "row" }}
+                direction={"row"}
                 bg={glassBG}
                 sx={{
                     backdropFilter: "blur(10px)",
@@ -63,7 +75,7 @@ const HeaderNavbar = ({ role }) => {
                         icon={<HamburgerIcon />}
                         aria-label="Open sidebar"
                         variant="ghost"
-                        colorScheme="whiteAlpha"
+                        colorScheme="gray"
                         onClick={isOpen ? onClose : onOpen}
                     />
 
@@ -73,7 +85,7 @@ const HeaderNavbar = ({ role }) => {
                     <Text fontSize={"10px"}>Welcome Back</Text>
                     <Text fontSize={"20px"} fontWeight={"800"} lineHeight="0.9">Name</Text>
                 </Box>
-                <InputGroup maxW={{ base: "60vw", md: "400px" }} mx={4} display={{ base: "none", md: "flex" }}>
+                <InputGroup maxW={{ base: "60vw", lg: "400px" }} mx={4} display={{ base: "none", lg: "flex" }}>
                     <InputLeftElement pointerEvents="none">
                         <SearchIcon color="gray.400" />
                     </InputLeftElement>
@@ -89,7 +101,12 @@ const HeaderNavbar = ({ role }) => {
                         color={colors.primary}
                         _hover={{ bg: colors.accent + '33' }}
                     />
-                    <Avatar size="sm" name="User" />
+                    <IconButton
+                        aria-label="Admin Profile"
+                        icon={<Avatar size="sm" name="User" />}
+                        onClick={() => navigateTo()}
+                    />
+
                 </HStack>
             </Flex >
         </>

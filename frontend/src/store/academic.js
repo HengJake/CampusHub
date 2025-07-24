@@ -478,6 +478,35 @@ export const useAcademicStore = create((set, get) => ({
                 courses: [...state.courses, data.data],
             }));
 
+            return { success: true, message: data.message, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    updateCourse: async (id, updates) => {
+        try {
+            const res = await fetch(`/api/course/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updates),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update course");
+            }
+
+            // Update in local state
+            set((state) => ({
+                courses: state.courses.map((course) =>
+                    course._id === id ? data.data : course
+                ),
+            }));
+
             return { success: true, data: data.data };
         } catch (error) {
             return { success: false, message: error.message };

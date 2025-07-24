@@ -1,3 +1,9 @@
+let array = [123,123]
+
+console.log(typeof array)
+
+
+// ===============================
 // import fs from "fs";
 // import path from "path";
 // import { fileURLToPath } from "url";

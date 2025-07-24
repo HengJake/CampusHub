@@ -320,10 +320,6 @@ export function LecturerManagement() {
     };
 
     // Specialization and title management
-    const addToArrayField = (field, value) => {
-        if (!value) return;
-        setFormData({ ...formData, [field]: [...formData[field], value] });
-    };
     const removeFromArrayField = (field, idx) => {
         const updated = [...formData[field]];
         updated.splice(idx, 1);
@@ -332,7 +328,7 @@ export function LecturerManagement() {
 
     return (
         <Box flex={1} minH="100vh">
-            <VStack spacing={6} align="stretch">
+            <VStack spacing={6} align="stretch" >
                 {/* Header */}
                 <HStack justify="space-between">
                     <Box>

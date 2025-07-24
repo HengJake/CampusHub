@@ -10,7 +10,6 @@ import {
 } from "../../utils/reusable.js";
 import LostItem from "../../models/Service/lostItem.model.js";
 import User from "../../models/Academic/user.model.js";
-import FoundItem from "../../models/Service/foundItem.model.js";
 import Student from "../../models/Academic/student.model.js";
 
 const validateLostItemData = async (data) => {

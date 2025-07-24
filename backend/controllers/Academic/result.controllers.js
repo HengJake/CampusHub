@@ -259,7 +259,14 @@ export const getResultsBySchool = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Result,
         "results",
-        ["studentId", "moduleId", "schoolId"],
+        [
+            {
+                path: "studentId",
+                populate: {
+                    path: ["intakeCourseId","userId"]
+                }
+            }
+            , "moduleId", "schoolId"],
         { schoolId }
     );
 });

@@ -1,7 +1,11 @@
 import express from "express";
+import exceljs from "exceljs";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import cookieParser from "cookie-parser";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 // 1 Academic
 import userRoutes from "./routes/Academic/user.routes.js";
@@ -42,16 +46,81 @@ import parkingLotRoutes from "./routes/Facility/parkingLot.routes.js";
 // 5 Service
 import feedbackRoutes from "./routes/Service/feedback.routes.js";
 import respondRoutes from "./routes/Service/respond.routes.js";
-import foundItemRoutes from "./routes/Service/foundItem.routes.js";
 import lostItemRoutes from "./routes/Service/lostItem.routes.js";
+import { Rows } from "lucide-react";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(cookieParser());
 app.use(express.json());
+
+
+// =-=-=-=-=-=-=-=-=
+
+app.post("/export", async (req, res) => {
+  const { columns, prefilledData, fileName } = req.body;
+
+  try {
+    const workbook = new exceljs.Workbook();
+    const worksheet = workbook.addWorksheet(fileName);
+
+    // header , key , width
+    worksheet.columns = columns
+
+    // Step 2: Style the header row
+    const headerRow = worksheet.getRow(1); // First row is the header
+    headerRow.eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFD3D3D3" }, // light gray background
+      };
+      cell.font = {
+        bold: true,
+        color: { argb: "FF000000" }, // black text
+      };
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
+
+
+    prefilledData.forEach((item) => {
+      worksheet.addRow({ ...item });
+    });
+
+    // Set CSV headers
+
+    res.setHeader(
+      "Content-Tydpe",
+      "application/vnd. openxmlformats-officedocument.spreadsheetml.sheet")
+
+    res.setHeader(
+      "Content-Disposition",
+      "attachment;filename=" + `${fileName}.xlsx`)
+
+    await workbook.xlsx.write(res);
+
+    res.end();
+  } catch (error) {
+    console.error(error.message);
+    return res
+      .status(400)
+      .json({ success: false, message: error.message });
+
+  }
+})
+
+// =-=-=-=-=-=-=-=-=
 
 // 1 Academic
 app.use("/auth", authRoutes);
@@ -92,7 +161,6 @@ app.use("/api/parking-lot", parkingLotRoutes);
 // 5 Service
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/respond", respondRoutes);
-app.use("/api/found-item", foundItemRoutes);
 app.use("/api/lost-item", lostItemRoutes);
 
 app.listen(PORT, () => {

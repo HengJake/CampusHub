@@ -22,57 +22,53 @@ import About from "./pages/commonPage/about/about.jsx";
 import AuthTest from "./pages/authTest.jsx";
 
 // User Pages
-import ClassFinder from "./pages/userPage/ClassFinder.jsx";
-import StudentDashboard from "./pages/userPage/StudentDashboard.jsx";
-import Profile from "./pages/userPage/Profile.jsx";
-import Feedback from "./pages/userPage/Feedback.jsx";
-import Academic from "./pages/userPage/Academic.jsx";
-import Transportation from "./pages/userPage/Transportation.jsx";
-import SFacilityManagement from "./pages/userPage/FacilityManagement.jsx";
-
+import ClassFinder from "./pages/studentPage/ClassFinder.jsx";
+import StudentDashboard from "./pages/studentPage/StudentDashboard.jsx";
+import Profile from "./pages/studentPage/Profile.jsx";
+import Feedback from "./pages/studentPage/Feedback.jsx";
+import Academic from "./pages/studentPage/Academic.jsx";
+import Transportation from "./pages/studentPage/Transportation.jsx";
+import StudyRoom from "./pages/studentPage/StudyRoom.jsx";
+import Parking from "./pages/studentPage/Parking.jsx";
+import Locker from "./pages/studentPage/Locker.jsx";
+import Courts from "./pages/studentPage/Courts.jsx";
+import Schedule from "./pages/studentPage/Schedule.jsx";
+import Exams from "./pages/studentPage/Exams.jsx";
+import Attendance from "./pages/studentPage/Attendance.jsx";
 
 // School Admin Pages
-import { Dashboard as AdminDashboard } from "./pages/schoolAdminPage/Dashboard.jsx";
-import { UserManagement } from "./pages/schoolAdminPage/UserManagement.jsx";
-import { FacilityManagement } from "./pages/schoolAdminPage/FacilityManagement.jsx";
-import { ParkingManagement } from "./pages/schoolAdminPage/ParkingManagement.jsx";
-import { LockerManagement } from "./pages/schoolAdminPage/LockerManagement.jsx";
-import { BookingManagement } from "./pages/schoolAdminPage/BookingManagement.jsx";
-import { FeedbackManagement } from "./pages/schoolAdminPage/FeedbackManagement.jsx";
-import { AnnouncementManagement } from "./pages/schoolAdminPage/AnnouncementManagement.jsx";
-import { AdminSetting } from "./pages/schoolAdminPage/AdminSetting.jsx";
-import { AdminProfile } from "./pages/schoolAdminPage/AdminProfile.jsx";
-import { CourseManagementPage } from "./pages/schoolAdminPage/CourseManagement.jsx";
-import { AcademicOverview } from "./pages/schoolAdminPage/AcademicOverview.jsx";
+import { Dashboard as AdminDashboard } from "./pages/schoolPage/Dashboard.jsx";
+import { UserManagement } from "./pages/schoolPage/UserManagement.jsx";
+import { FacilityManagement } from "./pages/schoolPage/FacilityManagement.jsx";
+import { ParkingManagement } from "./pages/schoolPage/ParkingManagement.jsx";
+import { LockerManagement } from "./pages/schoolPage/LockerManagement.jsx";
+import { BookingManagement } from "./pages/schoolPage/BookingManagement.jsx";
+import { FeedbackManagement } from "./pages/schoolPage/FeedbackManagement.jsx";
+import { AnnouncementManagement } from "./pages/schoolPage/AnnouncementManagement.jsx";
+import { AdminSetting } from "./pages/schoolPage/AdminSetting.jsx";
+import { AdminProfile } from "./pages/schoolPage/AdminProfile.jsx";
+import { CourseManagementPage } from "./pages/schoolPage/CourseManagement.jsx";
+import { AcademicOverview } from "./pages/schoolPage/AcademicOverview.jsx";
+import CourtsManagement from "./pages/schoolPage/CourtsManagement.jsx";
+import ResultsManagement from "./pages/schoolPage/ResultsManagement.jsx";
+import ScheduleManagement from "./pages/schoolPage/ScheduleManagement.jsx";
 
 // CampusHub Admin Pages
-import CampushubDashboard from "./pages/campusHubAdminPage/dashboard.jsx";
-import Subscription from "./pages/campusHubAdminPage/subscription-tracking.jsx";
-import AnalyticalReport from "./pages/campusHubAdminPage/analytics.jsx";
-import ClientManagement from "./pages/campusHubAdminPage/client-management.jsx";
-import UserOversight from "./pages/campusHubAdminPage/user-oversight.jsx";
-import CampushubSetting from "./pages/campusHubAdminPage/profile-settings.jsx";
-// import CampushubProfile from "./pages/campusHubAdminPage/campushubProfile/campushubProfile.jsx";
+import CampushubDashboard from "./pages/companyPage/dashboard.jsx";
+import Subscription from "./pages/companyPage/subscription-tracking.jsx";
+import AnalyticalReport from "./pages/companyPage/analytics.jsx";
+import ClientManagement from "./pages/companyPage/client-management.jsx";
+import UserOversight from "./pages/companyPage/user-oversight.jsx";
+import CampushubSetting from "./pages/companyPage/profile-settings.jsx";
 
 
 // set different bar for different pages
 import LNavbar from "./component/navBar/landingNavBar";
 import RNavBar from "./component/navBar/registrationNavBar";
 import HeaderNavbar from "./component/navBar/HeaderNavbar";
-import Sidebar from "./component/navBar/Sidebar";
 
-import AdminLogs from "./pages/schoolAdminPage/AdminLogs.jsx";
-import CourtsManagement from "./pages/schoolAdminPage/CourtsManagement.jsx";
-import ResultsManagement from "./pages/schoolAdminPage/ResultsManagement.jsx";
-import ExamsManagement from "./pages/schoolAdminPage/ExamsManagement.jsx";
-import Reports from "./pages/schoolAdminPage/Reports.jsx";
 
-import Parking from "./pages/userPage/Parking.jsx";
-import Locker from "./pages/userPage/Locker.jsx";
-import Courts from "./pages/userPage/Courts.jsx";
-import Schedule from "./pages/userPage/Schedule.jsx";
-import Exams from "./pages/userPage/Exams.jsx";
-import Attendance from "./pages/userPage/Attendance.jsx";
+
 
 function App() {
   const path = useLocation().pathname;
@@ -90,6 +86,7 @@ function App() {
     "/academic",
     "/transportation",
     "/facility/parking",
+    "/facility/room",
     "/facility/locker",
     "/facility/courts",
     "/academic/schedule",
@@ -101,6 +98,7 @@ function App() {
     "/admin-dashboard",
     "/student-management",
     "/facility-management",
+    "/announcement-management",
     "/locker-management",
     "/parking-management",
     "/booking-management",
@@ -111,12 +109,9 @@ function App() {
     "/admin-setting",
     "/admin-profile",
     "/academic-overview",
-    "/admin/logs",
     "/admin/courts",
     "/admin/results",
-    "/admin/exams",
-    "/admin/reports"
-  ];
+    "/admin/schedule"  ];
   const companyRoutes = [
     "/campushub-dashboard",
     "/subscription",
@@ -229,40 +224,14 @@ function App() {
       </Box>
 
       <Box
-        ml={margin}
+        ml={{ base: 0, md: 0, lg: margin }}
         flex="1"
         display={"flex"}
-        // mt={userRole === "student" ? "64px" : ""}
         mt={"64px"}
         pr={2}
         pl={2}
         pt={6}
       >
-        {/* <Button
-          bg={"gray.900"}
-          onClick={() => setCookie("userRole", "admin", 7)}
-        >
-          Set School
-        </Button>
-        <Button
-          bg={"gray.900"}
-          onClick={() => setCookie("userRole", "user", 7)}
-        >
-          Set User
-        </Button>
-        <Button
-          bg={"gray.900"}
-          onClick={() => setCookie("userRole", "company", 7)}
-        >
-          Set Company
-        </Button>
-        <Button bg={"gray.900"} onClick={() => deleteCookie("userRole")}>
-          Delete Cookie
-        </Button>
-        <Button bg={"gray.900"} onClick={() => alert(Cookies.get("userRole"))}>
-          Log Cookies
-        </Button>  */}
-
         <Routes>
           {/* Common Pages - No auth required */}
           <Route path="/" element={<Landing />} />
@@ -283,6 +252,7 @@ function App() {
           <Route path="/transportation" element={wrapWithAuth(<Transportation />)} />
 
           {/* User Pages - Facility/Academic subpages */}
+          <Route path="/facility/room" element={wrapWithAuth(<StudyRoom />)} />
           <Route path="/facility/parking" element={wrapWithAuth(<Parking />)} />
           <Route path="/facility/locker" element={wrapWithAuth(<Locker />)} />
           <Route path="/facility/courts" element={wrapWithAuth(<Courts />)} />
@@ -305,11 +275,9 @@ function App() {
           <Route path="/admin-profile" element={wrapWithAuth(<AdminProfile />)} />
 
           {/* School Admin Pages - Additional */}
-          <Route path="/admin/logs" element={wrapWithAuth(<AdminLogs />)} />
           <Route path="/admin/courts" element={wrapWithAuth(<CourtsManagement />)} />
           <Route path="/admin/results" element={wrapWithAuth(<ResultsManagement />)} />
-          <Route path="/admin/exams" element={wrapWithAuth(<ExamsManagement />)} />
-          <Route path="/admin/reports" element={wrapWithAuth(<Reports />)} />
+          <Route path="/admin/schedule" element={wrapWithAuth(<ScheduleManagement />)} />
 
           {/* CampusHub Admin Pages - Require company admin authentication */}
           <Route path="/campushub-dashboard" element={wrapWithAuth(<CampushubDashboard />)} />
@@ -318,7 +286,6 @@ function App() {
           <Route path="/client-management" element={wrapWithAuth(<ClientManagement />)} />
           <Route path="/user-oversight" element={wrapWithAuth(<UserOversight />)} />
           <Route path="/campushub-setting" element={wrapWithAuth(<CampushubSetting />)} />
-          {/* <Route path="/campushub-profile" element={wrapWithAuth(<CampushubProfile />)} /> */}
 
         </Routes>
       </Box>

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const lostItemSchema = new mongoose.Schema({
-    ownerId: {
+    personId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Student',
         required: true
@@ -11,26 +11,28 @@ const lostItemSchema = new mongoose.Schema({
         ref: 'School',
         required: true
     },
-    name: {
-        type: String,
-        required: true,
-        trim: true
-    },
-    description: {
-        type: String,
-        required: true,
-        trim: true
-    },
-    lostLocation: {
-        type: String,
-        required: true,
-        trim: true,
-        enum: ['library', 'cafeteria', 'classroom', 'court', 'parking lot', 'lobby', 'office', 'gym', 'outdoor_area', 'other']
-    },
-    lostDate: {
-        type: Date,
-        required: true,
-        default: Date.now
+    itemDetails: {
+        name: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        description: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        location: {
+            type: String,
+            required: true,
+            trim: true,
+            enum: ['library', 'cafeteria', 'classroom', 'court', 'parking lot', 'lobby', 'office', 'gym', 'outdoor_area', 'other']
+        },
+        lostDate: {
+            type: Date,
+            required: true,
+            default: Date.now
+        },
     },
     status: {
         type: String,
@@ -43,8 +45,16 @@ const lostItemSchema = new mongoose.Schema({
         ref: 'FoundItem',
         default: null
     },
-    notes: {
-        type: String
+    resolution: {
+        status: {
+            type: String,
+        },
+        date: {
+            type: Date,
+        },
+        notes: {
+            type: String,
+        }
     }
 }, {
     timestamps: true

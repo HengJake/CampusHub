@@ -16,7 +16,12 @@ const feedbackSchema = new mongoose.Schema({
     enum: ['complaint', 'compliment', 'suggestion', 'query', 'issue'],
     required: true
   },
-  message: {
+  priority: {
+    type: String,
+    enum: ['Low', 'Medium', 'High', 'Urgent'],
+    default: "Medium"
+  }
+  , message: {
     type: String,
     required: true
   },

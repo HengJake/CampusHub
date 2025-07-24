@@ -93,9 +93,10 @@ export function ModuleManagement() {
     assessmentMethods: [],
     isActive: true,
   })
-
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [moduleToDelete, setModuleToDelete] = useState(null);
+
+
 
   const openDeleteDialog = (moduleId) => {
     setModuleToDelete(moduleId);
