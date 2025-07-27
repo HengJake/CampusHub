@@ -30,11 +30,10 @@ import {
   StatNumber,
   StatHelpText,
   Grid,
+  Spinner,
 } from "@chakra-ui/react"
 import { FiMessageSquare, FiClock, FiCheckCircle, FiAlertCircle } from "react-icons/fi"
-import { useState } from "react"
-import { useServiceStore } from "../../store/service"
-import { useAdminStore } from "../../store/TBI/adminStore";
+import { useState, useEffect } from "react"
 
 export function FeedbackManagement() {
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -43,15 +42,104 @@ export function FeedbackManagement() {
   const [response, setResponse] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [categoryFilter, setCategoryFilter] = useState("All")
+  const [feedback, setFeedback] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
 
-  // Defensive: Get feedback and updateFeedbackStatus from admin store
-  const { feedback = [], updateFeedbackStatus } = useAdminStore();
-  const safeFeedback = Array.isArray(feedback) ? feedback : [];
+  const API_BASE_URL = "http://localhost:5000/api"
 
-  const filteredFeedback = safeFeedback.filter((item) => {
+  // Fetch feedback data from backend
+  const fetchFeedback = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`${API_BASE_URL}/feedback`, {
+        credentials: 'include'
+      })
+      if (!response.ok) {
+        throw new Error('Failed to fetch feedback data')
+      }
+      const data = await response.json()
+      setFeedback(data.data || [])
+    } catch (error) {
+      console.error('Error fetching feedback:', error)
+      setError(error.message)
+      toast({
+        title: "Error",
+        description: "Failed to load feedback data",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Update feedback status
+  const updateFeedbackStatus = async (id, status) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/feedback/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ status }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to update feedback status')
+      }
+      
+      // Refresh the feedback list
+      await fetchFeedback()
+      
+      toast({
+        title: "Success",
+        description: "Feedback status updated successfully",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      })
+    } catch (error) {
+      console.error('Error updating feedback status:', error)
+      toast({
+        title: "Error",
+        description: "Failed to update feedback status",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
+  // Load feedback data on component mount
+  useEffect(() => {
+    fetchFeedback()
+  }, [])
+
+  // Transform backend data to match frontend expectations
+  const transformFeedbackData = (backendData) => {
+    return backendData.map(item => ({
+      id: item._id,
+      studentName: item.studentId?.name || "Unknown Student", // Assuming studentId is populated
+      category: item.feedbackType,
+      subject: item.message?.substring(0, 50) + (item.message?.length > 50 ? "..." : ""),
+      message: item.message,
+      status: item.status,
+      priority: item.priority,
+      date: new Date(item.createdAt).toLocaleDateString(),
+      studentId: item.studentId,
+      schoolId: item.schoolId,
+    }))
+  }
+
+  const transformedFeedback = transformFeedbackData(feedback)
+
+  const filteredFeedback = transformedFeedback.filter((item) => {
     if (!item || typeof item !== 'object') return false;
     const status = item.status || "";
     const category = item.category || "";
@@ -65,7 +153,7 @@ export function FeedbackManagement() {
     onOpen()
   }
 
-  const submitResponse = () => {
+  const submitResponse = async () => {
     if (!response.trim()) {
       toast({
         title: "Error",
@@ -76,9 +164,15 @@ export function FeedbackManagement() {
       })
       return
     }
-    if (selectedFeedback && typeof updateFeedbackStatus === 'function') {
+
+    if (selectedFeedback) {
       try {
-        updateFeedbackStatus(selectedFeedback.id, "Resolved")
+        // Update feedback status to resolved
+        await updateFeedbackStatus(selectedFeedback.id, "resolved")
+        
+        // Here you could also create a response record using the respond API
+        // For now, we'll just update the status
+        
         toast({
           title: "Response Sent",
           description: "Your response has been sent to the student",
@@ -95,15 +189,8 @@ export function FeedbackManagement() {
           isClosable: true,
         })
       }
-    } else {
-      toast({
-        title: "Error",
-        description: "Feedback status update function is unavailable.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      })
     }
+    
     setResponse("")
     setSelectedFeedback(null)
     onClose()
@@ -111,12 +198,14 @@ export function FeedbackManagement() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Open":
+      case "open":
         return "red"
-      case "In Progress":
+      case "in_progress":
         return "yellow"
-      case "Resolved":
+      case "resolved":
         return "green"
+      case "closed":
+        return "gray"
       default:
         return "gray"
     }
@@ -130,15 +219,41 @@ export function FeedbackManagement() {
         return "yellow"
       case "Low":
         return "green"
+      case "Urgent":
+        return "red"
       default:
         return "gray"
     }
   }
 
-  // Defensive: fallback for feedback counts
-  const openCount = safeFeedback.filter((f) => f && f.status === "Open").length
-  const inProgressCount = safeFeedback.filter((f) => f && f.status === "In Progress").length
-  const resolvedCount = safeFeedback.filter((f) => f && f.status === "Resolved").length
+  // Calculate feedback counts
+  const openCount = transformedFeedback.filter((f) => f && f.status === "open").length
+  const inProgressCount = transformedFeedback.filter((f) => f && f.status === "in_progress").length
+  const resolvedCount = transformedFeedback.filter((f) => f && f.status === "resolved").length
+
+  if (loading) {
+    return (
+      <Box p={6} minH="100vh" display="flex" alignItems="center" justifyContent="center">
+        <VStack spacing={4}>
+          <Spinner size="xl" color="#344E41" />
+          <Text>Loading feedback data...</Text>
+        </VStack>
+      </Box>
+    )
+  }
+
+  if (error) {
+    return (
+      <Box p={6} minH="100vh" display="flex" alignItems="center" justifyContent="center">
+        <VStack spacing={4}>
+          <Text color="red.500">Error: {error}</Text>
+          <Button onClick={fetchFeedback} colorScheme="blue">
+            Retry
+          </Button>
+        </VStack>
+      </Box>
+    )
+  }
 
   return (
     <Box p={6} minH="100vh" flex={1}>
@@ -161,7 +276,7 @@ export function FeedbackManagement() {
                 <HStack justify="space-between">
                   <Box>
                     <StatLabel color="gray.600">Total Feedback</StatLabel>
-                    <StatNumber color="#344E41">{safeFeedback.length}</StatNumber>
+                    <StatNumber color="#344E41">{transformedFeedback.length}</StatNumber>
                     <StatHelpText>All time</StatHelpText>
                   </Box>
                   <Box color="#344E41" fontSize="2xl">
@@ -230,16 +345,18 @@ export function FeedbackManagement() {
             <HStack spacing={4}>
               <Select w="200px" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                 <option value="All">All Status</option>
-                <option value="Open">Open</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Resolved">Resolved</option>
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
               </Select>
               <Select w="200px" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
                 <option value="All">All Categories</option>
-                <option value="Facility">Facility</option>
-                <option value="Service">Service</option>
-                <option value="Technical">Technical</option>
-                <option value="Other">Other</option>
+                <option value="complaint">Complaint</option>
+                <option value="compliment">Compliment</option>
+                <option value="suggestion">Suggestion</option>
+                <option value="query">Query</option>
+                <option value="issue">Issue</option>
               </Select>
             </HStack>
           </CardBody>
@@ -285,7 +402,7 @@ export function FeedbackManagement() {
                       <Text fontSize="sm">{item?.date || "-"}</Text>
                     </Td>
                     <Td>
-                      {item?.status !== "Resolved" && (
+                      {item?.status !== "resolved" && item?.status !== "closed" && (
                         <Button
                           size="sm"
                           bg="#344E41"

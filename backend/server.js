@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import cors from "cors";
 
 // 1 Academic
 import userRoutes from "./routes/Academic/user.routes.js";
@@ -58,6 +59,14 @@ const __dirname = path.dirname(__filename);
 
 app.use(cookieParser());
 app.use(express.json());
+
+// CORS configuration
+app.use(cors({
+  origin: ["http://localhost:5173", "http://localhost:3000", "http://localhost:4173"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+}));
 
 
 // =-=-=-=-=-=-=-=-=
