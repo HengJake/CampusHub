@@ -50,7 +50,7 @@ export const createClassSchedule = controllerWrapper(async (req, res) => {
     return await createRecord(
         ClassSchedule,
         req.body,
-        "class schedule",
+        "classSchedule",
         validateClassScheduleData
     );
 });
@@ -59,8 +59,13 @@ export const createClassSchedule = controllerWrapper(async (req, res) => {
 export const getClassSchedules = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         ClassSchedule,
-        "class schedules",
-        ['RoomID', 'ModuleID', 'LecturerID', 'intakeCourseId']
+        "classSchedules",
+        ['roomId', 'moduleId',
+            {
+                path: "lecturerId",
+                populate: [{ path: "userId" }]
+            }
+            , 'intakeCourseId']
     );
 });
 
@@ -70,8 +75,11 @@ export const getClassScheduleById = controllerWrapper(async (req, res) => {
     return await getRecordById(
         ClassSchedule,
         id,
-        "class schedule",
-        ['RoomID', 'ModuleID', 'LecturerID', 'intakeCourseId']
+        "classSchedules",
+        ['roomId', 'moduleId', {
+            path: "lecturerId",
+            populate: [{ path: "userId" }]
+        }, 'intakeCourseId']
     );
 });
 
@@ -82,7 +90,7 @@ export const updateClassSchedule = controllerWrapper(async (req, res) => {
         ClassSchedule,
         id,
         req.body,
-        "class schedule",
+        "classSchedules",
         validateClassScheduleData
     );
 });
@@ -102,7 +110,12 @@ export const getClassSchedulesBySchool = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         ClassSchedule,
         "classSchedules",
-        ["moduleId", "lecturerId", "roomId", "schoolId"],
+        ["moduleId", "roomId", "schoolId",
+            {
+                path: "lecturerId",
+                populate: [{ path: "userId" }]
+            },
+        ],
         { schoolId }
     );
 });

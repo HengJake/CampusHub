@@ -11,7 +11,11 @@ const TimeslotSchema = new mongoose.Schema({
         ref: 'School',
         required: true,
     },
-    dayOfWeek: { type: Number, required: true }, // 0 = Sunday, 6 = Saturday
+    dayOfWeek: {
+        type: String,
+        enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        required: true
+    }, 
     timeslot: [
         {
             start: { type: String, required: true }, // "09:00"

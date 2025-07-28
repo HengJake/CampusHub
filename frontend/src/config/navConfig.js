@@ -62,7 +62,7 @@ const navConfig = {
             children: [
                 { label: "Academic Overview", path: "/academic-overview", icon: FiBook },
                 { label: "Course Management☑️", path: "/course-management", icon: FaChalkboardTeacher },
-                { label: "Results", path: "/admin/results", icon: FiBarChart2 },
+                { label: "Results☑️", path: "/admin/results", icon: FiBarChart2 },
                 { label: "Schedule Manager", path: "/admin/schedule", icon: MdEventNote }
             ]
         },

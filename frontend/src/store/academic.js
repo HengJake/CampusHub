@@ -1082,7 +1082,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await fetch("/api/classSchedule", {
+            const res = await fetch("/api/class-schedule", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

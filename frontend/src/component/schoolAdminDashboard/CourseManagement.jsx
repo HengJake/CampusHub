@@ -52,7 +52,7 @@ import { useAcademicStore } from "../../store/academic";
 import { useShowToast } from "../../store/utils/toast";
 import ComfirmationMessage from "../common/ComfirmationMessage.jsx";
 import TitleInputList from "../common/TitleInputList.jsx";
-import MultiSelectPopover from "../common/MultiSelect.jsx";
+import MultiSelectPopover from "../common/MultiSelectPopover.jsx";
 
 export function CourseManagement() {
     const {

@@ -14,7 +14,6 @@ import {
 
 const validateResultData = async (data) => {
     const { studentId, moduleId, grade, creditHour, remark } = data;
-
     // Check required fields
     if (!studentId) {
         return {

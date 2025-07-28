@@ -51,12 +51,11 @@ export const validateObjectId = (id, entityName = "record") => {
 // validate reference ID
 export const validateReferenceExists = async (id, Model, fieldName) => {
     if (!id) return null; // Skip validation if field is not provided
-
+    
     const validationError = validateObjectId(id, fieldName);
     if (validationError) return validationError;
-
-    try {
-        // for to repeating record
+    
+    try {        // for to repeating record
         const exists = await Model.findById(id);
         if (!exists) {
             return {
@@ -90,7 +89,6 @@ export const validateMultipleReferences = async (references) => {
 
 export const createRecord = async (Model, data, entityName = "record", validationFn = null, uniqueFields = []) => {
     try {
-        console.log(`[reusable.js] Creating ${entityName} with data:`, data);
 
         // Custom validation if provided
         if (validationFn) {
