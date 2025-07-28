@@ -93,7 +93,9 @@ export const useServiceStore = create((set, get) => ({
         try {
             await get().waitForAuth();
             const url = get().buildUrl("/api/feedback", filters);
-            const res = await fetch(url);
+            const res = await fetch(url, {
+                credentials: 'include'
+            });
             const data = await res.json();
             if (!data.success) {
                 throw new Error(data.message || "Failed to fetch feedback");
@@ -114,26 +116,33 @@ export const useServiceStore = create((set, get) => ({
     },
     createFeedback: async (feedbackData) => {
         try {
+            console.log("createFeedback called with:", feedbackData);
             const authStore = useAuthStore.getState();
             const userContext = authStore.getCurrentUser();
+            console.log("User context:", userContext);
             if (userContext.role === "schoolAdmin" || userContext.role === "student") {
                 const schoolId = authStore.getSchoolId();
+                console.log("School ID:", schoolId);
                 if (schoolId) {
                     feedbackData.schoolId = schoolId;
                 }
             }
+            console.log("Final feedback data to send:", feedbackData);
             const res = await fetch("/api/feedback", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: 'include',
                 body: JSON.stringify(feedbackData),
             });
             const data = await res.json();
+            console.log("Backend response:", data);
             if (!data.success) {
                 throw new Error(data.message || "Failed to create feedback");
             }
             set((state) => ({ feedback: [...state.feedback, data.data] }));
             return { success: true, data: data.data };
         } catch (error) {
+            console.error("Error in createFeedback:", error);
             return { success: false, message: error.message };
         }
     },
@@ -142,6 +151,7 @@ export const useServiceStore = create((set, get) => ({
             const res = await fetch(`/api/feedback/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
+                credentials: 'include',
                 body: JSON.stringify(updates),
             });
             const data = await res.json();
@@ -162,6 +172,7 @@ export const useServiceStore = create((set, get) => ({
         try {
             const res = await fetch(`/api/feedback/${id}`, {
                 method: "DELETE",
+                credentials: 'include',
             });
             const data = await res.json();
             if (!data.success) {
@@ -182,7 +193,9 @@ export const useServiceStore = create((set, get) => ({
         try {
             await get().waitForAuth();
             const url = get().buildUrl("/api/found-item", filters);
-            const res = await fetch(url);
+            const res = await fetch(url, {
+                credentials: 'include'
+            });
             const data = await res.json();
             if (!data.success) {
                 throw new Error(data.message || "Failed to fetch found items");
@@ -214,6 +227,7 @@ export const useServiceStore = create((set, get) => ({
             const res = await fetch("/api/found-item", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: 'include',
                 body: JSON.stringify(itemData),
             });
             const data = await res.json();
@@ -231,6 +245,7 @@ export const useServiceStore = create((set, get) => ({
             const res = await fetch(`/api/found-item/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
+                credentials: 'include',
                 body: JSON.stringify(updates),
             });
             const data = await res.json();
@@ -251,6 +266,7 @@ export const useServiceStore = create((set, get) => ({
         try {
             const res = await fetch(`/api/found-item/${id}`, {
                 method: "DELETE",
+                credentials: 'include',
             });
             const data = await res.json();
             if (!data.success) {
@@ -271,7 +287,9 @@ export const useServiceStore = create((set, get) => ({
         try {
             await get().waitForAuth();
             const url = get().buildUrl("/api/lost-item", filters);
-            const res = await fetch(url);
+            const res = await fetch(url, {
+                credentials: 'include'
+            });
             const data = await res.json();
             if (!data.success) {
                 throw new Error(data.message || "Failed to fetch lost items");
@@ -303,6 +321,7 @@ export const useServiceStore = create((set, get) => ({
             const res = await fetch("/api/lost-item", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: 'include',
                 body: JSON.stringify(itemData),
             });
             const data = await res.json();
@@ -320,6 +339,7 @@ export const useServiceStore = create((set, get) => ({
             const res = await fetch(`/api/lost-item/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
+                credentials: 'include',
                 body: JSON.stringify(updates),
             });
             const data = await res.json();
@@ -340,6 +360,7 @@ export const useServiceStore = create((set, get) => ({
         try {
             const res = await fetch(`/api/lost-item/${id}`, {
                 method: "DELETE",
+                credentials: 'include',
             });
             const data = await res.json();
             if (!data.success) {
@@ -360,7 +381,9 @@ export const useServiceStore = create((set, get) => ({
         try {
             await get().waitForAuth();
             const url = get().buildUrl("/api/respond", filters);
-            const res = await fetch(url);
+            const res = await fetch(url, {
+                credentials: 'include'
+            });
             const data = await res.json();
             if (!data.success) {
                 throw new Error(data.message || "Failed to fetch responds");
@@ -392,6 +415,7 @@ export const useServiceStore = create((set, get) => ({
             const res = await fetch("/api/respond", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: 'include',
                 body: JSON.stringify(respondData),
             });
             const data = await res.json();
@@ -409,6 +433,7 @@ export const useServiceStore = create((set, get) => ({
             const res = await fetch(`/api/respond/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
+                credentials: 'include',
                 body: JSON.stringify(updates),
             });
             const data = await res.json();
@@ -429,6 +454,7 @@ export const useServiceStore = create((set, get) => ({
         try {
             const res = await fetch(`/api/respond/${id}`, {
                 method: "DELETE",
+                credentials: 'include',
             });
             const data = await res.json();
             if (!data.success) {

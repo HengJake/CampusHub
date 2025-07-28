@@ -3,6 +3,22 @@ import { createRecord, getAllRecords, getRecordById, updateRecord, deleteRecord,
 
 // Create Feedback
 export const createFeedback = controllerWrapper(async (req, res) => {
+    console.log("Creating feedback with body:", req.body);
+    
+    // Add the authenticated user's ID if not provided
+    if (!req.body.studentId && req.body.id) {
+        req.body.studentId = req.body.id;
+    }
+    
+    // Ensure we have a studentId
+    if (!req.body.studentId) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "Student ID is required" 
+        });
+    }
+    
+    console.log("Final feedback data:", req.body);
     return await createRecord(Feedback, req.body, "feedback");
 });
 
@@ -20,12 +36,17 @@ export const getFeedbackById = controllerWrapper(async (req, res) => {
 // Get Feedbacks by Student ID
 export const getFeedbacksByStudentId = controllerWrapper(async (req, res) => {
     const { studentId } = req.params;
-    return await getAllRecords(
+    console.log("Fetching feedback for student ID:", studentId);
+    
+    const result = await getAllRecords(
         Feedback,
         "feedbacks",
         [],
-        { StudentID: studentId }
+        { studentId: studentId }
     );
+    
+    console.log("Found feedback records:", result);
+    return result;
 });
 
 // Get Feedbacks by Feedback Type
@@ -35,7 +56,7 @@ export const getFeedbacksByFeedbackType = controllerWrapper(async (req, res) => 
         Feedback,
         "feedbacks",
         [],
-        { FeedbackType: feedbackType }
+        { feedbackType: feedbackType }
     );
 });
 

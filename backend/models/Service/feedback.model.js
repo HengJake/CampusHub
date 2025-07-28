@@ -20,8 +20,8 @@ const feedbackSchema = new mongoose.Schema({
     type: String,
     enum: ['Low', 'Medium', 'High', 'Urgent'],
     default: "Medium"
-  }
-  , message: {
+  },
+  message: {
     type: String,
     required: true
   },

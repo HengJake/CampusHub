@@ -17,21 +17,25 @@ import {
   RadioGroup,
   Radio,
   HStack,
+  Spinner,
 } from "@chakra-ui/react"
 import { useState } from "react"
-import { useStudentStore } from "../../store/TBI/studentStore.js"
+import { useServiceStore } from "../../store/service.js"
+import { useAuthStore } from "../../store/auth.js"
 
-export function FeedbackModal({ isOpen, onClose }) {
+export function FeedbackModal({ isOpen, onClose, onSuccess }) {
   const [category, setCategory] = useState("")
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState("")
-  const [priority, setPriority] = useState("medium")
+  const [priority, setPriority] = useState("Medium")
   const [anonymous, setAnonymous] = useState("no")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { submitFeedback } = useStudentStore()
+  const { createFeedback } = useServiceStore()
+  const { getCurrentUser } = useAuthStore()
   const toast = useToast()
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!category || !subject || !message) {
       toast({
         title: "Missing Information",
@@ -43,32 +47,89 @@ export function FeedbackModal({ isOpen, onClose }) {
       return
     }
 
-    const feedback = {
-      category,
-      subject,
-      message,
-      priority,
-      anonymous: anonymous === "yes",
-      timestamp: new Date().toISOString(),
+    setIsSubmitting(true)
+
+    try {
+      const currentUser = getCurrentUser()
+      
+      // Map category to feedbackType enum values from the backend model
+      const categoryToFeedbackType = {
+        "facilities": "issue",
+        "academic": "query", 
+        "transportation": "issue",
+        "dining": "complaint",
+        "technology": "issue",
+        "student-life": "suggestion",
+        "administration": "query",
+        "other": "query"
+      }
+
+      // Helper function to get student ID consistently (same as in Feedback.jsx)
+      const getStudentId = (currentUser) => {
+        return currentUser.studentId || 
+               currentUser.user?.studentId || 
+               currentUser.user?.student?._id || 
+               currentUser.user?._id ||
+               currentUser.id
+      }
+
+      // Get the correct student ID from various possible locations
+      const studentId = getStudentId(currentUser)
+
+      console.log("Current user:", currentUser)
+      console.log("Extracted student ID:", studentId)
+
+      const feedbackData = {
+        feedbackType: categoryToFeedbackType[category] || "query",
+        priority: priority,
+        message: `${subject}\n\n${message}`,
+        studentId: studentId,
+        // schoolId will be automatically added by the service store
+      }
+
+      console.log("Submitting feedback data:", feedbackData)
+      const result = await createFeedback(feedbackData)
+      console.log("Feedback submission result:", result)
+
+      if (result.success) {
+        console.log("Feedback submitted successfully, calling onSuccess callback")
+        toast({
+          title: "Feedback Submitted Successfully",
+          description: "Your feedback has been submitted and will appear in your feedback history. We'll review it shortly.",
+          status: "success",
+          duration: 4000,
+          isClosable: true,
+        })
+
+        // Reset form
+        setCategory("")
+        setSubject("")
+        setMessage("")
+        setPriority("Medium")
+        setAnonymous("no")
+        
+        // Call success callback if provided
+        if (onSuccess) {
+          console.log("Calling onSuccess callback")
+          onSuccess()
+        }
+        
+        onClose()
+      } else {
+        throw new Error(result.message || "Failed to submit feedback")
+      }
+    } catch (error) {
+      console.error("Error submitting feedback:", error)
+      toast({
+        title: "Submission Failed",
+        description: error.message || "Failed to submit feedback. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    } finally {
+      setIsSubmitting(false)
     }
-
-    submitFeedback(feedback)
-
-    toast({
-      title: "Feedback Submitted",
-      description: "Thank you for your feedback! We'll review it shortly.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    })
-
-    // Reset form
-    setCategory("")
-    setSubject("")
-    setMessage("")
-    setPriority("medium")
-    setAnonymous("no")
-    onClose()
   }
 
   return (
@@ -120,10 +181,10 @@ export function FeedbackModal({ isOpen, onClose }) {
               <FormLabel>Priority Level</FormLabel>
               <RadioGroup value={priority} onChange={setPriority}>
                 <HStack spacing={6}>
-                  <Radio value="low">Low</Radio>
-                  <Radio value="medium">Medium</Radio>
-                  <Radio value="high">High</Radio>
-                  <Radio value="urgent">Urgent</Radio>
+                  <Radio value="Low">Low</Radio>
+                  <Radio value="Medium">Medium</Radio>
+                  <Radio value="High">High</Radio>
+                  <Radio value="Urgent">Urgent</Radio>
                 </HStack>
               </RadioGroup>
             </FormControl>
@@ -141,10 +202,15 @@ export function FeedbackModal({ isOpen, onClose }) {
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
+          <Button variant="ghost" mr={3} onClick={onClose} isDisabled={isSubmitting}>
             Cancel
           </Button>
-          <Button colorScheme="blue" onClick={handleSubmit}>
+          <Button 
+            colorScheme="blue" 
+            onClick={handleSubmit}
+            isLoading={isSubmitting}
+            loadingText="Submitting..."
+          >
             Submit Feedback
           </Button>
         </ModalFooter>
