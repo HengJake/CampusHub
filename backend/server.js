@@ -50,6 +50,11 @@ import respondRoutes from "./routes/Service/respond.routes.js";
 import lostItemRoutes from "./routes/Service/lostItem.routes.js";
 import { Rows } from "lucide-react";
 
+// At the top of your server.js
+console.log('🚀 Server starting...');
+console.log('📍 Current directory:', process.cwd());
+console.log('🌍 Environment:', process.env.NODE_ENV);
+
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
@@ -172,6 +177,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/respond", respondRoutes);
 app.use("/api/lost-item", lostItemRoutes);
 
+
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "/frontend/dist")))
 
@@ -179,6 +185,17 @@ if (process.env.NODE_ENV === "production") {
     res.sendFile(path.resolve(__dirname,"frontend","dist","index.html"))
   })
 }
+
+// Add this to catch unhandled errors
+process.on('uncaughtException', (err) => {
+  console.error('💥 Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
 
 
 app.listen(PORT, () => {
