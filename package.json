@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "fdev": "cross-env NODE_ENV=development cd frontend && npm run dev",
+    "fdev": "npx cross-env NODE_ENV=development cd frontend && npm run dev",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "cross-env NODE_ENV=development nodemon backend/server.js",
+    "dev": "npx cross-env NODE_ENV=development nodemon backend/server.js",
     "init-academic-api": "node backend/initAcademicDatabaseAPI.js",
-    "build" : "npm i && npm i --prefix frontend && npm run build --prefix frontend",
-    "start" : "cross-env NODE_ENV=production node backend/server.js"
+    "build": "npm i && npm i --prefix frontend && npm run build --prefix frontend",
+    "start": "npx cross-env NODE_ENV=production node backend/server.js"
   },
   "repository": {
     "type": "git",
