@@ -3,7 +3,7 @@ import { Box, Text, Collapse, VStack, HStack, Badge, Grid } from '@chakra-ui/rea
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 
 // Component for rendering individual class item
-export const ClassItem = ({ item, getTypeColor }) => (
+export const ClassItem = ({ item, getTypeColor, rowSpan = 1 }) => (
     <Box
         bg={`${getTypeColor(item.type, item.examType)}.100`}
         borderLeft="3px solid"
@@ -12,11 +12,15 @@ export const ClassItem = ({ item, getTypeColor }) => (
         borderRadius="sm"
         mb={1}
         fontSize="xs"
+        gridRow={rowSpan > 1 ? `span ${rowSpan}` : undefined}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
     >
         <Text fontWeight="bold" mb={1}>
             {item.code}
         </Text>
-        <Text mb={1} noOfLines={1}>
+        <Text mb={1} noOfLines={2}>
             {item.subject}
         </Text>
         <Text color="gray.600" noOfLines={1}>
@@ -30,15 +34,46 @@ export const ClassItem = ({ item, getTypeColor }) => (
     </Box>
 );
 
+// Helper function to find consecutive classes
+const findConsecutiveClasses = (items, timeSlots) => {
+    const consecutiveGroups = new Map();
+
+    items.forEach(item => {
+        const timeIndex = timeSlots.indexOf(item.time);
+        if (timeIndex === -1) return;
+
+        const key = `${item.day}-${item.code}-${item.subject}`;
+
+        if (!consecutiveGroups.has(key)) {
+            consecutiveGroups.set(key, {
+                item,
+                startIndex: timeIndex,
+                endIndex: timeIndex,
+                timeSlots: [item.time]
+            });
+        } else {
+            const group = consecutiveGroups.get(key);
+            if (timeIndex === group.endIndex + 1) {
+                group.endIndex = timeIndex;
+                group.timeSlots.push(item.time);
+            }
+        }
+    });
+
+    return consecutiveGroups;
+};
+
 // Main component that manages the clustering state
 export const ClusteredScheduleGrid = ({
     daysOfWeek,
     timeSlots,
     gridBg,
     getItemsForSlot,
-    getTypeColor
+    getTypeColor,
+    allItems = [], // Add this prop to pass all schedule items
+    filter,
 }) => {
-    // State to track expanded clusters - now properly inside a component
+    // State to track expanded clusters
     const [expandedClusters, setExpandedClusters] = useState(new Set());
 
     // Helper function to toggle cluster expansion
@@ -55,6 +90,10 @@ export const ClusteredScheduleGrid = ({
         setExpandedClusters(newExpanded);
     };
 
+    // Find consecutive classes for merging
+    const consecutiveGroups = findConsecutiveClasses(allItems, timeSlots);
+    const mergedSlots = new Set(); // Track which slots are part of merged cells
+
     // Component for clustered classes
     const ClusteredClasses = ({ day, time, slotData }) => {
         const clusterId = `${day}-${time}`;
@@ -63,9 +102,42 @@ export const ClusteredScheduleGrid = ({
 
         if (count === 0) return null;
 
+        // Check if this slot should be skipped (part of a merged cell)
+        if (mergedSlots.has(`${day}-${time}`)) {
+            return null;
+        }
+
+        // console.log(items)
+
         if (!shouldCluster) {
-            // Single item, render normally
-            return <ClassItem item={items[0]} getTypeColor={getTypeColor} />;
+            // Single item - check if it's part of a consecutive group
+            const item = items[0];
+            const groupKey = `${day}-${item.code}-${item.subject}`;
+            const group = consecutiveGroups.get(groupKey);
+
+            if (group && group.timeSlots.length > 1 && group.timeSlots[0] === time) {
+                // This is the start of a merged cell
+                const rowSpan = group.timeSlots.length;
+
+                // Mark subsequent slots as merged
+                for (let i = 1; i < group.timeSlots.length; i++) {
+                    mergedSlots.add(`${day}-${group.timeSlots[i]}`);
+                }
+
+                return (
+                    <ClassItem
+                        item={item}
+                        getTypeColor={getTypeColor}
+                        rowSpan={rowSpan}
+                    />
+                );
+            } else if (group && group.timeSlots[0] !== time) {
+                // This slot is part of a merged cell but not the first one
+                return null;
+            }
+
+            // Regular single item
+            return <ClassItem item={item} getTypeColor={getTypeColor} />;
         }
 
         return (
@@ -105,7 +177,7 @@ export const ClusteredScheduleGrid = ({
                 {/* Expanded Classes */}
                 <Collapse in={isExpanded} animateOpacity>
                     <VStack spacing={1} align="stretch" pl={2}>
-                        {items.map((item) => (
+                        {items && items.map((item) => (
                             <ClassItem
                                 key={item.id}
                                 item={item}
@@ -153,7 +225,28 @@ export const ClusteredScheduleGrid = ({
                             {time}
                         </Box>
                         {daysOfWeek.map((day) => {
-                            const slotData = getItemsForSlot(day, time);
+                            let slotData = getItemsForSlot(day, time);
+
+                            let filteredItems = slotData
+
+                            // if (slotData.items.length > 0) {
+                            //    //TODO:
+                            //     const filtered = slotData.items.filter(item => item.id == "6885ccf07399d77d7676174a");
+
+                            //     filteredItems = {
+                            //         ...slotData,
+                            //         items: filtered,
+                            //         count: filtered.length,
+                            //         shouldCluster: filtered.length > 1 // or whatever your clustering logic is
+                            //     };
+                            // }
+
+                            // console.log("FILTERED ITEMS", filteredItems)
+                            // Skip rendering if this slot is part of a merged cell
+                            if (mergedSlots.has(`${day}-${time}`)) {
+                                return null;
+                            }
+
                             return (
                                 <Box
                                     key={`${day}-${time}`}
@@ -166,7 +259,7 @@ export const ClusteredScheduleGrid = ({
                                     <ClusteredClasses
                                         day={day}
                                         time={time}
-                                        slotData={slotData}
+                                        slotData={filteredItems}
                                     />
                                 </Box>
                             );

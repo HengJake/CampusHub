@@ -53,11 +53,11 @@ import { useState, useEffect, useMemo, useRef } from "react"
 import { useGeneralStore } from "../../store/general.js"
 import { useAcademicStore } from "../../store/academic.js"
 import { useShowToast } from "../../store/utils/toast.js";
-import generateClassSchedule from "../../component/schoolAdminDashboard/generateClassSchedule.js"
+import generateClassSchedule from "../../component/schoolAdminDashboard/ScheduleManagement/generateClassSchedule.js"
 import { FiRefreshCcw } from "react-icons/fi";
 import * as XLSX from "xlsx"
 import { IoIosSwap } from "react-icons/io";
-import { ClassItem, ClusteredScheduleGrid } from "../../component/schoolAdminDashboard/ClassScheduleCard.jsx"
+import { ClassItem, ClusteredScheduleGrid } from "../../component/schoolAdminDashboard/ScheduleManagement/ClassScheduleCard.jsx"
 
 // Mock data for schedules
 const mockScheduleData = {
@@ -297,6 +297,9 @@ export default function ScheduleManagement() {
   function getItemsForSlot(day, time) {
     const items = classSchedules?.filter((item) => {
       if (item.dayOfWeek !== day) return false;
+
+      
+      console.log("🚀 ~ getItemsForSlot ~ classSchedules:", classSchedules)
 
       const [startHour, startMin] = item.startTime.split(":").map(Number);
       const [endHour, endMin] = item.endTime.split(":").map(Number);
@@ -612,70 +615,6 @@ export default function ScheduleManagement() {
           </CardBody>
         </Card>
 
-        {/* Filters */}
-        <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-          <CardBody>
-            <Stack direction={cardDirection} spacing={4} align="center">
-              <HStack spacing={2}>
-                <Icon as={FiFilter} color="gray.500" />
-                <Text fontWeight="medium" fontSize="sm">
-                  Filters:
-                </Text>
-              </HStack>
-
-              <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4} flex="1">
-                <Box>
-                  <Text fontSize="sm" mb={1} color="gray.600">
-                    Semester
-                  </Text>
-                  <Select size="sm" value={selectedSemester} onChange={(e) => setSelectedSemester(e.target.value)}>
-                    {mockScheduleData.semesters.map((semester) => (
-                      <option key={semester} value={semester}>
-                        {semester}
-                      </option>
-                    ))}
-                  </Select>
-                </Box>
-
-                <Box>
-                  <Text fontSize="sm" mb={1} color="gray.600">
-                    Week
-                  </Text>
-                  <Select size="sm" value={selectedWeek} onChange={(e) => setSelectedWeek(e.target.value)}>
-                    {mockScheduleData.weeks.map((week) => (
-                      <option key={week} value={week}>
-                        {week}
-                      </option>
-                    ))}
-                  </Select>
-                </Box>
-
-                <Box>
-                  <Text fontSize="sm" mb={1} color="gray.600">
-                    Group
-                  </Text>
-                  <Select size="sm" value={selectedGroup} onChange={(e) => setSelectedGroup(e.target.value)}>
-                    {mockScheduleData.groups.map((group) => (
-                      <option key={group} value={group}>
-                        {group}
-                      </option>
-                    ))}
-                  </Select>
-                </Box>
-              </SimpleGrid>
-
-              <ButtonGroup size="sm" isAttached variant="outline">
-                <Button colorScheme={viewMode === "weekly" ? "blue" : "gray"} onClick={() => setViewMode("weekly")}>
-                  Weekly View
-                </Button>
-                <Button colorScheme={viewMode === "list" ? "blue" : "gray"} onClick={() => setViewMode("list")}>
-                  List View
-                </Button>
-              </ButtonGroup>
-            </Stack>
-          </CardBody>
-        </Card>
-
         {/* Main Content */}
         <Tabs index={activeTab} onChange={setActiveTab} variant="enclosed" colorScheme="blue">
           <TabList>
@@ -697,6 +636,15 @@ export default function ScheduleManagement() {
                 </Badge>
               </HStack>
             </Tab>
+
+            <ButtonGroup size="sm" isAttached variant="outline" pos="absolute" right={0}>
+              <Button colorScheme={viewMode === "weekly" ? "blue" : "gray"} onClick={() => setViewMode("weekly")}>
+                Weekly View
+              </Button>
+              <Button colorScheme={viewMode === "list" ? "blue" : "gray"} onClick={() => setViewMode("list")}>
+                List View
+              </Button>
+            </ButtonGroup>
           </TabList>
 
           <TabPanels>
@@ -791,6 +739,11 @@ export default function ScheduleManagement() {
                         gridBg={gridBg}
                         getItemsForSlot={getItemsForSlot}
                         getTypeColor={getTypeColor}
+                        filter={{
+                        intake : selectedIntake,
+                        course : selectedCourse,
+                        module : selectedModule,
+                        }}
                       />
                     )}
                   </CardBody>
