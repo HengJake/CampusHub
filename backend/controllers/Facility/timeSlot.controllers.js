@@ -7,7 +7,7 @@ import {
   validateReferenceExists,
   controllerWrapper
 } from "../../utils/reusable.js";
-import Timeslot from "../../models/Facility/timeslot.model.js";
+import Timeslot from "../../models/Facility/timeSlot.model.js";
 import Resource from "../../models/Facility/resource.model.js";
 
 const validateTimeslotData = async (data) => {
