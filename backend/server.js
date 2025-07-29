@@ -179,11 +179,11 @@ app.use("/api/lost-item", lostItemRoutes);
 
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, 'frontend', 'dist')))
+  app.use(express.static(path.join(__dirname, "..", 'frontend', 'dist')))
   console.log("🚀 ~ __dirname:", __dirname)
 
   app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"))
+    res.sendFile(path.resolve(__dirname, "..", "frontend", "dist", "index.html"))
   })
 }
 
