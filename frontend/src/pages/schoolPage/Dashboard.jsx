@@ -10,7 +10,7 @@ import { useFacilityStore } from "../../store/facility.js";
 import { useServiceStore } from "../../store/service.js";
 import { useTransportationStore } from "../../store/transportation.js";
 import { useEffect } from "react";
-import { StatCard } from "../../component/common/StatsCard.jsx"
+import { StatsCard } from "../../component/common/StatsCard.jsx"
 
 
 export function Dashboard() {
@@ -106,25 +106,25 @@ export function Dashboard() {
     <Box flex={1}>
       {/* KPI Cards */}
       <Grid templateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={6} mb={8}>
-        <StatCard
+        <StatsCard
           title="Total Students"
           value={students.length}
           change={stats.studentChange}
           icon={<FiUsers />}
         />
-        <StatCard
+        <StatsCard
           title="Active Bookings ❌"
           value={dashboardStats.activeBookings}
           change={8}
           icon={<FiCalendar />}
         />
-        <StatCard
+        <StatsCard
           title="Locker Usage ❌"
           value={`${lockerUsage}%`}
           change={lockerUsage}
           icon={<FiLock />}
         />
-        <StatCard
+        <StatsCard
           title="Parking Spots ❌"
           value={`${parkingOccupancy}%`}
           change={parkingOccupancy}

@@ -17,7 +17,7 @@ import {
 } from "@chakra-ui/react"
 
 
-export function StatCard({ title, value, change, icon, color }) {
+export function StatsCard({ title, value, change, icon, color }) {
     const bgColor = useColorModeValue("white", "gray.800")
     const borderColor = useColorModeValue("gray.200", "gray.600")
     return (

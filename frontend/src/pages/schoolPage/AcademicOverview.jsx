@@ -23,7 +23,7 @@ import { FaGraduationCap } from "react-icons/fa";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
 import { useAcademicStore } from "../../store/academic.js";
 import { useEffect } from "react";
-import { StatCard } from "../../component/common/StatCard.jsx";
+import { StatsCard } from "../../component/common/StatsCard.jsx";
 
 import {
   FiCheckCircle,
@@ -282,28 +282,28 @@ export function AcademicOverview() {
             📚 Student Academic Performance
           </Text>
           <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
-            <StatCard
+            <StatsCard
               title="Pass Rate"
               value={`${dashboardStats.passRate}%`}
               change={2.5}
               icon={<FiCheckCircle />}
               color="green.500"
             />
-            <StatCard
+            <StatsCard
               title="Average GPA"
               value={dashboardStats.averageGPA.toFixed(2)}
               change={0.1}
               icon={<FiTrendingUp />}
               color="blue.500"
             />
-            <StatCard
+            <StatsCard
               title="At-Risk Students"
               value={dashboardStats.atRiskStudents}
               change={-3}
               icon={<FiAlertTriangle />}
               color="red.500"
             />
-            <StatCard
+            <StatsCard
               title="Top Performers"
               value={dashboardStats.topPerformers}
               icon={<FiStar />}
@@ -318,25 +318,25 @@ export function AcademicOverview() {
             🧑‍🏫 Lecturer/Subject Overview
           </Text>
           <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
-            <StatCard
+            <StatsCard
               title="Avg Subject Load"
               value={dashboardStats.avgSubjectLoad}
               icon={<FiBook />}
               color="purple.500"
             />
-            <StatCard
+            <StatsCard
               title="Contact Hours"
               value={dashboardStats.totalContactHours}
               icon={<FiClock />}
               color="teal.500"
             />
-            <StatCard
+            <StatsCard
               title="High Fail Rate Subjects"
               value={dashboardStats.highFailRateSubjects}
               icon={<FiAlertCircle />}
               color="orange.500"
             />
-            <StatCard
+            <StatsCard
               title="Avg Feedback Score"
               value={`${dashboardStats.avgFeedbackScore}/5`}
               icon={<FiMessageSquare />}
@@ -351,25 +351,25 @@ export function AcademicOverview() {
             🏫 Class & Semester Metrics
           </Text>
           <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
-            <StatCard
+            <StatsCard
               title="Active Semesters"
               value={dashboardStats.activeSemesters}
               icon={<FiCalendar />}
               color="indigo.500"
             />
-            <StatCard
+            <StatsCard
               title="Avg Class Size"
               value={dashboardStats.avgClassSize}
               icon={<FiUsers />}
               color="cyan.500"
             />
-            <StatCard
+            <StatsCard
               title="Course Retake Rate"
               value={`${dashboardStats.courseRetakeRate}%`}
               icon={<FiRefreshCw />}
               color="red.400"
             />
-            <StatCard
+            <StatsCard
               title="Enrollment Rate"
               value={`${dashboardStats.enrollmentRate}%`}
               icon={<FiUserPlus />}
@@ -384,25 +384,25 @@ export function AcademicOverview() {
             📅 Attendance Tracking
           </Text>
           <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
-            <StatCard
+            <StatsCard
               title="Avg Attendance Rate"
               value={`${dashboardStats.avgAttendanceRate}%`}
               icon={<FiCheckSquare />}
               color="green.500"
             />
-            <StatCard
+            <StatsCard
               title="Low Attendance Alerts"
               value={dashboardStats.lowAttendanceAlerts}
               icon={<FiAlertTriangle />}
               color="red.500"
             />
-            <StatCard
+            <StatsCard
               title="Attendance vs Performance"
               value={`${dashboardStats.attendancePerformanceCorr}%`}
               icon={<FiTrendingUp />}
               color="blue.500"
             />
-            <StatCard
+            <StatsCard
               title="Weekly Absence Trend"
               value={`${dashboardStats.weeklyAbsenceTrend}%`}
               icon={<FiBarChart />}
@@ -417,25 +417,25 @@ export function AcademicOverview() {
             📤 Assessment & Exam Insights
           </Text>
           <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
-            <StatCard
+            <StatsCard
               title="Upcoming Exams"
               value={dashboardStats.upcomingExams}
               icon={<FiCalendar />}
               color="red.500"
             />
-            <StatCard
+            <StatsCard
               title="Result Submission"
               value={`${dashboardStats.resultSubmissionProgress}%`}
               icon={<FiUpload />}
               color="green.500"
             />
-            <StatCard
+            <StatsCard
               title="Assessment Weightage"
               value={`${dashboardStats.assessmentWeightage}%`}
               icon={<FiPieChart />}
               color="purple.500"
             />
-            <StatCard
+            <StatsCard
               title="Pending Grading"
               value={dashboardStats.pendingGradingItems}
               icon={<FiClock />}
