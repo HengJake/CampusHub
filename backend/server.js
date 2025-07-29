@@ -7,6 +7,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
+import path from "path";
 
 // 1 Academic
 import userRoutes from "./routes/Academic/user.routes.js";
@@ -171,6 +172,15 @@ app.use("/api/parking-lot", parkingLotRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/respond", respondRoutes);
 app.use("/api/lost-item", lostItemRoutes);
+
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "/frontend/dist")))
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname,"frontend","dist","index.html"))
+  })
+}
+
 
 app.listen(PORT, () => {
   connectDB();
