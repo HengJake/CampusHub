@@ -23,7 +23,7 @@ import { FaGraduationCap } from "react-icons/fa";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
 import { useAcademicStore } from "../../store/academic.js";
 import { useEffect } from "react";
-import { StatCard } from "../../component/common/statsCard.jsx";
+import { StatCard } from "../../component/common/StatCard.jsx";
 
 import {
   FiCheckCircle,
