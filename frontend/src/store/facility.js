@@ -232,6 +232,7 @@ export const useFacilityStore = create((set, get) => ({
     },
     updateResource: async (id, updates) => {
         try {
+            
             const res = await fetch(`/api/resource/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },

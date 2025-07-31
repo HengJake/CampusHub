@@ -44,7 +44,7 @@ import {
 import { FiPlus, FiEdit, FiTrash2, FiMoreVertical, FiHome, FiUsers } from "react-icons/fi"
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { useFacilityStore } from "../../store/facility.js";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import React from "react";
 import ComfirmationMessage from "../../component/common/ComfirmationMessage.jsx";
 
@@ -58,13 +58,14 @@ const FACILITY_TYPES = [
 ];
 
 export function FacilityManagement() {
-  const { resources, fetchResources, createResource, updateResource, deleteResource, lockerUnits, fetchLockerUnits, createLockerUnit, updateLockerUnits, deleteLockerUnits, bookings, fetchBookings, createBooking, updateBooking, deleteBooking} = useFacilityStore();
+  const { resources, fetchResources, createResource, updateResource, deleteResource, lockerUnits, fetchLockerUnits, createLockerUnit, updateLockerUnits, deleteLockerUnits, bookings, fetchBookings, createBooking, updateBooking, deleteBooking } = useFacilityStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [facilityType, setFacilityType] = useState("All");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isEdit, setIsEdit] = useState(false);
   const toast = useToast();
   const [form, setForm] = React.useState({
+    schoolId: "",
     name: "",
     location: "",
     type: "study_room",
@@ -77,6 +78,8 @@ export function FacilityManagement() {
   const [selectedFacility, setSelectedFacility] = React.useState(null);
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
   const [facilityToDelete, setFacilityToDelete] = React.useState(null);
+  const [totalFacilities, setTotalFacilities] = useState(0);
+  const [avgCapacity, setAvgCapacity] = useState(0);
 
   useEffect(() => {
     fetchResources();
@@ -96,16 +99,25 @@ export function FacilityManagement() {
   const getStatusColor = (status) => (status ? "green" : "red");
 
   // Filter out lockers from all resource displays
-  
+
 
   // Use filteredResources instead of resources throughout the component
   // For stats, pie chart, and table:
   // - totalFacilities, avgCapacity, typeCounts, pieData, and the table rows should all use filteredResources
 
-  // Example replacements:
-  // const totalFacilities = resources.length;
-  const totalFacilities = filteredResources.length;
-  const avgCapacity = totalFacilities > 0 ? Math.round(filteredResources.reduce((sum, f) => sum + (f.capacity || 0), 0) / totalFacilities) : 0;
+  // **Calculating total facilities and average capacity**
+  useEffect(() => {
+    // When the resources are fetched, calculate total and average capacity
+    if (resources.length > 0) {
+      const total = resources.length; // Total number of facilities
+      const avgCap =
+        total > 0 ? Math.round(resources.reduce((sum, f) => sum + (f.capacity || 0), 0) / total) : 0; // Average capacity calculation
+      setTotalFacilities(total); // Set total facilities count
+      setAvgCapacity(avgCap); // Set average capacity
+    }
+  }, [resources]);
+
+
   const typeCounts = filteredResources.reduce((acc, curr) => {
     acc[curr.type] = (acc[curr.type] || 0) + 1;
     return acc;
@@ -126,7 +138,9 @@ export function FacilityManagement() {
   };
 
   const openEditModal = (facility) => {
+    console.log("🚀 ~ openEditModal ~ facility:", facility)
     setForm({
+      schoolId: facility.schoolId,
       name: facility.name || "",
       location: facility.location || "",
       type: facility.type || "study_room",
@@ -142,6 +156,8 @@ export function FacilityManagement() {
     try {
       let res;
       if (isEditing && selectedFacility) {
+        console.log("🚀 ~ handleSubmit ~ selectedFacility._id,:", selectedFacility._id)
+        console.log("🚀 ~ handleSubmit ~ form:", form)
         res = await updateResource(selectedFacility._id, form);
       } else {
         res = await createResource(form);
