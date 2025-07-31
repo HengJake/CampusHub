@@ -58,6 +58,7 @@ async function createFullSchoolData({
         lecturers: [],
         modules: [],
         intakeCourses: [],
+        semesters: [],
         classSchedules: [],
         examSchedules: [],
         students: [],
@@ -82,7 +83,6 @@ async function createFullSchoolData({
         // Service
         feedbacks: [],
         responds: [],
-        foundItems: [],
         lostItems: []
     };
 
@@ -245,6 +245,8 @@ async function createFullSchoolData({
             minimumCGPA: 2.0,
             departmentId: createdIds.departments[0],
             duration: 36,
+            totalYear: 3,
+            totalSemester: 6,
             entryRequirements: ["SPM with 5 credits", "Mathematics"],
             careerProspects: ["Software Developer", "System Analyst", "Database Administrator"],
             isActive: true,
@@ -260,6 +262,8 @@ async function createFullSchoolData({
             minimumCGPA: 2.0,
             departmentId: createdIds.departments[1],
             duration: 36,
+            totalYear: 3,
+            totalSemester: 6,
             entryRequirements: ["SPM with 5 credits", "English"],
             careerProspects: ["IT Consultant", "Network Engineer", "Security Analyst"],
             isActive: true,
@@ -278,15 +282,9 @@ async function createFullSchoolData({
         {
             intakeName: "January 2024 Intake",
             intakeMonth: "January",
-            totalYear: 4, // Added for schema compliance
-            totalSemester: 8, // Added for schema compliance
-            academicYear: "2024/2025",
-            semester: 1,
             registrationStartDate: "2024-01-01T00:00:00.000Z",
             registrationEndDate: "2024-01-31T23:59:59.000Z",
             orientationDate: "2024-02-01T00:00:00.000Z",
-            classesStartDate: "2024-02-05T00:00:00.000Z",
-            classesEndDate: "2024-05-30T23:59:59.000Z",
             examinationStartDate: "2024-06-01T00:00:00.000Z",
             examinationEndDate: "2024-06-15T23:59:59.000Z",
             academicEvents: [
@@ -305,15 +303,9 @@ async function createFullSchoolData({
         {
             intakeName: "May 2024 Intake",
             intakeMonth: "May",
-            totalYear: 4, // Added for schema compliance
-            totalSemester: 8, // Added for schema compliance
-            academicYear: "2024/2025",
-            semester: 2,
             registrationStartDate: "2024-05-01T00:00:00.000Z",
             registrationEndDate: "2024-05-31T23:59:59.000Z",
             orientationDate: "2024-06-01T00:00:00.000Z",
-            classesStartDate: "2024-06-05T00:00:00.000Z",
-            classesEndDate: "2024-09-30T23:59:59.000Z",
             examinationStartDate: "2024-10-01T00:00:00.000Z",
             examinationEndDate: "2024-10-15T23:59:59.000Z",
             academicEvents: [
@@ -332,15 +324,9 @@ async function createFullSchoolData({
         {
             intakeName: "September 2024 Intake",
             intakeMonth: "September",
-            totalYear: "4", // Added for schema compliance
-            totalSemester: 8, // Added for schema compliance
-            academicYear: "2024/2025",
-            semester: 3,
             registrationStartDate: "2024-09-01T00:00:00.000Z",
             registrationEndDate: "2024-09-30T23:59:59.000Z",
             orientationDate: "2024-10-01T00:00:00.000Z",
-            classesStartDate: "2024-10-05T00:00:00.000Z",
-            classesEndDate: "2025-01-30T23:59:59.000Z",
             examinationStartDate: "2025-02-01T00:00:00.000Z",
             examinationEndDate: "2025-02-15T23:59:59.000Z",
             academicEvents: [
@@ -407,7 +393,7 @@ async function createFullSchoolData({
         {
             moduleName: "Database Systems",
             code: "CS301",
-            totalCreditHour: 3,
+            totalCreditHours: 3,
             courseId: createdIds.courses[0],
             prerequisites: [],
             moduleDescription: "Introduction to database design and management",
@@ -423,7 +409,7 @@ async function createFullSchoolData({
         {
             moduleName: "Web Development",
             code: "CS302",
-            totalCreditHour: 3,
+            totalCreditHours: 3,
             courseId: createdIds.courses[0],
             prerequisites: [],
             moduleDescription: "Learn to build modern web applications",
@@ -439,7 +425,7 @@ async function createFullSchoolData({
         {
             moduleName: "Software Engineering",
             code: "CS303",
-            totalCreditHour: 3,
+            totalCreditHours: 3,
             courseId: createdIds.courses[0],
             prerequisites: [],
             moduleDescription: "Principles of software engineering",
@@ -508,8 +494,46 @@ async function createFullSchoolData({
         console.log(`[${schoolPrefix}] ✅ Intake Course created: ${intakeCoursesData[i].intakeId} + ${intakeCoursesData[i].courseId} (${intakeCourseResponse.data._id})`);
     }
 
-    // 10. Create Class Schedules
-    console.log(`[${schoolPrefix}] 10. Creating Class Schedules...`);
+    // 10. Create Semesters
+    console.log(`[${schoolPrefix}] 10. Creating Semesters...`);
+    const semestersData = [
+        // Semester 1 for first intake course
+        {
+            intakeCourseId: createdIds.intakeCourses[0],
+            semesterNumber: 1,
+            semesterName: "Year 1 Semester 1",
+            startDate: "2024-02-01T00:00:00.000Z",
+            endDate: "2024-06-30T23:59:59.000Z",
+            registrationStartDate: "2024-01-15T00:00:00.000Z",
+            registrationEndDate: "2024-01-31T23:59:59.000Z",
+            examStartDate: "2024-06-01T00:00:00.000Z",
+            examEndDate: "2024-06-15T23:59:59.000Z",
+            status: "in_progress",
+            schoolId: createdIds.school
+        },
+        // Semester 1 for second intake course
+        {
+            intakeCourseId: createdIds.intakeCourses[1],
+            semesterNumber: 1,
+            semesterName: "Year 1 Semester 1",
+            startDate: "2024-06-01T00:00:00.000Z",
+            endDate: "2024-10-31T23:59:59.000Z",
+            registrationStartDate: "2024-05-15T00:00:00.000Z",
+            registrationEndDate: "2024-05-31T23:59:59.000Z",
+            examStartDate: "2024-10-01T00:00:00.000Z",
+            examEndDate: "2024-10-15T23:59:59.000Z",
+            status: "in_progress",
+            schoolId: createdIds.school
+        }
+    ];
+    for (let i = 0; i < semestersData.length; i++) {
+        const semesterResponse = await apiCall('POST', '/api/semester', semestersData[i]);
+        createdIds.semesters.push(semesterResponse.data._id);
+        console.log(`[${schoolPrefix}] ✅ Semester created: ${semestersData[i].semesterName} (${semesterResponse.data._id})`);
+    }
+
+    // 11. Create Class Schedules
+    console.log(`[${schoolPrefix}] 11. Creating Class Schedules...`);
     const classSchedulesData = [
         {
             roomId: createdIds.rooms.classroom,
@@ -519,7 +543,10 @@ async function createFullSchoolData({
             startTime: "09:00",
             endTime: "12:00",
             intakeCourseId: createdIds.intakeCourses[0],
-            schoolId: createdIds.school
+            semesterId: createdIds.semesters[0],
+            schoolId: createdIds.school,
+            moduleStartDate: "2024-02-01T00:00:00.000Z",
+            moduleEndDate: "2024-06-30T23:59:59.000Z"
         },
         {
             roomId: createdIds.rooms.classroom,
@@ -529,7 +556,10 @@ async function createFullSchoolData({
             startTime: "13:00",
             endTime: "16:00",
             intakeCourseId: createdIds.intakeCourses[1],
-            schoolId: createdIds.school
+            semesterId: createdIds.semesters[1],
+            schoolId: createdIds.school,
+            moduleStartDate: "2024-06-01T00:00:00.000Z",
+            moduleEndDate: "2024-10-31T23:59:59.000Z"
         }
     ];
     for (let i = 0; i < classSchedulesData.length; i++) {
@@ -538,8 +568,8 @@ async function createFullSchoolData({
         console.log(`[${schoolPrefix}] ✅ Class Schedule created: ${classSchedulesData[i].dayOfWeek} (${classScheduleResponse.data._id})`);
     }
 
-    // 11. Create Exam Schedules
-    console.log(`[${schoolPrefix}] 11. Creating Exam Schedules...`);
+    // 12. Create Exam Schedules
+    console.log(`[${schoolPrefix}] 12. Creating Exam Schedules...`);
     const examSchedulesData = [
         {
             intakeCourseId: createdIds.intakeCourses[0],
@@ -547,6 +577,7 @@ async function createFullSchoolData({
             moduleId: createdIds.modules[0],
             examDate: "2024-06-01",
             examTime: "09:00",
+            semesterId: createdIds.semesters[1],
             roomId: createdIds.rooms.tech_lab,
             invigilators: [createdIds.lecturers[0]],
             durationMinute: 120,
@@ -556,6 +587,7 @@ async function createFullSchoolData({
             intakeCourseId: createdIds.intakeCourses[1],
             courseId: createdIds.courses[1],
             moduleId: createdIds.modules[1],
+            semesterId: createdIds.semesters[1],
             examDate: "2024-08-01",
             examTime: "14:00",
             roomId: createdIds.rooms.tech_lab,
@@ -570,36 +602,33 @@ async function createFullSchoolData({
         console.log(`[${schoolPrefix}] ✅ Exam Schedule created: ${examSchedulesData[i].examDate} (${examScheduleResponse.data._id})`);
     }
 
-    // 12. Create Students (limit to 20 per school)
-    console.log(`[${schoolPrefix}] 12. Creating Students...`);
-    const completionStatuses = ["completed", "in progress", "dropped"];
+    // 13. Create Students (limit to 20 per school)
+    console.log(`[${schoolPrefix}] 13. Creating Students...`);
     const years = [1, 2, 3, 4];
     const semesters = [1, 2, 3];
-    const statuses = ['enrolled', 'active', 'graduated', 'dropped', 'suspended'];
+    const statuses = ['enrolled', 'active', 'in_progress', 'graduated', 'dropped', 'suspended'];
     const standings = ['good', 'warning', 'probation', 'suspended'];
 
     const newStudentUsers = [];
     let studentUserIndex = 0;
     outerUser:
     for (let i = 0; i < createdIds.intakeCourses.length; i++) {
-        for (let cs of completionStatuses) {
-            for (let y of years) {
-                for (let sem of semesters) {
-                    for (let st of statuses) {
-                        for (let as of standings) {
-                            if (studentUserIndex >= 20) break outerUser;
-                            const userData = {
-                                name: `${schoolPrefix} Student_${studentUserIndex}`,
-                                email: `student${studentUserIndex}@student.${schoolEmailDomain}`,
-                                password: "password123",
-                                phoneNumber: studentPhoneBase + 100 + studentUserIndex,
-                                role: "student",
-                                twoFA_enabled: false
-                            };
-                            const userResponse = await apiCall('POST', '/api/user', userData);
-                            newStudentUsers.push(userResponse.data._id);
-                            studentUserIndex++;
-                        }
+        for (let y of years) {
+            for (let sem of semesters) {
+                for (let st of statuses) {
+                    for (let as of standings) {
+                        if (studentUserIndex >= 20) break outerUser;
+                        const userData = {
+                            name: `${schoolPrefix} Student_${studentUserIndex}`,
+                            email: `student${studentUserIndex}@student.${schoolEmailDomain}`,
+                            password: "password123",
+                            phoneNumber: studentPhoneBase + 100 + studentUserIndex,
+                            role: "student",
+                            twoFA_enabled: false
+                        };
+                        const userResponse = await apiCall('POST', '/api/user', userData);
+                        newStudentUsers.push(userResponse.data._id);
+                        studentUserIndex++;
                     }
                 }
             }
@@ -610,32 +639,30 @@ async function createFullSchoolData({
     let userIdx = 0;
     outerStudent:
     for (let i = 0; i < createdIds.intakeCourses.length; i++) {
-        for (let cs of completionStatuses) {
-            for (let y of years) {
-                for (let sem of semesters) {
-                    for (let st of statuses) {
-                        for (let as of standings) {
-                            if (userIdx >= 20) break outerStudent;
-                            studentsData.push({
-                                userId: newStudentUsers[userIdx],
-                                schoolId: createdIds.school,
-                                intakeCourseId: createdIds.intakeCourses[i],
-                                completionStatus: cs,
-                                currentYear: y,
-                                currentSemester: sem,
-                                cgpa: 0,
-                                status: st,
-                                totalCreditHours: 0,
-                                completedCreditHours: 0,
-                                academicStanding: as
-                            });
-                            userIdx++;
-                        }
+        for (let y of years) {
+            for (let sem of semesters) {
+                for (let st of statuses) {
+                    for (let as of standings) {
+                        if (userIdx >= 20) break outerStudent;
+                        studentsData.push({
+                            userId: newStudentUsers[userIdx],
+                            schoolId: createdIds.school,
+                            intakeCourseId: createdIds.intakeCourses[i],
+                            currentYear: y,
+                            currentSemester: sem,
+                            cgpa: 0,
+                            status: st,
+                            totalCreditHours: 0,
+                            completedCreditHours: 0,
+                            academicStanding: as
+                        });
+                        userIdx++;
                     }
                 }
             }
         }
     }
+
 
     for (let i = 0; i < studentsData.length; i++) {
         const studentResponse = await apiCall('POST', '/api/student', studentsData[i]);
@@ -643,8 +670,8 @@ async function createFullSchoolData({
         console.log(`[${schoolPrefix}] ✅ Student created: ${studentsData[i].userId} (${studentResponse.data._id})`);
     }
 
-    // 13. Create Attendance
-    console.log(`[${schoolPrefix}] 13. Creating Attendance...`);
+    // 14. Create Attendance
+    console.log(`[${schoolPrefix}] 14. Creating Attendance...`);
     const attendanceStatuses = ["present", "absent", "late"];
     for (let i = 0; i < createdIds.students.length; i++) {
         for (let j = 0; j < createdIds.classSchedules.length; j++) {
@@ -664,8 +691,8 @@ async function createFullSchoolData({
     }
     console.log(`[${schoolPrefix}] ✅ Attendance records created: ${createdIds.attendance.length}`);
 
-    // 14. Create Results
-    console.log(`[${schoolPrefix}] 14. Creating Results...`);
+    // 15. Create Results
+    console.log(`[${schoolPrefix}] 15. Creating Results...`);
     const grades = ["A", "B", "C", "D", "F"];
     for (let i = 0; i < createdIds.students.length; i++) {
         for (let j = 0; j < createdIds.modules.length; j++) {
@@ -673,7 +700,7 @@ async function createFullSchoolData({
                 studentId: createdIds.students[i],
                 moduleId: createdIds.modules[j],
                 grade: grades[(i + j) % grades.length],
-                creditHour: 3,
+                creditHours: 3,
                 remark: `Performance in module ${j + 1}`,
                 schoolId: createdIds.school
             };
@@ -755,7 +782,7 @@ async function createFullSchoolData({
     const timeSlotData = {
         resourceId: createdIds.resources[0],
         schoolId: createdIds.school,
-        dayOfWeek: 1,
+        dayOfWeek: "Monday",
         timeslot: [{ start: "09:00", end: "10:00" }]
     };
     const timeSlotRes = await apiCall('POST', '/api/time-slot', timeSlotData);
@@ -857,27 +884,16 @@ async function createFullSchoolData({
     const respondRes = await apiCall('POST', '/api/respond', respondData);
     createdIds.responds.push(respondRes.data._id);
 
-    console.log(`[${schoolPrefix}] Service: Creating FoundItem...`);
-    const foundItemData = {
-        submittedBy: createdIds.users.schoolAdmin[0],
-        schoolId: createdIds.school,
-        name: "Wallet",
-        description: "Black leather wallet found in the cafeteria.",
-        foundLocation: "cafeteria",
-        foundDate: new Date().toISOString(),
-        status: "unclaimed"
-    };
-    const foundItemRes = await apiCall('POST', '/api/found-item', foundItemData);
-    createdIds.foundItems.push(foundItemRes.data._id);
-
     console.log(`[${schoolPrefix}] Service: Creating LostItem...`);
     const lostItemData = {
-        ownerId: createdIds.students[0],
+        personId: createdIds.students[0],
         schoolId: createdIds.school,
-        name: "Wallet",
-        description: "Lost black leather wallet.",
-        lostLocation: "cafeteria",
-        lostDate: new Date().toISOString(),
+        itemDetails: {
+            name: "Wallet",
+            description: "Lost black leather wallet.",
+            location: "cafeteria",
+            lostDate: new Date().toISOString()
+        },
         status: "reported"
     };
     const lostItemRes = await apiCall('POST', '/api/lost-item', lostItemData);
@@ -930,7 +946,6 @@ const clearDatabase = async () => {
         // Service
         await apiCall('DELETE', '/api/feedback/all');
         await apiCall('DELETE', '/api/respond/all');
-        await apiCall('DELETE', '/api/found-item/all');
         await apiCall('DELETE', '/api/lost-item/all');
         console.log('✅ All data cleared successfully');
     } catch (error) {

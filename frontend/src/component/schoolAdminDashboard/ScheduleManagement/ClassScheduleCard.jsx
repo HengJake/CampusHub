@@ -1,38 +1,289 @@
-import React, { useState } from 'react';
-import { Box, Text, Collapse, VStack, HStack, Badge, Grid } from '@chakra-ui/react';
-import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
+import React, { useState, useMemo } from 'react';
+import {
+    Box,
+    Text,
+    Collapse,
+    VStack,
+    HStack,
+    Badge,
+    Grid,
+    Card,
+    CardBody,
+    Table,
+    Thead,
+    Tbody,
+    Tr,
+    Th,
+    Td,
+    TableContainer,
+    Icon,
+    Tooltip,
+    Divider,
+    Flex,
+    Spacer
+} from '@chakra-ui/react';
+import { ChevronDownIcon, ChevronUpIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
+import { MapPin, BookOpen, AlertCircle, User, Clock, Calendar } from 'lucide-react';
+import { FaUsers } from "react-icons/fa";
+import { useDisclosure } from '@chakra-ui/react';
+
+// Shared helper functions
+const transformExamData = (examData) => {
+    return examData
+        .map(exam => {
+            if (typeof exam !== 'object' || !exam || !exam.examTime) return null;
+            try {
+                const examDate = new Date(exam.examDate);
+                const dayOfWeek = examDate.toLocaleDateString('en-US', { weekday: 'long' });
+                const startTime = exam.examTime;
+                const [hours, minutes] = startTime.split(':').map(Number);
+                const startDate = new Date();
+                startDate.setHours(hours, minutes, 0, 0);
+                const endDate = new Date(startDate.getTime() + (exam.durationMinute * 60000));
+                const endTime = endDate.toTimeString().slice(0, 5);
+                return {
+                    id: exam._id,
+                    code: exam.moduleId?.code ?? 'N/A',
+                    subject: exam.moduleId?.moduleName ?? 'Unknown',
+                    room: exam.roomId,
+                    building: exam.roomId?.block ?? 'TBD',
+                    lecturer: exam.invigilators?.length > 0
+                        ? `${exam.invigilators.length} Invigilator(s)`
+                        : 'No Invigilator',
+                    startTime: startTime,
+                    endTime: endTime,
+                    date: examDate.toLocaleDateString(),
+                    dayOfWeek: dayOfWeek,
+                    type: "exam",
+                    examType: "Final",
+                    duration: `${exam.durationMinute} min`,
+                    examDate: exam.examDate,
+                    invigilators: exam.invigilators,
+                    durationMinute: exam.durationMinute,
+                    intakeCourseId: exam.intakeCourseId,
+                    courseId: exam.courseId,
+                    moduleId: exam.moduleId
+                };
+            } catch (e) {
+                return null;
+            }
+        })
+        .filter(Boolean);
+};
+
+const transformClassData = (classData) => {
+    return classData
+        .map(classItem => {
+            if (typeof classItem !== 'object' || !classItem || !classItem.startTime) return null;
+            try {
+                return {
+                    id: classItem._id,
+                    code: classItem.moduleId?.code ?? 'N/A',
+                    subject: classItem.moduleId?.moduleName ?? 'Unknown',
+                    room: classItem.roomId,
+                    building: classItem.roomId?.block ?? 'TBD',
+                    lecturer: classItem.lecturerId?.userId?.name ?? 'Unassigned',
+                    startTime: classItem.startTime,
+                    endTime: classItem.endTime,
+                    date: new Date().toLocaleDateString(),
+                    dayOfWeek: classItem.dayOfWeek,
+                    type: "class",
+                    examType: "",
+                    intakeCourseId: classItem.intakeCourseId,
+                    courseId: classItem.courseId,
+                    moduleId: classItem.moduleId,
+                    lecturerId: classItem.lecturerId
+                };
+            } catch (e) {
+                return null;
+            }
+        })
+        .filter(Boolean);
+};
+
+// Shared function to combine and filter data
+const getCombinedAndFilteredData = (
+    classSchedules = [],
+    examSchedules = [],
+    showClasses,
+    showExams,
+    filter
+) => {
+    let allItems = [];
+
+    if (showClasses && classSchedules) {
+        allItems = [...allItems, ...transformClassData(classSchedules)];
+    }
+
+    if (showExams && examSchedules) {
+        allItems = [...allItems, ...transformExamData(examSchedules)];
+    }
+
+    // Defensive: filter out nulls
+    allItems = allItems.filter(Boolean);
+
+    // Apply filters
+    return allItems.filter(item => {
+        // console.log("🚀 ~ getCombinedAndFilteredData ~ filter.selectedCourse:", filter.selectedCourse)
+        // console.log("🚀 ~ getCombinedAndFilteredData ~ filter.selectedIntake:", filter.selectedIntake)
+
+        if (!filter.selectedCourse || !filter.selectedIntake) {
+            return false
+        }
+
+        // const itemDay = item.dayOfWeek;
+        // const itemStartTime = item.startTime;
+
+        // Default: don't include
+        let include = false;
+
+        // Check if item matches time slot
+        // const isTimeMatch = itemDay === day && itemStartTime === time;
+        // if (!isTimeMatch) return false;
+
+        // Type filtering
+        if (item.type === 'exam' && showExams) include = true;
+        if (item.type === 'class' && showClasses) include = true;
+
+        // Filter by intake (deep path check)
+        if (
+            filter?.selectedIntake &&
+            item.intakeCourseId?.intakeId?._id !== filter.selectedIntake
+        ) return false;
+
+        // Filter by course (assuming courseId is under intakeCourseId.courseId._id)
+        if (
+            filter?.selectedCourse &&
+            item.intakeCourseId?.courseId?._id !== filter.selectedCourse
+        ) return false;
+
+        // Filter by module
+        if (
+            filter?.selectedModule &&
+            item.moduleId?._id !== filter.selectedModule
+        ) return false;
+
+
+        // console.log("🚀 ~ getItemsForSlot ~ include:", include)
+        return include;
+    });
+};
 
 // Component for rendering individual class item
-export const ClassItem = ({ item, getTypeColor, rowSpan = 1 }) => (
-    <Box
-        bg={`${getTypeColor(item.type, item.examType)}.100`}
-        borderLeft="3px solid"
-        borderLeftColor={`${getTypeColor(item.type, item.examType)}.400`}
-        p={2}
-        borderRadius="sm"
-        mb={1}
-        fontSize="xs"
-        gridRow={rowSpan > 1 ? `span ${rowSpan}` : undefined}
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-    >
-        <Text fontWeight="bold" mb={1}>
-            {item.code}
-        </Text>
-        <Text mb={1} noOfLines={2}>
-            {item.subject}
-        </Text>
-        <Text color="gray.600" noOfLines={1}>
-            {item.room}
-        </Text>
-        {item.lecturer && (
-            <Text color="gray.600" noOfLines={1}>
-                {item.lecturer}
-            </Text>
-        )}
-    </Box>
-);
+export const ClassItem = ({ item, getTypeColor, rowSpan = 1, onEditClick }) => {
+    const colors = getTypeColor(item.type);
+    const isExam = item.type === 'exam';
+
+    return (
+        <Box
+            bg={colors.bg}
+            borderLeft="3px solid"
+            borderLeftColor={colors.border}
+            p={2}
+            borderRadius="sm"
+            mb={1}
+            minH={rowSpan > 1 ? `${rowSpan * 60}px` : "auto"}
+            position="relative"
+            _hover={{ transform: 'translateY(-1px)', shadow: 'sm' }}
+            transition="all 0.2s"
+            onClick={() => onEditClick(item)}
+            cursor="pointer"
+        >
+            <VStack align="start" spacing={1}>
+                {/* Type Badge */}
+                <HStack justify="space-between" width="100%">
+                    <Badge
+                        colorScheme={isExam ? 'red' : 'blue'}
+                        size="sm"
+                        variant="solid"
+                    >
+                        {isExam ? 'EXAM' : 'CLASS'}
+                    </Badge>
+                    {isExam && (
+                        <Badge colorScheme="orange" size="xs">
+                            {item.durationMinute}min
+                        </Badge>
+                    )}
+                </HStack>
+
+                {/* Module Code and Name */}
+                <VStack align="start" spacing={0}>
+                    <Text
+                        fontSize="sm"
+                        fontWeight="bold"
+                        color={colors.text}
+                        lineHeight="1.2"
+                    >
+                        {item.code}
+                    </Text>
+                    <Text
+                        fontSize="xs"
+                        color={colors.text}
+                        opacity={0.8}
+                        lineHeight="1.2"
+                    >
+                        {item.subject}
+                    </Text>
+                </VStack>
+
+                {/* Time */}
+                <HStack spacing={1}>
+                    <TimeIcon color={colors.border} />
+                    <Text fontSize="xs" color={colors.text}>
+                        {item.startTime} - {item.endTime}
+                    </Text>
+                </HStack>
+
+                {/* Exam Date (only for exams) */}
+                {isExam && item.examDate && (
+                    <HStack spacing={1}>
+                        <CalendarIcon color={colors.text} />
+                        <Text fontSize="xs" color={colors.text}>
+                            {new Date(item.examDate).toLocaleDateString()}
+                        </Text>
+                    </HStack>
+                )}
+
+                {/* Lecturer/Invigilator */}
+                <HStack spacing={1}>
+                    <FaUsers />
+                    <Text fontSize="xs" color={colors.text} noOfLines={1}>
+                        {isExam
+                            ? (item.invigilators?.length > 0 ? `${item.invigilators.length} Invigilator(s)` : 'No Invigilator')
+                            : (item.lecturer?.userId?.name || 'No Lecturer')
+                        }
+                    </Text>
+                </HStack>
+
+                {/* Room */}
+                {item.room && (
+                    <HStack spacing={1}>
+                        <MapPin color={colors.border} />
+                        <Text fontSize="xs" color={colors.text} noOfLines={1}>
+                            {typeof item.room === 'object'
+                                ? `${item.room.block} ${item.room.roomNumber}`
+                                : item.room
+                            }
+                        </Text>
+                    </HStack>
+                )}
+            </VStack>
+
+            {/* Exam indicator line */}
+            {isExam && (
+                <Box
+                    position="absolute"
+                    top="0"
+                    right="0"
+                    width="4px"
+                    height="100%"
+                    bg="red.400"
+                    borderRadius="0 sm sm 0"
+                />
+            )}
+        </Box>
+    );
+};
 
 // Helper function to find consecutive classes
 const findConsecutiveClasses = (items, timeSlots) => {
@@ -63,16 +314,311 @@ const findConsecutiveClasses = (items, timeSlots) => {
     return consecutiveGroups;
 };
 
-// Main component that manages the clustering state
+// Enhanced table row component for list view
+const EnhancedTableRow = ({ item, getTypeColor, onEditClick }) => {
+    const isExam = item.type === "exam";
+    console.log("🚀 ~ EnhancedTableRow ~ item:", item)
+
+    return (
+        <Tr
+            _hover={{ bg: isExam ? "red.50" : "blue.50" }}
+            borderLeft={`4px solid`}
+            borderLeftColor={isExam ? "red.400" : "blue.400"}
+            onClick={() => onEditClick(item)}
+            cursor="pointer"
+        >
+            <Td>
+                <VStack align="start" spacing={1}>
+                    <HStack spacing={2}>
+                        <Icon as={Clock} boxSize={4} color={isExam ? "red.500" : "blue.500"} />
+                        <Text fontWeight="medium" fontSize="sm">
+                            {item.startTime} - {item.endTime}
+                        </Text>
+                    </HStack>
+                    <HStack spacing={2}>
+                        <Icon as={Calendar} boxSize={3} color="gray.400" />
+                        <Text fontSize="xs" color="gray.500">
+                            {item.date}
+                        </Text>
+                    </HStack>
+                    {isExam && (
+                        <HStack spacing={2}>
+                            <Icon as={AlertCircle} boxSize={3} color="orange.400" />
+                            <Text fontSize="xs" color="orange.600" fontWeight="medium">
+                                {item.duration}
+                            </Text>
+                        </HStack>
+                    )}
+                </VStack>
+            </Td>
+
+            <Td>
+                <VStack align="start" spacing={1}>
+                    <HStack spacing={2}>
+                        <Icon as={BookOpen} boxSize={4} color={isExam ? "red.500" : "blue.500"} />
+                        <Text fontWeight="bold" fontSize="sm">{item.code}</Text>
+                    </HStack>
+                    <Text fontSize="sm" color="gray.600" noOfLines={2}>
+                        {item.subject}
+                    </Text>
+                </VStack>
+            </Td>
+
+            <Td>
+                <VStack align="start" spacing={1}>
+                    <HStack spacing={2}>
+                        <Icon as={MapPin} boxSize={4} color="gray.500" />
+                        <Text fontWeight="medium" fontSize="sm">
+                            {typeof item.room === 'object' && item.room
+                                ? `${item.room.block} ${item.room.roomNumber}`
+                                : item.room || 'TBD'
+                            }
+                        </Text>
+                    </HStack>
+                    <Text fontSize="xs" color="gray.500">
+                        {typeof item.room === 'object' && item.room
+                            ? item.room.block
+                            : item.building || 'TBD'
+                        }
+                    </Text>
+                </VStack>
+            </Td>
+
+            <Td>
+                <VStack align="start" spacing={1}>
+                    <Badge
+                        colorScheme={isExam ? "red" : "blue"}
+                        variant="solid"
+                        size="sm"
+                    >
+                        {item.type === "exam" ? `${item.examType} Exam` : "Class"}
+                    </Badge>
+                    {isExam && (
+                        <Badge colorScheme="orange" variant="outline" size="xs">
+                            {item.durationMinute}min
+                        </Badge>
+                    )}
+                </VStack>
+            </Td>
+
+            <Td>
+                <HStack spacing={2}>
+                    <Icon as={User} boxSize={4} color="gray.500" />
+                    <Tooltip label={item.lecturer} placement="top">
+                        <Text fontSize="sm" noOfLines={2}>
+                            {item.lecturer || "N/A"}
+                        </Text>
+                    </Tooltip>
+                </HStack>
+            </Td>
+        </Tr>
+    );
+};
+
+// Statistics component for list view
+const DayStatistics = ({ dayItems }) => {
+    const classCount = dayItems.filter(item => item.type === 'class').length;
+    const examCount = dayItems.filter(item => item.type === 'exam').length;
+
+    return (
+        <HStack spacing={4} mb={3}>
+            <Badge colorScheme="blue" variant="outline">
+                {classCount} Class{classCount !== 1 ? 'es' : ''}
+            </Badge>
+            {examCount > 0 && (
+                <Badge colorScheme="red" variant="outline">
+                    {examCount} Exam{examCount !== 1 ? 's' : ''}
+                </Badge>
+            )}
+            <Spacer />
+            <Text fontSize="xs" color="gray.500">
+                Total: {dayItems.length} item{dayItems.length !== 1 ? 's' : ''}
+            </Text>
+        </HStack>
+    );
+};
+
+// Timetable List View Component
+export const TimetableListView = ({
+    classSchedules = [],
+    examSchedules = [],
+    daysOfWeek,
+    bgColor,
+    borderColor,
+    showExams = true,
+    showClasses = true,
+    filter,
+    getTypeColor,
+    onEditClick
+}) => {
+    // Combine and filter data using shared function
+    const combinedData = useMemo(() => {
+        return getCombinedAndFilteredData(classSchedules, examSchedules, showClasses, showExams, filter);
+    }, [classSchedules, examSchedules, showClasses, showExams, filter]);
+
+    // Group data by day
+    const groupedByDay = useMemo(() => {
+        return daysOfWeek.reduce((acc, day) => {
+            const dayItems = combinedData
+                .filter(item => item.dayOfWeek === day)
+                .sort((a, b) => {
+                    // Sort by start time
+                    const timeA = a.startTime.split(':').map(Number);
+                    const timeB = b.startTime.split(':').map(Number);
+                    return (timeA[0] * 60 + timeA[1]) - (timeB[0] * 60 + timeB[1]);
+                });
+
+            if (dayItems.length > 0) {
+                acc[day] = dayItems;
+            }
+            return acc;
+        }, {});
+    }, [combinedData, daysOfWeek]);
+
+    if (Object.keys(groupedByDay).length === 0) {
+        return (
+            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
+                <CardBody>
+                    <VStack spacing={4} py={8}>
+                        <Icon as={Calendar} boxSize={12} color="gray.300" />
+                        <Text color="gray.500" textAlign="center">
+                            No schedule items found for the selected filters.
+                        </Text>
+                    </VStack>
+                </CardBody>
+            </Card>
+        );
+    }
+
+    return (
+        <VStack spacing={4} align="stretch">
+            {Object.entries(groupedByDay).map(([day, dayItems]) => (
+                <Card key={day} bg={bgColor} borderColor={borderColor} borderWidth="1px" shadow="sm">
+                    <CardBody>
+                        <Flex align="center" mb={4}>
+                            <Text fontSize="xl" fontWeight="bold" color="blue.600">
+                                {day}
+                            </Text>
+                            <Spacer />
+                            <DayStatistics dayItems={dayItems} />
+                        </Flex>
+
+                        <Divider mb={4} />
+
+                        <TableContainer>
+                            <Table variant="simple" size="sm">
+                                <Thead>
+                                    <Tr bg="gray.50">
+                                        <Th>
+                                            <HStack spacing={2}>
+                                                <Icon as={Clock} boxSize={4} />
+                                                <Text>Time & Duration</Text>
+                                            </HStack>
+                                        </Th>
+                                        <Th>
+                                            <HStack spacing={2}>
+                                                <Icon as={BookOpen} boxSize={4} />
+                                                <Text>Subject</Text>
+                                            </HStack>
+                                        </Th>
+                                        <Th>
+                                            <HStack spacing={2}>
+                                                <Icon as={MapPin} boxSize={4} />
+                                                <Text>Location</Text>
+                                            </HStack>
+                                        </Th>
+                                        <Th>Type</Th>
+                                        <Th>
+                                            <HStack spacing={2}>
+                                                <Icon as={User} boxSize={4} />
+                                                <Text>Staff</Text>
+                                            </HStack>
+                                        </Th>
+                                    </Tr>
+                                </Thead>
+                                <Tbody>
+                                    {dayItems.map((item) => (
+                                        <EnhancedTableRow
+                                            key={item.id}
+                                            item={item}
+                                            getTypeColor={getTypeColor}
+                                            onEditClick={onEditClick}
+                                        />
+                                    ))}
+                                </Tbody>
+                            </Table>
+                        </TableContainer>
+                    </CardBody>
+                </Card>
+            ))}
+        </VStack>
+    );
+};
+
+// Main clustered schedule grid component
 export const ClusteredScheduleGrid = ({
     daysOfWeek,
     timeSlots,
     gridBg,
-    getItemsForSlot,
     getTypeColor,
-    allItems = [], // Add this prop to pass all schedule items
+    allItems = [],
     filter,
+    showExams = true,
+    showClasses = true,
+    onEditClick
 }) => {
+    // Updated getItemsForSlot function
+    const getItemsForSlot = (day, time) => {
+        const items = allItems.filter(item => {
+
+            if (!filter.selectedCourse || !filter.selectedIntake) {
+                return false
+            }
+
+            const itemDay = item.dayOfWeek;
+            const itemStartTime = item.startTime;
+
+            // Default: don't include
+            let include = false;
+
+            // Check if item matches time slot
+            const isTimeMatch = itemDay === day && itemStartTime === time;
+            if (!isTimeMatch) return false;
+
+            // Type filtering
+            if (item.type === 'exam' && showExams) include = true;
+            if (item.type === 'class' && showClasses) include = true;
+
+            // Filter by intake (deep path check)
+            if (
+                filter?.selectedIntake &&
+                item.intakeCourseId?.intakeId?._id !== filter.selectedIntake
+            ) return false;
+
+            // Filter by course (assuming courseId is under intakeCourseId.courseId._id)
+            if (
+                filter?.selectedCourse &&
+                item.intakeCourseId?.courseId?._id !== filter.selectedCourse
+            ) return false;
+
+            // Filter by module
+            if (
+                filter?.selectedModule &&
+                item.moduleId?._id !== filter.selectedModule
+            ) return false;
+
+
+            return include;
+        });
+
+
+        return {
+            items,
+            count: items.length,
+            shouldCluster: items.length > 1
+        };
+    };
+
     // State to track expanded clusters
     const [expandedClusters, setExpandedClusters] = useState(new Set());
 
@@ -94,7 +640,7 @@ export const ClusteredScheduleGrid = ({
     const consecutiveGroups = findConsecutiveClasses(allItems, timeSlots);
     const mergedSlots = new Set(); // Track which slots are part of merged cells
 
-    // Component for clustered classes
+    // Enhanced ClusteredClasses component
     const ClusteredClasses = ({ day, time, slotData }) => {
         const clusterId = `${day}-${time}`;
         const isExpanded = expandedClusters.has(clusterId);
@@ -102,24 +648,18 @@ export const ClusteredScheduleGrid = ({
 
         if (count === 0) return null;
 
-        // Check if this slot should be skipped (part of a merged cell)
         if (mergedSlots.has(`${day}-${time}`)) {
             return null;
         }
 
-        // console.log(items)
-
         if (!shouldCluster) {
-            // Single item - check if it's part of a consecutive group
             const item = items[0];
             const groupKey = `${day}-${item.code}-${item.subject}`;
             const group = consecutiveGroups.get(groupKey);
 
             if (group && group.timeSlots.length > 1 && group.timeSlots[0] === time) {
-                // This is the start of a merged cell
                 const rowSpan = group.timeSlots.length;
 
-                // Mark subsequent slots as merged
                 for (let i = 1; i < group.timeSlots.length; i++) {
                     mergedSlots.add(`${day}-${group.timeSlots[i]}`);
                 }
@@ -129,20 +669,22 @@ export const ClusteredScheduleGrid = ({
                         item={item}
                         getTypeColor={getTypeColor}
                         rowSpan={rowSpan}
+                        onEditClick={onEditClick}
                     />
                 );
             } else if (group && group.timeSlots[0] !== time) {
-                // This slot is part of a merged cell but not the first one
                 return null;
             }
 
-            // Regular single item
-            return <ClassItem item={item} getTypeColor={getTypeColor} />;
+            return <ClassItem item={item} getTypeColor={getTypeColor} onEditClick={onEditClick} />;
         }
+
+        // Group items by type for better clustering display
+        const examItems = items.filter(item => item.type === 'exam');
+        const classItems = items.filter(item => item.type === 'class');
 
         return (
             <Box>
-                {/* Cluster Summary */}
                 <Box
                     bg="blue.50"
                     borderLeft="3px solid"
@@ -157,14 +699,24 @@ export const ClusteredScheduleGrid = ({
                 >
                     <HStack justify="space-between" align="center">
                         <VStack align="start" spacing={0}>
-                            <HStack>
-                                <Badge colorScheme="blue" size="sm">
-                                    {count} Classes
-                                </Badge>
-                            </HStack>
-                            <Text fontSize="xs" color="gray.600">
+                            <Text fontSize="xs" color="gray.600" whiteSpace="nowrap" mb={3}>
                                 Click to {isExpanded ? 'collapse' : 'expand'}
                             </Text>
+                            <VStack spacing={2}>
+                                <Badge colorScheme="blue" size="sm">
+                                    {count} Total
+                                </Badge>
+                                {examItems.length > 0 && (
+                                    <Badge colorScheme="red" size="sm">
+                                        {examItems.length} Exam{examItems.length > 1 ? 's' : ''}
+                                    </Badge>
+                                )}
+                                {classItems.length > 0 && (
+                                    <Badge colorScheme="green" size="sm">
+                                        {classItems.length} Class{classItems.length > 1 ? 'es' : ''}
+                                    </Badge>
+                                )}
+                            </VStack>
                         </VStack>
                         {isExpanded ? (
                             <ChevronUpIcon boxSize={4} color="blue.500" />
@@ -174,14 +726,23 @@ export const ClusteredScheduleGrid = ({
                     </HStack>
                 </Box>
 
-                {/* Expanded Classes */}
                 <Collapse in={isExpanded} animateOpacity>
                     <VStack spacing={1} align="stretch" pl={2}>
-                        {items && items.map((item) => (
+                        {/* Show exams first, then classes */}
+                        {examItems.map((item) => (
                             <ClassItem
                                 key={item.id}
                                 item={item}
                                 getTypeColor={getTypeColor}
+                                onEditClick={onEditClick}
+                            />
+                        ))}
+                        {classItems.map((item) => (
+                            <ClassItem
+                                key={item.id}
+                                item={item}
+                                getTypeColor={getTypeColor}
+                                onEditClick={onEditClick}
                             />
                         ))}
                     </VStack>
@@ -193,7 +754,6 @@ export const ClusteredScheduleGrid = ({
     return (
         <Box overflowX="auto">
             <Grid templateColumns="80px repeat(7, 1fr)" gap={1} minW="800px">
-                {/* Header Row */}
                 <Box />
                 {daysOfWeek.map((day) => (
                     <Box
@@ -209,7 +769,6 @@ export const ClusteredScheduleGrid = ({
                     </Box>
                 ))}
 
-                {/* Time Slots */}
                 {timeSlots.map((time) => (
                     <React.Fragment key={time}>
                         <Box
@@ -227,22 +786,6 @@ export const ClusteredScheduleGrid = ({
                         {daysOfWeek.map((day) => {
                             let slotData = getItemsForSlot(day, time);
 
-                            let filteredItems = slotData
-
-                            // if (slotData.items.length > 0) {
-                            //    //TODO:
-                            //     const filtered = slotData.items.filter(item => item.id == "6885ccf07399d77d7676174a");
-
-                            //     filteredItems = {
-                            //         ...slotData,
-                            //         items: filtered,
-                            //         count: filtered.length,
-                            //         shouldCluster: filtered.length > 1 // or whatever your clustering logic is
-                            //     };
-                            // }
-
-                            // console.log("FILTERED ITEMS", filteredItems)
-                            // Skip rendering if this slot is part of a merged cell
                             if (mergedSlots.has(`${day}-${time}`)) {
                                 return null;
                             }
@@ -259,7 +802,7 @@ export const ClusteredScheduleGrid = ({
                                     <ClusteredClasses
                                         day={day}
                                         time={time}
-                                        slotData={filteredItems}
+                                        slotData={slotData}
                                     />
                                 </Box>
                             );

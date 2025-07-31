@@ -133,7 +133,7 @@ export const createRecord = async (Model, data, entityName = "record", validatio
 
         return {
             success: false,
-            message: "Server error - createRecord method",
+            message: `Server error - createRecord method - ${error.message}`,
             statusCode: 500
         };
     }

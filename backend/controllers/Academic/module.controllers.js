@@ -13,21 +13,21 @@ import {
 
 // Custom validation function for module data
 const validateModuleData = async (data) => {
-    const { moduleName, code, moduleDescription, totalCreditHour } = data;
+    const { moduleName, code, moduleDescription, totalCreditHours } = data;
 
     // Check required fields
-    if (!moduleName || !code || !moduleDescription || !totalCreditHour) {
+    if (!moduleName || !code || !moduleDescription || !totalCreditHours) {
         return {
             isValid: false,
-            message: "Please provide all required fields (moduleName, code, moduleDescription, totalCreditHour)"
+            message: "Please provide all required fields (moduleName, code, moduleDescription, totalCreditHours)"
         };
     }
 
-    // Validate totalCreditHour is a positive number
-    if (totalCreditHour <= 0) {
+    // Validate totalCreditHours is a positive number
+    if (totalCreditHours <= 0) {
         return {
             isValid: false,
-            message: "totalCreditHour must be a positive number"
+            message: "totalCreditHours must be a positive number"
         };
     }
 

@@ -2,6 +2,9 @@ import ClassSchedule from '../../models/Academic/classSchedule.model.js';
 import Room from '../../models/Academic/room.model.js';
 import Module from '../../models/Academic/module.model.js';
 import Lecturer from '../../models/Academic/lecturer.model.js';
+import IntakeCourse from '../../models/Academic/intakeCourse.model.js';
+import Semester from '../../models/Academic/semester.model.js';
+import School from '../../models/Billing/school.model.js';
 import {
     createRecord,
     getAllRecords,
@@ -13,17 +16,65 @@ import {
     controllerWrapper,
     deleteAllRecords
 } from "../../utils/reusable.js";
-import IntakeCourse from '../../models/Academic/intakeCourse.model.js';
 
 // Custom validation function for class schedule data
 const validateClassScheduleData = async (data) => {
-    const { roomId, moduleId, lecturerId, dayOfWeek, startTime, endTime, intakeCourseId } = data;
+    const { roomId, moduleId, lecturerId, dayOfWeek, startTime, endTime, intakeCourseId, semesterId, schoolId, moduleStartDate, moduleEndDate } = data;
 
     // Check required fields
-    if (!roomId || !moduleId || !lecturerId || !dayOfWeek || !startTime || !endTime || !intakeCourseId) {
+    if (!roomId || !moduleId || !lecturerId || !dayOfWeek || !startTime || !endTime || !intakeCourseId || !semesterId || !schoolId || !moduleStartDate || !moduleEndDate) {
         return {
             isValid: false,
-            message: "Please provide all required fields (roomId, moduleId, lecturerId, dayOfWeek, startTime, endTime, intakeCourseId)"
+            message: "Please provide all required fields (roomId, moduleId, lecturerId, dayOfWeek, startTime, endTime, intakeCourseId, semesterId, schoolId, moduleStartDate, moduleEndDate)"
+        };
+    }
+
+    // Validate time format
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    if (!timeRegex.test(startTime)) {
+        return {
+            isValid: false,
+            message: "startTime must be in HH:MM format (24-hour)"
+        };
+    }
+    if (!timeRegex.test(endTime)) {
+        return {
+            isValid: false,
+            message: "endTime must be in HH:MM format (24-hour)"
+        };
+    }
+
+    // Validate dayOfWeek enum
+    const validDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    if (!validDays.includes(dayOfWeek)) {
+        return {
+            isValid: false,
+            message: "dayOfWeek must be one of: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday"
+        };
+    }
+
+    // Validate dates
+    const startDate = new Date(moduleStartDate);
+    const endDate = new Date(moduleEndDate);
+
+    if (isNaN(startDate.getTime())) {
+        return {
+            isValid: false,
+            message: "moduleStartDate must be a valid date"
+        };
+    }
+
+    if (isNaN(endDate.getTime())) {
+        return {
+            isValid: false,
+            message: "moduleEndDate must be a valid date"
+        };
+    }
+
+    if (endDate <= startDate) {
+        return {
+            isValid: false,
+            message: "moduleEndDate must be after moduleStartDate"
         };
     }
 
@@ -32,7 +83,9 @@ const validateClassScheduleData = async (data) => {
         roomId: { id: roomId, Model: Room },
         moduleId: { id: moduleId, Model: Module },
         lecturerId: { id: lecturerId, Model: Lecturer },
-        intakeCourseId: { id: intakeCourseId, Model: IntakeCourse }
+        intakeCourseId: { id: intakeCourseId, Model: IntakeCourse },
+        semesterId: { id: semesterId, Model: Semester },
+        schoolId: { id: schoolId, Model: School }
     });
 
     if (referenceValidation) {
@@ -60,12 +113,10 @@ export const getClassSchedules = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         ClassSchedule,
         "classSchedules",
-        ['roomId', 'moduleId',
-            {
-                path: "lecturerId",
-                populate: [{ path: "userId" }]
-            }
-            , 'intakeCourseId']
+        ['roomId', 'moduleId', 'intakeCourseId', 'semesterId', 'schoolId', {
+            path: "lecturerId",
+            populate: [{ path: "userId" }]
+        }]
     );
 });
 
@@ -75,11 +126,14 @@ export const getClassScheduleById = controllerWrapper(async (req, res) => {
     return await getRecordById(
         ClassSchedule,
         id,
-        "classSchedules",
-        ['roomId', 'moduleId', {
-            path: "lecturerId",
-            populate: [{ path: "userId" }]
-        }, 'intakeCourseId']
+        "classSchedule",
+        ['roomId', 'moduleId', 'semesterId', 'schoolId', {
+            path: 'intakeCourseId',
+            populate: { path: ["intakeId", "courseId"] }
+        }, {
+                path: "lecturerId",
+                populate: [{ path: "userId" }]
+            }]
     );
 });
 
@@ -90,7 +144,7 @@ export const updateClassSchedule = controllerWrapper(async (req, res) => {
         ClassSchedule,
         id,
         req.body,
-        "classSchedules",
+        "classSchedule",
         validateClassScheduleData
     );
 });
@@ -110,12 +164,13 @@ export const getClassSchedulesBySchool = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         ClassSchedule,
         "classSchedules",
-        ["moduleId", "roomId", "schoolId",
-            {
+        ['roomId', 'moduleId', 'semesterId', 'schoolId', {
+            path: 'intakeCourseId',
+            populate: { path: ["intakeId", "courseId"] }
+        }, {
                 path: "lecturerId",
-                populate: [{ path: "userId" }]
-            },
-        ],
+                populate: { path: "userId" }
+            }],
         { schoolId }
     );
 });

@@ -22,7 +22,6 @@ import {
 const validateExamScheduleData = async (data) => {
     const {
         intakeCourseId,
-        courseId,
         moduleId,
         examDate,
         examTime,
@@ -35,7 +34,6 @@ const validateExamScheduleData = async (data) => {
     // Check required fields
     if (
         !intakeCourseId ||
-        !courseId ||
         !moduleId ||
         !examDate ||
         !examTime ||
@@ -48,7 +46,7 @@ const validateExamScheduleData = async (data) => {
     ) {
         return {
             isValid: false,
-            message: "Please provide all required fields (intakeCourseId, courseId, moduleId, examDate, examTime, roomId, invigilators, durationMinute, schoolId)"
+            message: "Please provide all required fields (intakeCourseId, moduleId, examDate, examTime, roomId, invigilators, durationMinute, schoolId)"
         };
     }
 
@@ -79,7 +77,6 @@ const validateExamScheduleData = async (data) => {
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
         intakeCourseId: { id: intakeCourseId, Model: IntakeCourse },
-        courseId: { id: courseId, Model: Course },
         moduleId: { id: moduleId, Model: Module },
         roomId: { id: roomId, Model: Room },
         schoolId: { id: schoolId, Model: School },
@@ -122,7 +119,7 @@ export const getExamSchedules = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         ExamSchedule,
         "exam schedules",
-        ['RoomID', 'ModuleID', 'CourseID', 'intakeCourseID']
+        ['roomId', 'moduleId', 'intakeCourseId']
     );
 });
 
@@ -133,7 +130,7 @@ export const getExamScheduleById = controllerWrapper(async (req, res) => {
         ExamSchedule,
         id,
         "exam schedule",
-        ['RoomID', 'ModuleID', 'CourseID', 'intakeCourseID']
+        ['roomId', 'moduleId', 'intakeCourseId']
     );
 });
 
@@ -144,7 +141,7 @@ export const updateExamSchedule = controllerWrapper(async (req, res) => {
         ExamSchedule,
         id,
         req.body,
-        "exam schedule",
+        "examSchedules",
         validateExamScheduleData
     );
 });
@@ -152,7 +149,7 @@ export const updateExamSchedule = controllerWrapper(async (req, res) => {
 // Delete Exam Schedule
 export const deleteExamSchedule = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    return await deleteRecord(ExamSchedule, id, "exam schedule");
+    return await deleteRecord(ExamSchedule, id, "examSchedules");
 });
 // Delete All ExamSchedules
 export const deleteAllExamSchedules = controllerWrapper(async (req, res) => {
@@ -164,7 +161,18 @@ export const getExamSchedulesBySchool = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         ExamSchedule,
         "examSchedules",
-        ["moduleId", "schoolId"],
+        [
+            "moduleId",
+            "schoolId",
+            "roomId",
+            {
+                path: 'intakeCourseId',
+                populate: [
+                    { path: 'intakeId' },
+                    { path: 'courseId' }
+                ]
+            }
+        ],
         { schoolId }
     );
 });

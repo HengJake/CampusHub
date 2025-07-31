@@ -40,19 +40,14 @@ import {
     AccordionButton,
     AccordionPanel,
     AccordionIcon,
-    Tabs,
-    TabList,
-    TabPanels,
-    Tab,
-    TabPanel,
 } from "@chakra-ui/react"
 import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiEye, FiDownload } from "react-icons/fi"
 import { useEffect, useState } from "react"
-import { useAcademicStore } from "../../store/academic";
-import { useShowToast } from "../../store/utils/toast";
-import ComfirmationMessage from "../common/ComfirmationMessage.jsx";
-import TitleInputList from "../common/TitleInputList.jsx";
-import MultiSelectPopover from "../common/MultiSelectPopover.jsx";
+import { useAcademicStore } from "../../../store/academic.js";
+import { useShowToast } from "../../../store/utils/toast.js";
+import ComfirmationMessage from "../../common/ComfirmationMessage.jsx";
+import TitleInputList from "../../common/TitleInputList.jsx";
+import MultiSelectPopover from "../../common/MultiSelectPopover.jsx";
 
 export function CourseManagement() {
     const {
@@ -85,6 +80,8 @@ export function CourseManagement() {
         courseLevel: "",           // 'Diploma' | 'Bachelor' | 'Master' | 'PhD'
         courseType: "Full Time",   // 'Full Time' | 'Part Time' | 'Distance Learning'
         totalCreditHours: 0,      // Number
+        totalYear: 3,              // Number - added from model
+        totalSemester: 6,          // Number - added from model
         minimumCGPA: 2.0,          // Number (default)
         departmentId: "",          // ObjectId (select from Department list)
         duration: "",              // Number (in months)
@@ -112,13 +109,6 @@ export function CourseManagement() {
             fetchDepartments();
         }
     }, [])
-    // console.log(courses)
-
-
-    // useEffect(() => {
-    //     console.log(formData);
-    // }, [formData])
-    console.log("🚀 ~ useEffect ~ courses:", courses)
 
     // helper function
     const removeFromArrayField = (field, idx) => {
@@ -181,6 +171,8 @@ export function CourseManagement() {
                 courseLevel: formData.courseLevel,
                 courseType: formData.courseType,
                 totalCreditHours: Number(formData.totalCreditHours),
+                totalYear: Number(formData.totalYear),
+                totalSemester: Number(formData.totalSemester),
                 minimumCGPA: parseFloat(formData.minimumCGPA), // force float
                 departmentId: formData.departmentId,
                 duration: Number(formData.duration),
@@ -210,6 +202,8 @@ export function CourseManagement() {
             courseLevel: "",           // 'Diploma' | 'Bachelor' | 'Master' | 'PhD'
             courseType: "Full Time",   // 'Full Time' | 'Part Time' | 'Distance Learning'
             totalCreditHours: 0,      // Number
+            totalYear: 3,              // Number - added from model
+            totalSemester: 6,          // Number - added from model
             minimumCGPA: 2.0,          // Number (default)
             departmentId: "",          // ObjectId (select from Department list)
             duration: "",              // Number (in months)
@@ -239,6 +233,8 @@ export function CourseManagement() {
             courseLevel: course.courseLevel || "",                 // e.g., 'Diploma'
             courseType: course.courseType || "Full Time",          // default fallback
             totalCreditHours: course.totalCreditHours || "",       // Number
+            totalYear: course.totalYear || 3,                      // Number
+            totalSemester: course.totalSemester || 6,              // Number
             minimumCGPA: course.minimumCGPA ?? 2.0,                // Allow 0 as valid
             departmentId: course.departmentId._id || "",               // ObjectId
             duration: course.duration || "",                       // Number
@@ -283,7 +279,7 @@ export function CourseManagement() {
     // change csv with the new attribute
     const exportCourses = () => {
         const csvContent = [
-            ["Course Code", "Course Name", "Description", "Credits", "Department", "Duration", "Status"],
+            ["Course Code", "Course Name", "Description", "Credits", "Department", "Duration", "Total Year", "Total Semester", "Status"],
             ...filteredCourses.map((course) => [
                 course.courseCode || "N/A",
                 course.courseName || "N/A",
@@ -291,6 +287,8 @@ export function CourseManagement() {
                 course.credits || course.totalCreditHours || "N/A",
                 course.departmentId?.departmentName || course.department || "N/A",
                 course.duration || "N/A",
+                course.totalYear || "N/A",
+                course.totalSemester || "N/A",
                 course.isActive ? "Active" : "Inactive",
             ]),
         ]
@@ -356,11 +354,11 @@ export function CourseManagement() {
                             </Select>
                             <Select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)}>
                                 <option value="All">All Departments</option>
-                                <option value="Computer Science">Computer Science</option>
-                                <option value="Information Technology">Information Technology</option>
-                                <option value="Engineering">Engineering</option>
-                                <option value="Business">Business</option>
-                                <option value="Arts">Arts</option>
+                                {departments.map(dept => (
+                                    <option key={dept._id} value={dept.departmentName}>
+                                        {dept.departmentName}
+                                    </option>
+                                ))}
                             </Select>
                         </Grid>
                     </CardBody>
@@ -381,6 +379,7 @@ export function CourseManagement() {
                                         <Th>Course Name</Th>
                                         <Th>Department</Th>
                                         <Th>Total Credit Hour</Th>
+                                        <Th>Years / Semesters</Th>
                                         <Th>Duration (Month)</Th>
                                         <Th>Modules</Th>
                                         <Th>Status</Th>
@@ -405,13 +404,19 @@ export function CourseManagement() {
                                                     </Box>
                                                 </Td>
                                                 <Td>
-                                                    {course.departmentId.departmentName}
+                                                    {course.departmentId?.departmentName || "N/A"}
                                                 </Td>
                                                 <Td>{course.totalCreditHours || course.credits || "N/A"}</Td>
+                                                <Td>
+                                                    <VStack align="start" spacing={0}>
+                                                        <Text fontSize="sm">{course.totalYear || "N/A"} years</Text>
+                                                        <Text fontSize="sm" color="gray.600">{course.totalSemester || "N/A"} semesters</Text>
+                                                    </VStack>
+                                                </Td>
                                                 <Td>{course.duration || "N/A"}</Td>
                                                 <Td>
-                                                    <Badge colorScheme={modules.filter(module => module.courseId === course._id).length < 1 ? "red" : "blue"}>
-                                                        {modules.filter(module => module.courseId === course._id).length} modules
+                                                    <Badge colorScheme={modules.filter(module => module.courseId?.some(c => c._id === course._id)).length < 1 ? "red" : "blue"}>
+                                                        {modules.filter(module => module.courseId?.some(c => c._id === course._id)).length} modules
                                                     </Badge>
                                                 </Td>
                                                 <Td>
@@ -474,13 +479,17 @@ export function CourseManagement() {
                                                         <Text>{course.totalCreditHours || course.credits || "N/A"}</Text>
                                                     </Box>
                                                     <Box>
+                                                        <Text fontWeight="semibold">Years / Semesters:</Text>
+                                                        <Text>{course.totalYear || "N/A"} years / {course.totalSemester || "N/A"} semesters</Text>
+                                                    </Box>
+                                                    <Box>
                                                         <Text fontWeight="semibold">Duration (Month):</Text>
                                                         <Text>{course.duration || "N/A"}</Text>
                                                     </Box>
                                                     <Box>
                                                         <Text fontWeight="semibold">Modules:</Text>
-                                                        <Badge colorScheme={modules.filter(module => module.courseId === course._id).length < 1 ? "red" : "blue"}>
-                                                            {modules.filter(module => module.courseId === course._id).length} modules
+                                                        <Badge colorScheme={modules.filter(module => module.courseId?.some(c => c._id === course._id)).length < 1 ? "red" : "blue"}>
+                                                            {modules.filter(module => module.courseId?.some(c => c._id === course._id)).length} modules
                                                         </Badge>
                                                     </Box>
                                                     <Box>
@@ -513,7 +522,7 @@ export function CourseManagement() {
                 {/* Add/Edit Course Modal */}
                 <Modal isOpen={isOpen} onClose={onClose} size="xl">
                     <ModalOverlay />
-                    <ModalContent>
+                    <ModalContent maxW="4xl">
                         <ModalHeader>{isEditing ? "Edit Course" : "Add New Course"}</ModalHeader>
                         <ModalCloseButton />
                         <ModalBody>
@@ -585,6 +594,28 @@ export function CourseManagement() {
                                 </FormControl>
 
                                 <FormControl isRequired>
+                                    <FormLabel>Total Years</FormLabel>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        value={formData.totalYear}
+                                        onChange={(e) => setFormData({ ...formData, totalYear: e.target.value })}
+                                        placeholder="3"
+                                    />
+                                </FormControl>
+
+                                <FormControl isRequired>
+                                    <FormLabel>Total Semesters</FormLabel>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        value={formData.totalSemester}
+                                        onChange={(e) => setFormData({ ...formData, totalSemester: e.target.value })}
+                                        placeholder="6"
+                                    />
+                                </FormControl>
+
+                                <FormControl isRequired>
                                     <FormLabel>Department</FormLabel>
                                     <Select
                                         value={formData.departmentId}
@@ -626,9 +657,8 @@ export function CourseManagement() {
                             </FormControl>
 
                             <FormControl mt={4}>
-                                {/*TODO:use multie select */}
                                 <MultiSelectPopover
-                                    label={"Entry Requirement"}
+                                    label={"Entry Requirements"}
                                     items={modules}
                                     selectedIds={formData.entryRequirements}
                                     onChange={selected => setFormData({ ...formData, entryRequirements: selected })}
@@ -718,6 +748,10 @@ export function CourseManagement() {
                                             <Text>{selectedCourse.totalCreditHours || selectedCourse.credits || "N/A"}</Text>
                                         </Box>
                                         <Box>
+                                            <Text fontWeight="semibold">Duration:</Text>
+                                            <Text>{selectedCourse.totalYear || "N/A"} years / {selectedCourse.totalSemester || "N/A"} semesters</Text>
+                                        </Box>
+                                        <Box>
                                             <Text fontWeight="semibold">Minimum CGPA:</Text>
                                             <Text>{selectedCourse.minimumCGPA || "N/A"}</Text>
                                         </Box>
@@ -728,7 +762,7 @@ export function CourseManagement() {
                                         <Box>
                                             <Text fontWeight="semibold">Modules:</Text>
                                             <Text>
-                                                {modules.filter(module => module.courseId === selectedCourse._id).length || 0} modules
+                                                {modules.filter(module => module.courseId?.some(c => c._id === selectedCourse._id)).length || 0} modules
                                             </Text>
                                         </Box>
                                     </Grid>
@@ -761,7 +795,7 @@ export function CourseManagement() {
                                     <Box>
                                         <Text fontWeight="semibold">Assigned Modules:</Text>
                                         <HStack wrap="wrap">
-                                            {modules.filter((module) => module.courseId === selectedCourse._id).map((module) => (
+                                            {modules.filter((module) => module.courseId?.some(c => c._id === selectedCourse._id)).map((module) => (
                                                 <Badge key={module._id} colorScheme="blue">
                                                     {module.moduleName || "Unnamed Module"}
                                                 </Badge>

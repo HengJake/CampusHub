@@ -15,7 +15,7 @@ const moduleSchema = new mongoose.Schema({
         // Module code (e.g., "CS101", "DB201")
     },
 
-    totalCreditHour: {
+    totalCreditHours: {
         type: Number,
         required: true,
         min: 1,

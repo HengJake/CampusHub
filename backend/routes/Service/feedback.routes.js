@@ -13,13 +13,14 @@ import {
 
 const router = express.Router();
 
-router.post("/", userAuth, createFeedback);
-router.get("/", userAuth, getAllFeedbacks);
-router.get("/:id", userAuth, getFeedbackById);
-router.get("/student/:studentId", userAuth, getFeedbacksByStudentId);
-router.get("/type/:feedbackType", userAuth, getFeedbacksByFeedbackType);
-router.put("/:id", userAuth, updateFeedback);
-router.delete('/all', userAuth, deleteAllFeedbacks);
-router.delete("/:id", userAuth, deleteFeedback);
+// router.post("/", userAuth, createFeedback);
+router.post("/", createFeedback);
+router.get("/", getAllFeedbacks);
+router.get("/:id", getFeedbackById);
+router.get("/student/:studentId", getFeedbacksByStudentId);
+router.get("/type/:feedbackType", getFeedbacksByFeedbackType);
+router.put("/:id", updateFeedback);
+router.delete('/all', deleteAllFeedbacks);
+router.delete("/:id", deleteFeedback);
 
 export default router; 

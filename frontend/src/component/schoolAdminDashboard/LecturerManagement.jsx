@@ -167,7 +167,7 @@ export function LecturerManagement() {
 
         // Now create/update lecturer with userId
         const submitData = { ...formData, userId };
-        console.log("🚀 ~ handleSubmit ~ submitData:", submitData)
+        // console.log("🚀 ~ handleSubmit ~ submitData:", submitData)
         let res;
         if (isEdit) {
             res = await updateLecturer(selectedLecturer._id, submitData);
@@ -642,7 +642,7 @@ export function LecturerManagement() {
 
                 <ComfirmationMessage
                     title="Confirm delete lecturer?"
-                    description="Lecturer deleted won't be able to be restored"
+                    description="Deleted lecturer can't be restored"
                     isOpen={isDeleteOpen}
                     onClose={closeDeleteDialog}
                     onConfirm={handleDelete}

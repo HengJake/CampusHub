@@ -57,9 +57,9 @@ import {
 } from "@chakra-ui/react"
 import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiEye, FiDownload } from "react-icons/fi"
 import { useEffect, useState } from "react"
-import { useAcademicStore } from "../../store/academic";
-import { useShowToast } from "../../store/utils/toast";
-import ComfirmationMessage from "../common/ComfirmationMessage.jsx";
+import { useAcademicStore } from "../../../store/academic.js";
+import { useShowToast } from "../../../store/utils/toast.js";
+import ComfirmationMessage from "../../common/ComfirmationMessage.jsx";
 
 export function ModuleManagement() {
   const {

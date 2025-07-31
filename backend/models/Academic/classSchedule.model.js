@@ -48,13 +48,20 @@ const classScheduleSchema = new mongoose.Schema({
     },
     intakeCourseId: { type: mongoose.Schema.Types.ObjectId, ref: 'IntakeCourse', required: true }, // Add this
 
+    semesterId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Semester',
+        required: true,
+        // Reference to the semester when this class is scheduled
+    },
+
     schoolId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'School',
         required: true,
         // Each schedule belongs to a specific school
     },
-    
+
     moduleStartDate: {
         type: Date,
         required: true,

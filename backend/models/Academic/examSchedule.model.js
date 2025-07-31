@@ -4,10 +4,11 @@ import Course from './course.model.js';
 const examScheduleSchema = new mongoose.Schema({
     intakeCourseId: { type: mongoose.Schema.Types.ObjectId, ref: 'IntakeCourse', required: true }, // Add this
 
-    courseId: {
+    semesterId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
-        required: true
+        ref: 'Semester',
+        required: true,
+        // Reference to the semester when this exam is scheduled
     },
 
     moduleId: {

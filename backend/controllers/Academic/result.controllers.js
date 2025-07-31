@@ -13,7 +13,7 @@ import {
 } from "../../utils/reusable.js";
 
 const validateResultData = async (data) => {
-    const { studentId, moduleId, grade, creditHour, remark } = data;
+    const { studentId, moduleId, grade, creditHours, remark } = data;
     // Check required fields
     if (!studentId) {
         return {
@@ -33,18 +33,18 @@ const validateResultData = async (data) => {
             message: "grade is required"
         };
     }
-    if (!creditHour) {
+    if (!creditHours) {
         return {
             isValid: false,
-            message: "creditHour is required"
+            message: "creditHours is required"
         };
     }
 
     // Validate credit hour range
-    if (creditHour < 0 || creditHour > 4) {
+    if (creditHours < 0 || creditHours > 4) {
         return {
             isValid: false,
-            message: "creditHour must be between 0 and 4"
+            message: "creditHours must be between 0 and 4"
         };
     }
 
@@ -169,9 +169,9 @@ export const getStudentGPA = controllerWrapper(async (req, res) => {
         };
 
         results.forEach(result => {
-            const gradePoints = gradePointMap[result.grade] * result.creditHour;
+            const gradePoints = gradePointMap[result.grade] * result.creditHours;
             totalGradePoints += gradePoints;
-            totalCreditHours += result.creditHour;
+            totalCreditHours += result.creditHours;
         });
 
         const gpa = totalCreditHours > 0 ? (totalGradePoints / totalCreditHours).toFixed(2) : 0;
@@ -262,7 +262,7 @@ export const getResultsBySchool = controllerWrapper(async (req, res) => {
             {
                 path: "studentId",
                 populate: {
-                    path: ["intakeCourseId","userId"]
+                    path: ["intakeCourseId", "userId"]
                 }
             }
             , "moduleId", "schoolId"],

@@ -13,7 +13,7 @@ import {
 
 // Custom validation function for intake data
 const validateIntakeData = async (data) => {
-    const { intakeName, intakeMonth, academicYear, semester, registrationStartDate, registrationEndDate, orientationDate, classesStartDate, classesEndDate, examinationStartDate, examinationEndDate, academicEvents, isActive, status, schoolId } = data;
+    const { intakeName, intakeMonth, registrationStartDate, registrationEndDate, orientationDate, academicEvents, isActive, status, schoolId } = data;
 
     // Check required fields
     if (!intakeName) {
@@ -26,18 +26,6 @@ const validateIntakeData = async (data) => {
         return {
             isValid: false,
             message: "intakeMonth is required"
-        };
-    }
-    if (!academicYear) {
-        return {
-            isValid: false,
-            message: "academicYear is required"
-        };
-    }
-    if (!semester) {
-        return {
-            isValid: false,
-            message: "semester is required"
         };
     }
     if (!registrationStartDate) {
@@ -58,30 +46,7 @@ const validateIntakeData = async (data) => {
             message: "orientationDate is required"
         };
     }
-    if (!classesStartDate) {
-        return {
-            isValid: false,
-            message: "classesStartDate is required"
-        };
-    }
-    if (!classesEndDate) {
-        return {
-            isValid: false,
-            message: "classesEndDate is required"
-        };
-    }
-    if (!examinationStartDate) {
-        return {
-            isValid: false,
-            message: "examinationStartDate is required"
-        };
-    }
-    if (!examinationEndDate) {
-        return {
-            isValid: false,
-            message: "examinationEndDate is required"
-        };
-    }
+
     if (!schoolId) {
         return {
             isValid: false,
@@ -95,15 +60,6 @@ const validateIntakeData = async (data) => {
         return {
             isValid: false,
             message: "intakeMonth must be one of: January, May, September"
-        };
-    }
-
-    // Validate academicYear format (YYYY/YYYY)
-    const yearRegex = /^\d{4}\/\d{4}$/;
-    if (!yearRegex.test(academicYear)) {
-        return {
-            isValid: false,
-            message: "academicYear must be in YYYY/YYYY format"
         };
     }
 
@@ -123,10 +79,6 @@ const validateIntakeData = async (data) => {
         { name: 'registrationStartDate', value: registrationStartDate },
         { name: 'registrationEndDate', value: registrationEndDate },
         { name: 'orientationDate', value: orientationDate },
-        { name: 'classesStartDate', value: classesStartDate },
-        { name: 'classesEndDate', value: classesEndDate },
-        { name: 'examinationStartDate', value: examinationStartDate },
-        { name: 'examinationEndDate', value: examinationEndDate }
     ];
 
     for (const dateField of dates) {

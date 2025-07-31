@@ -28,13 +28,6 @@ const studentSchema = new mongoose.Schema({
         required: true,
     },
 
-    completionStatus: {
-        type: String,
-        enum: ["completed", "in progress", "dropped",],
-        default: "in progress",
-        required: true,
-    },
-
     currentYear: {
         type: Number,
         required: true,
@@ -59,9 +52,9 @@ const studentSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ['enrolled', 'active', 'graduated', 'dropped', 'suspended'],
+        enum: ['enrolled', 'active', 'in_progress', 'graduated', 'dropped', 'suspended'],
         default: 'enrolled',
-        // Current status of the student
+        // Current status of the student (consolidated from completionStatus)
     },
 
     totalCreditHours: {
@@ -94,16 +87,8 @@ studentSchema.index({ schoolId: 1 });
 studentSchema.index({ intakeCourseId: 1 });
 studentSchema.index({ status: 1 });
 
-// Virtual to get course info
-studentSchema.virtual('courseInfo', {
-    ref: 'IntakeCourse',
-    localField: 'intakeCourseId',
-    foreignField: '_id',
-    justOne: true
-});
-
-// Virtual to get intake info
-studentSchema.virtual('intakeInfo', {
+// Virtual to get intake course info
+studentSchema.virtual('intakeCourseInfo', {
     ref: 'IntakeCourse',
     localField: 'intakeCourseId',
     foreignField: '_id',

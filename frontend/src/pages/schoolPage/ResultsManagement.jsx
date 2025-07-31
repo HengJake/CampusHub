@@ -164,7 +164,7 @@ export default function ResultsBulkUpload() {
 
         try {
             const promises = csvData.map(async (data, idx) => {
-                if (data.grade === "" || data.creditHour === "") {
+                if (data.grade === "" || data.creditHours === "") {
                     showToast.error(`Error in line ${idx + 1}`, "Please ensure the columns are filled", 'id-1');
                     return { success: false, index: idx };
                 }
@@ -229,7 +229,7 @@ export default function ResultsBulkUpload() {
             { header: "studentId", key: "studentId", width: 10 },
             { header: "name", key: "name", width: 25 },
             { header: "grade", key: "grade", width: 25 },
-            { header: "creditHour", key: "creditHour", width: 25 },
+            { header: "creditHours", key: "creditHours", width: 25 },
             { header: "remark", key: "remark", width: 25 },
         ]
 
@@ -441,7 +441,7 @@ export default function ResultsBulkUpload() {
                                                                     {record.grade}
                                                                 </Badge>
                                                             </Td>
-                                                            <Td>{record.creditHour}</Td>
+                                                            <Td>{record.creditHours}</Td>
                                                             <Td color="gray.600">{record.remark}</Td>
                                                         </Tr>
                                                     ))}
@@ -472,7 +472,7 @@ export default function ResultsBulkUpload() {
                                                     <Td>{r?.studentId?.userId?.name || "N/A"}</Td>
                                                     <Td>{r?.moduleId?.moduleName || "N/A"}</Td>
                                                     <Td>{r?.grade || "N/A"}</Td>
-                                                    <Td>{r?.creditHour || "N/A"}</Td>
+                                                    <Td>{r?.creditHours || "N/A"}</Td>
                                                     <Td>{r?.remark || "N/A"}</Td>
                                                 </Tr>
                                             ))
@@ -520,7 +520,7 @@ export default function ResultsBulkUpload() {
                                                 <Td>{row.studentId}</Td>
                                                 <Td>{row.name}</Td>
                                                 <Td>{row.grade}</Td>
-                                                <Td>{row.creditHour}</Td>
+                                                <Td>{row.creditHours}</Td>
                                                 <Td>{row.remark}</Td>
                                             </Tr>
                                         ))}
@@ -639,7 +639,7 @@ export default function ResultsBulkUpload() {
                                                 <Td>{r?.studentId?.userId?.name || "N/A"}</Td>
                                                 <Td>{r?.moduleId?.moduleName || "N/A"}</Td>
                                                 <Td>{r?.grade || "N/A"}</Td>
-                                                <Td>{r?.creditHour || "N/A"}</Td>
+                                                <Td>{r?.creditHours || "N/A"}</Td>
                                                 <Td>{r?.remark || "N/A"}</Td>
                                                 <Td>{r?.updatedAt ? new Date(r.updatedAt).toLocaleDateString() : "N/A"}</Td>
                                             </Tr>
@@ -686,7 +686,7 @@ export default function ResultsBulkUpload() {
                                             </Box>
                                             <Box>
                                                 <Text fontWeight="semibold">Credit Hour:</Text>
-                                                <Text>{result?.creditHour || "N/A"}</Text>
+                                                <Text>{result?.creditHours || "N/A"}</Text>
                                             </Box>
                                             <Box>
                                                 <Text fontWeight="semibold">Remark:</Text>

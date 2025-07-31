@@ -39,6 +39,7 @@
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.525.0",
+    "luxon": "^3.7.1",
     "mongoose": "^8.15.1",
     "nodemailer": "^7.0.3",
     "nodemon": "^3.1.10",

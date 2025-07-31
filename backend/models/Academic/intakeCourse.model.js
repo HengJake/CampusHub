@@ -45,17 +45,11 @@ const intakeCourseSchema = new mongoose.Schema({
     },
 
     // Course-specific details for this intake
-    duration: {
-        type: Number,
-        required: true,
-        min: 1,
-        // Duration in months for this course in this intake
-    },
-
     maxDuration: {
         type: Number,
         required: true,
-        // Maximum duration in months (for part-time students)
+        // Maximum duration in months (for part-time/flexible students)
+        // Use course.duration as the standard duration
     },
 
     requirements: {

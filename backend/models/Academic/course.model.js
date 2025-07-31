@@ -66,6 +66,20 @@ const courseSchema = new mongoose.Schema({
         // Duration in months (e.g., 36 for 3-year degree)
     },
 
+    totalYear: {
+        type: Number,
+        required: true,
+        min: 1,
+        // Total years for the course (e.g., 3 for 3-year degree)
+    },
+
+    totalSemester: {
+        type: Number,
+        required: true,
+        min: 1,
+        // Total semesters for the course (e.g., 6 for 3-year degree with 2 semesters per year)
+    },
+
     entryRequirements: {
         type: [String],
         default: [],

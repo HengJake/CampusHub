@@ -15,6 +15,7 @@ export const useAcademicStore = create((set, get) => ({
     attendance: [],
     results: [],
     rooms: [],
+    semesters: [],
     schools: [], // Add schools state
 
     // Loading states
@@ -31,6 +32,7 @@ export const useAcademicStore = create((set, get) => ({
         attendance: false,
         results: false,
         rooms: false,
+        semesters: false,
         schools: false, // Add schools loading state
     },
 
@@ -48,15 +50,10 @@ export const useAcademicStore = create((set, get) => ({
         attendance: null,
         results: null,
         rooms: null,
+        semesters: null,
         schools: null, // Add schools error state
     },
 
-    // Helper to get schoolId from auth store
-    getSchoolId: () => {
-        const authStore = useAuthStore.getState();
-        return authStore.getSchoolId();
-    },
-    // ======================
     // Helper to get schoolId from auth store
     getSchoolId: () => {
         const authStore = useAuthStore.getState();
@@ -142,10 +139,10 @@ export const useAcademicStore = create((set, get) => ({
 
             // Remove from local state
             set(state => ({
-                localstorage: state.localstorage.filter(item => item._id !== id)
+                [localstorage]: state[localstorage].filter(item => item._id !== id)
             }));
 
-            return res;
+            return data;
         } catch (error) {
             return { success: false, message: error.message };
         }
@@ -566,6 +563,14 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+    fetchLecturerById: async (lecturerId) => {
+        const res = await fetch(`/api/lecturer/${lecturerId}`);
+
+        const data = await res.json()
+
+        return { success: data.success, message: data.message, data: data.data };
+    },
+
     createLecturer: async (lecturerData) => {
         try {
             // Automatically add schoolId for schoolAdmin
@@ -943,6 +948,50 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+    createIntakeCourse: async (intakeCourseData) => {
+        try {
+            // Automatically add schoolId for schoolAdmin
+            const authStore = useAuthStore.getState();
+            const user = authStore.getCurrentUser();
+
+            if (user.role === "schoolAdmin") {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    intakeCourseData.schoolId = schoolId;
+                }
+            }
+
+            const res = await get().buildPOST('/api/intake-course', intakeCourseData);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to create intake course");
+            }
+
+            set((state) => ({
+                intakeCourses: [...state.intakeCourses, data.data],
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteIntakeCourse: async (id) => {
+        try {
+            const data = await get().buildDELETE('/api/intake-course', id, 'intakeCourses');
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete intake course");
+            }
+
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
     updateEnrollment: async (id, action) => {
         try {
             const res = await fetch(`/api/intake-course/${id}/enrollment`, {
@@ -1039,6 +1088,42 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+    updateAttendance: async (id, updates) => {
+        try {
+            const res = await get().buildPUT('/api/attendance', id, updates);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update attendance");
+            }
+
+            // Update in local state
+            set((state) => ({
+                attendance: state.attendance.map((attendance) =>
+                    attendance._id === id ? data.data : attendance
+                ),
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteAttendance: async (id) => {
+        try {
+            const data = await get().buildDELETE('/api/attendance', id, 'attendance');
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete attendance");
+            }
+
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
     // ===== CLASS SCHEDULE OPERATIONS =====
     fetchClassSchedules: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, classSchedules: true } }));
@@ -1105,6 +1190,41 @@ export const useAcademicStore = create((set, get) => ({
             return { success: false, message: error.message };
         }
     },
+
+    updateClassSchedule: async (id, updates) => {
+        try {
+            const res = await get().buildPUT('/api/class-schedule', id, updates);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update class schedule");
+            }
+
+            set((state) => ({
+                classSchedules: [...state.classSchedules, data.data],
+            }));
+
+            return { success: true, data: data.data };
+
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteClassSchedule: async (id) => {
+        try {
+            const data = await get().buildDELETE('/api/class-schedule', id, 'classSchedules');
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete class schedule");
+            }
+
+            return { success: true, message: data.message };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
 
     // ===== RESULT OPERATIONS =====
     fetchResults: async (filters = {}) => {
@@ -1173,6 +1293,42 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+    updateResult: async (id, updates) => {
+        try {
+            const res = await get().buildPUT('/api/result', id, updates);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update result");
+            }
+
+            // Update in local state
+            set((state) => ({
+                results: state.results.map((result) =>
+                    result._id === id ? data.data : result
+                ),
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteResult: async (id) => {
+        try {
+            const data = await get().buildDELETE('/api/result', id, 'results');
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete result");
+            }
+
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
     // =======INTAKE OPERATIONS======
     fetchIntakes: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, intakes: true } }));
@@ -1198,6 +1354,72 @@ export const useAcademicStore = create((set, get) => ({
                 loading: { ...state.loading, intakes: false },
                 errors: { ...state.errors, intakes: error.message },
             }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    createIntake: async (intakeData) => {
+        try {
+            // Automatically add schoolId for schoolAdmin
+            const authStore = useAuthStore.getState();
+            const user = authStore.getCurrentUser();
+
+            if (user.role === "schoolAdmin") {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    intakeData.schoolId = schoolId;
+                }
+            }
+
+            const res = await get().buildPOST('/api/intake', intakeData);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to create intake");
+            }
+
+            set((state) => ({
+                intakes: [...state.intakes, data.data],
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    updateIntake: async (id, updates) => {
+        try {
+            const res = await get().buildPUT('/api/intake', id, updates);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update intake");
+            }
+
+            // Update in local state
+            set((state) => ({
+                intakes: state.intakes.map((intake) =>
+                    intake._id === id ? data.data : intake
+                ),
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteIntake: async (id) => {
+        try {
+            const data = await get().buildDELETE('/api/intake', id, 'intakes');
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete intake");
+            }
+
+            return { success: true };
+        } catch (error) {
             return { success: false, message: error.message };
         }
     },
@@ -1573,6 +1795,72 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+    createRoom: async (roomData) => {
+        try {
+            // Automatically add schoolId for schoolAdmin
+            const authStore = useAuthStore.getState();
+            const user = authStore.getCurrentUser();
+
+            if (user.role === "schoolAdmin") {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    roomData.schoolId = schoolId;
+                }
+            }
+
+            const res = await get().buildPOST('/api/room', roomData);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to create room");
+            }
+
+            set((state) => ({
+                rooms: [...state.rooms, data.data],
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    updateRoom: async (id, updates) => {
+        try {
+            const res = await get().buildPUT('/api/room', id, updates);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update room");
+            }
+
+            // Update in local state
+            set((state) => ({
+                rooms: state.rooms.map((room) =>
+                    room._id === id ? data.data : room
+                ),
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteRoom: async (id) => {
+        try {
+            const data = await get().buildDELETE('/api/room', id, 'rooms');
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete room");
+            }
+
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
     // ===== ANALYTICS FUNCTIONS =====
     getCourseCompletionRate: (intakeCourseId) => {
         const { students } = get();
@@ -1583,7 +1871,7 @@ export const useAcademicStore = create((set, get) => ({
         if (relevantStudents.length === 0) return 0;
 
         const completed = relevantStudents.filter(
-            (s) => s.completionStatus === "completed"
+            (s) => s.status === "graduated"
         ).length;
         return (completed / relevantStudents.length) * 100;
     },
@@ -1592,7 +1880,7 @@ export const useAcademicStore = create((set, get) => ({
         const { students } = get();
 
         const completed = students.filter(
-            (s) => s.completionStatus === "completed"
+            (s) => s.status === "graduated"
         ).length;
         return (completed / students.length) * 100;
     },
@@ -1642,6 +1930,7 @@ export const useAcademicStore = create((set, get) => ({
                 results: null,
                 rooms: null,
                 schools: null,
+                semesters: null,
             },
         }));
     },
@@ -1660,6 +1949,7 @@ export const useAcademicStore = create((set, get) => ({
             attendance: [],
             results: [],
             rooms: [],
+            semesters: [],
             schools: [],
         });
     },
@@ -1670,7 +1960,7 @@ export const useAcademicStore = create((set, get) => ({
         try {
             await get().waitForAuth();
 
-            const url = get().buildUrl("/api/examSchedule", filters);
+            const url = get().buildUrl("/api/exam-schedule", filters);
             const res = await fetch(url);
             const data = await res.json();
 
@@ -1690,6 +1980,286 @@ export const useAcademicStore = create((set, get) => ({
                 loading: { ...state.loading, examSchedules: false },
                 errors: { ...state.errors, examSchedules: error.message },
             }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    createExamSchedule: async (examScheduleData) => {
+        try {
+            // Automatically add schoolId for schoolAdmin
+            const authStore = useAuthStore.getState();
+            const user = authStore.getCurrentUser();
+
+            if (user.role === "schoolAdmin") {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    examScheduleData.schoolId = schoolId;
+                }
+            }
+
+            const res = await get().buildPOST('/api/exam-schedule', examScheduleData);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to create exam schedule");
+            }
+
+            set((state) => ({
+                examSchedules: [...state.examSchedules, data.data],
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    updateExamSchedule: async (id, updates) => {
+        try {
+            const res = await get().buildPUT('/api/exam-schedule', id, updates);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update exam schedule");
+            }
+
+            // Update in local state
+            set((state) => ({
+                examSchedules: state.examSchedules.map((schedule) =>
+                    schedule._id === id ? data.data : schedule
+                ),
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteExamSchedule: async (id) => {
+        try {
+            const data = await get().buildDELETE('/api/exam-schedule', id, 'examSchedules');
+            console.log("🚀 ~ data:", data)
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete exam schedule");
+            }
+
+            return { success: true, message: data.message };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    // ===== SEMESTER OPERATIONS =====
+    fetchSemesters: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, semesters: true } }));
+        try {
+            await get().waitForAuth();
+
+            const url = get().buildUrl("/api/semester", filters);
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch semesters");
+            }
+
+            set((state) => ({
+                semesters: data.data,
+                loading: { ...state.loading, semesters: false },
+                errors: { ...state.errors, semesters: null },
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, semesters: false },
+                errors: { ...state.errors, semesters: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchSemestersBySchoolId: async (schoolId) => {
+        set((state) => ({ loading: { ...state.loading, semesters: true } }));
+        try {
+            await get().waitForAuth();
+
+            const res = await fetch(`/api/semester/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch semesters by school");
+            }
+
+            set((state) => ({
+                semesters: data.data,
+                loading: { ...state.loading, semesters: false },
+                errors: { ...state.errors, semesters: null },
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, semesters: false },
+                errors: { ...state.errors, semesters: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchSemestersByIntakeCourse: async (intakeCourseId) => {
+        try {
+            const res = await fetch(`/api/semester/intake-course/${intakeCourseId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch semesters by intake course");
+            }
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchSemesterById: async (semesterId) => {
+        try {
+            const res = await fetch(`/api/semester/${semesterId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch semester");
+            }
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    createSemester: async (semesterData) => {
+        try {
+            // Automatically add schoolId for schoolAdmin
+            const authStore = useAuthStore.getState();
+            const user = authStore.getCurrentUser();
+
+            if (user.role === "schoolAdmin") {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    semesterData.schoolId = schoolId;
+                }
+            }
+
+            const res = await get().buildPOST('/api/semester', semesterData);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to create semester");
+            }
+
+            set((state) => ({
+                semesters: [...state.semesters, data.data],
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    updateSemester: async (id, updates) => {
+        try {
+            const res = await get().buildPUT('/api/semester', id, updates);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update semester");
+            }
+
+            // Update in local state
+            set((state) => ({
+                semesters: state.semesters.map((semester) =>
+                    semester._id === id ? data.data : semester
+                ),
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteSemester: async (id) => {
+        try {
+            const data = await get().buildDELETE('/api/semester', id, 'semesters');
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete semester");
+            }
+
+            return { success: true, message: data.message };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    getCurrentSemester: async (intakeCourseId) => {
+        try {
+            const res = await fetch(`/api/semester/intake-course/${intakeCourseId}/current`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch current semester");
+            }
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    getUpcomingSemesters: async (schoolId) => {
+        try {
+            const res = await fetch(`/api/semester/school/${schoolId}/upcoming`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch upcoming semesters");
+            }
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    updateSemesterStatus: async (id, status) => {
+        try {
+            const res = await fetch(`/api/semester/${id}/status`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ status }),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update semester status");
+            }
+
+            // Update in local state
+            set((state) => ({
+                semesters: state.semesters.map((semester) =>
+                    semester._id === id ? data.data : semester
+                ),
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
             return { success: false, message: error.message };
         }
     },

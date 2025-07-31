@@ -61,12 +61,12 @@ const navConfig = {
             icon: FiBook,
             children: [
                 { label: "Academic Overview", path: "/academic-overview", icon: FiBook },
-                { label: "Course Management☑️", path: "/course-management", icon: FaChalkboardTeacher },
+                { label: "Intake and Course☑️", path: "/course-management", icon: FaChalkboardTeacher },
                 { label: "Results☑️", path: "/admin/results", icon: FiBarChart2 },
-                { label: "Schedule Manager", path: "/admin/schedule", icon: MdEventNote }
+                { label: "Schedule Manager☑️", path: "/admin/schedule", icon: MdEventNote }
             ]
         },
-        { label: "Feedback Management", path: "/feedback-management", icon: FiMessageSquare },
+        { label: "Feedback Management☑️", path: "/feedback-management", icon: FiMessageSquare },
         { label: "Announcement", path: "/announcement-management", icon: GoMegaphone },
     ],
 

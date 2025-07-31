@@ -1,4 +1,4 @@
-const generateClassSchedule = async (selectedIntake, selectedCourse, selectedIntakeCourse, modules, rooms, lecturers, scheduleConfig = {}) => {
+const generateClassSchedule = async (selectedIntake, selectedCourse, selectedIntakeCourse, modules, rooms, lecturers, scheduleConfig = {}, selectedSemester = null) => {
     // Configuration with defaults
     const CLASSES_PER_MODULE_PER_WEEK = scheduleConfig.classesPerWeek || 2;
     const DAYS_OF_WEEK = scheduleConfig.daysOfWeek || ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
