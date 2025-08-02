@@ -40,7 +40,7 @@ export default function ScheduleControls({
                     {allItems.filter(i => i.type == "exam").length} exams
                 </Badge>
             </HStack>
-
+<Text></Text>
             <HStack>
                 <ButtonGroup size="sm" isAttached variant="outline">
                     <Button
