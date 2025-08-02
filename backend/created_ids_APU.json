@@ -1,0 +1,277 @@
+{
+  "school": "688ca2864fdc892a1c9c7ea0",
+  "users": {
+    "schoolAdmin": [
+      "688ca2844fdc892a1c9c7e88",
+      "688ca2854fdc892a1c9c7e8e"
+    ],
+    "lecturer": [
+      "688ca2854fdc892a1c9c7e92",
+      "688ca2854fdc892a1c9c7e94",
+      "688ca2854fdc892a1c9c7e98"
+    ]
+  },
+  "rooms": {
+    "office": "688ca2864fdc892a1c9c7ea4",
+    "classroom": "688ca2864fdc892a1c9c7ea8",
+    "tech_lab": "688ca2864fdc892a1c9c7eac"
+  },
+  "departments": [
+    "688ca2864fdc892a1c9c7eb2",
+    "688ca2864fdc892a1c9c7eb8"
+  ],
+  "courses": [
+    "688ca2864fdc892a1c9c7ebc",
+    "688ca2864fdc892a1c9c7ec0"
+  ],
+  "intakes": [
+    "688ca2864fdc892a1c9c7ec7",
+    "688ca2864fdc892a1c9c7ecf",
+    "688ca2864fdc892a1c9c7ed7"
+  ],
+  "lecturers": [
+    "688ca2864fdc892a1c9c7ee3",
+    "688ca2874fdc892a1c9c7ef1"
+  ],
+  "modules": [
+    "688ca2874fdc892a1c9c7ef8",
+    "688ca2874fdc892a1c9c7efc",
+    "688ca2874fdc892a1c9c7f00"
+  ],
+  "intakeCourses": [
+    "688ca2874fdc892a1c9c7f0a",
+    "688ca2874fdc892a1c9c7f16",
+    "688ca2874fdc892a1c9c7f22"
+  ],
+  "semesters": [
+    "688ca2874fdc892a1c9c7f2e",
+    "688ca2874fdc892a1c9c7f38",
+    "688ca2874fdc892a1c9c7f43",
+    "688ca2874fdc892a1c9c7f4d",
+    "688ca2874fdc892a1c9c7f56",
+    "688ca2874fdc892a1c9c7f60",
+    "688ca2884fdc892a1c9c7f6a",
+    "688ca2884fdc892a1c9c7f74",
+    "688ca2884fdc892a1c9c7f7e",
+    "688ca2884fdc892a1c9c7f88",
+    "688ca2884fdc892a1c9c7f92",
+    "688ca2884fdc892a1c9c7f9c"
+  ],
+  "classSchedules": [
+    "688ca2884fdc892a1c9c7fae",
+    "688ca2884fdc892a1c9c7fc1"
+  ],
+  "examSchedules": [
+    "688ca2894fdc892a1c9c7fd1",
+    "688ca2894fdc892a1c9c7fe0"
+  ],
+  "students": [
+    "688ca28f4fdc892a1c9c8038",
+    "688ca28f4fdc892a1c9c8046",
+    "688ca28f4fdc892a1c9c8052",
+    "688ca28f4fdc892a1c9c805e",
+    "688ca28f4fdc892a1c9c806a",
+    "688ca28f4fdc892a1c9c8076",
+    "688ca2904fdc892a1c9c8082",
+    "688ca2904fdc892a1c9c808e",
+    "688ca2904fdc892a1c9c809a",
+    "688ca2904fdc892a1c9c80a6",
+    "688ca2904fdc892a1c9c80b2",
+    "688ca2904fdc892a1c9c80be",
+    "688ca2904fdc892a1c9c80ca",
+    "688ca2904fdc892a1c9c80d7",
+    "688ca2904fdc892a1c9c80e3",
+    "688ca2904fdc892a1c9c80ef",
+    "688ca2914fdc892a1c9c80fb",
+    "688ca2914fdc892a1c9c8107",
+    "688ca2914fdc892a1c9c8113",
+    "688ca2914fdc892a1c9c811f"
+  ],
+  "attendance": [
+    "688ca2914fdc892a1c9c812a",
+    "688ca2914fdc892a1c9c8135",
+    "688ca2914fdc892a1c9c813f",
+    "688ca2914fdc892a1c9c814a",
+    "688ca2914fdc892a1c9c8153",
+    "688ca2914fdc892a1c9c815d",
+    "688ca2924fdc892a1c9c8168",
+    "688ca2924fdc892a1c9c8172",
+    "688ca2924fdc892a1c9c817b",
+    "688ca2924fdc892a1c9c8186",
+    "688ca2924fdc892a1c9c8190",
+    "688ca2924fdc892a1c9c8199",
+    "688ca2924fdc892a1c9c81a3",
+    "688ca2924fdc892a1c9c81ae",
+    "688ca2924fdc892a1c9c81b8",
+    "688ca2924fdc892a1c9c81c2",
+    "688ca2934fdc892a1c9c81cd",
+    "688ca2934fdc892a1c9c81d7",
+    "688ca2934fdc892a1c9c81e3",
+    "688ca2934fdc892a1c9c81ed",
+    "688ca2934fdc892a1c9c81f7",
+    "688ca2934fdc892a1c9c8202",
+    "688ca2934fdc892a1c9c820b",
+    "688ca2934fdc892a1c9c8216",
+    "688ca2934fdc892a1c9c8220",
+    "688ca2934fdc892a1c9c822a",
+    "688ca2934fdc892a1c9c8234",
+    "688ca2944fdc892a1c9c823f",
+    "688ca2944fdc892a1c9c8249",
+    "688ca2944fdc892a1c9c8252",
+    "688ca2944fdc892a1c9c825d",
+    "688ca2944fdc892a1c9c8267",
+    "688ca2944fdc892a1c9c8271",
+    "688ca2944fdc892a1c9c827b",
+    "688ca2944fdc892a1c9c8286",
+    "688ca2944fdc892a1c9c8290",
+    "688ca2944fdc892a1c9c829a",
+    "688ca2944fdc892a1c9c82a4",
+    "688ca2944fdc892a1c9c82ae",
+    "688ca2944fdc892a1c9c82b8",
+    "688ca2954fdc892a1c9c82c2",
+    "688ca2954fdc892a1c9c82cb",
+    "688ca2954fdc892a1c9c82d4",
+    "688ca2954fdc892a1c9c82de",
+    "688ca2954fdc892a1c9c82e8",
+    "688ca2954fdc892a1c9c82f1",
+    "688ca2954fdc892a1c9c82fb",
+    "688ca2954fdc892a1c9c8305",
+    "688ca2954fdc892a1c9c830f",
+    "688ca2964fdc892a1c9c8319",
+    "688ca2964fdc892a1c9c8321",
+    "688ca2964fdc892a1c9c832b",
+    "688ca2964fdc892a1c9c8334",
+    "688ca2964fdc892a1c9c833e",
+    "688ca2964fdc892a1c9c8347",
+    "688ca2964fdc892a1c9c834e",
+    "688ca2964fdc892a1c9c8353",
+    "688ca2974fdc892a1c9c835b",
+    "688ca2974fdc892a1c9c8365",
+    "688ca2974fdc892a1c9c836f",
+    "688ca2974fdc892a1c9c8378",
+    "688ca2974fdc892a1c9c8382",
+    "688ca2974fdc892a1c9c838c",
+    "688ca2974fdc892a1c9c8396",
+    "688ca2974fdc892a1c9c83a0",
+    "688ca2974fdc892a1c9c83a8",
+    "688ca2974fdc892a1c9c83b4",
+    "688ca2984fdc892a1c9c83be",
+    "688ca2984fdc892a1c9c83c9",
+    "688ca2984fdc892a1c9c83d3",
+    "688ca2984fdc892a1c9c83dc",
+    "688ca2984fdc892a1c9c83e7",
+    "688ca2984fdc892a1c9c83f1",
+    "688ca2984fdc892a1c9c83fb",
+    "688ca2984fdc892a1c9c8406",
+    "688ca2984fdc892a1c9c8411",
+    "688ca2984fdc892a1c9c841b",
+    "688ca2994fdc892a1c9c8425",
+    "688ca2994fdc892a1c9c8432",
+    "688ca2994fdc892a1c9c843b"
+  ],
+  "results": [
+    "688ca2994fdc892a1c9c8444",
+    "688ca2994fdc892a1c9c844c",
+    "688ca2994fdc892a1c9c8452",
+    "688ca2994fdc892a1c9c845a",
+    "688ca2994fdc892a1c9c8462",
+    "688ca2994fdc892a1c9c846a",
+    "688ca2994fdc892a1c9c8472",
+    "688ca2994fdc892a1c9c847a",
+    "688ca2994fdc892a1c9c8482",
+    "688ca29a4fdc892a1c9c8489",
+    "688ca29a4fdc892a1c9c8492",
+    "688ca29a4fdc892a1c9c8499",
+    "688ca29a4fdc892a1c9c84a1",
+    "688ca29a4fdc892a1c9c84a9",
+    "688ca29a4fdc892a1c9c84b1",
+    "688ca29a4fdc892a1c9c84ba",
+    "688ca29a4fdc892a1c9c84c1",
+    "688ca29a4fdc892a1c9c84c8",
+    "688ca29a4fdc892a1c9c84d0",
+    "688ca29a4fdc892a1c9c84d8",
+    "688ca29a4fdc892a1c9c84e0",
+    "688ca29a4fdc892a1c9c84e8",
+    "688ca29a4fdc892a1c9c84ee",
+    "688ca29a4fdc892a1c9c84f6",
+    "688ca29b4fdc892a1c9c84fe",
+    "688ca29b4fdc892a1c9c8506",
+    "688ca29b4fdc892a1c9c850e",
+    "688ca29b4fdc892a1c9c8518",
+    "688ca29b4fdc892a1c9c851e",
+    "688ca29b4fdc892a1c9c8528",
+    "688ca29b4fdc892a1c9c8530",
+    "688ca29b4fdc892a1c9c8538",
+    "688ca29b4fdc892a1c9c853e",
+    "688ca29b4fdc892a1c9c8548",
+    "688ca29b4fdc892a1c9c8550",
+    "688ca29b4fdc892a1c9c8558",
+    "688ca29b4fdc892a1c9c8560",
+    "688ca29b4fdc892a1c9c8568",
+    "688ca29b4fdc892a1c9c8570",
+    "688ca29b4fdc892a1c9c8578",
+    "688ca29b4fdc892a1c9c8580",
+    "688ca29b4fdc892a1c9c8588",
+    "688ca29c4fdc892a1c9c858e",
+    "688ca29c4fdc892a1c9c8595",
+    "688ca29c4fdc892a1c9c859d",
+    "688ca29c4fdc892a1c9c85a5",
+    "688ca29c4fdc892a1c9c85ac",
+    "688ca29c4fdc892a1c9c85b4",
+    "688ca29c4fdc892a1c9c85bc",
+    "688ca29c4fdc892a1c9c85c4",
+    "688ca29c4fdc892a1c9c85cc",
+    "688ca29c4fdc892a1c9c85d4",
+    "688ca29c4fdc892a1c9c85da",
+    "688ca29c4fdc892a1c9c85e4",
+    "688ca29c4fdc892a1c9c85ea",
+    "688ca29c4fdc892a1c9c85f4",
+    "688ca29c4fdc892a1c9c85fc",
+    "688ca29c4fdc892a1c9c8604",
+    "688ca29c4fdc892a1c9c860c",
+    "688ca29d4fdc892a1c9c8614"
+  ],
+  "subscription": "688ca29d4fdc892a1c9c8617",
+  "payment": "688ca29d4fdc892a1c9c861d",
+  "invoice": "688ca29d4fdc892a1c9c8625",
+  "resources": [
+    "688ca29d4fdc892a1c9c862a"
+  ],
+  "bookings": [
+    "688ca29d4fdc892a1c9c8632"
+  ],
+  "lockerUnits": [
+    "688ca29d4fdc892a1c9c8638"
+  ],
+  "timeSlots": [
+    "688ca29d4fdc892a1c9c863f"
+  ],
+  "parkingLots": [
+    "688ca29d4fdc892a1c9c8646"
+  ],
+  "stops": [
+    "688ca29d4fdc892a1c9c8649",
+    "688ca29d4fdc892a1c9c864e"
+  ],
+  "vehicles": [
+    "688ca29d4fdc892a1c9c8652"
+  ],
+  "routes": [
+    "688ca29d4fdc892a1c9c865c"
+  ],
+  "busSchedules": [
+    "688ca29d4fdc892a1c9c8665"
+  ],
+  "eHailings": [
+    "688ca29d4fdc892a1c9c8670"
+  ],
+  "feedbacks": [
+    "688ca29d4fdc892a1c9c8675"
+  ],
+  "responds": [
+    "688ca29d4fdc892a1c9c8678"
+  ],
+  "lostItems": [
+    "688ca29d4fdc892a1c9c8680"
+  ]
+}
