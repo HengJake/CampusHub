@@ -2,37 +2,61 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Helper function to make API calls
-const apiCall = async (method, endpoint, data = null) => {
+// Helper function to add delay between API calls
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper function to make API calls with retry and rate limiting
+const apiCall = async (method, endpoint, data = null, retries = 3) => {
     const url = `http://localhost:5000${endpoint}`;
-    try {
-        let response;
-        if (method === "GET") {
-            response = await fetch(url, {
-                method: "GET",
-                headers: { "Content-Type": "application/json" }
-            });
-        } else if (method === "DELETE") {
-            response = await fetch(url, {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" }
-            });
-        } else {
-            response = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            });
+
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            // Add delay to prevent server overload during parallel execution
+            if (attempt > 1) {
+                await delay(1000 * attempt); // Exponential backoff
+            }
+
+            let response;
+            if (method === "GET") {
+                response = await fetch(url, {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" }
+                });
+            } else if (method === "DELETE") {
+                response = await fetch(url, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" }
+                });
+            } else {
+                response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+            }
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
+            const responseData = await response.json();
+            return responseData;
+
+        } catch (error) {
+            console.error(`❌ API Error (${method} ${endpoint}) - Attempt ${attempt}:`, error.message);
+
+            // If this is the last attempt, throw the error
+            if (attempt === retries) {
+                throw error;
+            }
+
+            // For network errors like "fetch failed", retry with longer delay
+            if (error.message.includes('fetch failed') || error.message.includes('ECONNRESET')) {
+                console.log(`🔄 Retrying in ${2000 * attempt}ms...`);
+                await delay(2000 * attempt);
+            }
         }
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        const responseData = await response.json();
-        return responseData;
-    } catch (error) {
-        console.error(`❌ API Error (${method} ${endpoint}):`, error.message);
-        throw error;
     }
 };
 
@@ -496,40 +520,61 @@ async function createFullSchoolData({
 
     // 10. Create Semesters
     console.log(`[${schoolPrefix}] 10. Creating Semesters...`);
-    const semestersData = [
-        // Semester 1 for first intake course
-        {
-            intakeCourseId: createdIds.intakeCourses[0],
-            semesterNumber: 1,
-            semesterName: "Year 1 Semester 1",
-            startDate: "2024-02-01T00:00:00.000Z",
-            endDate: "2024-06-30T23:59:59.000Z",
-            registrationStartDate: "2024-01-15T00:00:00.000Z",
-            registrationEndDate: "2024-01-31T23:59:59.000Z",
-            examStartDate: "2024-06-01T00:00:00.000Z",
-            examEndDate: "2024-06-15T23:59:59.000Z",
-            status: "in_progress",
-            schoolId: createdIds.school
-        },
-        // Semester 1 for second intake course
-        {
-            intakeCourseId: createdIds.intakeCourses[1],
-            semesterNumber: 1,
-            semesterName: "Year 1 Semester 1",
-            startDate: "2024-06-01T00:00:00.000Z",
-            endDate: "2024-10-31T23:59:59.000Z",
-            registrationStartDate: "2024-05-15T00:00:00.000Z",
-            registrationEndDate: "2024-05-31T23:59:59.000Z",
-            examStartDate: "2024-10-01T00:00:00.000Z",
-            examEndDate: "2024-10-15T23:59:59.000Z",
-            status: "in_progress",
-            schoolId: createdIds.school
+
+    // Generate semesters for each course
+    for (let courseIndex = 0; courseIndex < coursesData.length; courseIndex++) {
+        const courseData = coursesData[courseIndex];
+        const courseId = createdIds.courses[courseIndex];
+        const totalYears = courseData.totalYear;
+        const semestersPerYear = 2; // Assuming 2 semesters per year
+
+        console.log(`[${schoolPrefix}] Creating ${courseData.totalSemester} semesters for ${courseData.courseName}...`);
+
+        for (let year = 1; year <= totalYears; year++) {
+            for (let semesterInYear = 1; semesterInYear <= semestersPerYear; semesterInYear++) {
+                // Calculate overall semester number
+                const semesterNumber = semesterInYear;
+
+                // Calculate dates based on year and semester
+                const baseYear = 2024;
+                const yearOffset = year - 1;
+                const isFirstSemester = semesterInYear === 1;
+
+                // First semester: Feb-Jun, Second semester: Jul-Nov
+                const startMonth = isFirstSemester ? 1 : 6; // Feb = 1, Jul = 6
+                const endMonth = isFirstSemester ? 5 : 10;   // Jun = 5, Nov = 10
+
+                const startDate = new Date(baseYear + yearOffset, startMonth, 1);
+                const endDate = new Date(baseYear + yearOffset, endMonth, 30);
+                const regStartDate = new Date(baseYear + yearOffset, startMonth - 1, 15);
+                const regEndDate = new Date(baseYear + yearOffset, startMonth - 1, 28);
+                const examStartDate = new Date(baseYear + yearOffset, endMonth, 1);
+                const examEndDate = new Date(baseYear + yearOffset, endMonth, 15);
+
+                const semesterData = {
+                    courseId: courseId,
+                    semesterNumber: semesterNumber,
+                    year: year,
+                    semesterName: `Year ${year} Semester ${semesterNumber}`,
+                    startDate: startDate.toISOString(),
+                    endDate: endDate.toISOString(),
+                    registrationStartDate: regStartDate.toISOString(),
+                    registrationEndDate: regEndDate.toISOString(),
+                    examStartDate: examStartDate.toISOString(),
+                    examEndDate: examEndDate.toISOString(),
+                    status: year === 1 && semesterInYear === 1 ? "in_progress" : "upcoming",
+                    schoolId: createdIds.school
+                };
+
+                try {
+                    const semesterResponse = await apiCall('POST', '/api/semester', semesterData);
+                    createdIds.semesters.push(semesterResponse.data._id);
+                    console.log(`[${schoolPrefix}] ✅ Semester created: ${semesterData.semesterName} for ${courseData.courseCode} (${semesterResponse.data._id})`);
+                } catch (error) {
+                    console.error(`[${schoolPrefix}] ❌ Failed to create semester: ${semesterData.semesterName} for ${courseData.courseCode}`, error.message);
+                }
+            }
         }
-    ];
-    for (let i = 0; i < semestersData.length; i++) {
-        const semesterResponse = await apiCall('POST', '/api/semester', semestersData[i]);
-        createdIds.semesters.push(semesterResponse.data._id);
-        console.log(`[${schoolPrefix}] ✅ Semester created: ${semestersData[i].semesterName} (${semesterResponse.data._id})`);
     }
 
     // 11. Create Class Schedules
@@ -577,7 +622,7 @@ async function createFullSchoolData({
             moduleId: createdIds.modules[0],
             examDate: "2024-06-01",
             examTime: "09:00",
-            semesterId: createdIds.semesters[1],
+            semesterId: createdIds.semesters[0],
             roomId: createdIds.rooms.tech_lab,
             invigilators: [createdIds.lecturers[0]],
             durationMinute: 120,
@@ -693,15 +738,30 @@ async function createFullSchoolData({
 
     // 15. Create Results
     console.log(`[${schoolPrefix}] 15. Creating Results...`);
-    const grades = ["A", "B", "C", "D", "F"];
+    const grades = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"];
+    const gradeToGPA = {
+        "A+": 4.0, "A": 4.0, "A-": 3.7,
+        "B+": 3.3, "B": 3.0, "B-": 2.7,
+        "C+": 2.3, "C": 2.0, "C-": 1.7,
+        "D": 1.0, "F": 0.0
+    };
+
     for (let i = 0; i < createdIds.students.length; i++) {
         for (let j = 0; j < createdIds.modules.length; j++) {
+            const selectedGrade = grades[(i + j) % grades.length];
+            console.log("🚀 ~ createFullSchoolData ~ selectedGrade:", selectedGrade)
+            const totalMarks = 100;
+            const marks = Math.floor(Math.random() * 40) + (selectedGrade === 'F' ? 0 : 50); // 50-90 for passing, 0-49 for F
+
             const resultData = {
                 studentId: createdIds.students[i],
                 moduleId: createdIds.modules[j],
-                grade: grades[(i + j) % grades.length],
+                grade: selectedGrade,
                 creditHours: 3,
-                remark: `Performance in module ${j + 1}`,
+                marks: marks,
+                totalMarks: totalMarks,
+                gpa: gradeToGPA[selectedGrade],
+                remark: `Performance in module ${j + 1} - Score: ${marks}/${totalMarks}`,
                 schoolId: createdIds.school
             };
             const resultResponse = await apiCall('POST', '/api/result', resultData);
@@ -912,12 +972,14 @@ async function createFullSchoolData({
 const clearDatabase = async () => {
     console.log('🗑️  Clearing all data from all domains...');
     try {
+        await apiCall('DELETE', '/api/school/all');
         // Academic
         await apiCall('DELETE', '/api/result/all');
         await apiCall('DELETE', '/api/attendance/all');
         await apiCall('DELETE', '/api/student/all');
         await apiCall('DELETE', '/api/exam-schedule/all');
         await apiCall('DELETE', '/api/class-schedule/all');
+        await apiCall('DELETE', '/api/semester/all');
         await apiCall('DELETE', '/api/intake-course/all');
         await apiCall('DELETE', '/api/module/all');
         await apiCall('DELETE', '/api/lecturer/all');
@@ -988,10 +1050,8 @@ const main = async () => {
             }
         ];
 
-        // Create both schools in parallel
-        await Promise.all(
-            schools.map(schoolData => createFullSchoolData(schoolData))
-        );
+        // Create both schools in parallel for better performance
+        await Promise.all(schools.map(schoolData => createFullSchoolData(schoolData)));
 
         console.log(`\n✅ API-based database initialization for both schools completed successfully!`);
         process.exit(0);

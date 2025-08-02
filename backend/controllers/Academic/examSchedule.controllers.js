@@ -119,7 +119,7 @@ export const getExamSchedules = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         ExamSchedule,
         "exam schedules",
-        ['roomId', 'moduleId', 'intakeCourseId']
+        ['roomId', 'moduleId',  'semesterId', 'intakeCourseId']
     );
 });
 
@@ -130,7 +130,7 @@ export const getExamScheduleById = controllerWrapper(async (req, res) => {
         ExamSchedule,
         id,
         "exam schedule",
-        ['roomId', 'moduleId', 'intakeCourseId']
+        ['roomId', 'moduleId',  'semesterId', 'intakeCourseId']
     );
 });
 
@@ -165,6 +165,7 @@ export const getExamSchedulesBySchool = controllerWrapper(async (req, res) => {
             "moduleId",
             "schoolId",
             "roomId",
+            'semesterId',
             {
                 path: 'intakeCourseId',
                 populate: [

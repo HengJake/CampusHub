@@ -61,7 +61,9 @@ export function CourseManagement() {
         fetchLecturers,
         lecturers,
         fetchDepartments,
-        departments
+        departments,
+        fetchSemesters,
+        semesters
     } = useAcademicStore()
 
     const { isOpen, onOpen, onClose } = useDisclosure()
@@ -107,6 +109,9 @@ export function CourseManagement() {
         }
         if (departments.length == 0) {
             fetchDepartments();
+        }
+        if (semesters.length == 0) {
+            fetchSemesters();
         }
     }, [])
 
@@ -163,7 +168,6 @@ export function CourseManagement() {
 
             showToast.success("Success", "Course updated successfully", "course-update");
         } else {
-            // TODO:check for values
             const newCourse = {
                 courseName: formData.courseName,
                 courseCode: formData.courseCode,
@@ -225,7 +229,6 @@ export function CourseManagement() {
         }
 
         setSelectedCourse(course)
-        // TODO:change the form value
         setFormData({
             courseName: course.courseName || "",
             courseCode: course.courseCode || "",
@@ -305,7 +308,7 @@ export function CourseManagement() {
     }
 
     return (
-        <Box p={6} minH="100vh" flex={1}>
+        <Box minH="100vh" flex={1}>
 
             <VStack spacing={6} align="stretch">
                 {/* Header */}

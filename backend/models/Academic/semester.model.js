@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
 
 const semesterSchema = new mongoose.Schema({
-    intakeCourseId: {
+    courseId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'IntakeCourse',
+        ref: 'Course',
         required: true,
-        // Reference to the specific course offering within an intake
+        // Reference to the course
     },
 
     semesterNumber: {
@@ -13,6 +13,13 @@ const semesterSchema = new mongoose.Schema({
         required: true,
         min: 1,
         // Semester number within the course (1, 2, 3, etc.)
+    },
+
+    year: {
+        type: Number,
+        required: true,
+        min: 1,
+        // Academic year (1, 2, 3, etc.)
     },
 
     semesterName: {
@@ -32,12 +39,6 @@ const semesterSchema = new mongoose.Schema({
     endDate: {
         type: Date,
         required: true,
-        validate: {
-            validator: function (v) {
-                return v > this.startDate;
-            },
-            message: 'End date must be after start date'
-        },
         // When this semester ends
     },
 
@@ -51,36 +52,18 @@ const semesterSchema = new mongoose.Schema({
     registrationEndDate: {
         type: Date,
         required: true,
-        validate: {
-            validator: function (v) {
-                return v > this.registrationStartDate && v <= this.startDate;
-            },
-            message: 'Registration end date must be after registration start date and before semester start date'
-        },
         // When course registration closes for this semester
     },
 
     examStartDate: {
         type: Date,
         required: true,
-        validate: {
-            validator: function (v) {
-                return v >= this.startDate && v <= this.endDate;
-            },
-            message: 'Exam start date must be within semester dates'
-        },
         // When final exams begin
     },
 
     examEndDate: {
         type: Date,
         required: true,
-        validate: {
-            validator: function (v) {
-                return v > this.examStartDate && v <= this.endDate;
-            },
-            message: 'Exam end date must be after exam start date and within semester dates'
-        },
         // When final exams end
     },
 
@@ -108,7 +91,7 @@ const semesterSchema = new mongoose.Schema({
 });
 
 // Indexes
-semesterSchema.index({ intakeCourseId: 1, semesterNumber: 1 }, { unique: true });
+semesterSchema.index({ courseId: 1, semesterNumber: 1, year: 1 });
 semesterSchema.index({ schoolId: 1 });
 semesterSchema.index({ status: 1 });
 semesterSchema.index({ startDate: 1, endDate: 1 });

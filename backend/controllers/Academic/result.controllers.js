@@ -49,7 +49,7 @@ const validateResultData = async (data) => {
     }
 
     // Validate grade
-    const validGrades = ["A", "B", "C", "D", "F"];
+    const validGrades = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'];
     if (!validGrades.includes(grade)) {
         return {
             isValid: false,

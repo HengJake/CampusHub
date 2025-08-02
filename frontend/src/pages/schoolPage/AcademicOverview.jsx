@@ -163,6 +163,7 @@ export function AcademicOverview() {
    * Includes debugging and fallbacks for missing data
    */
 
+  // console.log(students)
   const dashboardStats = (() => {
     debugLog("Data Arrays", {
       students: students?.length || 0,
@@ -245,9 +246,13 @@ export function AcademicOverview() {
         if (!students?.length || !results?.length) return 0;
 
         const topPerformers = students.filter(student => {
-          const studentResults = results.filter(r => r.studentId === student._id);
+          const studentResults = results.filter(r => r.studentId._id === student._id);
           if (!studentResults.length) return false;
 
+          console.log(studentResults.length)
+          console.log( studentResults.reduce((sum, r) => sum + r.creditHours, 0))
+
+          // get when cgpa > 3.8
           const avgGPA = safeDivide(
             studentResults.reduce((sum, r) => sum + r.creditHours, 0),
             studentResults.length
@@ -647,7 +652,7 @@ export function AcademicOverview() {
             </Text>
             <Text color="gray.600">Welcome to the Academic Management Dashboard</Text>
           </Box>
-          
+
           <RefreshData />
 
         </HStack>

@@ -243,4 +243,211 @@ export const mockData = {
     systemUptime: "99.8%",
     lastBackup: format(subDays(new Date(), 1), "yyyy-MM-dd HH:mm"),
   },
+
+  // Academic Mock Data
+  semesters: [
+    {
+      _id: "sem_001",
+      courseId: {
+        _id: "course_001",
+        courseName: "Bachelor of Computer Science",
+        courseCode: "BCS",
+        courseLevel: "Undergraduate",
+        duration: 36
+      },
+      semesterNumber: 1,
+      year: 2024,
+      semesterName: "Semester 1 - 2024",
+      startDate: "2024-09-01",
+      endDate: "2024-12-20",
+      registrationStartDate: "2024-08-01",
+      registrationEndDate: "2024-08-31",
+      examStartDate: "2024-12-10",
+      examEndDate: "2024-12-20",
+      isActive: true,
+      status: "in_progress",
+      schoolId: "school_001"
+    },
+    {
+      _id: "sem_002",
+      courseId: {
+        _id: "course_001",
+        courseName: "Bachelor of Computer Science",
+        courseCode: "BCS",
+        courseLevel: "Undergraduate",
+        duration: 36
+      },
+      semesterNumber: 2,
+      year: 2024,
+      semesterName: "Semester 2 - 2024",
+      startDate: "2025-01-15",
+      endDate: "2025-05-15",
+      registrationStartDate: "2024-12-15",
+      registrationEndDate: "2025-01-10",
+      examStartDate: "2025-05-05",
+      examEndDate: "2025-05-15",
+      isActive: true,
+      status: "upcoming",
+      schoolId: "school_001"
+    },
+    {
+      _id: "sem_003",
+      courseId: {
+        _id: "course_002",
+        courseName: "Bachelor of Business Administration",
+        courseCode: "BBA",
+        courseLevel: "Undergraduate",
+        duration: 36
+      },
+      semesterNumber: 1,
+      year: 2024,
+      semesterName: "Semester 1 - 2024",
+      startDate: "2024-09-01",
+      endDate: "2024-12-20",
+      registrationStartDate: "2024-08-01",
+      registrationEndDate: "2024-08-31",
+      examStartDate: "2024-12-10",
+      examEndDate: "2024-12-20",
+      isActive: true,
+      status: "in_progress",
+      schoolId: "school_001"
+    },
+    {
+      _id: "sem_004",
+      courseId: {
+        _id: "course_003",
+        courseName: "Master of Engineering",
+        courseCode: "MEng",
+        courseLevel: "Postgraduate",
+        duration: 24
+      },
+      semesterNumber: 1,
+      year: 2024,
+      semesterName: "Semester 1 - 2024",
+      startDate: "2024-09-01",
+      endDate: "2024-12-20",
+      registrationStartDate: "2024-08-01",
+      registrationEndDate: "2024-08-31",
+      examStartDate: "2024-12-10",
+      examEndDate: "2024-12-20",
+      isActive: true,
+      status: "in_progress",
+      schoolId: "school_001"
+    }
+  ],
+
+  intakeCourses: [
+    {
+      _id: "ic_001",
+      intakeId: {
+        _id: "intake_001",
+        intakeName: "September 2024 Intake",
+        intakeCode: "SEP2024",
+        startDate: "2024-09-01",
+        endDate: "2024-12-20",
+        isActive: true
+      },
+      courseId: {
+        _id: "course_001",
+        courseName: "Bachelor of Computer Science",
+        courseCode: "BCS",
+        courseLevel: "Undergraduate",
+        duration: 36
+      },
+      maxStudents: 100,
+      currentStudents: 85,
+      isActive: true
+    },
+    {
+      _id: "ic_002",
+      intakeId: {
+        _id: "intake_001",
+        intakeName: "September 2024 Intake",
+        intakeCode: "SEP2024",
+        startDate: "2024-09-01",
+        endDate: "2024-12-20",
+        isActive: true
+      },
+      courseId: {
+        _id: "course_002",
+        courseName: "Bachelor of Business Administration",
+        courseCode: "BBA",
+        courseLevel: "Undergraduate",
+        duration: 36
+      },
+      maxStudents: 80,
+      currentStudents: 72,
+      isActive: true
+    },
+    {
+      _id: "ic_003",
+      intakeId: {
+        _id: "intake_002",
+        intakeName: "January 2025 Intake",
+        intakeCode: "JAN2025",
+        startDate: "2025-01-15",
+        endDate: "2025-05-15",
+        isActive: true
+      },
+      courseId: {
+        _id: "course_003",
+        courseName: "Master of Engineering",
+        courseCode: "MEng",
+        courseLevel: "Postgraduate",
+        duration: 24
+      },
+      maxStudents: 50,
+      currentStudents: 38,
+      isActive: true
+    }
+  ],
+
+  courses: [
+    {
+      _id: "course_001",
+      courseName: "Bachelor of Computer Science",
+      courseCode: "BCS",
+      courseLevel: "Undergraduate",
+      duration: 36,
+      description: "A comprehensive program covering software development, algorithms, and computer systems.",
+      isActive: true
+    },
+    {
+      _id: "course_002",
+      courseName: "Bachelor of Business Administration",
+      courseCode: "BBA",
+      courseLevel: "Undergraduate",
+      duration: 36,
+      description: "Business management and administration program with focus on leadership and strategy.",
+      isActive: true
+    },
+    {
+      _id: "course_003",
+      courseName: "Master of Engineering",
+      courseCode: "MEng",
+      courseLevel: "Postgraduate",
+      duration: 24,
+      description: "Advanced engineering program with specialization in various engineering disciplines.",
+      isActive: true
+    }
+  ],
+
+  intakes: [
+    {
+      _id: "intake_001",
+      intakeName: "September 2024 Intake",
+      intakeCode: "SEP2024",
+      startDate: "2024-09-01",
+      endDate: "2024-12-20",
+      isActive: true
+    },
+    {
+      _id: "intake_002",
+      intakeName: "January 2025 Intake",
+      intakeCode: "JAN2025",
+      startDate: "2025-01-15",
+      endDate: "2025-05-15",
+      isActive: true
+    }
+  ]
 }

@@ -51,10 +51,10 @@ export const validateObjectId = (id, entityName = "record") => {
 // validate reference ID
 export const validateReferenceExists = async (id, Model, fieldName) => {
     if (!id) return null; // Skip validation if field is not provided
-    
+
     const validationError = validateObjectId(id, fieldName);
     if (validationError) return validationError;
-    
+
     try {        // for to repeating record
         const exists = await Model.findById(id);
         if (!exists) {
@@ -97,6 +97,7 @@ export const createRecord = async (Model, data, entityName = "record", validatio
                 return {
                     success: false,
                     message: validationResult.message,
+                    errors: validationResult.errors || null,
                     statusCode: 400
                 };
             }
@@ -106,7 +107,6 @@ export const createRecord = async (Model, data, entityName = "record", validatio
         for (const field of uniqueFields) {
             const uniqueValidation = await validateUniqueField(Model, data[field], field, entityName);
             if (uniqueValidation) {
-                console.error("nah1");
                 return uniqueValidation;
             }
         }
@@ -123,11 +123,22 @@ export const createRecord = async (Model, data, entityName = "record", validatio
     } catch (error) {
         console.error(`Error creating ${entityName}:`, error.message);
 
+        // Handle duplicate key errors
         if (error.code === 11000) {
             return {
                 success: false,
                 message: `${entityName} already exists`,
                 statusCode: 409
+            };
+        }
+
+        // Handle Mongoose validation errors
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(err => err.message);
+            return {
+                success: false,
+                message: `Validation failed: ${validationErrors.join(', ')}`,
+                statusCode: 400
             };
         }
 
@@ -192,7 +203,7 @@ export const getRecordById = async (Model, id, entityName = "record", populateFi
         }
 
         const record = await query;
-        
+
         if (!record) {
             return {
                 success: false,
@@ -228,16 +239,19 @@ export const updateRecord = async (Model, id, updates, entityName = "record", va
     try {
         // Custom validation if provided
         if (validationFn) {
+            console.log("🚀 ~ updateRecord ~ updates:", updates)
             const validationResult = await validationFn(updates);
             if (validationResult && !validationResult.isValid) {
                 return {
                     success: false,
                     message: validationResult.message,
+                    errors: validationResult.errors || null,
                     statusCode: 400
                 };
             }
         }
-        
+
+
         const updatedRecord = await Model.findByIdAndUpdate(id, updates, {
             new: true,
             runValidators: true
@@ -259,9 +273,20 @@ export const updateRecord = async (Model, id, updates, entityName = "record", va
         };
     } catch (error) {
         console.error(`Error updating ${entityName}:`, error.message);
+
+        // Handle Mongoose validation errors
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(err => err.message);
+            return {
+                success: false,
+                message: `Validation failed: ${validationErrors.join(', ')}`,
+                statusCode: 400
+            };
+        }
+
         return {
             success: false,
-            message: "Server error - updateRecord method",
+            message: `Server error - updateRecord method - ${error.message}`,
             statusCode: 500
         };
     }

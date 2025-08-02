@@ -2109,13 +2109,13 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    fetchSemestersByIntakeCourse: async (intakeCourseId) => {
+    fetchSemestersByCourse: async (courseId) => {
         try {
-            const res = await fetch(`/api/semester/intake-course/${intakeCourseId}`);
+            const res = await fetch(`/api/semester/course/${courseId}`);
             const data = await res.json();
 
             if (!data.success) {
-                throw new Error(data.message || "Failed to fetch semesters by intake course");
+                throw new Error(data.message || "Failed to fetch semesters by course");
             }
 
             return { success: true, data: data.data };
@@ -2156,7 +2156,10 @@ export const useAcademicStore = create((set, get) => ({
             const data = await res.json();
 
             if (!data.success) {
-                throw new Error(data.message || "Failed to create semester");
+                return {
+                    success: false,
+                    message: data.message || "Failed to create semester"
+                };
             }
 
             set((state) => ({
@@ -2175,7 +2178,10 @@ export const useAcademicStore = create((set, get) => ({
             const data = await res.json();
 
             if (!data.success) {
-                throw new Error(data.message || "Failed to update semester");
+                return {
+                    success: false,
+                    message: data.message || "Failed to update semester"
+                };
             }
 
             // Update in local state
@@ -2185,7 +2191,7 @@ export const useAcademicStore = create((set, get) => ({
                 ),
             }));
 
-            return { success: true, data: data.data };
+            return { success: true, data: data.data, message: data.message };
         } catch (error) {
             return { success: false, message: error.message };
         }
@@ -2205,9 +2211,9 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    getCurrentSemester: async (intakeCourseId) => {
+    getCurrentSemester: async (courseId) => {
         try {
-            const res = await fetch(`/api/semester/intake-course/${intakeCourseId}/current`);
+            const res = await fetch(`/api/semester/course/${courseId}/current`);
             const data = await res.json();
 
             if (!data.success) {

@@ -111,7 +111,7 @@ function App() {
     "/academic-overview",
     "/admin/courts",
     "/admin/results",
-    "/admin/schedule"  ];
+    "/admin/schedule"];
   const companyRoutes = [
     "/campushub-dashboard",
     "/subscription",
@@ -228,8 +228,8 @@ function App() {
         flex="1"
         display={"flex"}
         mt={"64px"}
-        pr={2}
-        pl={2}
+        pr={{ base: 6, lg: 2 }}
+        pl={{ base: 6, lg: 2 }}
         pt={6}
       >
         <Routes>

@@ -45,7 +45,16 @@ import {
     AccordionIcon,
     AccordionPanel,
     Link,
-    Badge
+    Badge,
+    IconButton,
+    ButtonGroup,
+    AlertDialog,
+    AlertDialogBody,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogContent,
+    AlertDialogOverlay,
+    Textarea
 } from "@chakra-ui/react"
 import { FiUpload } from "react-icons/fi"
 import { useMemo, useState, useRef, useEffect } from "react"
@@ -54,10 +63,11 @@ import { FaFileDownload } from "react-icons/fa";
 import { useGeneralStore } from "../../store/general";
 import { useShowToast } from "../../store/utils/toast.js"
 import * as XLSX from "xlsx"
+import { SearchIcon, EditIcon, DeleteIcon } from "@chakra-ui/icons"
 // CSV columns: Student ID, Student Name, Subject Code, Subject Name, Semester, Academic Year, Credit Hours, Grade, GPA, Marks, Total Marks, Status
 
 export default function ResultsBulkUpload() {
-    const { createResult, fetchStudents, students, fetchIntakeCourses, intakeCourses, results, fetchResults, modules, fetchModules } = useAcademicStore();
+    const { createResult, fetchStudents, students, fetchIntakeCourses, intakeCourses, results, fetchResults, modules, fetchModules, updateResult, deleteResult } = useAcademicStore();
     const { exportTemplate } = useGeneralStore();
     const showToast = useShowToast();
 
@@ -82,6 +92,25 @@ export default function ResultsBulkUpload() {
     const bgColor = useColorModeValue("white", "gray.800")
     const borderColor = useColorModeValue("gray.200", "gray.600")
 
+    // Edit modal state
+    const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure()
+    const [selectedResult, setSelectedResult] = useState(null)
+    const [editFormData, setEditFormData] = useState({
+        grade: '',
+        creditHours: '',
+        marks: '',
+        totalMarks: '',
+        gpa: '',
+        remark: ''
+    })
+    const [isEditLoading, setIsEditLoading] = useState(false)
+
+    // Delete confirmation state
+    const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure()
+    const [deleteResultId, setDeleteResultId] = useState(null)
+    const [isDeleteLoading, setIsDeleteLoading] = useState(false)
+    const cancelRef = useRef()
+
     // Intake/course preview state
     const [selectedIntake, setSelectedIntake] = useState("");
     const [selectedCourse, setSelectedCourse] = useState("")
@@ -90,9 +119,12 @@ export default function ResultsBulkUpload() {
 
     // Filter options
     const [moduleFilter, setModuleFilter] = useState("all");
+    const [searchUserName, setSearchUserName] = useState("");
     const filteredResults = results.filter((result) => {
         const matchesModule = moduleFilter === "all" || (result.moduleId._id === moduleFilter);
-        return matchesModule;
+        const matchesUserName = searchUserName === "" ||
+            (result?.studentId?.userId?.name?.toLowerCase().includes(searchUserName.toLowerCase()));
+        return matchesModule && matchesUserName;
     });
 
     useEffect(() => {
@@ -262,6 +294,99 @@ export default function ResultsBulkUpload() {
             'F': 'red'
         };
         return gradeColors[grade] || 'gray';
+    };
+
+    // Marking matrix for automatic grade and GPA calculation
+    const getGradeAndGPAFromMarks = (marks, totalMarks = 100) => {
+        const percentage = (marks / totalMarks) * 100;
+
+        if (percentage >= 90) return { grade: 'A+', gpa: 4.0 };
+        if (percentage >= 85) return { grade: 'A', gpa: 4.0 };
+        if (percentage >= 80) return { grade: 'A-', gpa: 3.7 };
+        if (percentage >= 75) return { grade: 'B+', gpa: 3.3 };
+        if (percentage >= 70) return { grade: 'B', gpa: 3.0 };
+        if (percentage >= 65) return { grade: 'B-', gpa: 2.7 };
+        if (percentage >= 60) return { grade: 'C+', gpa: 2.3 };
+        if (percentage >= 55) return { grade: 'C', gpa: 2.0 };
+        if (percentage >= 50) return { grade: 'C-', gpa: 1.7 };
+        if (percentage >= 45) return { grade: 'D', gpa: 1.0 };
+        return { grade: 'F', gpa: 0.0 };
+    };
+
+    // Handle marks change with automatic grade/GPA calculation
+    const handleMarksChange = (newMarks) => {
+        const { grade, gpa } = getGradeAndGPAFromMarks(newMarks, editFormData.totalMarks);
+        setEditFormData(prev => ({
+            ...prev,
+            marks: newMarks,
+            grade: grade,
+            gpa: gpa
+        }));
+    };
+
+    // Edit handlers
+    const handleEditClick = (result) => {
+        setSelectedResult(result);
+        console.log("🚀 ~ handleEditClick ~ result:", result)
+        setEditFormData({
+            grade: result.grade || '',
+            creditHours: result.creditHours || '',
+            marks: result.marks || '',
+            totalMarks: result.totalMarks || 100,
+            gpa: result.gpa || '',
+            remark: result.remark || ''
+        });
+        onEditOpen();
+    };
+
+    const handleEditSubmit = async () => {
+        if (!selectedResult) return;
+
+        setIsEditLoading(true);
+        try {
+            const response = await updateResult(selectedResult._id, editFormData);
+
+            if (response.success) {
+                showToast("Result updated successfully", "success");
+                onEditClose();
+                // Refresh results
+                fetchResults();
+            } else {
+                showToast(response.message || "Failed to update result", "error");
+            }
+        } catch (error) {
+            showToast("Error updating result", "error");
+        } finally {
+            setIsEditLoading(false);
+        }
+    };
+
+    // Delete handlers
+    const handleDeleteClick = (resultId) => {
+        setDeleteResultId(resultId);
+        onDeleteOpen();
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteResultId) return;
+
+        setIsDeleteLoading(true);
+        try {
+            const response = await deleteResult(deleteResultId);
+
+            if (response.success) {
+                showToast("Result deleted successfully", "success");
+                onDeleteClose();
+                // Refresh results
+                fetchResults();
+            } else {
+                showToast(response.message || "Failed to delete result", "error");
+            }
+        } catch (error) {
+            showToast("Error deleting result", "error");
+        } finally {
+            setIsDeleteLoading(false);
+        }
     };
 
     return (
@@ -597,11 +722,156 @@ export default function ResultsBulkUpload() {
                     </ModalContent>
                 </Modal>
 
+                {/* Edit Result Modal */}
+                <Modal isOpen={isEditOpen} onClose={onEditClose} size="lg">
+                    <ModalOverlay />
+                    <ModalContent>
+                        <ModalHeader>Edit Result</ModalHeader>
+                        <ModalCloseButton />
+                        <ModalBody>
+                            {selectedResult && (
+                                <VStack spacing={4} align="stretch">
+                                    <Box>
+                                        <Text fontWeight="semibold" color="gray.600">Student:</Text>
+                                        <Text>{selectedResult?.studentId?.userId?.name || "N/A"}</Text>
+                                    </Box>
+                                    <Box>
+                                        <Text fontWeight="semibold" color="gray.600">Module:</Text>
+                                        <Text>{selectedResult?.moduleId?.moduleName || "N/A"}</Text>
+                                    </Box>
+                                    <HStack spacing={4}>
+                                        <FormControl>
+                                            <FormLabel>Marks (Editable)</FormLabel>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                max={editFormData.totalMarks || 100}
+                                                value={editFormData.marks}
+                                                onChange={(e) => handleMarksChange(e.target.value)}
+                                                placeholder="Enter marks"
+                                            />
+                                        </FormControl>
+                                        <FormControl>
+                                            <FormLabel>Total Marks</FormLabel>
+                                            <Input
+                                                type="number"
+                                                value={editFormData.totalMarks}
+                                                isReadOnly
+                                                bg="gray.50"
+                                                cursor="not-allowed"
+                                            />
+                                        </FormControl>
+                                    </HStack>
+                                    <HStack spacing={4}>
+                                        <FormControl>
+                                            <FormLabel>Grade (Auto-calculated)</FormLabel>
+                                            <Input
+                                                value={editFormData.grade}
+                                                isReadOnly
+                                                bg="gray.50"
+                                                cursor="not-allowed"
+                                                fontWeight="bold"
+                                                color={`${getGradeColor(editFormData.grade)}.600`}
+                                            />
+                                        </FormControl>
+                                        <FormControl>
+                                            <FormLabel>GPA (Auto-calculated)</FormLabel>
+                                            <Input
+                                                value={editFormData.gpa}
+                                                isReadOnly
+                                                bg="gray.50"
+                                                cursor="not-allowed"
+                                                fontWeight="bold"
+                                            />
+                                        </FormControl>
+                                    </HStack>
+                                    <FormControl>
+                                        <FormLabel>Credit Hours</FormLabel>
+                                        <Input
+                                            type="number"
+                                            value={editFormData.creditHours}
+                                            isReadOnly
+                                            bg="gray.50"
+                                            cursor="not-allowed"
+                                        />
+                                    </FormControl>
+                                    <FormControl>
+                                        <FormLabel>Remark</FormLabel>
+                                        <Textarea
+                                            value={editFormData.remark}
+                                            onChange={(e) => setEditFormData({ ...editFormData, remark: e.target.value })}
+                                            placeholder="Enter any remarks..."
+                                        />
+                                    </FormControl>
+                                </VStack>
+                            )}
+                        </ModalBody>
+                        <ModalFooter>
+                            <Button variant="ghost" mr={3} onClick={onEditClose}>
+                                Cancel
+                            </Button>
+                            <Button
+                                colorScheme="blue"
+                                onClick={handleEditSubmit}
+                                isLoading={isEditLoading}
+                                loadingText="Updating..."
+                            >
+                                Update Result
+                            </Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </Modal>
+
+                {/* Delete Confirmation Dialog */}
+                <AlertDialog
+                    isOpen={isDeleteOpen}
+                    leastDestructiveRef={cancelRef}
+                    onClose={onDeleteClose}
+                >
+                    <AlertDialogOverlay>
+                        <AlertDialogContent>
+                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                                Delete Result
+                            </AlertDialogHeader>
+                            <AlertDialogBody>
+                                Are you sure you want to delete this result? This action cannot be undone.
+                            </AlertDialogBody>
+                            <AlertDialogFooter>
+                                <Button ref={cancelRef} onClick={onDeleteClose}>
+                                    Cancel
+                                </Button>
+                                <Button
+                                    colorScheme="red"
+                                    onClick={handleDeleteConfirm}
+                                    ml={3}
+                                    isLoading={isDeleteLoading}
+                                    loadingText="Deleting..."
+                                >
+                                    Delete
+                                </Button>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialogOverlay>
+                </AlertDialog>
+
                 {/*Desktop View */}
                 <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" display={{ base: "none", lg: "block" }}>
                     <CardBody>
-                        <HStack spacing={4} flexWrap="wrap" justify={"space-between"}>
-                            <Text fontSize="2xl" fontWeight="bold" color="gray.800" mb={2}>View All Result</Text>
+                        <HStack spacing={4} justify={"space-between"} align={"center"}>
+                            <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={2} whiteSpace="nowrap">View All Result</Text>
+
+                            <InputGroup>
+                                <InputLeftElement>
+                                    <SearchIcon />
+                                </InputLeftElement>
+                                <Input
+                                    type="text"
+                                    placeholder="Search by student name"
+                                    value={searchUserName}
+                                    onChange={(e) => setSearchUserName(e.target.value)}
+                                />
+                            </InputGroup>
+
                             <HStack>
                                 <Select
                                     w={{ base: "full", sm: "200px" }}
@@ -626,10 +896,13 @@ export default function ResultsBulkUpload() {
                                     <Tr>
                                         <Th>Student</Th>
                                         <Th><Badge >Module</Badge></Th>
+                                        <Th>Marks</Th>
                                         <Th>Grade</Th>
+                                        <Th>GPA</Th>
                                         <Th>Credit Hour</Th>
                                         <Th>Remark</Th>
                                         <Th>Updated At</Th>
+                                        <Th>Actions</Th>
                                     </Tr>
                                 </Thead>
                                 <Tbody>
@@ -638,15 +911,39 @@ export default function ResultsBulkUpload() {
                                             <Tr key={`${rIdx}`}>
                                                 <Td>{r?.studentId?.userId?.name || "N/A"}</Td>
                                                 <Td>{r?.moduleId?.moduleName || "N/A"}</Td>
-                                                <Td>{r?.grade || "N/A"}</Td>
+                                                <Td>{r?.marks || r?.totalMarks ? `${r?.marks || 0}/${r?.totalMarks || 100}` : "N/A"}</Td>
+                                                <Td>
+                                                    <Badge colorScheme={getGradeColor(r?.grade)}>
+                                                        {r?.grade || "N/A"}
+                                                    </Badge>
+                                                </Td>
+                                                <Td>{r?.gpa ? r?.gpa.toFixed(2) : "N/A"}</Td>
                                                 <Td>{r?.creditHours || "N/A"}</Td>
                                                 <Td>{r?.remark || "N/A"}</Td>
                                                 <Td>{r?.updatedAt ? new Date(r.updatedAt).toLocaleDateString() : "N/A"}</Td>
+                                                <Td>
+                                                    <ButtonGroup size="sm" spacing={2}>
+                                                        <IconButton
+                                                            aria-label="Edit result"
+                                                            icon={<EditIcon />}
+                                                            size="sm"
+                                                            colorScheme="blue"
+                                                            onClick={() => handleEditClick(r)}
+                                                        />
+                                                        <IconButton
+                                                            aria-label="Delete result"
+                                                            icon={<DeleteIcon />}
+                                                            size="sm"
+                                                            colorScheme="red"
+                                                            onClick={() => handleDeleteClick(r._id)}
+                                                        />
+                                                    </ButtonGroup>
+                                                </Td>
                                             </Tr>
                                         ))
                                     ) : (
                                         <Tr>
-                                            <Td colSpan={6}>
+                                            <Td colSpan={9}>
                                                 <Text color="gray.500" fontSize="sm">
                                                     No results found.
                                                 </Text>
@@ -681,8 +978,18 @@ export default function ResultsBulkUpload() {
                                     <AccordionPanel pb={4}>
                                         <VStack spacing={3} align="stretch">
                                             <Box>
+                                                <Text fontWeight="semibold">Marks:</Text>
+                                                <Text>{result?.marks || result?.totalMarks ? `${result?.marks || 0}/${result?.totalMarks || 100}` : "N/A"}</Text>
+                                            </Box>
+                                            <Box>
                                                 <Text fontWeight="semibold">Grade:</Text>
-                                                <Text>{result?.grade || "N/A"}</Text>
+                                                <Badge colorScheme={getGradeColor(result?.grade)}>
+                                                    {result?.grade || "N/A"}
+                                                </Badge>
+                                            </Box>
+                                            <Box>
+                                                <Text fontWeight="semibold">GPA:</Text>
+                                                <Text>{result?.gpa ? result?.gpa.toFixed(2) : "N/A"}</Text>
                                             </Box>
                                             <Box>
                                                 <Text fontWeight="semibold">Credit Hour:</Text>
@@ -695,6 +1002,27 @@ export default function ResultsBulkUpload() {
                                             <Box>
                                                 <Text fontWeight="semibold">Updated At:</Text>
                                                 <Text>{result?.updatedAt ? new Date(result.updatedAt).toLocaleString() : "N/A"}</Text>
+                                            </Box>
+                                            <Box>
+                                                <Text fontWeight="semibold" mb={2}>Actions:</Text>
+                                                <ButtonGroup size="sm" spacing={2}>
+                                                    <Button
+                                                        leftIcon={<EditIcon />}
+                                                        size="sm"
+                                                        colorScheme="blue"
+                                                        onClick={() => handleEditClick(result)}
+                                                    >
+                                                        Edit
+                                                    </Button>
+                                                    <Button
+                                                        leftIcon={<DeleteIcon />}
+                                                        size="sm"
+                                                        colorScheme="red"
+                                                        onClick={() => handleDeleteClick(result._id)}
+                                                    >
+                                                        Delete
+                                                    </Button>
+                                                </ButtonGroup>
                                             </Box>
                                         </VStack>
                                     </AccordionPanel>

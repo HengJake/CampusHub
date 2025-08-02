@@ -36,16 +36,16 @@ import {
     Flex,
     Spacer,
     Divider
-  } from "@chakra-ui/react"
-  import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiDownload } from "react-icons/fi"
-  import { useEffect, useState } from "react"
-  import { useAcademicStore } from "../../store/academic.js";
-  import { useShowToast } from "../../store/utils/toast.js";
-  import { useUserStore } from "../../store/user.js";
-  import { Spinner } from "@chakra-ui/react";
-  import ComfirmationMessage from "../../component/common/ComfirmationMessage.jsx";
+} from "@chakra-ui/react"
+import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiDownload } from "react-icons/fi"
+import { useEffect, useState } from "react"
+import { useAcademicStore } from "../../store/academic.js";
+import { useShowToast } from "../../store/utils/toast.js";
+import { useUserStore } from "../../store/user.js";
+import { Spinner } from "@chakra-ui/react";
+import ComfirmationMessage from "../../component/common/ComfirmationMessage.jsx";
 
-export function StudentManagement() {
+export function StudentManagement({ selectedIntakeCourse, filterBy }) {
 
     const { alertOpen, onAlertOpen, onAlertClose } = useDisclosure()
     const { createUser, modifyUser } = useUserStore();
@@ -64,12 +64,13 @@ export function StudentManagement() {
         deleteStudent,
         loading,
     } = useAcademicStore();
-
+    
     const { isOpen, onOpen, onClose } = useDisclosure();
     const showToast = useShowToast();
     const toast = useToast()
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("all") // Changed from "All" to "all"
+    const [intakeCourseFilter, setIntakeCourseFilter] = useState("all")
     const [selectedStudent, setSelectedStudent] = useState(null)
     const [step, setStep] = useState(0); // 0: User Info, 1: Academic Info, 2: Review/Submit
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -77,7 +78,7 @@ export function StudentManagement() {
     const [isEdit, setIsEdit] = useState(false);
     const bgColor = useColorModeValue("white", "gray.800")
     const borderColor = useColorModeValue("gray.200", "gray.600")
-
+    
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         fetchIntakeCourses();
@@ -85,6 +86,13 @@ export function StudentManagement() {
         fetchCourses();
         fetchIntakes();
     }, [])
+
+    // Handle initial filtering when navigated from intake courses
+    useEffect(() => {
+        if (selectedIntakeCourse && filterBy === 'intakeCourse') {
+            setIntakeCourseFilter(selectedIntakeCourse._id);
+        }
+    }, [selectedIntakeCourse, filterBy]);
 
     // Expanded formData
     const [formData, setFormData] = useState({
@@ -113,7 +121,8 @@ export function StudentManagement() {
             email.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (student._id ? student._id.toLowerCase().includes(searchTerm.toLowerCase()) : false);
         const matchesStatus = statusFilter === "all" || (student.status && student.status.toLowerCase() === statusFilter.toLowerCase());
-        return matchesSearch && matchesStatus;
+        const matchesIntakeCourse = intakeCourseFilter === "all" || (student.intakeCourseId && student.intakeCourseId._id === intakeCourseFilter);
+        return matchesSearch && matchesStatus && matchesIntakeCourse;
     });
 
     // Sorting logic
@@ -601,6 +610,18 @@ export function StudentManagement() {
                             </Select>
                             <Select
                                 w={{ base: "full", sm: "200px" }}
+                                value={intakeCourseFilter}
+                                onChange={(e) => setIntakeCourseFilter(e.target.value)}
+                            >
+                                <option value="all">All Intake Courses</option>
+                                {intakeCourses.map(ic => (
+                                    <option key={ic._id} value={ic._id}>
+                                        {ic.intakeId?.intakeName} - {ic.courseId?.courseName}
+                                    </option>
+                                ))}
+                            </Select>
+                            <Select
+                                w={{ base: "full", sm: "200px" }}
                                 value={sortOption}
                                 onChange={(e) => setSortOption(e.target.value)}
                                 placeholder="Sort By"
@@ -640,7 +661,7 @@ export function StudentManagement() {
                                             <Th>Actions</Th>
                                         </Tr>
                                     </Thead>
-                                    <Tbody  fontSize={12}>
+                                    <Tbody fontSize={12}>
                                         {sortedStudents.map((student) => {
                                             if (student) {
 

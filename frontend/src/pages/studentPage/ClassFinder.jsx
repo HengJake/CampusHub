@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import {
   Box,
@@ -64,6 +62,7 @@ import {
   Thermometer,
   Shield,
 } from "lucide-react"
+import { useAcademicStore } from "../../store/academic"
 
 const ClassFinder = () => {
   const [searchTerm, setSearchTerm] = useState("")
@@ -81,216 +80,71 @@ const ClassFinder = () => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
 
-  // Mock classroom data
-  const mockClassrooms = [
-    {
-      id: "A101",
-      name: "Classroom A101",
-      building: "Academic Block A",
-      floor: 1,
-      capacity: 30,
-      currentOccupancy: 0,
-      status: "available",
-      nextClass: "14:00 - CS301 Database Systems",
-      availableUntil: "13:45",
-      features: ["Projector", "Whiteboard", "AC", "WiFi", "Audio System"],
-      type: "Lecture Hall",
-      location: { lat: 1.2966, lng: 103.7764 },
-      walkingTime: "3 min",
-      bookingAllowed: true,
-      maxBookingHours: 2,
-      currentTemp: "22°C",
-      lightingLevel: "Bright",
-      cleaningStatus: "Recently Cleaned",
-    },
-    {
-      id: "B205",
-      name: "Seminar Room B205",
-      building: "Academic Block B",
-      floor: 2,
-      capacity: 20,
-      currentOccupancy: 8,
-      status: "occupied",
-      nextClass: "15:30 - MATH201 Statistics",
-      availableUntil: "15:15",
-      features: ["Smart Board", "Video Conferencing", "AC", "WiFi"],
-      type: "Seminar Room",
-      location: { lat: 1.297, lng: 103.776 },
-      walkingTime: "5 min",
-      bookingAllowed: true,
-      maxBookingHours: 3,
-      currentTemp: "23°C",
-      lightingLevel: "Medium",
-      cleaningStatus: "Scheduled for 16:00",
-    },
-    {
-      id: "C301",
-      name: "Computer Lab C301",
-      building: "IT Block C",
-      floor: 3,
-      capacity: 40,
-      currentOccupancy: 0,
-      status: "available",
-      nextClass: "16:00 - IT401 Software Engineering",
-      availableUntil: "15:45",
-      features: ["40 Computers", "Projector", "AC", "WiFi", "Printer"],
-      type: "Computer Lab",
-      location: { lat: 1.2975, lng: 103.7755 },
-      walkingTime: "7 min",
-      bookingAllowed: false,
-      maxBookingHours: 1,
-      currentTemp: "21°C",
-      lightingLevel: "Bright",
-      cleaningStatus: "Clean",
-    },
-    {
-      id: "D102",
-      name: "Tutorial Room D102",
-      building: "Academic Block D",
-      floor: 1,
-      capacity: 15,
-      currentOccupancy: 0,
-      status: "available",
-      nextClass: "No scheduled classes",
-      availableUntil: "All day",
-      features: ["Whiteboard", "AC", "WiFi", "Round Tables"],
-      type: "Tutorial Room",
-      location: { lat: 1.2968, lng: 103.7758 },
-      walkingTime: "4 min",
-      bookingAllowed: true,
-      maxBookingHours: 4,
-      currentTemp: "22°C",
-      lightingLevel: "Bright",
-      cleaningStatus: "Clean",
-    },
-    {
-      id: "E201",
-      name: "Lecture Theatre E201",
-      building: "Main Academic Building",
-      floor: 2,
-      capacity: 100,
-      currentOccupancy: 45,
-      status: "occupied",
-      nextClass: "13:30 - PHY101 Physics Fundamentals",
-      availableUntil: "13:15",
-      features: ["Large Projector", "Microphone", "AC", "WiFi", "Recording Equipment"],
-      type: "Lecture Theatre",
-      location: { lat: 1.2972, lng: 103.7762 },
-      walkingTime: "2 min",
-      bookingAllowed: false,
-      maxBookingHours: 2,
-      currentTemp: "23°C",
-      lightingLevel: "Dimmed",
-      cleaningStatus: "In Use",
-    },
-    {
-      id: "F105",
-      name: "Study Room F105",
-      building: "Library Block",
-      floor: 1,
-      capacity: 8,
-      currentOccupancy: 0,
-      status: "available",
-      nextClass: "No scheduled classes",
-      availableUntil: "All day",
-      features: ["Whiteboard", "WiFi", "Power Outlets", "Quiet Zone"],
-      type: "Study Room",
-      location: { lat: 1.2965, lng: 103.7767 },
-      walkingTime: "6 min",
-      bookingAllowed: true,
-      maxBookingHours: 6,
-      currentTemp: "22°C",
-      lightingLevel: "Bright",
-      cleaningStatus: "Clean",
-    },
-    {
-      id: "G203",
-      name: "Meeting Room G203",
-      building: "Student Center",
-      floor: 2,
-      capacity: 12,
-      currentOccupancy: 0,
-      status: "maintenance",
-      nextClass: "Under Maintenance",
-      availableUntil: "Tomorrow 09:00",
-      features: ["Conference Table", "TV Screen", "AC", "WiFi"],
-      type: "Meeting Room",
-      location: { lat: 1.2963, lng: 103.7759 },
-      walkingTime: "8 min",
-      bookingAllowed: false,
-      maxBookingHours: 3,
-      currentTemp: "N/A",
-      lightingLevel: "Off",
-      cleaningStatus: "Under Maintenance",
-    },
-    {
-      id: "H301",
-      name: "Presentation Room H301",
-      building: "Business Block",
-      floor: 3,
-      capacity: 25,
-      currentOccupancy: 0,
-      status: "available",
-      nextClass: "17:00 - BUS301 Marketing Strategy",
-      availableUntil: "16:45",
-      features: ["Smart Board", "Video Conferencing", "AC", "WiFi", "Presentation Clicker"],
-      type: "Presentation Room",
-      location: { lat: 1.2969, lng: 103.7756 },
-      walkingTime: "9 min",
-      bookingAllowed: true,
-      maxBookingHours: 2,
-      currentTemp: "22°C",
-      lightingLevel: "Bright",
-      cleaningStatus: "Clean",
-    },
-  ]
-
-  // Initialize classrooms
+  const { rooms, fetchRooms, classSchedules, fetchClassSchedules } = useAcademicStore();
+  
   useEffect(() => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setClassrooms(mockClassrooms)
-      setFilteredClassrooms(mockClassrooms)
+    if (rooms.length === 0) {
+      fetchRooms();
+    }
+    
+    if (classSchedules.length === 0) {
+      fetchClassSchedules();
+    }
+    
+  }, []);
+  console.log("🚀 ~ ClassFinder ~ classSchedule:", classSchedules)
+  console.log("🚀 ~ ClassFinder ~ rooms:", rooms)
+
+  // const filteredRooms = rooms.filter(room => room.status === "available")
+  const filteredRooms = rooms
+
+
+
+  // Initialize classrooms with real data
+  useEffect(() => {
+    if (rooms.length > 0) {
+      setIsLoading(true)
+      // Map the fetched room data to the expected structure
+      const mappedRooms = rooms.map((room) => ({
+        id: room._id,
+        name: `Room ${room.roomNumber}`,
+        building: room.block,
+        floor: room.floor,
+        capacity: room.capacity,
+        currentOccupancy: 0, // Default since not provided in API
+        status: room.roomStatus,
+        nextClass: "No scheduled classes", // Default since not provided in API
+        availableUntil: room.roomStatus === "available" ? "All day" : "Check schedule",
+        features: room.facilities || [],
+        type: room.type,
+        location: { lat: 0, lng: 0 }, // Default since not provided in API
+        walkingTime: "Unknown", // Default since not provided in API
+        bookingAllowed: room.isActive,
+        maxBookingHours: 4, // Default since not provided in API
+        currentTemp: "22°C", // Default since not provided in API
+        lightingLevel: "Bright", // Default since not provided in API
+        cleaningStatus: "Clean", // Default since not provided in API
+      }))
+
+      setClassrooms(mappedRooms)
+      setFilteredClassrooms(mappedRooms)
       setIsLoading(false)
       setLastUpdated(new Date())
-    }, 1000)
-  }, [])
+    }
+  }, [rooms])
 
   // Auto-refresh functionality
   useEffect(() => {
     if (!autoRefresh) return
 
     const interval = setInterval(() => {
-      // Simulate real-time updates
-      setClassrooms((prevClassrooms) => {
-        const updated = prevClassrooms.map((classroom) => {
-          const random = Math.random()
-          let newStatus = classroom.status
-          let newOccupancy = classroom.currentOccupancy
-
-          // Simulate status changes
-          if (classroom.status === "available" && random < 0.1) {
-            newStatus = "occupied"
-            newOccupancy = Math.floor(Math.random() * classroom.capacity * 0.8) + 1
-          } else if (classroom.status === "occupied" && random < 0.15) {
-            newStatus = "available"
-            newOccupancy = 0
-          }
-
-          return {
-            ...classroom,
-            status: newStatus,
-            currentOccupancy: newOccupancy,
-          }
-        })
-
-        setLastUpdated(new Date())
-        return updated
-      })
-    }, 8000)
+      // Refresh data from the store
+      fetchRooms()
+      setLastUpdated(new Date())
+    }, 30000) // Refresh every 30 seconds
 
     return () => clearInterval(interval)
-  }, [autoRefresh])
+  }, [autoRefresh, fetchRooms])
 
   // Filter classrooms
   useEffect(() => {
@@ -351,50 +205,29 @@ const ClassFinder = () => {
     }
   }
 
-  const handleQuickBook = (classroom) => {
-    if (!classroom.bookingAllowed) {
-      toast({
-        title: "Booking Not Allowed",
-        description: "This classroom cannot be booked by students.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      })
-      return
-    }
-
-    toast({
-      title: "Booking Request Sent",
-      description: `Request to book ${classroom.name} has been submitted.`,
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    })
-  }
-
-  const handleGetDirections = (classroom) => {
-    toast({
-      title: "Opening Directions",
-      description: `Getting directions to ${classroom.name}...`,
-      status: "info",
-      duration: 2000,
-      isClosable: true,
-    })
-  }
 
   const refreshData = () => {
     setIsLoading(true)
-    setTimeout(() => {
+    fetchRooms().then(() => {
       setLastUpdated(new Date())
       setIsLoading(false)
       toast({
         title: "Data Refreshed",
-        description: "Classroom availability updated successfully.",
+        description: "Room availability updated successfully.",
         status: "success",
         duration: 2000,
         isClosable: true,
       })
-    }, 1000)
+    }).catch(() => {
+      setIsLoading(false)
+      toast({
+        title: "Refresh Failed",
+        description: "Failed to update room data. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    })
   }
 
   const availableCount = classrooms.filter((c) => c.status === "available").length
@@ -509,14 +342,10 @@ const ClassFinder = () => {
                   value={selectedBuilding}
                   onChange={(e) => setSelectedBuilding(e.target.value)}
                 >
-                  <option value="Academic Block A">Academic Block A</option>
-                  <option value="Academic Block B">Academic Block B</option>
-                  <option value="IT Block C">IT Block C</option>
-                  <option value="Academic Block D">Academic Block D</option>
-                  <option value="Main Academic Building">Main Academic Building</option>
-                  <option value="Library Block">Library Block</option>
-                  <option value="Student Center">Student Center</option>
-                  <option value="Business Block">Business Block</option>
+                  {/* Dynamic building options based on actual data */}
+                  {[...new Set(classrooms.map(room => room.building))].map(building => (
+                    <option key={building} value={building}>{building}</option>
+                  ))}
                 </Select>
 
                 <Select
@@ -524,11 +353,10 @@ const ClassFinder = () => {
                   value={selectedCapacity}
                   onChange={(e) => setSelectedCapacity(e.target.value)}
                 >
-                  <option value="8">8+ people</option>
-                  <option value="15">15+ people</option>
-                  <option value="25">25+ people</option>
-                  <option value="40">40+ people</option>
-                  <option value="100">100+ people</option>
+                  {/* Dynamic capacity options based on actual data */}
+                  {[...new Set(classrooms.map(room => room.capacity))].sort((a, b) => a - b).map(capacity => (
+                    <option key={capacity} value={capacity}>{capacity}+ people</option>
+                  ))}
                 </Select>
 
                 <Select value={availabilityFilter} onChange={(e) => setAvailabilityFilter(e.target.value)}>
@@ -571,7 +399,7 @@ const ClassFinder = () => {
                           {classroom.name}
                         </Text>
                         <Text fontSize="sm" color="gray.600">
-                          {classroom.building} • Floor {classroom.floor}
+                          {classroom.building} • {classroom.floor}
                         </Text>
                       </VStack>
                       <Badge
@@ -627,59 +455,33 @@ const ClassFinder = () => {
                     {/* Features */}
                     <Box>
                       <Text fontSize="sm" fontWeight="medium" mb={2}>
-                        Features:
+                        Facilities:
                       </Text>
                       <Flex wrap="wrap" gap={1}>
-                        {classroom.features.slice(0, 3).map((feature, index) => (
-                          <Badge key={index} variant="outline" fontSize="xs">
-                            {feature}
-                          </Badge>
-                        ))}
-                        {classroom.features.length > 3 && (
-                          <Badge variant="outline" fontSize="xs" color="blue.500">
-                            +{classroom.features.length - 3} more
-                          </Badge>
+                        {classroom.features && classroom.features.length > 0 ? (
+                          <>
+                            {classroom.features.slice(0, 3).map((feature, index) => (
+                              <Badge key={index} variant="outline" fontSize="xs">
+                                {feature.replace(/_/g, ' ').toUpperCase()}
+                              </Badge>
+                            ))}
+                            {classroom.features.length > 3 && (
+                              <Badge variant="outline" fontSize="xs" color="blue.500">
+                                +{classroom.features.length - 3} more
+                              </Badge>
+                            )}
+                          </>
+                        ) : (
+                          <Text fontSize="xs" color="gray.500">No facilities listed</Text>
                         )}
                       </Flex>
                     </Box>
 
-                    {/* Actions */}
-                    <HStack spacing={2}>
-                      <Button
-                        size="sm"
-                        colorScheme="blue"
-                        variant="solid"
-                        flex={1}
-                        leftIcon={<Navigation />}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleGetDirections(classroom)
-                        }}
-                      >
-                        Directions
-                      </Button>
-                      {classroom.bookingAllowed && classroom.status === "available" && (
-                        <Button
-                          size="sm"
-                          colorScheme="green"
-                          variant="outline"
-                          flex={1}
-                          leftIcon={<Calendar />}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleQuickBook(classroom)
-                          }}
-                        >
-                          Quick Book
-                        </Button>
-                      )}
-                    </HStack>
-
-                    {/* Walking Time */}
+                    {/* Room Number */}
                     <HStack justify="center">
                       <Icon as={MapPin} size="14px" color="gray.400" />
                       <Text fontSize="xs" color="gray.500">
-                        {classroom.walkingTime} walk from current location
+                        Room Number: {classroom.name.replace('Room ', '')}
                       </Text>
                     </HStack>
                   </VStack>
@@ -727,7 +529,7 @@ const ClassFinder = () => {
                             <Text fontSize="sm" color="gray.500" mb={1}>
                               Floor
                             </Text>
-                            <Text fontWeight="medium">Floor {selectedClassroom.floor}</Text>
+                            <Text fontWeight="medium">{selectedClassroom.floor}</Text>
                           </Box>
                           <Box>
                             <Text fontSize="sm" color="gray.500" mb={1}>
@@ -737,9 +539,9 @@ const ClassFinder = () => {
                           </Box>
                           <Box>
                             <Text fontSize="sm" color="gray.500" mb={1}>
-                              Walking Time
+                              Room Number
                             </Text>
-                            <Text fontWeight="medium">{selectedClassroom.walkingTime}</Text>
+                            <Text fontWeight="medium">{selectedClassroom.name.replace('Room ', '')}</Text>
                           </Box>
                         </SimpleGrid>
 
@@ -769,21 +571,23 @@ const ClassFinder = () => {
 
                         <Divider />
 
-                        {/* Schedule */}
+                        {/* Room Status & Information */}
                         <Box>
                           <Text fontSize="sm" color="gray.500" mb={2}>
-                            Schedule Information
+                            Room Information
                           </Text>
                           <VStack align="stretch" spacing={2}>
                             <HStack>
                               <Icon as={Clock} color="green.500" />
                               <Text fontSize="sm">
-                                Available until: <strong>{selectedClassroom.availableUntil}</strong>
+                                Status: <strong>{selectedClassroom.status}</strong>
                               </Text>
                             </HStack>
                             <HStack>
                               <Icon as={BookOpen} color="blue.500" />
-                              <Text fontSize="sm">Next class: {selectedClassroom.nextClass}</Text>
+                              <Text fontSize="sm">
+                                Active: {selectedClassroom.bookingAllowed ? "Yes" : "No"}
+                              </Text>
                             </HStack>
                           </VStack>
                         </Box>
@@ -814,16 +618,20 @@ const ClassFinder = () => {
                     <TabPanel>
                       <VStack align="stretch" spacing={4}>
                         <Text fontSize="lg" fontWeight="medium">
-                          Available Features
+                          Available Facilities
                         </Text>
-                        <SimpleGrid columns={2} spacing={3}>
-                          {selectedClassroom.features.map((feature, index) => (
-                            <HStack key={index}>
-                              <Icon as={CheckCircle} color="green.500" size="16px" />
-                              <Text fontSize="sm">{feature}</Text>
-                            </HStack>
-                          ))}
-                        </SimpleGrid>
+                        {selectedClassroom.features && selectedClassroom.features.length > 0 ? (
+                          <SimpleGrid columns={2} spacing={3}>
+                            {selectedClassroom.features.map((feature, index) => (
+                              <HStack key={index}>
+                                <Icon as={CheckCircle} color="green.500" size="16px" />
+                                <Text fontSize="sm">{feature.replace(/_/g, ' ').toUpperCase()}</Text>
+                              </HStack>
+                            ))}
+                          </SimpleGrid>
+                        ) : (
+                          <Text fontSize="sm" color="gray.500">No facilities listed for this room.</Text>
+                        )}
                       </VStack>
                     </TabPanel>
 

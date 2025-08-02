@@ -571,7 +571,7 @@ export const ClusteredScheduleGrid = ({
     const getItemsForSlot = (day, time) => {
         const items = allItems.filter(item => {
 
-            if (!filter.selectedCourse || !filter.selectedIntake) {
+            if (!filter.selectedCourse || !filter.selectedIntake || !filter.selectedSemester) {
                 return false
             }
 
@@ -607,6 +607,13 @@ export const ClusteredScheduleGrid = ({
                 item.moduleId?._id !== filter.selectedModule
             ) return false;
 
+
+            if (!filter.selectedYear) return false;
+
+    
+            if (filter?.selectedSemester &&
+                item.semesterId?._id !== filter.selectedSemester
+            ) return false;
 
             return include;
         });

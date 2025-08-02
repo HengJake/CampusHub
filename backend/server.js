@@ -7,7 +7,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
-
+ 
 // 1 Academic
 import userRoutes from "./routes/Academic/user.routes.js";
 import authRoutes from "./routes/auth.routes.js";
