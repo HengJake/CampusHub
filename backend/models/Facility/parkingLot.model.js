@@ -5,7 +5,7 @@ const ParkingLotSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'School',
         required: true,
-    }, 
+    },
     zone: { type: String, required: true },
     slotNumber: { type: Number, required: true },
     active: { type: Boolean, default: true },
