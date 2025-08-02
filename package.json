@@ -1,0 +1,52 @@
+{
+  "name": "campushub-1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "fdev": "cross-env NODE_ENV=development npm run dev --prefix frontend",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "cross-env NODE_ENV=development nodemon backend/server.js",
+    "init-academic-api": "node backend/initAcademicDatabaseAPI.js",
+    "build": "npm i && npm i --prefix frontend && npm run build --prefix frontend",
+    "start": "NODE_ENV=production node backend/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HengJake/CampusHub.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HengJake/CampusHub/issues"
+  },
+  "type": "module",
+  "homepage": "https://github.com/HengJake/CampusHub#readme",
+  "description": "",
+  "dependencies": {
+    "@emailjs/browser": "^4.4.1",
+    "axios": "^1.10.0",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.5.0",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "google-map-react": "^2.2.5",
+    "gsap": "^3.13.0",
+    "js-cookie": "^3.0.5",
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.525.0",
+    "luxon": "^3.7.1",
+    "mongoose": "^8.15.1",
+    "nodemailer": "^7.0.3",
+    "nodemon": "^3.1.10",
+    "sass": "^1.89.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
+}
