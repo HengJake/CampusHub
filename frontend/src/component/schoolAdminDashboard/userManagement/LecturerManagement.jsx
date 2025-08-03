@@ -39,13 +39,13 @@ import {
 } from "@chakra-ui/react"
 import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiDownload } from "react-icons/fi"
 import { useEffect, useState } from "react"
-import { useAcademicStore } from "../../store/academic.js";
-import ComfirmationMessage from "../common/ComfirmationMessage.jsx";
-import MultiSelectPopover from "../common/MultiSelectPopover.jsx";
-import { useUserStore } from "../../store/user.js";
-import TitleInputList from "../common/TitleInputList";
+import { useAcademicStore } from "../../../store/academic.js";
+import ComfirmationMessage from "../../common/ComfirmationMessage.jsx";
+import MultiSelectPopover from "../../common/MultiSelectPopover.jsx";
+import { useUserStore } from "../../../store/user.js";
+import TitleInputList from "../../common/TitleInputList.jsx";
 import { IoIosRemoveCircle } from "react-icons/io";
-import { useShowToast } from "../../store/utils/toast.js"
+import { useShowToast } from "../../../store/utils/toast.js"
 
 export function LecturerManagement() {
     const {

@@ -231,6 +231,7 @@ function App() {
         pr={{ base: 6, lg: 2 }}
         pl={{ base: 6, lg: 2 }}
         pt={6}
+        maxW="100%"
       >
         <Routes>
           {/* Common Pages - No auth required */}

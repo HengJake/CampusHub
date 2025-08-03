@@ -250,18 +250,6 @@ export default function ResultsPreviewTable({
                                     />
                                 </InputGroup>
 
-                                <Select
-                                    w={{ base: "full", sm: "200px" }}
-                                    value={moduleFilter}
-                                    onChange={(e) => setModuleFilter(e.target.value)}
-                                >
-                                    <option value="all">All Modules</option>
-                                    {modules && modules.map((module) => (
-                                        <option key={module._id} value={module._id}>
-                                            {module.moduleName} ({module.code})
-                                        </option>
-                                    ))}
-                                </Select>
                             </HStack>
                         )}
 

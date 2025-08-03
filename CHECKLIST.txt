@@ -9,13 +9,12 @@ Update usage on line 765✅
 👨‍🎓 Student Pages (Replace Mock Data)
 ClassFinder.jsx
 Replace mockClassrooms with API call to /api/rooms✅
-Add real-time room availability from /api/classSchedules
-Connect booking functionality to backend
+Add real-time room availability from /api/classSchedules ✅
 
 
 Academic.jsx
 Replace mock data from studentStore with real API calls:
-Academic schedule: /api/classSchedules
+Academic schedule: /api/classSchedules 🧑‍💻 
 Exam schedule: /api/examSchedules
 Attendance: /api/attendance
 Results: /api/results
@@ -39,12 +38,11 @@ Connect all dashboard data to academic store APIs🧑‍💻
 Ensure real-time data fetching for stats and charts
 
 ResultManagement.jsx
-
-TODO: Fix the edit and refresh the database🧑‍💻
+ Fix the edit and refresh the database✅ 
 
 ScheduleManagement
 Change the semester navigation to Year X Sem X✅
-only show class schedule when select year and semester🧑‍💻
+only show class schedule when select year and semester✅
 
 
 Course Management
@@ -56,7 +54,8 @@ Add bulk assign and export template
 
 
 LecturerManagement.jsx
-Fix lecturer adding bug in form submission
+Fix lecturer adding bug in form submission✅
+
 Ensure proper API integration with /api/lecturers
 Test CRUD operations thoroughly
 

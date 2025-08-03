@@ -1,5 +1,5 @@
-import { StudentManagement } from "../../component/schoolAdminDashboard/StudentManagement.jsx";
-import { LecturerManagement } from "../../component/schoolAdminDashboard/LecturerManagement.jsx";
+import { StudentManagement } from "../../component/schoolAdminDashboard/userManagement/StudentManagement.jsx";
+import { LecturerManagement } from "../../component/schoolAdminDashboard/userManagement/LecturerManagement.jsx";
 import { Tabs, Tab, TabList, TabPanel, TabPanels } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";

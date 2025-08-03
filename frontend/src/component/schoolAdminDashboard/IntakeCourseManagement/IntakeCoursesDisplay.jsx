@@ -153,20 +153,8 @@ export function IntakeCoursesDisplay() {
             setSelectedSemester(semester);
             setIsEditMode(true);
 
-            // Find the latest semester end date to calculate the next start date
-            const latestSemester = currentSemesters
-                .filter(s => s._id !== semester._id) // Exclude current semester being edited
-                .sort((a, b) => new Date(b.endDate) - new Date(a.endDate))[0];
-
-            let calculatedStartDate = semester.startDate ? new Date(semester.startDate).toISOString().split('T')[0] : '';
-
-            // If there's a latest semester, set start date to next day after its end date
-            if (latestSemester && latestSemester.endDate) {
-                const latestEndDate = new Date(latestSemester.endDate);
-                const nextStartDate = new Date(latestEndDate);
-                nextStartDate.setDate(nextStartDate.getDate() + 1); // Add one day
-                calculatedStartDate = nextStartDate.toISOString().split('T')[0];
-            }
+            // Use the original semester's start date instead of recalculating
+            const originalStartDate = semester.startDate ? new Date(semester.startDate).toISOString().split('T')[0] : '';
 
             // Populate form with current semester data
             setSemesterForm({
@@ -174,7 +162,7 @@ export function IntakeCoursesDisplay() {
                 semesterNumber: semester.semesterNumber?.toString() || '',
                 year: semester.year?.toString() || '',
                 semesterName: semester.semesterName || '',
-                startDate: calculatedStartDate,
+                startDate: originalStartDate, // Use original start date
                 endDate: semester.endDate ? new Date(semester.endDate).toISOString().split('T')[0] : '',
                 durationMonths: '', // Will be calculated by the modal component
                 registrationStartDate: semester.registrationStartDate ? new Date(semester.registrationStartDate).toISOString().split('T')[0] : '',
@@ -253,6 +241,7 @@ export function IntakeCoursesDisplay() {
 
                 // Refresh semesters and close modal
                 await fetchSemesters();
+                await handleRefreshCurrentSemesters(); // Add this line to refresh current semesters
                 handleCloseAddSemesterModal();
             } else {
                 toast({
@@ -273,6 +262,9 @@ export function IntakeCoursesDisplay() {
                 isClosable: true,
             });
         } finally {
+            await fetchIntakeCourses();
+            await fetchSemesters();
+            await handleRefreshCurrentSemesters(); // Add this line to refresh current semesters
             setIsAddingLoading(false);
         }
     };
@@ -324,9 +316,9 @@ export function IntakeCoursesDisplay() {
                     isClosable: true,
                 });
 
-
                 // Refresh semesters and close modal
                 await fetchSemesters();
+                await handleRefreshCurrentSemesters(); // Add this line to refresh current semesters
                 handleCloseAddSemesterModal();
             } else {
                 toast({
@@ -347,6 +339,9 @@ export function IntakeCoursesDisplay() {
                 isClosable: true,
             });
         } finally {
+            await fetchIntakeCourses();
+            await fetchSemesters();
+            await handleRefreshCurrentSemesters(); // Add this line to refresh current semesters
             setIsAddingLoading(false);
         }
     };
