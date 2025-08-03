@@ -71,7 +71,7 @@ IntakeCoursesDisplay.jsx
 └── CompletionStatusBadge.jsx (used in SemesterDetailsModal)
 
 
-ScheduleManagement/
+frontend/src/component/schoolAdminDashboard/ScheduleManagement/
 ├── index.js                    # Barrel exports
 ├── README.md                   # Documentation
 ├── useScheduleManagement.js    # Custom hook
@@ -85,3 +85,11 @@ ScheduleManagement/
 ├── ClassScheduleCard.jsx      # Existing component
 ├── generateClassSchedule.js   # Existing utility
 └── generateExamSchedule.js    # Existing utility
+
+frontend/src/component/schoolAdminDashboard/results/
+├── index.js                    # Component exports
+├── ResultsUploadModal.jsx      # CSV upload functionality
+├── ResultsEditModal.jsx        # Edit result modal
+├── ResultsViewTable.jsx        # View all results table
+├── ResultsPreviewTable.jsx     # Preview with selection
+└── ResultsDeleteDialog.jsx     # Delete confirmation

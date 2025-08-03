@@ -134,6 +134,15 @@ async function createFullSchoolData({
             role: "schoolAdmin",
             twoFA_enabled: false
         },
+        // Company Admin
+        {
+            name: "Company Admin",
+            email: "company@gmail.com",
+            password: "Password123",
+            phoneNumber: adminPhoneBase + 2,
+            role: "companyAdmin",
+            twoFA_enabled: false
+        },
         // Lecturers
         {
             name: `${schoolPrefix} Dr. John Smith`,
@@ -753,9 +762,14 @@ async function createFullSchoolData({
             const totalMarks = 100;
             const marks = Math.floor(Math.random() * 40) + (selectedGrade === 'F' ? 0 : 50); // 50-90 for passing, 0-49 for F
 
+            // Assign semester based on module index and available semesters
+            const semesterIndex = j % createdIds.semesters.length;
+            const semesterId = createdIds.semesters[semesterIndex];
+
             const resultData = {
                 studentId: createdIds.students[i],
                 moduleId: createdIds.modules[j],
+                semesterId: semesterId,
                 grade: selectedGrade,
                 creditHours: 3,
                 marks: marks,

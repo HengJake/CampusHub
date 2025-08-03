@@ -7,9 +7,11 @@ import {
     deleteResult,
     getResultsByStudentId,
     getResultsByModuleId,
+    getResultsBySemesterId,
     getResultsByGrade,
     getStudentGPA,
     getModuleStatistics,
+    getSemesterStatistics,
     deleteAllResults,
     getResultsBySchool
 } from "../../controllers/Academic/result.controllers.js";
@@ -40,6 +42,9 @@ router.get("/student/:studentId", getResultsByStudentId);
 // Get results by module ID
 router.get("/module/:moduleId", getResultsByModuleId);
 
+// Get results by semester ID
+router.get("/semester/:semesterId", getResultsBySemesterId);
+
 // Get results by grade
 router.get("/grade/:grade", getResultsByGrade);
 
@@ -48,6 +53,9 @@ router.get("/gpa/:studentId", getStudentGPA);
 
 // Get module statistics
 router.get("/statistics/:moduleId", getModuleStatistics);
+
+// Get semester statistics
+router.get("/semester-statistics/:semesterId", getSemesterStatistics);
 
 router.get("/school/:schoolId", getResultsBySchool);
 

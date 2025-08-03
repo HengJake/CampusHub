@@ -33,15 +33,6 @@ export default function ScheduleControls({
                         List View
                     </Button>
                 </ButtonGroup>
-                <Badge colorScheme={"purple"}>
-                    {allItems.filter(i => i.type == "class").length} classes
-                </Badge>
-                <Badge colorScheme={"red"}>
-                    {allItems.filter(i => i.type == "exam").length} exams
-                </Badge>
-            </HStack>
-<Text></Text>
-            <HStack>
                 <ButtonGroup size="sm" isAttached variant="outline">
                     <Button
                         colorScheme={showExams ? "blue" : "gray"}
@@ -56,6 +47,15 @@ export default function ScheduleControls({
                         Classes
                     </Button>
                 </ButtonGroup>
+            </HStack>
+
+            <HStack>
+                <Badge colorScheme={"purple"}>
+                    {allItems.filter(i => i.type == "class").length} classes
+                </Badge>
+                <Badge colorScheme={"red"}>
+                    {allItems.filter(i => i.type == "exam").length} exams
+                </Badge>
                 <Button colorScheme={"green"} onClick={onImportClick}>
                     Import Schedule
                 </Button>

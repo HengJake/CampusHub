@@ -8,66 +8,34 @@ import {
     useColorModeValue,
     useToast,
     Button,
-    Input,
-    InputGroup,
-    InputLeftElement,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalFooter,
-    ModalBody,
-    ModalCloseButton,
     useDisclosure,
-    Spinner,
-    Center,
-    FormControl,
-    FormLabel,
+    Badge,
+    TableContainer,
     Table,
     Thead,
     Tbody,
     Tr,
     Th,
     Td,
-    TableContainer,
-    Alert,
-    AlertIcon,
-    AlertTitle,
-    AlertDescription,
-    Select,
-    Heading,
-    Tfoot,
-    CardFooter,
-    Divider,
-    Accordion,
-    AccordionButton,
-    AccordionItem,
-    AccordionIcon,
-    AccordionPanel,
-    Link,
-    Badge,
-    IconButton,
-    ButtonGroup,
-    AlertDialog,
-    AlertDialogBody,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogContent,
-    AlertDialogOverlay,
-    Textarea
+    Input
 } from "@chakra-ui/react"
 import { FiUpload } from "react-icons/fi"
-import { useMemo, useState, useRef, useEffect } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { useAcademicStore } from "../../store/academic"
-import { FaFileDownload } from "react-icons/fa";
 import { useGeneralStore } from "../../store/general";
 import { useShowToast } from "../../store/utils/toast.js"
-import * as XLSX from "xlsx"
-import { SearchIcon, EditIcon, DeleteIcon } from "@chakra-ui/icons"
+import {
+    ResultsUploadModal,
+    ResultsEditModal,
+    ResultsPreviewTable,
+    ResultsDeleteDialog,
+    ResultsTemplateModal
+} from "../../component/schoolAdminDashboard/results"
+
 // CSV columns: Student ID, Student Name, Subject Code, Subject Name, Semester, Academic Year, Credit Hours, Grade, GPA, Marks, Total Marks, Status
 
 export default function ResultsBulkUpload() {
-    const { createResult, fetchStudents, students, fetchIntakeCourses, intakeCourses, results, fetchResults, modules, fetchModules, updateResult, deleteResult } = useAcademicStore();
+    const { fetchSemesters, semesters, createResult, fetchStudents, students, fetchIntakeCourses, intakeCourses, results, fetchResults, modules, fetchModules, updateResult, deleteResult } = useAcademicStore();
     const { exportTemplate } = useGeneralStore();
     const showToast = useShowToast();
 
@@ -76,8 +44,10 @@ export default function ResultsBulkUpload() {
         fetchResults();
         fetchModules();
         fetchStudents();
+        fetchSemesters();
     }, [])
 
+    // console.log("🚀 ~ ResultsBulkUpload ~ semesters:", semesters)
     // console.log("🚀 ~ ResultsBulkUpload ~ results:", results)
     // console.log("🚀 ~ ResultsBulkUpload ~ intakeCourses:", intakeCourses)
     // console.log("🚀 ~ ResultsBulkUpload ~ modules:", modules)
@@ -87,7 +57,6 @@ export default function ResultsBulkUpload() {
     const [isLoading, setIsLoading] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const { isOpen, onOpen, onClose } = useDisclosure()
-    const fileInputRef = useRef(null)
     const toast = useToast()
     const bgColor = useColorModeValue("white", "gray.800")
     const borderColor = useColorModeValue("gray.200", "gray.600")
@@ -109,120 +78,161 @@ export default function ResultsBulkUpload() {
     const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure()
     const [deleteResultId, setDeleteResultId] = useState(null)
     const [isDeleteLoading, setIsDeleteLoading] = useState(false)
-    const cancelRef = useRef()
+
+    // Template modal state
+    const { isOpen: isTemplateModalOpen, onOpen: onTemplateModalOpen, onClose: onTemplateModalClose } = useDisclosure()
 
     // Intake/course preview state
     const [selectedIntake, setSelectedIntake] = useState("");
     const [selectedCourse, setSelectedCourse] = useState("")
     const [selectedModule, setSelectedModule] = useState("");
+    const [selectedYear, setSelectedYear] = useState("");
+    const [selectedSemester, setSelectedSemester] = useState("");
     const [previewResults, setPreviewResults] = useState([])
 
     // Filter options
     const [moduleFilter, setModuleFilter] = useState("all");
     const [searchUserName, setSearchUserName] = useState("");
-    const filteredResults = results.filter((result) => {
-        const matchesModule = moduleFilter === "all" || (result.moduleId._id === moduleFilter);
-        const matchesUserName = searchUserName === "" ||
-            (result?.studentId?.userId?.name?.toLowerCase().includes(searchUserName.toLowerCase()));
-        return matchesModule && matchesUserName;
-    });
 
     useEffect(() => {
-        if (!selectedIntake || !selectedCourse) {
-            setPreviewResults([])
-            return
+        let filteredResults = results;
+
+        // Progressive filtering - show data as each filter is selected
+        if (selectedIntake) {
+            filteredResults = filteredResults.filter(r =>
+                r?.studentId?.intakeCourseId?.intakeId === selectedIntake
+            );
         }
-        setPreviewResults(results.filter(r => r.studentId.intakeCourseId.courseId === selectedCourse && r.studentId.intakeCourseId.intakeId === selectedIntake && (selectedModule ? r.moduleId._id == selectedModule : true)))
-    }, [selectedCourse, selectedIntake, selectedModule])
 
-    // CSV file handling
-    const handleFileUpload = (event) => {
-        const file = event.target.files[0];
-        if (!file) return; // ✅ Guard clause
+        if (selectedCourse) {
+            filteredResults = filteredResults.filter(r =>
+                r?.studentId?.intakeCourseId?.courseId === selectedCourse
+            );
+        }
 
-        setIsLoading(true);
+        if (selectedModule) {
+            filteredResults = filteredResults.filter(r =>
+                r?.moduleId?._id === selectedModule
+            );
+        }
 
-        const reader = new FileReader();
+        if (selectedYear) {
+            filteredResults = filteredResults.filter(r =>
+                r?.semesterId?.year?.toString() === selectedYear
+            );
+        }
 
-        reader.onload = (e) => {
-            try {
-                const data = e.target.result;
-                const workbook = XLSX.read(data, { type: "array" }); // ✅ Use 'array' for ArrayBuffer
-                const sheetName = workbook.SheetNames[0];
-                const sheet = workbook.Sheets[sheetName];
-                const parsedData = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        if (selectedSemester) {
+            filteredResults = filteredResults.filter(r =>
+                r?.semesterId?._id === selectedSemester
+            );
+        }
 
-                setCsvData(parsedData);
-                setIsSubmitting(true)
-                toast({
-                    title: "File Uploaded",
-                    description: `${parsedData.length} rows extracted`,
-                    status: "success",
-                    duration: 3000,
-                    isClosable: true,
-                });
-            } catch (error) {
-                console.error("Error reading file:", error);
-                toast({
-                    title: "Upload Error",
-                    description: "Invalid Excel format",
-                    status: "error",
-                    duration: 3000,
-                    isClosable: true,
-                });
-            } finally {
-                setIsLoading(false);
-                onClose();
-            }
-        };
+        // Apply search and module filters to preview results
+        if (searchUserName) {
+            filteredResults = filteredResults.filter(r =>
+                r?.studentId?.userId?.name?.toLowerCase().includes(searchUserName.toLowerCase())
+            );
+        }
 
-        reader.onerror = () => {
-            setIsLoading(false);
-            toast({
-                title: "Read Error",
-                description: "Failed to read file",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-        };
+        if (moduleFilter !== "all") {
+            filteredResults = filteredResults.filter(r =>
+                r?.moduleId?._id === moduleFilter
+            );
+        }
 
-        reader.readAsArrayBuffer(file); // ✅ Only call this AFTER checking file exists
-    };
+        setPreviewResults(filteredResults);
+    }, [selectedCourse, selectedIntake, selectedModule, selectedYear, selectedSemester, results, searchUserName, moduleFilter])
+
+
 
     // Placeholder for API call
     const handleSubmit = async () => {
         setIsLoading(true); // Add loading state
 
         try {
-            const promises = csvData.map(async (data, idx) => {
-                if (data.grade === "" || data.creditHours === "") {
-                    showToast.error(`Error in line ${idx + 1}`, "Please ensure the columns are filled", 'id-1');
-                    return { success: false, index: idx };
+            const results = [];
+            const errors = [];
+
+            // Process all rows and collect results/errors
+            for (let idx = 0; idx < csvData.length; idx++) {
+                let data = csvData[idx];
+
+                if (data.marks === "" || data.marks === 0) {
+                    errors.push({
+                        line: idx + 1,
+                        studentName: data.name,
+                        error: "Please ensure marks are filled",
+                        data: data
+                    });
+                    continue;
+                }
+
+
+                data = {
+                    ...data,
+                    intakeCourseId: data.intakeCourseId._id,
+                    moduleId: data.moduleId._id,
+                    semesterId: data.semesterId._id,
                 }
 
                 const res = await createResult(data);
 
                 if (!res.success) {
-                    showToast.error(`Error in line ${idx + 1}`, res.message);
-                    return { success: false, index: idx };
+                    errors.push({
+                        line: idx + 1,
+                        studentName: data.name,
+                        error: res.message,
+                        data: data
+                    });
+                } else {
+                    results.push({
+                        line: idx + 1,
+                        studentName: data.name,
+                        success: true
+                    });
                 }
+            }
 
-                showToast.success("Bulk data added successfully", `Result ${idx + 1} : ${res.message}`, "id-3");
-                return { success: true, index: idx };
-            });
+            // Show summary of results
+            if (results.length > 0) {
+                showToast.success(
+                    "Results Processed",
+                    `${results.length} results added successfully`
+                );
+            }
 
-            await Promise.all(promises);
+            // Show errors if any
+            if (errors.length > 0) {
+                showToast.error(
+                    "Errors Found",
+                    `${errors.length} rows have errors. Check the table below for details.`
+                );
 
-            // Refresh the results data after successful insertion
+                // Mark error rows in the data
+                const updatedCsvData = csvData.map((row, idx) => {
+                    const error = errors.find(e => e.line === idx + 1);
+                    return {
+                        ...row,
+                        hasError: !!error,
+                        errorMessage: error?.error || null
+                    };
+                });
+
+                setCsvData(updatedCsvData);
+                setIsSubmitting(false); // Keep form open for editing
+                return; // Don't clear form or refresh data
+            }
+
+            // If no errors, proceed with success flow
             await fetchResults();
-
-            // Clear the form
             setIsSubmitting(false);
             setCsvData([]);
             setSelectedModule("");
             setSelectedCourse("");
             setSelectedIntake("");
+            setSelectedYear("");
+            setSelectedSemester("");
 
         } catch (error) {
             console.error("Error submitting results:", error);
@@ -232,19 +242,19 @@ export default function ResultsBulkUpload() {
         }
     }
     const selectedIntakeCourse = useMemo(() =>
-        intakeCourses.find(ic => ic.intakeId._id === selectedIntake && ic.courseId._id === selectedCourse),
+        intakeCourses.find(ic => ic?.intakeId?._id === selectedIntake && ic?.courseId?._id === selectedCourse),
         [intakeCourses, selectedIntake, selectedCourse]
     );
 
     const selectedModule2 = useMemo(() =>
-        modules.find(m => m._id === selectedModule),
+        modules.find(m => m?._id === selectedModule),
         [modules, selectedModule]
     );
     // download template with calling api from backend
     const handleDownloadTemplate = async () => {
 
-        if (!selectedCourse || !selectedIntake) {
-            showToast.error("Please select intake and course to generate template", "", "meow");
+        if (!selectedCourse || !selectedIntake || !selectedModule || !selectedYear || !selectedSemester) {
+            showToast.error("Please select intake, course, module, year, and semester to generate template", "", "meow");
             return;
         }
 
@@ -258,25 +268,44 @@ export default function ResultsBulkUpload() {
             { header: "courseName", key: "courseName", width: 25 },
             { header: "moduleId", key: "moduleId", width: 10 },
             { header: "moduleName", key: "moduleName", width: 25 },
+            { header: "year", key: "year", width: 10 },
+            { header: "semesterId", key: "semesterId", width: 10 },
+            { header: "semesterName", key: "semesterName", width: 25 },
             { header: "studentId", key: "studentId", width: 10 },
             { header: "name", key: "name", width: 25 },
-            { header: "grade", key: "grade", width: 25 },
-            { header: "creditHours", key: "creditHours", width: 25 },
+            { header: "marks", key: "marks", width: 15 },
             { header: "remark", key: "remark", width: 25 },
         ]
 
+        const selectedSemesterData = semesters.find(s => s._id === selectedSemester);
+        const selectedIntakeCourseData = selectedIntakeCourse || {
+            _id: "N/A",
+            intakeId: { intakeName: selectedIntake || "N/A" },
+            courseId: { courseName: selectedCourse || "N/A", courseCode: "N/A" }
+        };
+
         const formattedStudents = students.map((student) => ({
-            intakeCourseId: selectedIntakeCourse._id,
-            intakeName: selectedIntakeCourse.intakeId.intakeName,
-            courseName: selectedIntakeCourse.courseId.courseName,
-            moduleId: selectedModule2._id,
-            moduleName: selectedModule2.moduleName,
-            studentId: student._id,
-            name: student.userId.name
+            intakeCourseId: selectedIntakeCourseData?._id || "N/A",
+            intakeName: selectedIntakeCourseData?.intakeId?.intakeName || "N/A",
+            courseName: selectedIntakeCourseData?.courseId?.courseName || "N/A",
+            moduleId: selectedModule2?._id || "N/A",
+            moduleName: selectedModule2?.moduleName || "N/A",
+            year: selectedYear || "N/A",
+            semesterId: selectedSemester || "N/A",
+            semesterName: selectedSemesterData?.semesterName || "N/A",
+            studentId: student?._id || "N/A",
+            name: student?.userId?.name || "N/A",
+            marks: "", // Empty for user to fill
+            remark: "" // Empty for user to fill
         }));
 
 
-        await exportTemplate(columns, formattedStudents, `${selectedModule2.code}-${selectedIntakeCourse.intakeId.intakeName}-${selectedIntakeCourse.courseId.courseCode}`)
+        const filename = `${selectedModule2?.code || "Module"}-${selectedIntakeCourseData?.intakeId?.intakeName || "Intake"}-${selectedIntakeCourseData?.courseId?.courseCode || "Course"}-${selectedSemesterData?.semesterName || "Semester"}`;
+        await exportTemplate(columns, formattedStudents, filename)
+
+        // Close the modal after successful template generation
+        onTemplateModalClose();
+        showToast.success("Template Generated", "Excel template has been downloaded successfully");
     }
 
     const getGradeColor = (grade) => {
@@ -407,215 +436,7 @@ export default function ResultsBulkUpload() {
                         </Button>
                     </HStack>
                 </HStack>
-                {/* Intake Course Preview Section */}
-                <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-                    <CardBody>
-                        <HStack justify={"space-between"}>
-                            <VStack align={"start"} flex={1}>
-                                <Button
-                                    variant="link"
-                                    onClick={handleDownloadTemplate}
-                                    textDecor={"underline"}
-                                    isDisabled={!selectedCourse || !selectedIntake || !selectedModule}
-                                >
-                                    Download Template
-                                </Button>
-                                <HStack w={"full"} justify={"space-between"}>
-                                    <HStack justify={"start"} align={"end"} flex={1}>
-                                        <FormControl maxW="200px">
-                                            <FormLabel fontSize="sm"><Badge colorScheme="green">Intake</Badge></FormLabel>
-                                            <Select
-                                                placeholder="Select Intake"
-                                                value={(() => {
-                                                    if (!isSubmitting || !csvData.length) return selectedIntake;
-                                                    const intakeCourse = intakeCourses.find(IC => IC._id === csvData[0].intakeCourseId);
-                                                    return intakeCourse?.intakeId?._id || selectedIntake;
-                                                })()}
-                                                onChange={e => setSelectedIntake(e.target.value)}
-                                            >
-                                                {intakeCourses.map(intakeCourse => (
-                                                    <option key={intakeCourse._id} value={intakeCourse.intakeId._id}>
-                                                        {intakeCourse.intakeId.intakeName}
-                                                    </option>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
 
-                                        <FormControl maxW="300px">
-                                            <FormLabel fontSize="sm"><Badge colorScheme="blue">Course</Badge></FormLabel>
-                                            <Select
-                                                disabled={selectedIntake === "" || isSubmitting}
-                                                placeholder="Select Course"
-                                                value={(() => {
-                                                    if (!isSubmitting || !csvData.length) return selectedCourse;
-                                                    const intakeCourse = intakeCourses.find(IC => IC._id === csvData[0].intakeCourseId);
-                                                    return intakeCourse?.courseId?._id || selectedCourse;
-                                                })()}
-                                                onChange={e => setSelectedCourse(e.target.value)}
-                                            >
-                                                {intakeCourses.map(intakeCourse => {
-                                                    // When submitting, use CSV data's intake, otherwise use selectedIntake
-                                                    const targetIntakeId = isSubmitting && csvData.length > 0
-                                                        ? intakeCourses.find(IC => IC._id === csvData[0].intakeCourseId)?.intakeId?._id
-                                                        : selectedIntake;
-
-                                                    if (intakeCourse.intakeId._id === targetIntakeId) {
-                                                        return (
-                                                            <option key={intakeCourse._id} value={intakeCourse.courseId._id}>
-                                                                {intakeCourse.courseId.courseName}
-                                                            </option>
-                                                        );
-                                                    }
-                                                    return null;
-                                                })}
-                                            </Select>
-                                        </FormControl>
-
-                                        <FormControl maxW="300px">
-                                            <FormLabel fontSize="sm"><Badge colorScheme="">Module</Badge></FormLabel>
-                                            <Select
-                                                disabled={selectedCourse === "" || isSubmitting}
-                                                placeholder="Select Module"
-                                                value={isSubmitting && csvData.length > 0 ? csvData[0].moduleId : selectedModule}
-                                                onChange={e => setSelectedModule(e.target.value)}
-                                            >
-                                                {modules
-                                                    .filter(m => {
-                                                        // When submitting, use CSV data's course, otherwise use selectedCourse
-                                                        const targetCourseId = isSubmitting && csvData.length > 0
-                                                            ? intakeCourses.find(IC => IC._id === csvData[0].intakeCourseId)?.courseId?._id
-                                                            : selectedCourse;
-
-                                                        return m.courseId.some(c => c._id === targetCourseId);
-                                                    })
-                                                    .map(m => (
-                                                        <option key={m._id} value={m._id}>
-                                                            {m.moduleName}
-                                                        </option>
-                                                    ))}
-                                            </Select>
-                                        </FormControl>
-
-                                        {
-                                            (!selectedCourse || !selectedIntake || !selectedModule) ? ("") : (
-                                                <Text>Total Result: {filteredResults.length}</Text>
-                                            )
-                                        }
-                                    </HStack>
-
-                                    {
-                                        isSubmitting ? (<HStack>
-                                            <Button variant="ghost" disabled={!isSubmitting || csvData == ""} onClick={() => {
-                                                setIsSubmitting(false);
-                                                setCsvData("")
-                                            }}>
-                                                Cancel
-                                            </Button>
-                                            <Button
-                                                disabled={!isSubmitting}
-                                                onClick={handleSubmit}
-                                                colorScheme={"green"}
-                                            >
-                                                Add Bulk Result
-                                            </Button>
-                                        </HStack>) : (<HStack>
-                                            {selectedCourse && selectedIntake && (
-                                                <Button
-                                                    colorScheme="red"
-                                                    onClick={() => {
-                                                        setPreviewResults([]);
-                                                        setSelectedIntake("");
-                                                        setSelectedCourse("");
-                                                    }}
-                                                >
-                                                    Close
-                                                </Button>
-                                            )}
-                                        </HStack>)}
-                                </HStack>
-                                {
-                                    ((selectedCourse === "" || selectedIntake === "") && csvData == "") &&
-                                    <Text color="gray.500" fontSize="sm">Select an intake, course and module to display the result OR download template</Text>
-                                }
-                                {
-                                    ((csvData.length > 0 && csvData != "") && (
-                                        <TableContainer maxH="300px" overflowY="auto" shadow="lg" borderRadius="md" w={"full"}>
-                                            <Table size="sm" variant="striped" colorScheme="gray">
-                                                <Thead bg="teal.50" position="sticky" top={0} zIndex={1}>
-                                                    <Tr>
-                                                        <Th color="teal.700" fontWeight="bold">Student Name</Th>
-                                                        <Th color="teal.700" fontWeight="bold">Module Name</Th>
-                                                        <Th color="teal.700" fontWeight="bold">Grade</Th>
-                                                        <Th color="teal.700" fontWeight="bold">Credit Hour</Th>
-                                                        <Th color="teal.700" fontWeight="bold">Remark</Th>
-                                                    </Tr>
-                                                </Thead>
-                                                <Tbody>
-                                                    {csvData.map((record, index) => (
-                                                        <Tr key={index} _hover={{ bg: "teal.50" }}>
-                                                            <Td fontWeight="medium">{record.name}</Td>
-                                                            <Td>{record.moduleName}</Td>
-                                                            <Td>
-                                                                <Badge
-                                                                    colorScheme={getGradeColor(record.grade)}
-                                                                    variant="solid"
-                                                                    px={2}
-                                                                    py={1}
-                                                                    borderRadius="md"
-                                                                >
-                                                                    {record.grade}
-                                                                </Badge>
-                                                            </Td>
-                                                            <Td>{record.creditHours}</Td>
-                                                            <Td color="gray.600">{record.remark}</Td>
-                                                        </Tr>
-                                                    ))}
-                                                </Tbody>
-                                            </Table>
-                                        </TableContainer>
-                                    ))
-                                }
-                            </VStack>
-
-                        </HStack>
-                        {selectedIntake && selectedCourse && (
-                            <TableContainer maxH="300px" overflowY="auto" mt={5} shadow={"lg"}>
-                                <Table size="sm" variant="striped">
-                                    <Thead>
-                                        <Tr>
-                                            <Th>Student ID</Th>
-                                            <Th>Module ID</Th>
-                                            <Th>Grade</Th>
-                                            <Th>Credit Hour</Th>
-                                            <Th>Remark</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
-                                        {previewResults.length !== 0 && selectedCourse ? (
-                                            previewResults.map((r, rIdx) => (
-                                                <Tr key={`${rIdx}`}>
-                                                    <Td>{r?.studentId?.userId?.name || "N/A"}</Td>
-                                                    <Td>{r?.moduleId?.moduleName || "N/A"}</Td>
-                                                    <Td>{r?.grade || "N/A"}</Td>
-                                                    <Td>{r?.creditHours || "N/A"}</Td>
-                                                    <Td>{r?.remark || "N/A"}</Td>
-                                                </Tr>
-                                            ))
-                                        ) : (
-                                            <Tr>
-                                                <Td colSpan={5}>
-                                                    <Text color="gray.500" fontSize="sm">
-                                                        No results found for this course.
-                                                    </Text>
-                                                </Td>
-                                            </Tr>
-                                        )}
-                                    </Tbody>
-                                </Table>
-                            </TableContainer>
-                        )}
-                    </CardBody>
-                </Card>
                 {/* Preview Table */}
                 {csvData.length > 0 && (
                     <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
@@ -623,30 +444,100 @@ export default function ResultsBulkUpload() {
                             <Text textAlign={"center"} fontWeight="semibold" mb={2}>
                                 Preview Uploaded Results ({csvData.length} records)
                             </Text>
-                            <VStack align={"start"}>
-                                <Badge colorScheme="green" >{csvData[0].intakeName}</Badge>
-                                <Badge colorScheme="blue">{csvData[0].courseName}</Badge>
-                                <Badge>{csvData[0].moduleName}</Badge>
-                            </VStack>
+                            <HStack align={"start"}>
+                                <Badge colorScheme="green" >{csvData[0].intakeCourseId.intakeId.intakeName}</Badge>
+                                <Badge colorScheme="blue">{csvData[0].intakeCourseId.courseId.courseName}</Badge>
+                                <Badge>{csvData[0].moduleId.moduleName}</Badge>
+                            </HStack>
                             <TableContainer maxH="400px" overflowY="auto">
                                 <Table size="sm" variant="striped">
                                     <Thead>
                                         <Tr>
+                                            <Th>Line</Th>
                                             <Th>Student ID</Th>
                                             <Th>Student Name</Th>
-                                            <Th>Grade</Th>
-                                            <Th>Credit Hour</Th>
+                                            <Th>Marks</Th>
+                                            <Th>Grade (Auto)</Th>
+                                            <Th>GPA (Auto)</Th>
+                                            <Th>Credit Hour (Auto)</Th>
                                             <Th>Remark</Th>
+                                            <Th>Status</Th>
                                         </Tr>
                                     </Thead>
                                     <Tbody>
                                         {csvData.map((row, idx) => (
-                                            <Tr key={idx}>
+                                            <Tr
+                                                key={idx}
+                                                bg={row.hasError ? "red.50" : "inherit"}
+                                                borderLeft={row.hasError ? "4px solid red" : "none"}
+                                            >
+                                                <Td fontWeight="bold">{idx + 1}</Td>
                                                 <Td>{row.studentId}</Td>
                                                 <Td>{row.name}</Td>
-                                                <Td>{row.grade}</Td>
+                                                <Td>
+                                                    <Input
+                                                        size="sm"
+                                                        value={row.marks}
+                                                        onChange={(e) => {
+                                                            const newMarks = parseFloat(e.target.value) || 0;
+                                                            const { grade, gpa } = getGradeAndGPAFromMarks(newMarks);
+
+                                                            const updatedData = [...csvData];
+                                                            updatedData[idx] = {
+                                                                ...updatedData[idx],
+                                                                marks: newMarks,
+                                                                grade: grade,
+                                                                gpa: gpa,
+                                                                hasError: false,
+                                                                errorMessage: null
+                                                            };
+                                                            setCsvData(updatedData);
+                                                        }}
+                                                        borderColor={row.hasError ? "red.500" : "gray.300"}
+                                                        _focus={{ borderColor: row.hasError ? "red.500" : "blue.500" }}
+                                                    />
+                                                </Td>
+                                                <Td>
+                                                    <Badge colorScheme={getGradeColor(row.grade)}>
+                                                        {row.grade}
+                                                    </Badge>
+                                                </Td>
+                                                <Td>{row.gpa?.toFixed(2)}</Td>
                                                 <Td>{row.creditHours}</Td>
-                                                <Td>{row.remark}</Td>
+                                                <Td>
+                                                    <Input
+                                                        size="sm"
+                                                        value={row.remark || ""}
+                                                        onChange={(e) => {
+                                                            const updatedData = [...csvData];
+                                                            updatedData[idx] = {
+                                                                ...updatedData[idx],
+                                                                remark: e.target.value,
+                                                                hasError: false,
+                                                                errorMessage: null
+                                                            };
+                                                            setCsvData(updatedData);
+                                                        }}
+                                                        borderColor={row.hasError ? "red.500" : "gray.300"}
+                                                        _focus={{ borderColor: row.hasError ? "red.500" : "blue.500" }}
+                                                    />
+                                                </Td>
+                                                <Td>
+                                                    {row.hasError ? (
+                                                        <VStack spacing={1} align="start">
+                                                            <Badge colorScheme="red" size="sm">
+                                                                Error
+                                                            </Badge>
+                                                            <Text fontSize="xs" color="red.600" maxW="200px">
+                                                                {row.errorMessage}
+                                                            </Text>
+                                                        </VStack>
+                                                    ) : (
+                                                        <Badge colorScheme="green" size="sm">
+                                                            Ready
+                                                        </Badge>
+                                                    )}
+                                                </Td>
                                             </Tr>
                                         ))}
                                     </Tbody>
@@ -659,7 +550,7 @@ export default function ResultsBulkUpload() {
                                     isLoading={isSubmitting}
                                     onClick={handleSubmit}
                                 >
-                                    Submit Results
+                                    {csvData.some(row => row.hasError) ? "Retry Submit" : "Submit Results"}
                                 </Button>
                                 <Button
                                     isLoading={isSubmitting}
@@ -669,372 +560,112 @@ export default function ResultsBulkUpload() {
                         </CardBody>
                     </Card>
                 )}
-                {/* Modal for CSV upload instructions */}
-                <Modal isOpen={isOpen} onClose={onClose} isCentered>
-                    <ModalOverlay />
-                    <ModalContent>
-                        <ModalHeader>Import Student Results (CSV)</ModalHeader>
-                        <ModalCloseButton />
-                        <ModalBody>
-                            <VStack spacing={4} align="stretch">
-                                <Alert status="info" borderRadius="md">
-                                    <AlertIcon />
-                                    <Box>
-                                        <AlertTitle fontSize="sm">CSV Format Required:</AlertTitle>
-                                        <AlertDescription fontSize="sm">
-                                            Student ID, Student Name, Grade, Credit Hour, Remark
-                                        </AlertDescription>
-                                    </Box>
-                                </Alert>
-                                <FormControl>
-                                    <FormLabel>Select CSV File</FormLabel>
-                                    <Input
-                                        type="file"
-                                        accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                                        ref={fileInputRef}
-                                        onChange={handleFileUpload}
-                                        p={1}
-                                        border="2px dashed"
-                                        borderColor="gray.300"
-                                        _hover={{ borderColor: "blue.400" }}
-                                    />
-                                </FormControl>
-                                {isLoading && (
-                                    <Center py={4}>
-                                        <VStack>
-                                            <Spinner color="blue.500" />
-                                            <Text fontSize="sm" color="gray.600">
-                                                Processing CSV file...
-                                            </Text>
-                                        </VStack>
-                                    </Center>
-                                )}
-                            </VStack>
-                        </ModalBody>
-                        <ModalFooter>
-                            <Button variant="ghost" mr={3} onClick={onClose}>
-                                Cancel
-                            </Button>
-                            <Button colorScheme="blue" onClick={() => fileInputRef.current?.click()} isDisabled={isLoading}>
-                                Choose File
-                            </Button>
-                        </ModalFooter>
-                    </ModalContent>
-                </Modal>
+
+                {/* Preview Table with Selection */}
+                <ResultsPreviewTable
+                    selectedIntake={selectedIntake}
+                    setSelectedIntake={setSelectedIntake}
+                    selectedCourse={selectedCourse}
+                    setSelectedCourse={setSelectedCourse}
+                    selectedModule={selectedModule}
+                    setSelectedModule={setSelectedModule}
+                    selectedYear={selectedYear}
+                    setSelectedYear={setSelectedYear}
+                    selectedSemester={selectedSemester}
+                    setSelectedSemester={setSelectedSemester}
+                    intakeCourses={intakeCourses}
+                    modules={modules}
+                    semesters={semesters}
+                    previewResults={previewResults}
+                    isSubmitting={isSubmitting}
+                    csvData={csvData}
+                    handleDownloadTemplate={handleDownloadTemplate}
+                    handleSubmit={handleSubmit}
+                    setIsSubmitting={setIsSubmitting}
+                    setCsvData={setCsvData}
+                    setPreviewResults={setPreviewResults}
+                    getGradeColor={getGradeColor}
+                    searchUserName={searchUserName}
+                    setSearchUserName={setSearchUserName}
+                    moduleFilter={moduleFilter}
+                    setModuleFilter={setModuleFilter}
+                    handleEditClick={handleEditClick}
+                    handleDeleteClick={handleDeleteClick}
+                    isTemplateModalOpen={isTemplateModalOpen}
+                    onTemplateModalOpen={onTemplateModalOpen}
+                    onTemplateModalClose={onTemplateModalClose}
+                />
+
+
+                {/* CSV Upload Modal */}
+                <ResultsUploadModal
+                    isOpen={isOpen}
+                    onClose={onClose}
+                    onFileUpload={(parsedData) => {
+                        // Process the template format with marks
+                        const processedData = parsedData.map(row => {
+                            const marks = parseFloat(row.marks) || 0;
+                            const { grade, gpa } = getGradeAndGPAFromMarks(marks);
+
+                            return {
+                                studentId: row.studentId,
+                                name: row.name,
+                                marks: marks,
+                                grade: grade,
+                                gpa: gpa,
+                                creditHours: selectedModule2?.creditHours || 3, // Default credit hours
+                                remark: row.remark || "",
+                                // Use the data from the template
+                                moduleId: modules.find(m => m._id === row.moduleId),
+                                semesterId: semesters.find(s => s._id === row.semesterId),
+                                intakeCourseId: intakeCourses.find(ic => ic._id === row.intakeCourseId)
+                            };
+                        });
+                        console.log("🚀 ~ processedData:", processedData)
+                        setCsvData(processedData);
+                        setIsSubmitting(false);
+                    }}
+                    isLoading={isLoading}
+                />
 
                 {/* Edit Result Modal */}
-                <Modal isOpen={isEditOpen} onClose={onEditClose} size="lg">
-                    <ModalOverlay />
-                    <ModalContent>
-                        <ModalHeader>Edit Result</ModalHeader>
-                        <ModalCloseButton />
-                        <ModalBody>
-                            {selectedResult && (
-                                <VStack spacing={4} align="stretch">
-                                    <Box>
-                                        <Text fontWeight="semibold" color="gray.600">Student:</Text>
-                                        <Text>{selectedResult?.studentId?.userId?.name || "N/A"}</Text>
-                                    </Box>
-                                    <Box>
-                                        <Text fontWeight="semibold" color="gray.600">Module:</Text>
-                                        <Text>{selectedResult?.moduleId?.moduleName || "N/A"}</Text>
-                                    </Box>
-                                    <HStack spacing={4}>
-                                        <FormControl>
-                                            <FormLabel>Marks (Editable)</FormLabel>
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                max={editFormData.totalMarks || 100}
-                                                value={editFormData.marks}
-                                                onChange={(e) => handleMarksChange(e.target.value)}
-                                                placeholder="Enter marks"
-                                            />
-                                        </FormControl>
-                                        <FormControl>
-                                            <FormLabel>Total Marks</FormLabel>
-                                            <Input
-                                                type="number"
-                                                value={editFormData.totalMarks}
-                                                isReadOnly
-                                                bg="gray.50"
-                                                cursor="not-allowed"
-                                            />
-                                        </FormControl>
-                                    </HStack>
-                                    <HStack spacing={4}>
-                                        <FormControl>
-                                            <FormLabel>Grade (Auto-calculated)</FormLabel>
-                                            <Input
-                                                value={editFormData.grade}
-                                                isReadOnly
-                                                bg="gray.50"
-                                                cursor="not-allowed"
-                                                fontWeight="bold"
-                                                color={`${getGradeColor(editFormData.grade)}.600`}
-                                            />
-                                        </FormControl>
-                                        <FormControl>
-                                            <FormLabel>GPA (Auto-calculated)</FormLabel>
-                                            <Input
-                                                value={editFormData.gpa}
-                                                isReadOnly
-                                                bg="gray.50"
-                                                cursor="not-allowed"
-                                                fontWeight="bold"
-                                            />
-                                        </FormControl>
-                                    </HStack>
-                                    <FormControl>
-                                        <FormLabel>Credit Hours</FormLabel>
-                                        <Input
-                                            type="number"
-                                            value={editFormData.creditHours}
-                                            isReadOnly
-                                            bg="gray.50"
-                                            cursor="not-allowed"
-                                        />
-                                    </FormControl>
-                                    <FormControl>
-                                        <FormLabel>Remark</FormLabel>
-                                        <Textarea
-                                            value={editFormData.remark}
-                                            onChange={(e) => setEditFormData({ ...editFormData, remark: e.target.value })}
-                                            placeholder="Enter any remarks..."
-                                        />
-                                    </FormControl>
-                                </VStack>
-                            )}
-                        </ModalBody>
-                        <ModalFooter>
-                            <Button variant="ghost" mr={3} onClick={onEditClose}>
-                                Cancel
-                            </Button>
-                            <Button
-                                colorScheme="blue"
-                                onClick={handleEditSubmit}
-                                isLoading={isEditLoading}
-                                loadingText="Updating..."
-                            >
-                                Update Result
-                            </Button>
-                        </ModalFooter>
-                    </ModalContent>
-                </Modal>
+                <ResultsEditModal
+                    isOpen={isEditOpen}
+                    onClose={onEditClose}
+                    selectedResult={selectedResult}
+                    editFormData={editFormData}
+                    setEditFormData={setEditFormData}
+                    handleEditSubmit={handleEditSubmit}
+                    isEditLoading={isEditLoading}
+                    getGradeColor={getGradeColor}
+                    handleMarksChange={handleMarksChange}
+                />
 
                 {/* Delete Confirmation Dialog */}
-                <AlertDialog
+                <ResultsDeleteDialog
                     isOpen={isDeleteOpen}
-                    leastDestructiveRef={cancelRef}
                     onClose={onDeleteClose}
-                >
-                    <AlertDialogOverlay>
-                        <AlertDialogContent>
-                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                                Delete Result
-                            </AlertDialogHeader>
-                            <AlertDialogBody>
-                                Are you sure you want to delete this result? This action cannot be undone.
-                            </AlertDialogBody>
-                            <AlertDialogFooter>
-                                <Button ref={cancelRef} onClick={onDeleteClose}>
-                                    Cancel
-                                </Button>
-                                <Button
-                                    colorScheme="red"
-                                    onClick={handleDeleteConfirm}
-                                    ml={3}
-                                    isLoading={isDeleteLoading}
-                                    loadingText="Deleting..."
-                                >
-                                    Delete
-                                </Button>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialogOverlay>
-                </AlertDialog>
+                    handleDeleteConfirm={handleDeleteConfirm}
+                    isDeleteLoading={isDeleteLoading}
+                />
 
-                {/*Desktop View */}
-                <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" display={{ base: "none", lg: "block" }}>
-                    <CardBody>
-                        <HStack spacing={4} justify={"space-between"} align={"center"}>
-                            <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={2} whiteSpace="nowrap">View All Result</Text>
+                {/* Template Generation Modal */}
+                <ResultsTemplateModal
+                    isOpen={isTemplateModalOpen}
+                    onClose={onTemplateModalClose}
+                    onProceed={handleDownloadTemplate}
+                    selectedIntake={selectedIntake}
+                    selectedCourse={selectedCourse}
+                    selectedModule={selectedModule}
+                    selectedYear={selectedYear}
+                    selectedSemester={selectedSemester}
+                    intakeCourses={intakeCourses}
+                    modules={modules}
+                    semesters={semesters}
+                    previewResultsLength={previewResults.length}
+                />
 
-                            <InputGroup>
-                                <InputLeftElement>
-                                    <SearchIcon />
-                                </InputLeftElement>
-                                <Input
-                                    type="text"
-                                    placeholder="Search by student name"
-                                    value={searchUserName}
-                                    onChange={(e) => setSearchUserName(e.target.value)}
-                                />
-                            </InputGroup>
 
-                            <HStack>
-                                <Select
-                                    w={{ base: "full", sm: "200px" }}
-                                    value={moduleFilter}
-                                    onChange={(e) => setModuleFilter(e.target.value)}
-                                >
-                                    <option value="all">All Modules</option>
-                                    {modules && modules.map((module) => (
-                                        <option key={module._id} value={module._id}>
-                                            {module.moduleName} ({module.code})
-                                        </option>
-                                    ))}
-                                </Select>
-                            </HStack>
-                        </HStack>
-                    </CardBody>
-                    <Divider />
-                    <CardFooter>
-                        <TableContainer maxH="300px" overflowY="auto" w={"full"}>
-                            <Table size="sm" variant="striped">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Student</Th>
-                                        <Th><Badge >Module</Badge></Th>
-                                        <Th>Marks</Th>
-                                        <Th>Grade</Th>
-                                        <Th>GPA</Th>
-                                        <Th>Credit Hour</Th>
-                                        <Th>Remark</Th>
-                                        <Th>Updated At</Th>
-                                        <Th>Actions</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
-                                    {filteredResults && filteredResults.length > 0 ? (
-                                        filteredResults.map((r, rIdx) => (
-                                            <Tr key={`${rIdx}`}>
-                                                <Td>{r?.studentId?.userId?.name || "N/A"}</Td>
-                                                <Td>{r?.moduleId?.moduleName || "N/A"}</Td>
-                                                <Td>{r?.marks || r?.totalMarks ? `${r?.marks || 0}/${r?.totalMarks || 100}` : "N/A"}</Td>
-                                                <Td>
-                                                    <Badge colorScheme={getGradeColor(r?.grade)}>
-                                                        {r?.grade || "N/A"}
-                                                    </Badge>
-                                                </Td>
-                                                <Td>{r?.gpa ? r?.gpa.toFixed(2) : "N/A"}</Td>
-                                                <Td>{r?.creditHours || "N/A"}</Td>
-                                                <Td>{r?.remark || "N/A"}</Td>
-                                                <Td>{r?.updatedAt ? new Date(r.updatedAt).toLocaleDateString() : "N/A"}</Td>
-                                                <Td>
-                                                    <ButtonGroup size="sm" spacing={2}>
-                                                        <IconButton
-                                                            aria-label="Edit result"
-                                                            icon={<EditIcon />}
-                                                            size="sm"
-                                                            colorScheme="blue"
-                                                            onClick={() => handleEditClick(r)}
-                                                        />
-                                                        <IconButton
-                                                            aria-label="Delete result"
-                                                            icon={<DeleteIcon />}
-                                                            size="sm"
-                                                            colorScheme="red"
-                                                            onClick={() => handleDeleteClick(r._id)}
-                                                        />
-                                                    </ButtonGroup>
-                                                </Td>
-                                            </Tr>
-                                        ))
-                                    ) : (
-                                        <Tr>
-                                            <Td colSpan={9}>
-                                                <Text color="gray.500" fontSize="sm">
-                                                    No results found.
-                                                </Text>
-                                            </Td>
-                                        </Tr>
-                                    )}
-                                </Tbody>
-                            </Table>
-                        </TableContainer>
-                    </CardFooter>
-                </Card>
-
-                {/* Mobile Accordion View */}
-                <Box display={{ base: "block", lg: "none" }}>
-                    <Accordion allowMultiple>
-                        {filteredResults && filteredResults.length > 0 ? (
-                            filteredResults.map((result, index) => (
-                                <AccordionItem key={result?._id || index}>
-                                    <h2>
-                                        <AccordionButton>
-                                            <Box as="span" flex="1" textAlign="left">
-                                                <Text fontWeight="medium">
-                                                    {result?.studentId?.userId?.name || "N/A"}
-                                                </Text>
-                                                <Text fontSize="sm" color="gray.600">
-                                                    {result?.moduleId?.moduleName || "N/A"}
-                                                </Text>
-                                            </Box>
-                                            <AccordionIcon />
-                                        </AccordionButton>
-                                    </h2>
-                                    <AccordionPanel pb={4}>
-                                        <VStack spacing={3} align="stretch">
-                                            <Box>
-                                                <Text fontWeight="semibold">Marks:</Text>
-                                                <Text>{result?.marks || result?.totalMarks ? `${result?.marks || 0}/${result?.totalMarks || 100}` : "N/A"}</Text>
-                                            </Box>
-                                            <Box>
-                                                <Text fontWeight="semibold">Grade:</Text>
-                                                <Badge colorScheme={getGradeColor(result?.grade)}>
-                                                    {result?.grade || "N/A"}
-                                                </Badge>
-                                            </Box>
-                                            <Box>
-                                                <Text fontWeight="semibold">GPA:</Text>
-                                                <Text>{result?.gpa ? result?.gpa.toFixed(2) : "N/A"}</Text>
-                                            </Box>
-                                            <Box>
-                                                <Text fontWeight="semibold">Credit Hour:</Text>
-                                                <Text>{result?.creditHours || "N/A"}</Text>
-                                            </Box>
-                                            <Box>
-                                                <Text fontWeight="semibold">Remark:</Text>
-                                                <Text>{result?.remark || "N/A"}</Text>
-                                            </Box>
-                                            <Box>
-                                                <Text fontWeight="semibold">Updated At:</Text>
-                                                <Text>{result?.updatedAt ? new Date(result.updatedAt).toLocaleString() : "N/A"}</Text>
-                                            </Box>
-                                            <Box>
-                                                <Text fontWeight="semibold" mb={2}>Actions:</Text>
-                                                <ButtonGroup size="sm" spacing={2}>
-                                                    <Button
-                                                        leftIcon={<EditIcon />}
-                                                        size="sm"
-                                                        colorScheme="blue"
-                                                        onClick={() => handleEditClick(result)}
-                                                    >
-                                                        Edit
-                                                    </Button>
-                                                    <Button
-                                                        leftIcon={<DeleteIcon />}
-                                                        size="sm"
-                                                        colorScheme="red"
-                                                        onClick={() => handleDeleteClick(result._id)}
-                                                    >
-                                                        Delete
-                                                    </Button>
-                                                </ButtonGroup>
-                                            </Box>
-                                        </VStack>
-                                    </AccordionPanel>
-                                </AccordionItem>
-                            ))
-                        ) : (
-                            <Text color="gray.500" fontSize="sm" p={4}>
-                                No results found.
-                            </Text>
-                        )}
-                    </Accordion>
-                </Box>
 
 
             </VStack>

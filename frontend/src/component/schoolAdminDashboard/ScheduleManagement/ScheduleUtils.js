@@ -176,7 +176,7 @@ export const getCombinedAndFilteredData = (
 
     // Apply filters
     return allItems.filter(item => {
-        if (!selectedCourse || !selectedIntake) return false
+        if (!selectedCourse || !selectedIntake || !selectedSemester ) return false
 
         if (
             (selectedCourse &&

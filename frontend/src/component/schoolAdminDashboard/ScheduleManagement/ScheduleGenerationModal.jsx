@@ -30,16 +30,13 @@ export default function ScheduleGenerationModal({
                         This will generate an <strong>Excel template file</strong> for class schedules.
                     </Text>
                     <Text mb={2}>
-                        Each module will have <strong>2 classes per week</strong> for 12 weeks.
-                    </Text>
-                    <Text mb={2}>
                         <strong>Lecturers and rooms are assigned randomly</strong> for now.
                     </Text>
                     <Text mb={2}>
                         <strong>Note:</strong> If you check "Include Exam Schedule", both class and exam schedules will be combined in a single Excel file with a "type" column to differentiate them.
                     </Text>
                     <Text mb={2}>
-                        <strong>Import:</strong> You will need to import the generated Excel file to add schedules to the database.
+                        <strong>Import:</strong> Once you have checked the schedule, import the generated Excel file to add schedules to the database.
                     </Text>
                     <Text>
                         Do you wish to proceed?

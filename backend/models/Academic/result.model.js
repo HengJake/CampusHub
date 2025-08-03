@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const resultSchema = new mongoose.Schema({
     studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
     moduleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Module', required: true },
+    semesterId: { type: mongoose.Schema.Types.ObjectId, ref: 'Semester', required: true },
     grade: { type: String, enum: ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'], required: true },
     creditHours: { type: Number, required: true },
     marks: { type: Number, min: 0, max: 100 },
