@@ -1,6 +1,7 @@
 import Result from "../../models/Academic/result.model.js";
 import Student from "../../models/Academic/student.model.js";
 import Module from "../../models/Academic/module.model.js";
+import Semester from "../../models/Academic/semester.model.js";
 import {
     createRecord,
     getAllRecords,
@@ -13,7 +14,7 @@ import {
 } from "../../utils/reusable.js";
 
 const validateResultData = async (data) => {
-    const { studentId, moduleId, grade, creditHours, remark } = data;
+    const { studentId, moduleId, semesterId, grade, creditHours, remark } = data;
     // Check required fields
     if (!studentId) {
         return {
@@ -25,6 +26,12 @@ const validateResultData = async (data) => {
         return {
             isValid: false,
             message: "moduleId is required"
+        };
+    }
+    if (!semesterId) {
+        return {
+            isValid: false,
+            message: "semesterId is required"
         };
     }
     if (!grade) {
@@ -60,7 +67,8 @@ const validateResultData = async (data) => {
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
         studentId: { id: studentId, Model: Student },
-        moduleId: { id: moduleId, Model: Module }
+        moduleId: { id: moduleId, Model: Module },
+        semesterId: { id: semesterId, Model: Semester }
     });
 
     if (referenceValidation) {
@@ -83,12 +91,12 @@ export const createResult = controllerWrapper(async (req, res) => {
 });
 
 export const getAllResults = controllerWrapper(async (req, res) => {
-    return await getAllRecords(Result, "results", ["studentId", "moduleId"]);
+    return await getAllRecords(Result, "results", ["studentId", "moduleId", "semesterId"]);
 });
 
 export const getResultById = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    return await getRecordById(Result, id, "result", ["studentId", "moduleId"]);
+    return await getRecordById(Result, id, "result", ["studentId", "moduleId", "semesterId"]);
 });
 
 export const updateResult = controllerWrapper(async (req, res) => {
@@ -106,7 +114,7 @@ export const getResultsByStudentId = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Result,
         "results",
-        ["studentId", "moduleId"],
+        ["studentId", "moduleId", "semesterId"],
         { studentId }
     );
 });
@@ -116,8 +124,18 @@ export const getResultsByModuleId = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Result,
         "results",
-        ["studentId", "moduleId"],
+        ["studentId", "moduleId", "semesterId"],
         { moduleId }
+    );
+});
+
+export const getResultsBySemesterId = controllerWrapper(async (req, res) => {
+    const { semesterId } = req.params;
+    return await getAllRecords(
+        Result,
+        "results",
+        ["studentId", "moduleId", "semesterId"],
+        { semesterId }
     );
 });
 
@@ -137,7 +155,7 @@ export const getResultsByGrade = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Result,
         "results",
-        ["studentId", "moduleId"],
+        ["studentId", "moduleId", "semesterId"],
         { grade }
     );
 });
@@ -146,7 +164,7 @@ export const getStudentGPA = controllerWrapper(async (req, res) => {
     const { studentId } = req.params;
 
     try {
-        const results = await Result.find({ studentId }).populate('moduleId');
+        const results = await Result.find({ studentId }).populate(['moduleId', 'semesterId']);
 
         if (results.length === 0) {
             return {
@@ -201,7 +219,7 @@ export const getModuleStatistics = controllerWrapper(async (req, res) => {
     const { moduleId } = req.params;
 
     try {
-        const results = await Result.find({ moduleId }).populate('studentId');
+        const results = await Result.find({ moduleId }).populate(['studentId', 'semesterId']);
 
         if (results.length === 0) {
             return {
@@ -248,6 +266,57 @@ export const getModuleStatistics = controllerWrapper(async (req, res) => {
     }
 });
 
+export const getSemesterStatistics = controllerWrapper(async (req, res) => {
+    const { semesterId } = req.params;
+
+    try {
+        const results = await Result.find({ semesterId }).populate(['studentId', 'moduleId']);
+
+        if (results.length === 0) {
+            return {
+                success: false,
+                message: "No results found for this semester",
+                statusCode: 404
+            };
+        }
+
+        // Calculate statistics
+        const gradeCounts = { A: 0, B: 0, C: 0, D: 0, F: 0 };
+        let totalStudents = results.length;
+        let passCount = 0; // A, B, C, D are passing grades
+
+        results.forEach(result => {
+            gradeCounts[result.grade]++;
+            if (['A', 'B', 'C', 'D'].includes(result.grade)) {
+                passCount++;
+            }
+        });
+
+        const passRate = ((passCount / totalStudents) * 100).toFixed(2);
+
+        return {
+            success: true,
+            data: {
+                semesterId,
+                totalStudents,
+                passCount,
+                failCount: totalStudents - passCount,
+                passRate: parseFloat(passRate),
+                gradeDistribution: gradeCounts,
+                results
+            },
+            message: "Semester statistics calculated successfully",
+            statusCode: 200
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message: "Error calculating semester statistics",
+            statusCode: 500
+        };
+    }
+});
+
 // Delete All Results
 export const deleteAllResults = controllerWrapper(async (req, res) => {
     return await deleteAllRecords(Result, "results");
@@ -263,6 +332,12 @@ export const getResultsBySchool = controllerWrapper(async (req, res) => {
                 path: "studentId",
                 populate: {
                     path: ["intakeCourseId", "userId"]
+                }
+            },
+            {
+                path: "semesterId",
+                populate: {
+                    path: ["courseId"]
                 }
             }
             , "moduleId", "schoolId"],

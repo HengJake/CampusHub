@@ -60,6 +60,7 @@ export const useScheduleManagement = () => {
         fetchSemesters()
     }, [])
 
+
     // Fetch semesters when intake and course are selected
     useEffect(() => {
         const fetchSemestersForIntakeCourse = async () => {

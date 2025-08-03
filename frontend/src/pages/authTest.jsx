@@ -38,7 +38,7 @@ const AuthTest = () => {
     const USERS = {
         companyAdmin: {
             email: 'company@gmail.com',
-            password: 'password123',
+            password: 'Password123',
             name: 'Company Administrator',
             role: 'companyAdmin'
         },

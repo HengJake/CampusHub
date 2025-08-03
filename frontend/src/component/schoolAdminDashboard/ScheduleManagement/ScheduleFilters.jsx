@@ -172,7 +172,7 @@ export default function ScheduleFilters({
                             >
                                 {availableSemesters?.filter(semester => semester.year?.toString() === selectedYear).map(semester => (
                                     <option key={semester._id} value={semester._id}>
-                                        {semester.semesterName}
+                                        {semester.semesterNumber}
                                     </option>
                                 ))}
                             </Select>
@@ -214,11 +214,22 @@ export default function ScheduleFilters({
                     </VStack>
                 </HStack>
 
-                {(!selectedCourse || !selectedIntake || !selectedYear || !selectedSemester) && (
-                    <Text color="gray.500" fontSize="sm" mt={2}>
-                        Select an intake, course, year, and semester to download/ generate class schedule template
-                    </Text>
-                )}
+                <HStack justify="space-between">
+                    {(!selectedCourse || !selectedIntake || !selectedYear || !selectedSemester) && (
+                        <Text color="gray.500" fontSize="sm" mt={2}>
+                            Select an intake, course, year, and semester to view/ generate class schedule
+                        </Text>
+                    )}
+                    <Button variant="link" colorScheme="red" textDecoration="underline" onClick={() => {
+                        setSelectedIntake("")
+                        setSelectedCourse("")
+                        setSelectedModule("")
+                        setSelectedSemester("")
+                        setSelectedYear("")
+                    }}>
+                        Clear
+                    </Button>
+                </HStack>
             </CardBody>
         </Card>
     )
