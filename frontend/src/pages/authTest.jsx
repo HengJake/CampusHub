@@ -63,9 +63,21 @@ const AuthTest = () => {
         student: {
             email: 'student0@student.apu.edu.my',
             password: 'password123',
-            name: 'Student User',
+            name: 'APU Student User',
             role: 'student'
-        }
+        },
+        student3: {
+            email: 'student10@student.apu.edu.my',
+            password: 'password123',
+            name: 'APU Student User',
+            role: 'student'
+        },
+        student2: {
+            email: 'student0@student.bpu.edu.my',
+            password: 'password123',
+            name: 'BPU Student User',
+            role: 'student'
+        },
     };
 
     const showStatus = (message, type = 'info') => {

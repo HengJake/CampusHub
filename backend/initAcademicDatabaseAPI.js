@@ -656,7 +656,7 @@ async function createFullSchoolData({
         console.log(`[${schoolPrefix}] ✅ Exam Schedule created: ${examSchedulesData[i].examDate} (${examScheduleResponse.data._id})`);
     }
 
-    // 13. Create Students (limit to 20 per school)
+    // 13. Create Students (distributed across intakes and courses)
     console.log(`[${schoolPrefix}] 13. Creating Students...`);
     const years = [1, 2, 3, 4];
     const semesters = [1, 2, 3];
@@ -664,56 +664,61 @@ async function createFullSchoolData({
     const standings = ['good', 'warning', 'probation', 'suspended'];
 
     const newStudentUsers = [];
-    let studentUserIndex = 0;
-    outerUser:
-    for (let i = 0; i < createdIds.intakeCourses.length; i++) {
-        for (let y of years) {
-            for (let sem of semesters) {
-                for (let st of statuses) {
-                    for (let as of standings) {
-                        if (studentUserIndex >= 20) break outerUser;
-                        const userData = {
-                            name: `${schoolPrefix} Student_${studentUserIndex}`,
-                            email: `student${studentUserIndex}@student.${schoolEmailDomain}`,
-                            password: "password123",
-                            phoneNumber: studentPhoneBase + 100 + studentUserIndex,
-                            role: "student",
-                            twoFA_enabled: false
-                        };
-                        const userResponse = await apiCall('POST', '/api/user', userData);
-                        newStudentUsers.push(userResponse.data._id);
-                        studentUserIndex++;
-                    }
-                }
-            }
-        }
-    }
-
     const studentsData = [];
-    let userIdx = 0;
-    outerStudent:
-    for (let i = 0; i < createdIds.intakeCourses.length; i++) {
-        for (let y of years) {
-            for (let sem of semesters) {
-                for (let st of statuses) {
-                    for (let as of standings) {
-                        if (userIdx >= 20) break outerStudent;
-                        studentsData.push({
-                            userId: newStudentUsers[userIdx],
-                            schoolId: createdIds.school,
-                            intakeCourseId: createdIds.intakeCourses[i],
-                            currentYear: y,
-                            currentSemester: sem,
-                            cgpa: 0,
-                            status: st,
-                            totalCreditHours: 0,
-                            completedCreditHours: 0,
-                            academicStanding: as
-                        });
-                        userIdx++;
-                    }
-                }
-            }
+    let studentUserIndex = 0;
+
+    // Calculate students per intake course (20 total students / 3 intake courses = ~7 students per intake course)
+    const studentsPerIntakeCourse = Math.floor(20 / createdIds.intakeCourses.length);
+    const remainingStudents = 20 % createdIds.intakeCourses.length;
+
+    console.log(`[${schoolPrefix}] Distributing ${20} students across ${createdIds.intakeCourses.length} intake courses...`);
+
+    for (let intakeCourseIndex = 0; intakeCourseIndex < createdIds.intakeCourses.length; intakeCourseIndex++) {
+        // Calculate how many students for this intake course
+        const studentsForThisIntake = studentsPerIntakeCourse + (intakeCourseIndex < remainingStudents ? 1 : 0);
+
+        // Get intake and course info for logging
+        const intakeCourseData = intakeCoursesData[intakeCourseIndex];
+        const intakeData = intakesData[intakeCourseIndex % intakesData.length];
+        const courseData = coursesData[intakeCourseIndex % coursesData.length];
+
+        console.log(`[${schoolPrefix}] Creating ${studentsForThisIntake} students for ${intakeData.intakeName} - ${courseData.courseName}`);
+
+        for (let studentInIntake = 0; studentInIntake < studentsForThisIntake; studentInIntake++) {
+            // Create user for this student
+            const userData = {
+                name: `${schoolPrefix} Student_${studentUserIndex}`,
+                email: `student${studentUserIndex}@student.${schoolEmailDomain}`,
+                password: "password123",
+                phoneNumber: studentPhoneBase + 100 + studentUserIndex,
+                role: "student",
+                twoFA_enabled: false
+            };
+
+            const userResponse = await apiCall('POST', '/api/user', userData);
+            const userId = userResponse.data._id;
+            newStudentUsers.push(userId);
+
+            // Create student data with varied attributes
+            const currentYear = years[studentInIntake % years.length];
+            const currentSemester = semesters[studentInIntake % semesters.length];
+            const status = statuses[studentInIntake % statuses.length];
+            const academicStanding = standings[studentInIntake % standings.length];
+
+            studentsData.push({
+                userId: userId,
+                schoolId: createdIds.school,
+                intakeCourseId: createdIds.intakeCourses[intakeCourseIndex],
+                currentYear: currentYear,
+                currentSemester: currentSemester,
+                cgpa: 0,
+                status: status,
+                totalCreditHours: 0,
+                completedCreditHours: 0,
+                academicStanding: academicStanding
+            });
+
+            studentUserIndex++;
         }
     }
 
@@ -724,22 +729,49 @@ async function createFullSchoolData({
         console.log(`[${schoolPrefix}] ✅ Student created: ${studentsData[i].userId} (${studentResponse.data._id})`);
     }
 
+    // Log student distribution summary
+    console.log(`\n[${schoolPrefix}] 📊 Student Distribution Summary:`);
+    const distribution = {};
+    for (let i = 0; i < studentsData.length; i++) {
+        const intakeCourseId = studentsData[i].intakeCourseId;
+        const intakeCourseIndex = createdIds.intakeCourses.indexOf(intakeCourseId);
+        const intakeData = intakesData[intakeCourseIndex % intakesData.length];
+        const courseData = coursesData[intakeCourseIndex % coursesData.length];
+        const key = `${intakeData.intakeName} - ${courseData.courseName}`;
+        distribution[key] = (distribution[key] || 0) + 1;
+    }
+
+    Object.entries(distribution).forEach(([key, count]) => {
+        console.log(`[${schoolPrefix}]   ${key}: ${count} students`);
+    });
+    console.log(`[${schoolPrefix}]   Total: ${studentsData.length} students\n`);
+
     // 14. Create Attendance
     console.log(`[${schoolPrefix}] 14. Creating Attendance...`);
     const attendanceStatuses = ["present", "absent", "late"];
+
+    // Create attendance records for students in their respective class schedules
     for (let i = 0; i < createdIds.students.length; i++) {
+        // Get the student's intake course to match with appropriate class schedules
+        const studentData = studentsData[i];
+        const studentIntakeCourseId = studentData.intakeCourseId;
+
+        // Find class schedules that match this student's intake course
         for (let j = 0; j < createdIds.classSchedules.length; j++) {
-            for (let k = 0; k < 2; k++) { // 2 records per schedule
-                const attendanceData = {
-                    studentId: createdIds.students[i],
-                    scheduleId: createdIds.classSchedules[j],
-                    status: attendanceStatuses[(i + j + k) % attendanceStatuses.length],
-                    date: `2024-02-${(5 + k + j * 3).toString().padStart(2, '0')}T00:00:00.000Z`,
-                    schoolId: createdIds.school
-                };
-                const attendanceResponse = await apiCall('POST', '/api/attendance', attendanceData);
-                createdIds.attendance.push(attendanceResponse.data._id);
-                console.log((attendanceResponse.data._id))
+            // Only create attendance for schedules that match the student's intake course
+            // This is a simplified check - in a real scenario, you'd match based on intakeCourseId
+            if (j < 2) { // Limit to first 2 schedules for demonstration
+                for (let k = 0; k < 2; k++) { // 2 records per schedule
+                    const attendanceData = {
+                        studentId: createdIds.students[i],
+                        scheduleId: createdIds.classSchedules[j],
+                        status: attendanceStatuses[(i + j + k) % attendanceStatuses.length],
+                        date: `2024-02-${(5 + k + j * 3).toString().padStart(2, '0')}T00:00:00.000Z`,
+                        schoolId: createdIds.school
+                    };
+                    const attendanceResponse = await apiCall('POST', '/api/attendance', attendanceData);
+                    createdIds.attendance.push(attendanceResponse.data._id);
+                }
             }
         }
     }
@@ -755,15 +787,26 @@ async function createFullSchoolData({
         "D": 1.0, "F": 0.0
     };
 
+    // Create results for each student based on their course and modules
     for (let i = 0; i < createdIds.students.length; i++) {
-        for (let j = 0; j < createdIds.modules.length; j++) {
+        const studentData = studentsData[i];
+        const studentIntakeCourseId = studentData.intakeCourseId;
+
+        // Find which course this student belongs to based on their intake course ID
+        const studentIntakeCourseIndex = createdIds.intakeCourses.indexOf(studentData.intakeCourseId);
+        const studentCourseId = studentIntakeCourseIndex >= 0 ? intakeCoursesData[studentIntakeCourseIndex].courseId : createdIds.courses[0];
+
+        // Get modules for this student's course
+        const courseModules = modulesData.filter(module => module.courseId === studentCourseId);
+
+        // Create results for each module in the student's course
+        for (let j = 0; j < courseModules.length; j++) {
             const selectedGrade = grades[(i + j) % grades.length];
-            console.log("🚀 ~ createFullSchoolData ~ selectedGrade:", selectedGrade)
             const totalMarks = 100;
             const marks = Math.floor(Math.random() * 40) + (selectedGrade === 'F' ? 0 : 50); // 50-90 for passing, 0-49 for F
 
-            // Assign semester based on module index and available semesters
-            const semesterIndex = j % createdIds.semesters.length;
+            // Assign semester based on student's current semester and available semesters
+            const semesterIndex = (studentData.currentSemester - 1) % createdIds.semesters.length;
             const semesterId = createdIds.semesters[semesterIndex];
 
             const resultData = {

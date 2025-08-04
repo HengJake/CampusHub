@@ -157,22 +157,35 @@ export const useAcademicStore = create((set, get) => ({
     // Add a helper to wait for authentication
     waitForAuth: async () => {
         const authStore = useAuthStore.getState();
-        let attempts = 0;
-        const maxAttempts = 100; // 10 seconds with 100ms intervals
 
-        while (!authStore.isAuthenticated && attempts < maxAttempts) {
+        // TEMPORARILY DISABLED TIMEOUT - Remove this comment and uncomment below code when ready
+        // let attempts = 0;
+        // const maxAttempts = 2000; // 10 seconds with 1000ms intervals
+
+        // while (!authStore.isAuthenticated && attempts < maxAttempts) {
+        //     await new Promise((resolve) => setTimeout(resolve, 100));
+        //     attempts++;
+
+        //     // Re-check the auth store state on each attempt
+        //     const currentAuthStore = useAuthStore.getState();
+        //     if (currentAuthStore.isAuthenticated) {
+        //         break;
+        //     }
+        // }
+
+        // if (!authStore.isAuthenticated) {
+        //     throw new Error("Authentication timeout - please log in again");
+        // }
+
+        // Wait indefinitely for authentication (temporary)
+        while (!authStore.isAuthenticated) {
             await new Promise((resolve) => setTimeout(resolve, 100));
-            attempts++;
 
             // Re-check the auth store state on each attempt
             const currentAuthStore = useAuthStore.getState();
             if (currentAuthStore.isAuthenticated) {
                 break;
             }
-        }
-
-        if (!authStore.isAuthenticated) {
-            throw new Error("Authentication timeout - please log in again");
         }
 
         if (authStore.getCurrentUser().role === "companyAdmin") {
@@ -1704,35 +1717,6 @@ export const useAcademicStore = create((set, get) => ({
             set((state) => ({
                 loading: { ...state.loading, attendance: false },
                 errors: { ...state.errors, attendance: error.message },
-            }));
-            return { success: false, message: error.message };
-        }
-    },
-
-    fetchClassSchedulesBySchoolId: async (schoolId) => {
-        set((state) => ({ loading: { ...state.loading, classSchedules: true } }));
-        try {
-            await get().waitForAuth();
-
-            const res = await fetch(`/api/classSchedule/school/${schoolId}`);
-            const data = await res.json();
-
-            if (!data.success)
-                throw new Error(
-                    data.message || "Failed to fetch class schedules by schoolId"
-                );
-
-            set((state) => ({
-                classSchedules: data.data,
-                loading: { ...state.loading, classSchedules: false },
-                errors: { ...state.errors, classSchedules: null },
-            }));
-
-            return { success: true, data: data.data };
-        } catch (error) {
-            set((state) => ({
-                loading: { ...state.loading, classSchedules: false },
-                errors: { ...state.errors, classSchedules: error.message },
             }));
             return { success: false, message: error.message };
         }

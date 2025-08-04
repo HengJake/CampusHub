@@ -42,7 +42,8 @@ export const transformExamToScheduleFormat = (examSchedules) => {
 
 // Helper function to transform class schedule data
 export const transformClassToScheduleFormat = (classSchedules) => {
-    return classSchedules.map(classItem => ({
+    return classSchedules.map(classItem => {
+    return ({
         id: classItem._id,
         type: 'class', // Add type field
         dayOfWeek: classItem.dayOfWeek,
@@ -59,7 +60,8 @@ export const transformClassToScheduleFormat = (classSchedules) => {
         code: classItem.moduleId?.code || 'Unknown Code',
         room: classItem.roomId,
         lecturer: classItem.lecturerId,
-    }))
+    });
+})
 }
 
 // Main function to combine schedules

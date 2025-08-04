@@ -19,7 +19,7 @@ import { GoMegaphone } from "react-icons/go";
 const navConfig = {
     student: [
         { label: "Dashboard", path: "/user-dashboard", icon: FiHome },
-        { label: "Class Finder", path: "/class-finder", icon: MdClass },
+        { label: "Class Finder☑️", path: "/class-finder", icon: MdClass },
         {
             label: "Facility",
             icon: MdMeetingRoom,
@@ -34,7 +34,7 @@ const navConfig = {
             label: "Academic",
             icon: FiBook,
             children: [
-                { label: "Schedule", path: "/academic/schedule", icon: MdEventNote },
+                { label: "Schedule☑️", path: "/academic/schedule", icon: MdEventNote },
                 { label: "Exams", path: "/academic/exams", icon: FiFileText },
                 { label: "Attendance", path: "/academic/attendance", icon: FiList }
             ]

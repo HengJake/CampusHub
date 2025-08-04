@@ -50,6 +50,9 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
+  Stack,
+  useBreakpointValue,
+  Spinner,
 } from "@chakra-ui/react"
 import {
   FiCalendar,
@@ -63,309 +66,10 @@ import {
   FiTrendingUp,
   FiSearch,
 } from "react-icons/fi"
-import { useState } from "react"
-import { FaChartBar } from "react-icons/fa";
-
-// Mock data for exams and results
-const mockExamData = {
-  studentProfile: {
-    id: "STU001",
-    name: "Alex Johnson",
-    studentId: "2024CS001",
-    program: "Computer Science",
-    year: 3,
-    semester: "Fall 2024",
-  },
-
-  examSchedule: [
-    {
-      id: "EX001",
-      courseCode: "CS301",
-      courseName: "Data Structures & Algorithms",
-      date: "2024-02-15",
-      time: "9:00 AM - 12:00 PM",
-      duration: "3 hours",
-      room: "Exam Hall A",
-      building: "Main Academic Block",
-      type: "Midterm",
-      status: "scheduled",
-      syllabus: "Chapters 1-8: Arrays, Linked Lists, Stacks, Queues, Trees, Graphs",
-      instructions: "Bring calculator and ID card. No mobile phones allowed.",
-      totalMarks: 100,
-      passingMarks: 40,
-      weightage: "30%",
-    },
-    {
-      id: "EX002",
-      courseCode: "CS302",
-      courseName: "Database Management Systems",
-      date: "2024-02-18",
-      time: "2:00 PM - 5:00 PM",
-      duration: "3 hours",
-      room: "Exam Hall B",
-      building: "Main Academic Block",
-      type: "Final",
-      status: "scheduled",
-      syllabus: "Complete syllabus: ER Model, Normalization, SQL, Transactions, Indexing",
-      instructions: "Open book exam - textbook allowed. Bring your own calculator.",
-      totalMarks: 100,
-      passingMarks: 40,
-      weightage: "60%",
-    },
-    {
-      id: "EX003",
-      courseCode: "CS303",
-      courseName: "Software Engineering",
-      date: "2024-02-20",
-      time: "10:00 AM - 1:00 PM",
-      duration: "3 hours",
-      room: "Exam Hall C",
-      building: "Main Academic Block",
-      type: "Final",
-      status: "scheduled",
-      syllabus: "All modules: SDLC, Requirements, Design, Testing, Project Management",
-      instructions: "Closed book exam. Case study questions included.",
-      totalMarks: 100,
-      passingMarks: 40,
-      weightage: "70%",
-    },
-    {
-      id: "EX004",
-      courseCode: "CS304",
-      courseName: "Computer Networks",
-      date: "2024-02-22",
-      time: "9:00 AM - 12:00 PM",
-      duration: "3 hours",
-      room: "Exam Hall A",
-      building: "Main Academic Block",
-      type: "Final",
-      status: "scheduled",
-      syllabus: "Chapters 1-12: OSI Model, TCP/IP, Routing, Network Security",
-      instructions: "Bring network calculator. Formula sheet provided.",
-      totalMarks: 100,
-      passingMarks: 40,
-      weightage: "60%",
-    },
-    {
-      id: "EX005",
-      courseCode: "MATH301",
-      courseName: "Linear Algebra",
-      date: "2024-02-25",
-      time: "2:00 PM - 5:00 PM",
-      duration: "3 hours",
-      room: "Exam Hall D",
-      building: "Mathematics Block",
-      type: "Final",
-      status: "completed",
-      syllabus: "Vector Spaces, Matrices, Eigenvalues, Linear Transformations",
-      instructions: "Scientific calculator allowed. Show all working.",
-      totalMarks: 100,
-      passingMarks: 40,
-      weightage: "80%",
-    },
-  ],
-
-  academicResults: [
-    {
-      id: "AR001",
-      semester: "Spring 2023",
-      courses: [
-        {
-          courseCode: "CS201",
-          courseName: "Programming Fundamentals",
-          grade: "A",
-          credits: 4,
-          gpa: 4.0,
-          marks: 92,
-          totalMarks: 100,
-          percentage: 92,
-          examResults: [
-            { type: "Midterm", marks: 45, total: 50, percentage: 90 },
-            { type: "Final", marks: 47, total: 50, percentage: 94 },
-          ],
-        },
-        {
-          courseCode: "MATH201",
-          courseName: "Calculus I",
-          grade: "B+",
-          credits: 3,
-          gpa: 3.3,
-          marks: 78,
-          totalMarks: 100,
-          percentage: 78,
-          examResults: [
-            { type: "Midterm", marks: 38, total: 50, percentage: 76 },
-            { type: "Final", marks: 40, total: 50, percentage: 80 },
-          ],
-        },
-        {
-          courseCode: "PHY201",
-          courseName: "Physics I",
-          grade: "A-",
-          credits: 3,
-          gpa: 3.7,
-          marks: 85,
-          totalMarks: 100,
-          percentage: 85,
-          examResults: [
-            { type: "Midterm", marks: 42, total: 50, percentage: 84 },
-            { type: "Final", marks: 43, total: 50, percentage: 86 },
-          ],
-        },
-        {
-          courseCode: "ENG201",
-          courseName: "Technical Writing",
-          grade: "B",
-          credits: 2,
-          gpa: 3.0,
-          marks: 75,
-          totalMarks: 100,
-          percentage: 75,
-          examResults: [
-            { type: "Midterm", marks: 36, total: 50, percentage: 72 },
-            { type: "Final", marks: 39, total: 50, percentage: 78 },
-          ],
-        },
-      ],
-      semesterGPA: 3.6,
-      totalCredits: 12,
-      rank: 15,
-      totalStudents: 120,
-    },
-    {
-      id: "AR002",
-      semester: "Fall 2023",
-      courses: [
-        {
-          courseCode: "CS202",
-          courseName: "Object Oriented Programming",
-          grade: "A",
-          credits: 4,
-          gpa: 4.0,
-          marks: 95,
-          totalMarks: 100,
-          percentage: 95,
-          examResults: [
-            { type: "Midterm", marks: 48, total: 50, percentage: 96 },
-            { type: "Final", marks: 47, total: 50, percentage: 94 },
-          ],
-        },
-        {
-          courseCode: "MATH202",
-          courseName: "Discrete Mathematics",
-          grade: "A-",
-          credits: 3,
-          gpa: 3.7,
-          marks: 82,
-          totalMarks: 100,
-          percentage: 82,
-          examResults: [
-            { type: "Midterm", marks: 40, total: 50, percentage: 80 },
-            { type: "Final", marks: 42, total: 50, percentage: 84 },
-          ],
-        },
-        {
-          courseCode: "CS203",
-          courseName: "Computer Organization",
-          grade: "B+",
-          credits: 3,
-          gpa: 3.3,
-          marks: 79,
-          totalMarks: 100,
-          percentage: 79,
-          examResults: [
-            { type: "Midterm", marks: 39, total: 50, percentage: 78 },
-            { type: "Final", marks: 40, total: 50, percentage: 80 },
-          ],
-        },
-        {
-          courseCode: "STAT201",
-          courseName: "Statistics",
-          grade: "B",
-          credits: 3,
-          gpa: 3.0,
-          marks: 73,
-          totalMarks: 100,
-          percentage: 73,
-          examResults: [
-            { type: "Midterm", marks: 35, total: 50, percentage: 70 },
-            { type: "Final", marks: 38, total: 50, percentage: 76 },
-          ],
-        },
-      ],
-      semesterGPA: 3.5,
-      totalCredits: 13,
-      rank: 18,
-      totalStudents: 125,
-    },
-    {
-      id: "AR003",
-      semester: "Spring 2024",
-      courses: [
-        {
-          courseCode: "CS301",
-          courseName: "Data Structures",
-          grade: "A",
-          credits: 4,
-          gpa: 4.0,
-          marks: 88,
-          totalMarks: 100,
-          percentage: 88,
-          examResults: [
-            { type: "Midterm", marks: 44, total: 50, percentage: 88 },
-            { type: "Final", marks: 44, total: 50, percentage: 88 },
-          ],
-        },
-        {
-          courseCode: "CS302",
-          courseName: "Algorithms",
-          grade: "A-",
-          credits: 3,
-          gpa: 3.7,
-          marks: 84,
-          totalMarks: 100,
-          percentage: 84,
-          examResults: [
-            { type: "Midterm", marks: 41, total: 50, percentage: 82 },
-            { type: "Final", marks: 43, total: 50, percentage: 86 },
-          ],
-        },
-        {
-          courseCode: "CS303",
-          courseName: "Operating Systems",
-          grade: "B+",
-          credits: 3,
-          gpa: 3.3,
-          marks: 77,
-          totalMarks: 100,
-          percentage: 77,
-          examResults: [
-            { type: "Midterm", marks: 37, total: 50, percentage: 74 },
-            { type: "Final", marks: 40, total: 50, percentage: 80 },
-          ],
-        },
-        {
-          courseCode: "MATH301",
-          courseName: "Linear Algebra",
-          grade: "A",
-          credits: 3,
-          gpa: 4.0,
-          marks: 91,
-          totalMarks: 100,
-          percentage: 91,
-          examResults: [
-            { type: "Midterm", marks: 45, total: 50, percentage: 90 },
-            { type: "Final", marks: 46, total: 50, percentage: 92 },
-          ],
-        },
-      ],
-      semesterGPA: 3.75,
-      totalCredits: 13,
-      rank: 12,
-      totalStudents: 130,
-    },
-  ],
-}
+import { useState, useEffect } from "react"
+import { FaChartBar } from "react-icons/fa"
+import { useAcademicStore } from "../../store/academic"
+import { useAuthStore } from "../../store/auth"
 
 export default function Exams() {
   const [selectedExam, setSelectedExam] = useState(null)
@@ -379,22 +83,90 @@ export default function Exams() {
   const borderColor = useColorModeValue("gray.200", "gray.600")
   const toast = useToast()
 
+  // Academic store
+  const {
+    examSchedules,
+    results,
+    semesters,
+    modules,
+    courses,
+    loading,
+    fetchExamSchedules,
+    fetchResults,
+    fetchSemesters,
+    fetchModules,
+    fetchCourses,
+  } = useAcademicStore()
+
+  // Auth store
+  const { getCurrentUser } = useAuthStore()
+  const currentUser = getCurrentUser()
+
+  // Get current user/student ID
+  const currentUserId = currentUser.user?._id
+  const currentStudentId = currentUser.studentId
+  const currentSchoolId = currentUser.schoolId
+
+  // Responsive breakpoint values
+  const headerDirection = useBreakpointValue({ base: "column", md: "row" })
+  const statsGridCols = useBreakpointValue({ base: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" })
+  const examGridCols = useBreakpointValue({ base: "1fr", lg: "repeat(2, 1fr)" })
+  const analyticsGridCols = useBreakpointValue({ base: "1fr", lg: "repeat(2, 1fr)" })
+  const controlsDirection = useBreakpointValue({ base: "column", md: "row" })
+  const modalSize = useBreakpointValue({ base: "full", md: "lg" })
+
+  // Fetch data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await Promise.all([
+          fetchExamSchedules(),
+          fetchResults(),
+          fetchSemesters(),
+          fetchModules(),
+          fetchCourses(),
+        ])
+      } catch (error) {
+        console.error("Error fetching data:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load exam data",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+    }
+
+    fetchData()
+  }, [fetchExamSchedules, fetchResults, fetchSemesters, fetchModules, fetchCourses, toast])
+
   // Calculate overall statistics
   const calculateOverallGPA = () => {
+    if (!results || results.length === 0) return "0.00"
+
+    // Filter for current student only
+    const currentStudentResults = results.filter((result) =>
+      result.studentId?._id === currentStudentId
+    )
+
+    if (currentStudentResults.length === 0) return "0.00"
+
     let totalPoints = 0
     let totalCredits = 0
 
-    mockExamData.academicResults.forEach((semester) => {
-      semester.courses.forEach((course) => {
-        totalPoints += course.gpa * course.credits
-        totalCredits += course.credits
-      })
+    currentStudentResults.forEach((result) => {
+      if (result.gpa && result.creditHours) {
+        totalPoints += result.gpa * result.creditHours
+        totalCredits += result.creditHours
+      }
     })
 
     return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : "0.00"
   }
 
   const getGradeColor = (grade) => {
+    if (!grade) return "gray"
     if (grade.startsWith("A")) return "green"
     if (grade.startsWith("B")) return "blue"
     if (grade.startsWith("C")) return "yellow"
@@ -403,11 +175,25 @@ export default function Exams() {
   }
 
   const getPerformanceTrend = () => {
-    const gpas = mockExamData.academicResults.map((sem) => sem.semesterGPA)
-    if (gpas.length < 2) return { trend: "stable", change: 0 }
+    if (!results || results.length < 2) return { trend: "stable", change: 0 }
 
-    const latest = gpas[gpas.length - 1]
-    const previous = gpas[gpas.length - 2]
+    // Filter for current student only
+    const currentStudentResults = results.filter((result) =>
+      result.studentId?._id === currentStudentId
+    )
+
+    if (currentStudentResults.length < 2) return { trend: "stable", change: 0 }
+
+    const sortedResults = [...currentStudentResults].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+    const recentResults = sortedResults.slice(-2)
+
+    if (recentResults.length < 2) return { trend: "stable", change: 0 }
+
+    const latest = recentResults[recentResults.length - 1].gpa || 0
+    const previous = recentResults[0].gpa || 0
+
+    if (previous === 0) return { trend: "stable", change: 0 }
+
     const change = ((latest - previous) / previous) * 100
 
     return {
@@ -416,15 +202,32 @@ export default function Exams() {
     }
   }
 
-  const handleRefresh = () => {
-    setLastRefresh(new Date())
-    toast({
-      title: "Data Refreshed",
-      description: "Exam and result data has been updated",
-      status: "info",
-      duration: 2000,
-      isClosable: true,
-    })
+  const handleRefresh = async () => {
+    try {
+      await Promise.all([
+        fetchExamSchedules(),
+        fetchResults(),
+        fetchSemesters(),
+        fetchModules(),
+        fetchCourses(),
+      ])
+      setLastRefresh(new Date())
+      toast({
+        title: "Data Refreshed",
+        description: "Exam and result data has been updated",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to refresh data",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    }
   }
 
   const handleExport = () => {
@@ -437,26 +240,75 @@ export default function Exams() {
     })
   }
 
-  const filteredResults = mockExamData.academicResults.filter((semester) => {
+  // Filter results for current student only
+  const currentStudentResults = results.filter((result) =>
+    result.studentId?._id === currentStudentId
+  )
+
+  // Filter results by semester
+  const filteredResults = currentStudentResults.filter((result) => {
     if (selectedSemester === "all") return true
-    return semester.semester === selectedSemester
+    return result.semesterId?.semesterNumber === selectedSemester
   })
 
+  // Filter exam schedules by status
+  const upcomingExams = examSchedules.filter((exam) => exam.status === "scheduled")
+  const completedExams = examSchedules.filter((exam) => exam.status === "completed")
+
   const performanceTrend = getPerformanceTrend()
+
+  // Group results by semester (only for current student)
+  const resultsBySemester = currentStudentResults.reduce((acc, result) => {
+    const semesterKey = result.semesterId?._id || "unknown"
+    console.log("🚀 ~ Exams ~ result:", result)
+
+    if (!acc[semesterKey]) {
+      acc[semesterKey] = {
+        semester: result.semesterId,
+        courses: [],
+        semesterGPA: 0,
+        totalCredits: 0,
+      }
+    }
+    acc[semesterKey].courses.push(result)
+    acc[semesterKey].totalCredits += result.creditHours || 0
+    return acc
+  }, {})
+
+  // Calculate semester GPA for each group
+  Object.values(resultsBySemester).forEach((semester) => {
+    const totalPoints = semester.courses.reduce((sum, course) => {
+      return sum + ((course.gpa || 0) * (course.creditHours || 0))
+    }, 0)
+    semester.semesterGPA = semester.totalCredits > 0 ? (totalPoints / semester.totalCredits).toFixed(2) : "0.00"
+  })
+
+  if (loading.examSchedules || loading.results) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minH="400px">
+        <VStack spacing={4}>
+          <Spinner size="xl" />
+          <Text>Loading exam data...</Text>
+        </VStack>
+      </Box>
+    )
+  }
 
   return (
     <Box>
       <VStack spacing={6} align="stretch">
         {/* Header */}
-        <Flex justify="space-between" align="center">
+        <Stack direction={headerDirection} justify="space-between" align={{ base: "stretch", md: "center" }} spacing={4}>
           <Box>
-            <Text fontSize="2xl" fontWeight="bold" color="gray.800" mb={2}>
+            <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="gray.800" mb={2}>
               Exams & Results
             </Text>
-            <Text color="gray.600">View exam schedules and academic performance</Text>
+            <Text color="gray.600" fontSize={{ base: "sm", md: "md" }}>
+              View exam schedules and academic performance
+            </Text>
           </Box>
-          <HStack>
-            <Text fontSize="sm" color="gray.500">
+          <HStack spacing={2}>
+            <Text fontSize="xs" color="gray.500" display={{ base: "none", sm: "block" }}>
               Last updated: {lastRefresh.toLocaleTimeString()}
             </Text>
             <IconButton
@@ -465,18 +317,19 @@ export default function Exams() {
               variant="ghost"
               onClick={handleRefresh}
               aria-label="Refresh data"
+              isLoading={loading.examSchedules || loading.results}
             />
           </HStack>
-        </Flex>
+        </Stack>
 
         {/* Performance Overview */}
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
+        <Grid templateColumns={statsGridCols} gap={{ base: 4, md: 6 }}>
           <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
             <CardBody>
               <Stat>
-                <StatLabel>Cumulative GPA</StatLabel>
-                <StatNumber color="green.500">{calculateOverallGPA()}</StatNumber>
-                <StatHelpText>
+                <StatLabel fontSize={{ base: "xs", md: "sm" }}>Cumulative GPA</StatLabel>
+                <StatNumber color="green.500" fontSize={{ base: "lg", md: "xl" }}>{calculateOverallGPA()}</StatNumber>
+                <StatHelpText fontSize={{ base: "xs", md: "sm" }}>
                   <StatArrow type={performanceTrend.trend === "up" ? "increase" : "decrease"} />
                   {performanceTrend.change}% from last semester
                 </StatHelpText>
@@ -487,11 +340,11 @@ export default function Exams() {
           <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
             <CardBody>
               <Stat>
-                <StatLabel>Total Credits</StatLabel>
-                <StatNumber color="blue.500">
-                  {mockExamData.academicResults.reduce((sum, sem) => sum + sem.totalCredits, 0)}
+                <StatLabel fontSize={{ base: "xs", md: "sm" }}>Total Credits</StatLabel>
+                <StatNumber color="blue.500" fontSize={{ base: "lg", md: "xl" }}>
+                  {results.reduce((sum, result) => sum + (result.credits || 0), 0)}
                 </StatNumber>
-                <StatHelpText>
+                <StatHelpText fontSize={{ base: "xs", md: "sm" }}>
                   <Icon as={FiAward} mr={1} />
                   Credits Earned
                 </StatHelpText>
@@ -502,13 +355,13 @@ export default function Exams() {
           <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
             <CardBody>
               <Stat>
-                <StatLabel>Current Rank</StatLabel>
-                <StatNumber color="purple.500">
-                  {mockExamData.academicResults[mockExamData.academicResults.length - 1]?.rank || "N/A"}
+                <StatLabel fontSize={{ base: "xs", md: "sm" }}>Completed Exams</StatLabel>
+                <StatNumber color="purple.500" fontSize={{ base: "lg", md: "xl" }}>
+                  {completedExams.length}
                 </StatNumber>
-                <StatHelpText>
+                <StatHelpText fontSize={{ base: "xs", md: "sm" }}>
                   <Icon as={FiTrendingUp} mr={1} />
-                  Out of {mockExamData.academicResults[mockExamData.academicResults.length - 1]?.totalStudents || "N/A"}
+                  Total Exams Taken
                 </StatHelpText>
               </Stat>
             </CardBody>
@@ -517,13 +370,13 @@ export default function Exams() {
           <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
             <CardBody>
               <Stat>
-                <StatLabel>Upcoming Exams</StatLabel>
-                <StatNumber color="orange.500">
-                  {mockExamData.examSchedule.filter((exam) => exam.status === "scheduled").length}
+                <StatLabel fontSize={{ base: "xs", md: "sm" }}>Upcoming Exams</StatLabel>
+                <StatNumber color="orange.500" fontSize={{ base: "lg", md: "xl" }}>
+                  {upcomingExams.length}
                 </StatNumber>
-                <StatHelpText>
+                <StatHelpText fontSize={{ base: "xs", md: "sm" }}>
                   <Icon as={FiCalendar} mr={1} />
-                  This Month
+                  This Semester
                 </StatHelpText>
               </Stat>
             </CardBody>
@@ -532,21 +385,25 @@ export default function Exams() {
 
         {/* Main Tabs */}
         <Tabs variant="enclosed" colorScheme="blue">
-          <TabList>
-            <Tab>
-              <HStack>
+          <TabList css={{
+            '&::-webkit-scrollbar': { height: '4px' },
+            '&::-webkit-scrollbar-track': { background: '#f1f1f1' },
+            '&::-webkit-scrollbar-thumb': { background: '#888', borderRadius: '2px' },
+          }}>
+            <Tab whiteSpace="nowrap" fontSize={{ base: "sm", md: "md" }}>
+              <HStack spacing={{ base: 1, md: 2 }}>
                 <Icon as={FiCalendar} />
                 <Text>Exam Schedule</Text>
               </HStack>
             </Tab>
-            <Tab>
-              <HStack>
+            <Tab whiteSpace="nowrap" fontSize={{ base: "sm", md: "md" }}>
+              <HStack spacing={{ base: 1, md: 2 }}>
                 <Icon as={FiAward} />
                 <Text>Academic Results</Text>
               </HStack>
             </Tab>
-            <Tab>
-              <HStack>
+            <Tab whiteSpace="nowrap" fontSize={{ base: "sm", md: "md" }}>
+              <HStack spacing={{ base: 1, md: 2 }}>
                 <Icon as={FaChartBar} />
                 <Text>Performance Analytics</Text>
               </HStack>
@@ -558,37 +415,47 @@ export default function Exams() {
             <TabPanel>
               <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                 <CardBody>
-                  <HStack justify="space-between" mb={4}>
-                    <Text fontSize="lg" fontWeight="semibold">
+                  <Stack direction={{ base: "column", md: "row" }} justify="space-between" mb={4} spacing={4}>
+                    <Text fontSize={{ base: "md", md: "lg" }} fontWeight="semibold">
                       Upcoming Examinations
                     </Text>
-                    <Button leftIcon={<FiPrinter />} size="sm" variant="outline">
+                    <Button leftIcon={<FiPrinter />} size="sm" variant="outline" w={{ base: "full", md: "auto" }}>
                       Print Schedule
                     </Button>
-                  </HStack>
+                  </Stack>
 
-                  <Grid templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }} gap={4}>
-                    {mockExamData.examSchedule
-                      .filter((exam) => exam.status === "scheduled")
-                      .map((exam) => (
-                        <Card key={exam.id} borderWidth="1px" borderColor="orange.200" bg="orange.50">
+                  {upcomingExams.length === 0 ? (
+                    <Alert status="info" borderRadius="md">
+                      <AlertIcon />
+                      <Box>
+                        <AlertTitle fontSize="sm">No Upcoming Exams</AlertTitle>
+                        <AlertDescription fontSize="sm">
+                          There are no scheduled exams at the moment.
+                        </AlertDescription>
+                      </Box>
+                    </Alert>
+                  ) : (
+                    <Grid templateColumns={examGridCols} gap={4}>
+                      {upcomingExams.map((exam) => (
+                        <Card key={exam._id} borderWidth="1px" borderColor="orange.200" bg="orange.50">
                           <CardBody>
                             <VStack align="stretch" spacing={3}>
-                              <HStack justify="space-between">
-                                <VStack align="start" spacing={1}>
-                                  <Text fontWeight="bold" fontSize="lg">
-                                    {exam.courseCode}
+                              <HStack justify="space-between" flexWrap="wrap">
+                                <VStack align="start" spacing={1} minW="0" flex="1">
+                                  <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }} noOfLines={1}>
+                                    {exam.moduleId?.moduleCode || "N/A"}
                                   </Text>
-                                  <Text fontSize="sm" color="gray.600">
-                                    {exam.courseName}
+                                  <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" noOfLines={2}>
+                                    {exam.moduleId?.moduleName || "N/A"}
                                   </Text>
                                 </VStack>
                                 <Badge
-                                  colorScheme={exam.type === "Final" ? "red" : "blue"}
+                                  colorScheme={exam.examType === "Final" ? "red" : "blue"}
                                   variant="solid"
                                   fontSize="xs"
+                                  flexShrink={0}
                                 >
-                                  {exam.type}
+                                  {exam.examType || "Exam"}
                                 </Badge>
                               </HStack>
 
@@ -596,22 +463,28 @@ export default function Exams() {
 
                               <VStack align="stretch" spacing={2}>
                                 <HStack>
-                                  <Icon as={FiCalendar} color="orange.500" />
-                                  <Text fontWeight="medium">{exam.date}</Text>
-                                </HStack>
-                                <HStack>
-                                  <Icon as={FiClock} color="orange.500" />
-                                  <Text>{exam.time}</Text>
-                                  <Text fontSize="sm" color="gray.600">
-                                    ({exam.duration})
+                                  <Icon as={FiCalendar} color="orange.500" flexShrink={0} />
+                                  <Text fontWeight="medium" fontSize={{ base: "sm", md: "md" }}>
+                                    {new Date(exam.examDate).toLocaleDateString()}
                                   </Text>
                                 </HStack>
                                 <HStack>
-                                  <Icon as={FiMapPin} color="orange.500" />
-                                  <VStack align="start" spacing={0}>
-                                    <Text>{exam.room}</Text>
-                                    <Text fontSize="sm" color="gray.600">
-                                      {exam.building}
+                                  <Icon as={FiClock} color="orange.500" flexShrink={0} />
+                                  <Text fontSize={{ base: "sm", md: "md" }}>
+                                    {exam.startTime} - {exam.endTime}
+                                  </Text>
+                                  <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
+                                    ({exam.duration} hours)
+                                  </Text>
+                                </HStack>
+                                <HStack>
+                                  <Icon as={FiMapPin} color="orange.500" flexShrink={0} />
+                                  <VStack align="start" spacing={0} minW="0" flex="1">
+                                    <Text fontSize={{ base: "sm", md: "md" }} noOfLines={1}>
+                                      {exam.roomId?.roomName || "TBD"}
+                                    </Text>
+                                    <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" noOfLines={1}>
+                                      {exam.roomId?.building || "TBD"}
                                     </Text>
                                   </VStack>
                                 </HStack>
@@ -619,12 +492,12 @@ export default function Exams() {
 
                               <Divider />
 
-                              <HStack justify="space-between">
-                                <Badge colorScheme="blue" variant="outline">
-                                  {exam.totalMarks} Marks
+                              <HStack justify="space-between" flexWrap="wrap">
+                                <Badge colorScheme="blue" variant="outline" fontSize="xs">
+                                  {exam.totalMarks || 100} Marks
                                 </Badge>
-                                <Badge colorScheme="green" variant="outline">
-                                  {exam.weightage} Weight
+                                <Badge colorScheme="green" variant="outline" fontSize="xs">
+                                  {exam.weightage || "N/A"} Weight
                                 </Badge>
                               </HStack>
 
@@ -635,6 +508,7 @@ export default function Exams() {
                                   setSelectedExam(exam)
                                   onExamOpen()
                                 }}
+                                w="full"
                               >
                                 View Details
                               </Button>
@@ -642,7 +516,8 @@ export default function Exams() {
                           </CardBody>
                         </Card>
                       ))}
-                  </Grid>
+                    </Grid>
+                  )}
                 </CardBody>
               </Card>
             </TabPanel>
@@ -653,9 +528,9 @@ export default function Exams() {
                 {/* Controls */}
                 <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                   <CardBody>
-                    <HStack justify="space-between">
-                      <HStack spacing={4}>
-                        <InputGroup maxW="300px">
+                    <Stack direction={controlsDirection} justify="space-between" spacing={4}>
+                      <Stack direction={{ base: "column", sm: "row" }} spacing={4} flex="1">
+                        <InputGroup maxW={{ base: "full", sm: "300px" }}>
                           <InputLeftElement>
                             <Icon as={FiSearch} color="gray.400" />
                           </InputLeftElement>
@@ -667,208 +542,268 @@ export default function Exams() {
                         </InputGroup>
 
                         <Select
-                          maxW="200px"
+                          maxW={{ base: "full", sm: "200px" }}
                           value={selectedSemester}
                           onChange={(e) => setSelectedSemester(e.target.value)}
                         >
                           <option value="all">All Semesters</option>
-                          {mockExamData.academicResults.map((sem) => (
-                            <option key={sem.id} value={sem.semester}>
-                              {sem.semester}
+                          {semesters.map((sem) => (
+                            <option key={sem._id} value={sem.semesterNumber}>
+                              {sem.semesterName}
                             </option>
                           ))}
                         </Select>
-                      </HStack>
+                      </Stack>
 
-                      <Button leftIcon={<FiDownload />} size="sm" variant="outline" onClick={handleExport}>
+                      <Button
+                        leftIcon={<FiDownload />}
+                        size="sm"
+                        variant="outline"
+                        onClick={handleExport}
+                        w={{ base: "full", sm: "auto" }}
+                      >
                         Download Transcript
                       </Button>
-                    </HStack>
+                    </Stack>
                   </CardBody>
                 </Card>
 
                 {/* Semester-wise Results */}
-                <VStack spacing={6} align="stretch">
-                  {filteredResults.map((semester) => (
-                    <Card key={semester.id} bg={bgColor} borderColor={borderColor} borderWidth="1px">
-                      <CardBody>
-                        <HStack justify="space-between" mb={4}>
-                          <Text fontSize="lg" fontWeight="bold">
-                            {semester.semester}
-                          </Text>
-                          <HStack>
-                            <Badge colorScheme="blue" variant="solid" fontSize="sm">
-                              GPA: {semester.semesterGPA}
-                            </Badge>
-                            <Badge colorScheme="green" variant="outline" fontSize="sm">
-                              {semester.totalCredits} Credits
-                            </Badge>
-                            <Badge colorScheme="purple" variant="outline" fontSize="sm">
-                              Rank: {semester.rank}/{semester.totalStudents}
-                            </Badge>
-                          </HStack>
-                        </HStack>
+                {Object.keys(resultsBySemester).length === 0 ? (
+                  <Alert status="info" borderRadius="md">
+                    <AlertIcon />
+                    <Box>
+                      <AlertTitle fontSize="sm">No Results Available</AlertTitle>
+                      <AlertDescription fontSize="sm">
+                        No academic results have been recorded yet.
+                      </AlertDescription>
+                    </Box>
+                  </Alert>
+                ) : (
+                  <VStack spacing={6} align="stretch">
+                    {Object.values(resultsBySemester)
+                      .filter((semester) => {
 
-                        <TableContainer>
-                          <Table variant="simple" size="sm">
-                            <Thead>
-                              <Tr>
-                                <Th>Course</Th>
-                                <Th>Credits</Th>
-                                <Th>Marks</Th>
-                                <Th>Grade</Th>
-                                <Th>GPA Points</Th>
-                                <Th>Performance</Th>
-                              </Tr>
-                            </Thead>
-                            <Tbody>
-                              {semester.courses
-                                .filter(
-                                  (course) =>
-                                    course.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    course.courseCode.toLowerCase().includes(searchTerm.toLowerCase()),
-                                )
-                                .map((course, index) => (
-                                  <Tr key={index}>
-                                    <Td>
-                                      <VStack align="start" spacing={1}>
-                                        <Text fontWeight="medium">{course.courseCode}</Text>
-                                        <Text fontSize="sm" color="gray.600">
-                                          {course.courseName}
-                                        </Text>
-                                      </VStack>
-                                    </Td>
-                                    <Td>{course.credits}</Td>
-                                    <Td>
-                                      <VStack align="start" spacing={1}>
-                                        <Text fontWeight="medium">
-                                          {course.marks}/{course.totalMarks}
-                                        </Text>
-                                        <Text fontSize="sm" color="gray.600">
-                                          {course.percentage}%
-                                        </Text>
-                                      </VStack>
-                                    </Td>
-                                    <Td>
-                                      <Badge colorScheme={getGradeColor(course.grade)} variant="subtle" fontSize="sm">
-                                        {course.grade}
-                                      </Badge>
-                                    </Td>
-                                    <Td>{course.gpa.toFixed(1)}</Td>
-                                    <Td>
-                                      <Box w="100px">
-                                        <Progress
-                                          value={course.percentage}
-                                          colorScheme={
-                                            course.percentage >= 80
-                                              ? "green"
-                                              : course.percentage >= 60
-                                                ? "blue"
-                                                : "orange"
-                                          }
-                                          size="sm"
-                                          borderRadius="full"
-                                        />
-                                        <Text fontSize="xs" color="gray.500" mt={1}>
-                                          {course.percentage >= 80
-                                            ? "Excellent"
-                                            : course.percentage >= 60
-                                              ? "Good"
-                                              : "Average"}
-                                        </Text>
-                                      </Box>
-                                    </Td>
-                                  </Tr>
-                                ))}
-                            </Tbody>
-                          </Table>
-                        </TableContainer>
-                      </CardBody>
-                    </Card>
-                  ))}
-                </VStack>
+                        console.log(semester.semester.semesterName)
+                        console.log(semester)
+
+                        if (selectedSemester === "all") return true
+                        return semester.semester?.semesterNumber === selectedSemester
+                      })
+                      .map((semester) => (
+                        <Card key={semester.semester?._id || "unknown"} bg={bgColor} borderColor={borderColor} borderWidth="1px">
+                          <CardBody>
+                            <Stack direction={{ base: "column", md: "row" }} justify="space-between" mb={4} spacing={4}>
+                              <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold">
+                                {semester.semester?.semesterName || "Unknown Semester"}
+                              </Text>
+                              <HStack flexWrap="wrap" spacing={2}>
+                                <Badge colorScheme="blue" variant="solid" fontSize="xs">
+                                  GPA: {semester.semesterGPA}
+                                </Badge>
+                                <Badge colorScheme="green" variant="outline" fontSize="xs">
+                                  {semester.totalCredits} Credits
+                                </Badge>
+                                <Badge colorScheme="purple" variant="outline" fontSize="xs">
+                                  {semester.courses.length} Courses
+                                </Badge>
+                              </HStack>
+                            </Stack>
+
+                            <Box overflowX="auto">
+                              <TableContainer minW="600px">
+                                <Table variant="simple" size={{ base: "sm", md: "md" }}>
+                                  <Thead>
+                                    <Tr>
+                                      <Th fontSize={{ base: "xs", md: "sm" }}>Course</Th>
+                                      <Th fontSize={{ base: "xs", md: "sm" }}>Credits</Th>
+                                      <Th fontSize={{ base: "xs", md: "sm" }}>Marks</Th>
+                                      <Th fontSize={{ base: "xs", md: "sm" }}>Grade</Th>
+                                      <Th fontSize={{ base: "xs", md: "sm" }}>GPA Points</Th>
+                                      <Th fontSize={{ base: "xs", md: "sm" }}>Performance</Th>
+                                    </Tr>
+                                  </Thead>
+                                  <Tbody>
+                                    {semester.courses
+                                      .filter(
+                                        (course) =>
+                                          course.moduleId?.moduleName?.toLowerCase().includes(searchTerm.toLowerCase()) || course.moduleId?.moduleCode?.toLowerCase().includes(searchTerm.toLowerCase()),
+                                      )
+                                      .map((course, index) => (
+                                        <Tr key={index}>
+                                          <Td>
+                                            <VStack align="start" spacing={1}>
+                                              <Text fontWeight="medium" fontSize={{ base: "xs", md: "sm" }}>
+                                                {course.moduleId?.code || "N/A"}
+                                              </Text>
+                                              <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" noOfLines={2}>
+                                                {course.moduleId?.moduleName || "N/A"}
+                                              </Text>
+                                            </VStack>
+                                          </Td>
+                                          <Td fontSize={{ base: "xs", md: "sm" }}>{course.credits || 0}</Td>
+                                          <Td>
+                                            <VStack align="start" spacing={1}>
+                                              <Text fontWeight="medium" fontSize={{ base: "xs", md: "sm" }}>
+                                                {course.marks || 0}/{course.totalMarks || 100}
+                                              </Text>
+                                              <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
+                                                {course.percentage || 0}%
+                                              </Text>
+                                            </VStack>
+                                          </Td>
+                                          <Td>
+                                            <Badge colorScheme={getGradeColor(course.grade)} variant="subtle" fontSize="xs">
+                                              {course.grade || "N/A"}
+                                            </Badge>
+                                          </Td>
+                                          <Td fontSize={{ base: "xs", md: "sm" }}>{course.gpa?.toFixed(1) || "0.0"}</Td>
+                                          <Td>
+                                            <Box w={{ base: "60px", md: "100px" }}>
+                                              <Progress
+                                                value={course.percentage || 0}
+                                                colorScheme={
+                                                  (course.percentage || 0) >= 80
+                                                    ? "green"
+                                                    : (course.percentage || 0) >= 60
+                                                      ? "blue"
+                                                      : "orange"
+                                                }
+                                                size="sm"
+                                                borderRadius="full"
+                                              />
+                                              <Text fontSize="xs" color="gray.500" mt={1} noOfLines={1}>
+                                                {(course.percentage || 0) >= 80
+                                                  ? "Excellent"
+                                                  : (course.percentage || 0) >= 60
+                                                    ? "Good"
+                                                    : "Average"}
+                                              </Text>
+                                            </Box>
+                                          </Td>
+                                        </Tr>
+                                      ))}
+                                  </Tbody>
+                                </Table>
+                              </TableContainer>
+                            </Box>
+                          </CardBody>
+                        </Card>
+                      ))}
+                  </VStack>
+                )}
               </VStack>
             </TabPanel>
 
             {/* Performance Analytics Tab */}
             <TabPanel>
-              <Grid templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }} gap={6}>
+              <Grid templateColumns={analyticsGridCols} gap={6}>
                 {/* GPA Trend */}
                 <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                   <CardBody>
-                    <Text fontSize="lg" fontWeight="semibold" mb={4}>
+                    <Text fontSize={{ base: "md", md: "lg" }} fontWeight="semibold" mb={4}>
                       GPA Trend Analysis
                     </Text>
-                    <VStack spacing={4} align="stretch">
-                      {mockExamData.academicResults.map((semester, index) => (
-                        <Box key={semester.id} p={3} bg="gray.50" borderRadius="md">
-                          <HStack justify="space-between" mb={2}>
-                            <Text fontWeight="medium">{semester.semester}</Text>
-                            <Badge colorScheme="blue" variant="solid">
-                              {semester.semesterGPA}
-                            </Badge>
-                          </HStack>
-                          <Progress
-                            value={(semester.semesterGPA / 4.0) * 100}
-                            colorScheme={
-                              semester.semesterGPA >= 3.5 ? "green" : semester.semesterGPA >= 3.0 ? "blue" : "orange"
-                            }
-                            size="sm"
-                            borderRadius="full"
-                          />
-                          <HStack justify="space-between" mt={2}>
-                            <Text fontSize="sm" color="gray.600">
-                              Rank: {semester.rank}/{semester.totalStudents}
-                            </Text>
-                            <Text fontSize="sm" color="gray.600">
-                              {semester.totalCredits} Credits
-                            </Text>
-                          </HStack>
+                    {Object.keys(resultsBySemester).length === 0 ? (
+                      <Alert status="info" borderRadius="md">
+                        <AlertIcon />
+                        <Box>
+                          <AlertTitle fontSize="sm">No Data Available</AlertTitle>
+                          <AlertDescription fontSize="sm">
+                            No semester data available for trend analysis.
+                          </AlertDescription>
                         </Box>
-                      ))}
-                    </VStack>
+                      </Alert>
+                    ) : (
+                      <VStack spacing={4} align="stretch">
+                        {Object.values(resultsBySemester).map((semester) => (
+                          <Box key={semester.semester?._id || "unknown"} p={3} bg="gray.50" borderRadius="md">
+                            <HStack justify="space-between" mb={2}>
+                              <Text fontWeight="medium" fontSize={{ base: "sm", md: "md" }}>
+                                {semester.semester?.semesterName || "Unknown Semester"}
+                              </Text>
+                              <Badge colorScheme="blue" variant="solid" fontSize="xs">
+                                {semester.semesterGPA}
+                              </Badge>
+                            </HStack>
+                            <Progress
+                              value={(parseFloat(semester.semesterGPA) / 4.0) * 100}
+                              colorScheme={
+                                parseFloat(semester.semesterGPA) >= 3.5
+                                  ? "green"
+                                  : parseFloat(semester.semesterGPA) >= 3.0
+                                    ? "blue"
+                                    : "orange"
+                              }
+                              size="sm"
+                              borderRadius="full"
+                            />
+                            <HStack justify="space-between" mt={2}>
+                              <Text fontSize="xs" color="gray.600">
+                                {semester.courses.length} Courses
+                              </Text>
+                              <Text fontSize="xs" color="gray.600">
+                                {semester.totalCredits} Credits
+                              </Text>
+                            </HStack>
+                          </Box>
+                        ))}
+                      </VStack>
+                    )}
                   </CardBody>
                 </Card>
 
                 {/* Subject Performance */}
                 <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                   <CardBody>
-                    <Text fontSize="lg" fontWeight="semibold" mb={4}>
+                    <Text fontSize={{ base: "md", md: "lg" }} fontWeight="semibold" mb={4}>
                       Subject-wise Performance
                     </Text>
-                    <VStack spacing={3} align="stretch">
-                      {mockExamData.academicResults[mockExamData.academicResults.length - 1]?.courses.map((course) => (
-                        <Box key={course.courseCode} p={3} bg="gray.50" borderRadius="md">
-                          <HStack justify="space-between" mb={2}>
-                            <VStack align="start" spacing={0}>
-                              <Text fontWeight="medium" fontSize="sm">
-                                {course.courseCode}
+                    {results.length === 0 ? (
+                      <Alert status="info" borderRadius="md">
+                        <AlertIcon />
+                        <Box>
+                          <AlertTitle fontSize="sm">No Results Available</AlertTitle>
+                          <AlertDescription fontSize="sm">
+                            No subject performance data available.
+                          </AlertDescription>
+                        </Box>
+                      </Alert>
+                    ) : (
+                      <VStack spacing={3} align="stretch">
+                        {results.slice(0, 10).map((course) => (
+                          <Box key={course._id} p={3} bg="gray.50" borderRadius="md">
+                            <HStack justify="space-between" mb={2}>
+                              <VStack align="start" spacing={0} minW="0" flex="1">
+                                <Text fontWeight="medium" fontSize={{ base: "xs", md: "sm" }} noOfLines={1}>
+                                  {course.moduleId?.moduleCode || "N/A"}
+                                </Text>
+                                <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" noOfLines={2}>
+                                  {course.moduleId?.moduleName || "N/A"}
+                                </Text>
+                              </VStack>
+                              <Badge colorScheme={getGradeColor(course.grade)} variant="solid" fontSize="xs" flexShrink={0}>
+                                {course.grade || "N/A"}
+                              </Badge>
+                            </HStack>
+                            <Progress
+                              value={course.percentage || 0}
+                              colorScheme={getGradeColor(course.grade)}
+                              size="sm"
+                              borderRadius="full"
+                            />
+                            <HStack justify="space-between" mt={2}>
+                              <Text fontSize="xs" color="gray.600">
+                                {course.percentage || 0}%
                               </Text>
                               <Text fontSize="xs" color="gray.600">
-                                {course.courseName}
+                                {course.gpa?.toFixed(1) || "0.0"} GPA
                               </Text>
-                            </VStack>
-                            <Badge colorScheme={getGradeColor(course.grade)} variant="solid">
-                              {course.grade}
-                            </Badge>
-                          </HStack>
-                          <Progress
-                            value={course.percentage}
-                            colorScheme={getGradeColor(course.grade)}
-                            size="sm"
-                            borderRadius="full"
-                          />
-                          <HStack justify="space-between" mt={2}>
-                            <Text fontSize="xs" color="gray.600">
-                              {course.percentage}%
-                            </Text>
-                            <Text fontSize="xs" color="gray.600">
-                              {course.gpa} GPA
-                            </Text>
-                          </HStack>
-                        </Box>
-                      ))}
-                    </VStack>
+                            </HStack>
+                          </Box>
+                        ))}
+                      </VStack>
+                    )}
                   </CardBody>
                 </Card>
               </Grid>
@@ -878,88 +813,89 @@ export default function Exams() {
       </VStack>
 
       {/* Exam Details Modal */}
-      <Modal isOpen={isExamOpen} onClose={onExamClose} size="lg">
+      <Modal isOpen={isExamOpen} onClose={onExamClose} size={modalSize}>
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Exam Details</ModalHeader>
+        <ModalContent mx={4}>
+          <ModalHeader fontSize={{ base: "md", md: "lg" }}>Exam Details</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {selectedExam && (
               <VStack spacing={4} align="stretch">
                 <Box p={4} bg="orange.50" borderRadius="md">
-                  <Text fontSize="lg" fontWeight="bold">
-                    {selectedExam.courseCode} - {selectedExam.courseName}
+                  <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" noOfLines={2}>
+                    {selectedExam.moduleId?.moduleCode || "N/A"} - {selectedExam.moduleId?.moduleName || "N/A"}
                   </Text>
-                  <Badge colorScheme={selectedExam.type === "Final" ? "red" : "blue"} mt={2}>
-                    {selectedExam.type} Examination
+                  <Badge colorScheme={selectedExam.examType === "Final" ? "red" : "blue"} mt={2} fontSize="xs">
+                    {selectedExam.examType || "Exam"} Examination
                   </Badge>
                 </Box>
 
-                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={4}>
                   <Box>
-                    <Text fontWeight="medium" mb={2}>
+                    <Text fontWeight="medium" mb={2} fontSize={{ base: "sm", md: "md" }}>
                       Date & Time
                     </Text>
                     <VStack align="start" spacing={1}>
                       <HStack>
-                        <Icon as={FiCalendar} color="orange.500" />
-                        <Text>{selectedExam.date}</Text>
+                        <Icon as={FiCalendar} color="orange.500" flexShrink={0} />
+                        <Text fontSize={{ base: "sm", md: "md" }}>
+                          {new Date(selectedExam.examDate).toLocaleDateString()}
+                        </Text>
                       </HStack>
                       <HStack>
-                        <Icon as={FiClock} color="orange.500" />
-                        <Text>{selectedExam.time}</Text>
+                        <Icon as={FiClock} color="orange.500" flexShrink={0} />
+                        <Text fontSize={{ base: "sm", md: "md" }}>
+                          {selectedExam.startTime} - {selectedExam.endTime}
+                        </Text>
                       </HStack>
-                      <Text fontSize="sm" color="gray.600">
-                        Duration: {selectedExam.duration}
+                      <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
+                        Duration: {selectedExam.duration} hours
                       </Text>
                     </VStack>
                   </Box>
 
                   <Box>
-                    <Text fontWeight="medium" mb={2}>
+                    <Text fontWeight="medium" mb={2} fontSize={{ base: "sm", md: "md" }}>
                       Venue & Marks
                     </Text>
                     <VStack align="start" spacing={1}>
                       <HStack>
-                        <Icon as={FiMapPin} color="orange.500" />
-                        <Text>{selectedExam.room}</Text>
+                        <Icon as={FiMapPin} color="orange.500" flexShrink={0} />
+                        <Text fontSize={{ base: "sm", md: "md" }} noOfLines={1}>
+                          {selectedExam.roomId?.roomName || "TBD"}
+                        </Text>
                       </HStack>
-                      <Text fontSize="sm" color="gray.600">
-                        {selectedExam.building}
+                      <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" noOfLines={1}>
+                        {selectedExam.roomId?.building || "TBD"}
                       </Text>
-                      <HStack>
-                        <Badge colorScheme="blue" variant="outline">
-                          {selectedExam.totalMarks} Marks
+                      <HStack flexWrap="wrap">
+                        <Badge colorScheme="blue" variant="outline" fontSize="xs">
+                          {selectedExam.totalMarks || 100} Marks
                         </Badge>
-                        <Badge colorScheme="green" variant="outline">
-                          {selectedExam.weightage}
+                        <Badge colorScheme="green" variant="outline" fontSize="xs">
+                          {selectedExam.weightage || "N/A"}
                         </Badge>
                       </HStack>
                     </VStack>
                   </Box>
                 </Grid>
 
-                <Box>
-                  <Text fontWeight="medium" mb={2}>
-                    Syllabus Coverage
-                  </Text>
-                  <Text fontSize="sm">{selectedExam.syllabus}</Text>
-                </Box>
-
-                <Box>
-                  <Text fontWeight="medium" mb={2}>
-                    Instructions
-                  </Text>
-                  <Text fontSize="sm" color="gray.600">
-                    {selectedExam.instructions}
-                  </Text>
-                </Box>
+                {selectedExam.instructions && (
+                  <Box>
+                    <Text fontWeight="medium" mb={2} fontSize={{ base: "sm", md: "md" }}>
+                      Instructions
+                    </Text>
+                    <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
+                      {selectedExam.instructions}
+                    </Text>
+                  </Box>
+                )}
 
                 <Alert status="warning" borderRadius="md">
                   <AlertIcon />
                   <Box>
-                    <AlertTitle fontSize="sm">Important Reminders:</AlertTitle>
-                    <AlertDescription fontSize="sm">
+                    <AlertTitle fontSize={{ base: "xs", md: "sm" }}>Important Reminders:</AlertTitle>
+                    <AlertDescription fontSize={{ base: "xs", md: "sm" }}>
                       • Arrive 15 minutes before exam time
                       <br />• Bring valid student ID card
                       <br />• Mobile phones are not allowed in exam hall
@@ -972,7 +908,7 @@ export default function Exams() {
           </ModalBody>
 
           <ModalFooter>
-            <Button onClick={onExamClose}>Close</Button>
+            <Button onClick={onExamClose} size={{ base: "sm", md: "md" }}>Close</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

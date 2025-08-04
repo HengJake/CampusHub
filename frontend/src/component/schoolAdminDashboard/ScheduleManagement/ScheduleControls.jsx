@@ -50,6 +50,7 @@ export default function ScheduleControls({
             </HStack>
 
             <HStack>
+             
                 <Badge colorScheme={"purple"}>
                     {allItems.filter(i => i.type == "class").length} classes
                 </Badge>

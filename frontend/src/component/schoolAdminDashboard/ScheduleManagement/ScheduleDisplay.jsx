@@ -12,6 +12,7 @@ import {
 } from "@chakra-ui/react"
 import React from "react"
 import { FiClock, FiMapPin, FiUser } from "react-icons/fi"
+import { Calendar } from "lucide-react"
 import { ClusteredScheduleGrid, TimetableListView } from "./ClassScheduleCard.jsx"
 
 const timeSlots = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"]
@@ -34,6 +35,28 @@ export default function ScheduleDisplay({
 }) {
     const isMobile = useBreakpointValue({ base: true, md: false })
 
+    // Check if required filters are selected
+    const hasRequiredFilters = filter?.selectedCourse && filter?.selectedIntake && filter?.selectedYear && filter?.selectedSemester;
+
+    // Show message if required filters are not selected
+    if (!hasRequiredFilters) {
+        return (
+            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
+                <CardBody>
+                    <VStack spacing={4} py={8}>
+                        <Icon as={Calendar} boxSize={12} color="gray.300" />
+                        <Text color="gray.500" textAlign="center" fontSize="lg" fontWeight="medium">
+                            Please select Year and Semester to view the schedule
+                        </Text>
+                        <Text color="gray.400" textAlign="center" fontSize="sm">
+                            Make sure you have selected Intake, Course, Year, and Semester from the filters above
+                        </Text>
+                    </VStack>
+                </CardBody>
+            </Card>
+        );
+    }
+
     return (
         <>
             {viewMode === "weekly" ? (
@@ -44,18 +67,8 @@ export default function ScheduleDisplay({
                             // Mobile Weekly View - Stacked Cards
                             <VStack spacing={4} p={4}>
                                 {daysOfWeek.map((day) => {
-                                    // Updated to use filtered data based on real schedule
-                                    const dayItems = classSchedules?.filter((item) => item.dayOfWeek === day).map((item) => ({
-                                        id: item._id,
-                                        code: item.moduleId?.code ?? 'N/A',
-                                        subject: item.moduleId?.moduleName ?? 'Unknown',
-                                        room: item.roomId,
-                                        lecturer: item.lecturerId?.userId?.name ?? 'Unassigned',
-                                        startTime: item.startTime,
-                                        endTime: item.endTime,
-                                        type: "class",
-                                        examType: "",
-                                    })) || []
+                                    // Use the same filtering logic as the desktop view
+                                    const dayItems = scheduleData?.filter((item) => item.dayOfWeek === day) || []
 
                                     return (
                                         // Mobile View
@@ -70,9 +83,9 @@ export default function ScheduleDisplay({
                                                             <Box
                                                                 key={item.id}
                                                                 p={3}
-                                                                bg={`${getTypeColor(item.type, item.examType)}.50`}
+                                                                bg={`${getTypeColor(item.type)}.50`}
                                                                 borderLeft="4px solid"
-                                                                borderLeftColor={`${getTypeColor(item.type, item.examType)}.400`}
+                                                                borderLeftColor={`${getTypeColor(item.type)}.400`}
                                                                 borderRadius="md"
                                                                 onClick={() => onEditClick(item)}
                                                                 cursor="pointer"
@@ -83,8 +96,8 @@ export default function ScheduleDisplay({
                                                                     <Text fontWeight="bold" fontSize="sm">
                                                                         {item.code}
                                                                     </Text>
-                                                                    <Badge colorScheme={getTypeColor(item.type, item.examType)} size="sm">
-                                                                        {item.type === "exam" ? item.examType : "Class"}
+                                                                    <Badge colorScheme={getTypeColor(item.type)} size="sm">
+                                                                        {item.type === "exam" ? "Exam" : "Class"}
                                                                     </Badge>
                                                                 </HStack>
                                                                 <Text fontSize="sm" mb={1}>
