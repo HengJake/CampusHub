@@ -39,12 +39,12 @@ export const createEHailing = controllerWrapper(async (req, res) => {
 });
 
 export const getAllEHailing = controllerWrapper(async (req, res) => {
-  return await getAllRecords(EHailing, "eHailing", ["studentId", "routeId", "pickupLocation", "dropOffLocation", "vehicleId"]);
+  return await getAllRecords(EHailing, "eHailing", ["studentId", "routeId", "vehicleId"]);
 });
 
 export const getEHailingById = controllerWrapper(async (req, res) => {
   const { id } = req.params;
-  return await getRecordById(EHailing, id, "eHailing", ["studentId", "routeId", "pickupLocation", "dropOffLocation", "vehicleId"]);
+  return await getRecordById(EHailing, id, "eHailing", ["studentId", "routeId", "vehicleId"]);
 });
 
 // Get EHailings by Student ID
@@ -53,7 +53,7 @@ export const getEHailingsByStudentId = controllerWrapper(async (req, res) => {
   return await getAllRecords(
     EHailing,
     "eHailings",
-    ["studentId", "routeId", "pickupLocation", "dropOffLocation", "vehicleId"],
+    ["studentId", "routeId", "vehicleId"],
     { studentId: studentId }
   );
 });
@@ -64,7 +64,7 @@ export const getEHailingsByRouteId = controllerWrapper(async (req, res) => {
   return await getAllRecords(
     EHailing,
     "eHailings",
-    ["studentId", "routeId", "pickupLocation", "dropOffLocation", "vehicleId"],
+    ["studentId", "routeId", "vehicleId"],
     { routeId: routeId }
   );
 });
@@ -75,8 +75,19 @@ export const getEHailingsByVehicleId = controllerWrapper(async (req, res) => {
   return await getAllRecords(
     EHailing,
     "eHailings",
-    ["studentId", "routeId", "pickupLocation", "dropOffLocation", "vehicleId"],
+    ["studentId", "routeId", "vehicleId"],
     { vehicleId: vehicleId }
+  );
+});
+
+// Get EHailings by School ID
+export const getEHailingsBySchoolId = controllerWrapper(async (req, res) => {
+  const { schoolId } = req.params;
+  return await getAllRecords(
+    EHailing,
+    "eHailings",
+    ["studentId", "routeId", "vehicleId"],
+    { schoolId: schoolId }
   );
 });
 

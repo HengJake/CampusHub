@@ -34,6 +34,8 @@ import {
 } from "@chakra-ui/react"
 import { FiMessageSquare, FiClock, FiCheckCircle, FiAlertCircle } from "react-icons/fi"
 import { useState, useEffect } from "react"
+import { useServiceStore } from "../../store/service.js"
+import React from "react"
 
 export function FeedbackManagement() {
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -42,61 +44,55 @@ export function FeedbackManagement() {
   const [response, setResponse] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [categoryFilter, setCategoryFilter] = useState("All")
-  const [feedback, setFeedback] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [activeTab, setActiveTab] = useState("unresponded") // "unresponded" or "responded"
 
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
 
-  const API_BASE_URL = "http://localhost:5000/api"
+  // Use service store
+  const {
+    feedback,
+    responds,
+    loading,
+    errors,
+    fetchFeedback,
+    fetchResponds,
+    updateFeedback,
+    createRespond
+  } = useServiceStore()
 
   // Fetch feedback data from backend
-  const fetchFeedback = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch(`${API_BASE_URL}/feedback`, {
-        credentials: 'include'
-      })
-      if (!response.ok) {
-        throw new Error('Failed to fetch feedback data')
-      }
-      const data = await response.json()
-      setFeedback(data.data || [])
-    } catch (error) {
-      console.error('Error fetching feedback:', error)
-      setError(error.message)
+  const loadFeedback = async () => {
+    const result = await fetchFeedback()
+    if (!result.success) {
       toast({
         title: "Error",
-        description: "Failed to load feedback data",
+        description: result.message || "Failed to load feedback data",
         status: "error",
         duration: 3000,
         isClosable: true,
       })
-    } finally {
-      setLoading(false)
+    }
+  }
+
+  // Fetch responds data from backend
+  const loadResponds = async () => {
+    const result = await fetchResponds()
+    if (!result.success) {
+      toast({
+        title: "Error",
+        description: result.message || "Failed to load responses data",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
     }
   }
 
   // Update feedback status
   const updateFeedbackStatus = async (id, status) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/feedback/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ status }),
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to update feedback status')
-      }
-      
-      // Refresh the feedback list
-      await fetchFeedback()
-      
+    const result = await updateFeedback(id, { status })
+    if (result.success) {
       toast({
         title: "Success",
         description: "Feedback status updated successfully",
@@ -104,11 +100,10 @@ export function FeedbackManagement() {
         duration: 3000,
         isClosable: true,
       })
-    } catch (error) {
-      console.error('Error updating feedback status:', error)
+    } else {
       toast({
         title: "Error",
-        description: "Failed to update feedback status",
+        description: result.message || "Failed to update feedback status",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -118,28 +113,55 @@ export function FeedbackManagement() {
 
   // Load feedback data on component mount
   useEffect(() => {
-    fetchFeedback()
+    loadFeedback()
+    loadResponds()
   }, [])
 
   // Transform backend data to match frontend expectations
   const transformFeedbackData = (backendData) => {
-    return backendData.map(item => ({
-      id: item._id,
-      studentName: item.studentId?.name || "Unknown Student", // Assuming studentId is populated
-      category: item.feedbackType,
-      subject: item.message?.substring(0, 50) + (item.message?.length > 50 ? "..." : ""),
-      message: item.message,
-      status: item.status,
-      priority: item.priority,
-      date: new Date(item.createdAt).toLocaleDateString(),
-      studentId: item.studentId,
-      schoolId: item.schoolId,
-    }))
+    return backendData.map(item => {
+      return ({
+        id: item._id,
+        studentName: item.studentId.userId.name || "Unknown Student", // Assuming studentId is populated
+        category: item.feedbackType,
+        subject: item.message?.substring(0, 50) + (item.message?.length > 50 ? "..." : ""),
+        message: item.message,
+        status: item.status,
+        priority: item.priority,
+        date: new Date(item.createdAt).toLocaleDateString(),
+        studentId: item.studentId,
+        schoolId: item.schoolId,
+      });
+    })
+  }
+
+  // Get response for a specific feedback
+  const getResponseForFeedback = (feedbackId) => {
+    return responds.find(respond => respond.feedbackId === feedbackId)
   }
 
   const transformedFeedback = transformFeedbackData(feedback)
 
-  const filteredFeedback = transformedFeedback.filter((item) => {
+  // Get feedback IDs that have responses
+  const respondedFeedbackIds = responds.map(respond => respond.feedbackId)
+
+  // Separate feedback into responded and unresponded
+  const unrespondedFeedback = transformedFeedback.filter(item =>
+    !respondedFeedbackIds.includes(item.id) &&
+    item.status !== "resolved" &&
+    item.status !== "closed"
+  )
+
+  const respondedFeedback = transformedFeedback.filter(item =>
+    respondedFeedbackIds.includes(item.id) ||
+    item.status === "resolved" ||
+    item.status === "closed"
+  )
+
+  // Get the appropriate feedback list based on active tab
+  const currentFeedbackList = activeTab === "unresponded" ? unrespondedFeedback : respondedFeedback
+
+  const filteredFeedback = currentFeedbackList.filter((item) => {
     if (!item || typeof item !== 'object') return false;
     const status = item.status || "";
     const category = item.category || "";
@@ -167,30 +189,46 @@ export function FeedbackManagement() {
 
     if (selectedFeedback) {
       try {
-        // Update feedback status to resolved
-        await updateFeedbackStatus(selectedFeedback.id, "resolved")
-        
-        // Here you could also create a response record using the respond API
-        // For now, we'll just update the status
-        
-        toast({
-          title: "Response Sent",
-          description: "Your response has been sent to the student",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        })
+        // Create a response record
+        const respondData = {
+          feedbackId: selectedFeedback.id,
+          message: response,
+          status: "sent"
+        }
+
+        const respondResult = await createRespond(respondData)
+
+        if (respondResult.success) {
+          // Update feedback status to resolved
+          await updateFeedbackStatus(selectedFeedback.id, "resolved")
+
+          toast({
+            title: "Response Sent",
+            description: "Your response has been sent to the student",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          })
+        } else {
+          toast({
+            title: "Error",
+            description: respondResult.message || "Failed to send response",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          })
+        }
       } catch (error) {
         toast({
           title: "Error",
-          description: error.message || "Failed to update feedback status.",
+          description: error.message || "Failed to send response",
           status: "error",
           duration: 3000,
           isClosable: true,
         })
       }
     }
-    
+
     setResponse("")
     setSelectedFeedback(null)
     onClose()
@@ -227,11 +265,13 @@ export function FeedbackManagement() {
   }
 
   // Calculate feedback counts
-  const openCount = transformedFeedback.filter((f) => f && f.status === "open").length
-  const inProgressCount = transformedFeedback.filter((f) => f && f.status === "in_progress").length
-  const resolvedCount = transformedFeedback.filter((f) => f && f.status === "resolved").length
+  const openCount = unrespondedFeedback.filter((f) => f && f.status === "open").length
+  const inProgressCount = unrespondedFeedback.filter((f) => f && f.status === "in_progress").length
+  const resolvedCount = respondedFeedback.filter((f) => f && f.status === "resolved").length
+  const totalUnresponded = unrespondedFeedback.length
+  const totalResponded = respondedFeedback.length
 
-  if (loading) {
+  if (loading.feedback) {
     return (
       <Box p={6} minH="100vh" display="flex" alignItems="center" justifyContent="center">
         <VStack spacing={4}>
@@ -242,12 +282,12 @@ export function FeedbackManagement() {
     )
   }
 
-  if (error) {
+  if (errors.feedback) {
     return (
       <Box p={6} minH="100vh" display="flex" alignItems="center" justifyContent="center">
         <VStack spacing={4}>
-          <Text color="red.500">Error: {error}</Text>
-          <Button onClick={fetchFeedback} colorScheme="blue">
+          <Text color="red.500">Error: {errors.feedback}</Text>
+          <Button onClick={loadFeedback} colorScheme="blue">
             Retry
           </Button>
         </VStack>
@@ -275,12 +315,12 @@ export function FeedbackManagement() {
               <Stat>
                 <HStack justify="space-between">
                   <Box>
-                    <StatLabel color="gray.600">Total Feedback</StatLabel>
-                    <StatNumber color="#344E41">{transformedFeedback.length}</StatNumber>
-                    <StatHelpText>All time</StatHelpText>
+                    <StatLabel color="gray.600">Unresponded</StatLabel>
+                    <StatNumber color="#E53E3E">{totalUnresponded}</StatNumber>
+                    <StatHelpText>Needs attention</StatHelpText>
                   </Box>
-                  <Box color="#344E41" fontSize="2xl">
-                    <FiMessageSquare />
+                  <Box color="#E53E3E" fontSize="2xl">
+                    <FiAlertCircle />
                   </Box>
                 </HStack>
               </Stat>
@@ -326,8 +366,8 @@ export function FeedbackManagement() {
               <Stat>
                 <HStack justify="space-between">
                   <Box>
-                    <StatLabel color="gray.600">Resolved</StatLabel>
-                    <StatNumber color="#48BB78">{resolvedCount}</StatNumber>
+                    <StatLabel color="gray.600">Responded</StatLabel>
+                    <StatNumber color="#48BB78">{totalResponded}</StatNumber>
                     <StatHelpText>Completed</StatHelpText>
                   </Box>
                   <Box color="#48BB78" fontSize="2xl">
@@ -339,26 +379,55 @@ export function FeedbackManagement() {
           </Card>
         </Grid>
 
-        {/* Filters */}
+        {/* Tabs and Filters */}
         <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
           <CardBody>
-            <HStack spacing={4}>
-              <Select w="200px" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                <option value="All">All Status</option>
-                <option value="open">Open</option>
-                <option value="in_progress">In Progress</option>
-                <option value="resolved">Resolved</option>
-                <option value="closed">Closed</option>
-              </Select>
-              <Select w="200px" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-                <option value="All">All Categories</option>
-                <option value="complaint">Complaint</option>
-                <option value="compliment">Compliment</option>
-                <option value="suggestion">Suggestion</option>
-                <option value="query">Query</option>
-                <option value="issue">Issue</option>
-              </Select>
-            </HStack>
+            <VStack spacing={4}>
+              {/* Tabs */}
+              <HStack spacing={0} w="full" borderBottom="1px solid" borderColor="gray.200">
+                <Button
+                  variant={activeTab === "unresponded" ? "solid" : "ghost"}
+                  colorScheme={activeTab === "unresponded" ? "red" : "gray"}
+                  borderRadius="0"
+                  borderBottom={activeTab === "unresponded" ? "2px solid" : "none"}
+                  borderColor="red.500"
+                  onClick={() => setActiveTab("unresponded")}
+                  flex={1}
+                >
+                  Unresponded ({totalUnresponded})
+                </Button>
+                <Button
+                  variant={activeTab === "responded" ? "solid" : "ghost"}
+                  colorScheme={activeTab === "responded" ? "green" : "gray"}
+                  borderRadius="0"
+                  borderBottom={activeTab === "responded" ? "2px solid" : "none"}
+                  borderColor="green.500"
+                  onClick={() => setActiveTab("responded")}
+                  flex={1}
+                >
+                  Responded ({totalResponded})
+                </Button>
+              </HStack>
+
+              {/* Filters */}
+              <HStack spacing={4}>
+                <Select w="200px" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                  <option value="All">All Status</option>
+                  <option value="open">Open</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </Select>
+                <Select w="200px" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+                  <option value="All">All Categories</option>
+                  <option value="complaint">Complaint</option>
+                  <option value="compliment">Compliment</option>
+                  <option value="suggestion">Suggestion</option>
+                  <option value="query">Query</option>
+                  <option value="issue">Issue</option>
+                </Select>
+              </HStack>
+            </VStack>
           </CardBody>
         </Card>
 
@@ -366,7 +435,7 @@ export function FeedbackManagement() {
         <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
           <CardBody>
             <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
-              Feedback List ({filteredFeedback.length})
+              {activeTab === "unresponded" ? "Unresponded" : "Responded"} Feedback List ({filteredFeedback.length})
             </Text>
             <Table variant="simple">
               <Thead>
@@ -381,41 +450,70 @@ export function FeedbackManagement() {
                 </Tr>
               </Thead>
               <Tbody>
-                {filteredFeedback.map((item) => (
-                  <Tr key={item?.id || Math.random()}>
-                    <Td>
-                      <Text fontWeight="medium">{item?.studentName || "-"}</Text>
-                    </Td>
-                    <Td>
-                      <Badge colorScheme="blue">{item?.category || "-"}</Badge>
-                    </Td>
-                    <Td>
-                      <Text fontSize="sm">{item?.subject || "-"}</Text>
-                    </Td>
-                    <Td>
-                      <Badge colorScheme={getPriorityColor(item?.priority)}>{item?.priority || "-"}</Badge>
-                    </Td>
-                    <Td>
-                      <Badge colorScheme={getStatusColor(item?.status)}>{item?.status || "-"}</Badge>
-                    </Td>
-                    <Td>
-                      <Text fontSize="sm">{item?.date || "-"}</Text>
-                    </Td>
-                    <Td>
-                      {item?.status !== "resolved" && item?.status !== "closed" && (
-                        <Button
-                          size="sm"
-                          bg="#344E41"
-                          color="white"
-                          _hover={{ bg: "#2a3d33" }}
-                          onClick={() => handleRespond(item)}
-                        >
-                          Respond
-                        </Button>
+                {filteredFeedback.map((item) => {
+                  const response = getResponseForFeedback(item.id)
+                  return (
+                    <React.Fragment key={item?.id || Math.random()}>
+                      <Tr>
+                        <Td>
+                          <Text fontWeight="medium">{item?.studentName || "-"}</Text>
+                        </Td>
+                        <Td>
+                          <Badge colorScheme="blue">{item?.category || "-"}</Badge>
+                        </Td>
+                        <Td>
+                          <Text fontSize="sm">{item?.subject || "-"}</Text>
+                        </Td>
+                        <Td>
+                          <Badge colorScheme={getPriorityColor(item?.priority)}>{item?.priority || "-"}</Badge>
+                        </Td>
+                        <Td>
+                          <Badge colorScheme={getStatusColor(item?.status)}>{item?.status || "-"}</Badge>
+                        </Td>
+                        <Td>
+                          <Text fontSize="sm">{item?.date || "-"}</Text>
+                        </Td>
+                        <Td>
+                          {activeTab === "unresponded" && item?.status !== "resolved" && item?.status !== "closed" && (
+                            <Button
+                              size="sm"
+                              bg="#344E41"
+                              color="white"
+                              _hover={{ bg: "#2a3d33" }}
+                              onClick={() => handleRespond(item)}
+                            >
+                              Respond
+                            </Button>
+                          )}
+                          {activeTab === "responded" && (
+                            <Badge colorScheme="green" fontSize="xs">
+                              Responded
+                            </Badge>
+                          )}
+                        </Td>
+                      </Tr>
+                      {response && (
+                        <Tr bg="gray.50">
+                          <Td colSpan={7}>
+                            <VStack align="stretch" spacing={2}>
+                              <HStack justify="space-between">
+                                <Text fontSize="sm" fontWeight="semibold" color="green.600">
+                                  Response:
+                                </Text>
+                                <Text fontSize="xs" color="gray.500">
+                                  {new Date(response.createdAt).toLocaleDateString()}
+                                </Text>
+                              </HStack>
+                              <Text fontSize="sm" p={3} bg="white" borderRadius="md" border="1px solid" borderColor="gray.200">
+                                {response.message}
+                              </Text>
+                            </VStack>
+                          </Td>
+                        </Tr>
                       )}
-                    </Td>
-                  </Tr>
-                ))}
+                    </React.Fragment>
+                  )
+                })}
               </Tbody>
             </Table>
           </CardBody>

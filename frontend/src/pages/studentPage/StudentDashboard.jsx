@@ -24,7 +24,9 @@ import {
   Td,
   TableContainer,
   useDisclosure,
+  Spinner,
 } from "@chakra-ui/react"
+import { useState, useEffect } from "react"
 import {
   FiMapPin,
   FiBook,
@@ -38,8 +40,13 @@ import {
 } from "react-icons/fi"
 import { FaBus } from "react-icons/fa";
 import { useStudentStore } from "../../store/TBI/studentStore.js"
+import { useServiceStore } from "../../store/service.js"
+import { useFacilityStore } from "../../store/facility.js"
+import { useTransportationStore } from "../../store/transportation.js"
+import { useAcademicStore } from "../../store/academic.js"
 import { BookingModal } from "../../component/student/BookingModal"
 import { FeedbackModal } from "../../component/student/FeedbackModal"
+import { useAuthStore } from "../../store/auth.js";
 
 export default function StudentDashboard() {
   const {
@@ -52,10 +59,29 @@ export default function StudentDashboard() {
     examSchedule,
   } = useStudentStore()
 
+  const { getCurrentUser } = useAuthStore()
+  const currentUser = getCurrentUser()
+
+  // Use real data from stores
+  const { feedback, responds, fetchFeedback, fetchResponds } = useServiceStore()
+  const { bookings, fetchBookings } = useFacilityStore()
+  const { busSchedules, fetchBusSchedules } = useTransportationStore()
+  const { classSchedules, fetchClassSchedules, examSchedules, fetchExamSchedules } = useAcademicStore()
+
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
   const { isOpen: isBookingOpen, onOpen: onBookingOpen, onClose: onBookingClose } = useDisclosure()
   const { isOpen: isFeedbackOpen, onOpen: onFeedbackOpen, onClose: onFeedbackClose } = useDisclosure()
+
+  // Load data on component mount
+  useEffect(() => {
+    fetchFeedback()
+    fetchResponds()
+    fetchBookings()
+    fetchBusSchedules()
+    fetchClassSchedules()
+    fetchExamSchedules()
+  }, [])
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -92,7 +118,7 @@ export default function StudentDashboard() {
   }
 
   return (
-    <Box p={6} bg="gray.50" minH="100vh">
+    <Box p={6} minH="100vh">
       <VStack spacing={6} align="stretch">
         {/* Header */}
         <Box>
@@ -114,7 +140,7 @@ export default function StudentDashboard() {
                     Active Bookings
                   </Text>
                   <Text fontSize="2xl" fontWeight="bold">
-                    {myBookings.filter((b) => b.status !== "cancelled").length}
+                    {bookings.filter((b) => b.status !== "cancelled").length}
                   </Text>
                 </Box>
                 <Icon as={FiCalendar} boxSize={6} color="blue.500" />
@@ -130,10 +156,11 @@ export default function StudentDashboard() {
                     Avg Attendance
                   </Text>
                   <Text fontSize="2xl" fontWeight="bold">
-                    {Math.round(
-                      attendanceRecords.reduce((acc, record) => acc + record.percentage, 0) / attendanceRecords.length,
-                    )}
-                    %
+                    {attendanceRecords.length > 0
+                      ? Math.round(
+                        attendanceRecords.reduce((acc, record) => acc + record.percentage, 0) / attendanceRecords.length,
+                      )
+                      : 0}%
                   </Text>
                 </Box>
                 <Icon as={FiBarChart} boxSize={6} color="green.500" />
@@ -149,7 +176,7 @@ export default function StudentDashboard() {
                     Upcoming Exams
                   </Text>
                   <Text fontSize="2xl" fontWeight="bold">
-                    {examSchedule.length}
+                    {examSchedules.length}
                   </Text>
                 </Box>
                 <Icon as={FiClock} boxSize={6} color="orange.500" />
@@ -199,7 +226,7 @@ export default function StudentDashboard() {
                     </Text>
                     <VStack spacing={3} align="stretch">
                       {parkingSpots.map((spot) => (
-                        <HStack key={spot.id} justify="space-between" p={3} bg="gray.50" borderRadius="md">
+                        <HStack key={spot._id} justify="space-between" p={3} bg="gray.50" borderRadius="md">
                           <Box>
                             <Text fontWeight="medium">{spot.zone}</Text>
                             <Text fontSize="sm" color="gray.600">
@@ -227,12 +254,12 @@ export default function StudentDashboard() {
                       </Button>
                     </HStack>
                     <VStack spacing={3} align="stretch">
-                      {myBookings.slice(0, 3).map((booking) => (
-                        <HStack key={booking.id} justify="space-between" p={3} bg="gray.50" borderRadius="md">
+                      {bookings.slice(0, 3).map((booking) => (
+                        <HStack key={booking._id} justify="space-between" p={3} bg="gray.50" borderRadius="md">
                           <Box>
-                            <Text fontWeight="medium">{booking.resource}</Text>
+                            <Text fontWeight="medium">{booking.resourceId?.name || booking.resourceName}</Text>
                             <Text fontSize="sm" color="gray.600">
-                              {booking.date} • {booking.time}
+                              {new Date(booking.bookingDate).toLocaleDateString()} • {booking.startTime} - {booking.endTime}
                             </Text>
                           </Box>
                           <HStack>
@@ -280,14 +307,14 @@ export default function StudentDashboard() {
                         </Tr>
                       </Thead>
                       <Tbody>
-                        {shuttleSchedule.map((shuttle) => (
-                          <Tr key={shuttle.id}>
-                            <Td>{shuttle.route}</Td>
-                            <Td fontWeight="medium">{shuttle.nextArrival}</Td>
-                            <Td>{shuttle.frequency}</Td>
+                        {busSchedules.map((shuttle) => (
+                          <Tr key={shuttle._id}>
+                            <Td>{shuttle.routeId?.name || shuttle.routeName}</Td>
+                            <Td fontWeight="medium">{shuttle.departureTime}</Td>
+                            <Td>{shuttle.frequency || "Regular"}</Td>
                             <Td>
-                              <Badge colorScheme={getStatusColor(shuttle.status)} variant="subtle">
-                                {shuttle.status}
+                              <Badge colorScheme={getStatusColor(shuttle.status || "on-time")} variant="subtle">
+                                {shuttle.status || "on-time"}
                               </Badge>
                             </Td>
                           </Tr>
@@ -322,14 +349,14 @@ export default function StudentDashboard() {
                       Today's Schedule
                     </Text>
                     <VStack spacing={3} align="stretch">
-                      {academicSchedule.slice(0, 3).map((schedule) => (
-                        <Box key={schedule.id} p={3} bg="gray.50" borderRadius="md">
-                          <Text fontWeight="medium">{schedule.course}</Text>
+                      {classSchedules.slice(0, 3).map((schedule) => (
+                        <Box key={schedule._id} p={3} bg="gray.50" borderRadius="md">
+                          <Text fontWeight="medium">{schedule.moduleId?.name || schedule.moduleName}</Text>
                           <Text fontSize="sm" color="gray.600">
-                            {schedule.time} • {schedule.room}
+                            {schedule.startTime} - {schedule.endTime} • {schedule.roomId?.name || schedule.roomName}
                           </Text>
                           <Text fontSize="sm" color="gray.500">
-                            {schedule.instructor}
+                            {schedule.lecturerId?.name || schedule.lecturerName}
                           </Text>
                         </Box>
                       ))}
@@ -345,18 +372,18 @@ export default function StudentDashboard() {
                     </Text>
                     <VStack spacing={4} align="stretch">
                       {attendanceRecords.map((record) => (
-                        <Box key={record.id}>
+                        <Box key={record._id}>
                           <HStack justify="space-between" mb={2}>
                             <Text fontSize="sm" fontWeight="medium">
-                              {record.course}
+                              {record.moduleId?.name || record.moduleName}
                             </Text>
                             <Text fontSize="sm" color="gray.600">
-                              {record.attended}/{record.total} ({record.percentage}%)
+                              {record.attendedSessions}/{record.totalSessions} ({record.attendancePercentage}%)
                             </Text>
                           </HStack>
                           <Progress
-                            value={record.percentage}
-                            colorScheme={record.status === "good" ? "green" : "yellow"}
+                            value={record.attendancePercentage}
+                            colorScheme={record.attendancePercentage >= 80 ? "green" : "yellow"}
                             size="sm"
                           />
                         </Box>
@@ -401,6 +428,28 @@ export default function StudentDashboard() {
                       Find Classroom
                     </Button>
                   </Grid>
+                  {feedback.length > 0 && (
+                    <Box mt={4}>
+                      <Text fontSize="sm" fontWeight="semibold" mb={2}>
+                        Recent Feedback ({feedback.length})
+                      </Text>
+                      <VStack spacing={2} align="stretch">
+                        {feedback.slice(0, 2).map((item) => (
+                          <Box key={item._id} p={3} bg="gray.50" borderRadius="md">
+                            <Text fontSize="sm" fontWeight="medium">
+                              {item.feedbackType}
+                            </Text>
+                            <Text fontSize="xs" color="gray.600" noOfLines={2}>
+                              {item.message}
+                            </Text>
+                            <Badge colorScheme={getStatusColor(item.status)} size="sm" mt={1}>
+                              {item.status}
+                            </Badge>
+                          </Box>
+                        ))}
+                      </VStack>
+                    </Box>
+                  )}
                 </CardBody>
               </Card>
             </AccordionPanel>

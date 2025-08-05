@@ -4,6 +4,7 @@ import {
   getAllRoutes,
   getRouteById,
   getRoutesByStopId,
+  getRoutesBySchoolId,
   updateRoute,
   deleteRoute,
   deleteAllRoutes
@@ -14,6 +15,7 @@ const router = express.Router();
 router.post("/", createRoute);
 router.get("/", getAllRoutes);
 router.get("/stop/:stopId", getRoutesByStopId);
+router.get("/school/:schoolId", getRoutesBySchoolId);
 router.get("/:id", getRouteById);
 router.put("/:id", updateRoute);
 router.delete('/all', deleteAllRoutes);

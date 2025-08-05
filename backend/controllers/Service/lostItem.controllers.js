@@ -99,6 +99,17 @@ export const getLostItemsByMatchedItem = controllerWrapper(async (req, res) => {
   );
 });
 
+// Get LostItems by School ID
+export const getLostItemsBySchoolId = controllerWrapper(async (req, res) => {
+  const { schoolId } = req.params;
+  return await getAllRecords(
+    LostItem,
+    "lostItems",
+    ["personId", "schoolId", "matchedItem"],
+    { schoolId: schoolId }
+  );
+});
+
 export const updateLostItem = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await updateRecord(LostItem, id, req.body, "lostItem", validateLostItemData);

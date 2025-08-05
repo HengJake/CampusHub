@@ -2,6 +2,7 @@ import { Grid, Box, Text, useColorModeValue } from "@chakra-ui/react"
 import { RecentActivity } from "../../component/schoolAdminDashboard/RecentActivity"
 import { FacilityUsageChart } from "../../component/schoolAdminDashboard/FacilityUsageChart"
 import { BookingApprovals } from "../../component/schoolAdminDashboard/BookingApprovals"
+import { RecentBookings } from "../../component/schoolAdminDashboard/RecentBookings"
 import { QuickActions } from "../../component/schoolAdminDashboard/QuickActions"
 import { FiUsers, FiMapPin, FiLock, FiCalendar } from "react-icons/fi"
 import { useAdminStore } from "../../store/TBI/adminStore.js"
@@ -11,6 +12,7 @@ import { useServiceStore } from "../../store/service.js";
 import { useTransportationStore } from "../../store/transportation.js";
 import { useEffect } from "react";
 import { StatsCard } from "../../component/common/StatsCard.jsx"
+import { FaBookReader } from "react-icons/fa";
 
 
 export function Dashboard() {
@@ -31,12 +33,14 @@ export function Dashboard() {
     rooms, fetchRooms,
     schools, fetchSchools
   } = useAcademicStore();
-  const { bookings, fetchBookings, resources, fetchResources, timeSlots, fetchTimeSlots } = useFacilityStore();
-  const { feedback, fetchFeedback, foundItems, fetchFoundItems, lostItems, fetchLostItems, responds, fetchResponds } = useServiceStore();
+  const { bookings, fetchBookings, resources, fetchResources, lockerUnits, fetchLockerUnits } = useFacilityStore();
+  const { feedback, fetchFeedback, lostItems, fetchLostItems, responds, fetchResponds } = useServiceStore();
   const { busSchedules, fetchBusSchedules, eHailings, fetchEHailings, routes, fetchRoutes, stops, fetchStops, vehicles, fetchVehicles } = useTransportationStore();
 
   const stats = {
     studentChange: 0,
+    bookingChange: 0,
+    lockerChange: 0,
   }
 
   // Define date range for last month
@@ -54,51 +58,77 @@ export function Dashboard() {
   const totalStudentsLM = studentsLastMonth.length;
   stats.studentChange = Math.round((students.length - totalStudentsLM) / students.length * 100);
 
-  const lockerUsage = Math.round((dashboardStats.totalLockers - dashboardStats.pendingApprovals) / dashboardStats.totalLockers * 100)
-  const parkingOccupancy = Math.round((dashboardStats.parkingSpots - dashboardStats.pendingApprovals) / dashboardStats.parkingSpots * 100)
+  // BOOKING CHANGE
+  const bookingsThisMonth = bookings.filter(booking => {
+    const createdAt = new Date(booking.createdAt);
+    return createdAt >= firstDayOfThisMonth;
+  });
+
+  const bookingsLastMonth = bookings.filter(booking => {
+    const createdAt = new Date(booking.createdAt);
+    return createdAt >= firstDayOfLastMonth && createdAt <= lastDayOfLastMonth;
+  });
+
+  const totalBookingsLM = bookingsLastMonth.length;
+  const totalBookingsTM = bookingsThisMonth.length;
+
+  // Calculate percentage change
+  if (totalBookingsLM > 0) {
+    stats.bookingChange = Math.round(((totalBookingsTM - totalBookingsLM) / totalBookingsLM) * 100);
+  } else {
+    stats.bookingChange = totalBookingsTM > 0 ? 100 : 0; // If no bookings last month but some this month, show 100% increase
+  }
+
+  // LOCKER USAGE CALCULATION
+  const totalLockers = lockerUnits.length;
+  const usedLockers = lockerUnits.filter(locker => !locker.isAvailable).length;
+  const lockerUsage = Math.round((usedLockers / totalLockers) * 100)
+
+  // Display all intakes count
+  const currentMonthIntakes = intakes.length;
+
 
 
   useEffect(() => {
     // =====================
     // Academic Store Fetches
     // =====================
-    fetchStudents().then(() => console.log("Fetched students"));
-    fetchCourses().then(() => console.log("Fetched courses"));
-    fetchIntakes().then(() => console.log("Fetched intakes"));
-    fetchIntakeCourses().then(() => console.log("Fetched intakeCourses"));
-    fetchDepartments().then(() => console.log("Fetched departments"));
-    fetchLecturers().then(() => console.log("Fetched lecturers"));
-    fetchModules().then(() => console.log("Fetched modules"));
-    fetchClassSchedules().then(() => console.log("Fetched classSchedules"));
-    fetchExamSchedules().then(() => console.log("Fetched examSchedules"));
-    fetchAttendance().then(() => console.log("Fetched attendance"));
-    fetchResults().then(() => console.log("Fetched results"));
-    fetchRooms().then(() => console.log("Fetched rooms"));
-    fetchSchools().then(() => console.log("Fetched schools"));
+    fetchStudents();
+    fetchCourses();
+    fetchIntakes();
+    fetchIntakeCourses();
+    fetchDepartments();
+    fetchLecturers();
+    fetchModules();
+    fetchClassSchedules();
+    fetchExamSchedules();
+    fetchAttendance();
+    fetchResults();
+    fetchRooms();
+    fetchSchools();
 
     // =====================
     // Facility Store Fetches
     // =====================
-    fetchBookings().then(() => console.log("Fetched bookings"));
-    fetchResources().then(() => console.log("Fetched resources"));
-    fetchTimeSlots().then(() => console.log("Fetched timeSlots"));
+    fetchBookings();
+    fetchResources();
+    fetchLockerUnits();
 
     // =====================
     // Service Store Fetches
     // =====================
-    fetchFeedback().then(() => console.log("Fetched feedback"));
-    fetchFoundItems().then(() => console.log("Fetched foundItems"));
-    fetchLostItems().then(() => console.log("Fetched lostItems"));
-    fetchResponds().then(() => console.log("Fetched responds"));
+    fetchFeedback();
+    fetchLostItems();
+    fetchResponds();
 
     // =====================
     // Transportation Store Fetches
     // =====================
-    fetchBusSchedules().then(() => console.log("Fetched busSchedules"));
-    fetchEHailings().then(() => console.log("Fetched eHailings"));
-    fetchRoutes().then(() => console.log("Fetched routes"));
-    fetchStops().then(() => console.log("Fetched stops"));
-    fetchVehicles().then(() => console.log("Fetched vehicles"));
+    fetchBusSchedules();
+    fetchEHailings();
+    fetchRoutes();
+    fetchStops();
+    fetchVehicles();
 
   }, [])
 
@@ -113,22 +143,21 @@ export function Dashboard() {
           icon={<FiUsers />}
         />
         <StatsCard
-          title="Active Bookings ❌"
-          value={dashboardStats.activeBookings}
-          change={8}
+          title="Active Bookings"
+          value={bookings.length}
+          change={stats.bookingChange}
           icon={<FiCalendar />}
         />
         <StatsCard
-          title="Locker Usage ❌"
+          title="Locker Usage"
           value={`${lockerUsage}%`}
-          change={lockerUsage}
+          change={stats.lockerChange}
           icon={<FiLock />}
         />
         <StatsCard
-          title="Parking Spots ❌"
-          value={`${parkingOccupancy}%`}
-          change={parkingOccupancy}
-          icon={<FiMapPin />}
+          title="All Intake"
+          value={currentMonthIntakes}
+          icon={<FaBookReader />}
         />
       </Grid>
 
@@ -137,7 +166,7 @@ export function Dashboard() {
         <Box bg={bgColor} p={6} borderRadius="lg" shadow="sm" border="1px" borderColor="gray.200">
           <Box mb={4}>
             <Text fontSize="lg" fontWeight="semibold" mb={1}>
-              Facility Usage Trends ❌
+              Facility Usage Trends
             </Text>
             <Text fontSize="sm" color="gray.600">
               Daily facility bookings over the past 30 days
@@ -146,24 +175,26 @@ export function Dashboard() {
           <FacilityUsageChart />
         </Box>
 
+        {/* Recent Confirmed/Cancelled Bookings */}
         <Box bg={bgColor} p={6} borderRadius="lg" shadow="sm" border="1px" borderColor="gray.200">
-          <Box mb={4}>
+          <Box>
             <Text fontSize="lg" fontWeight="semibold" mb={1}>
-              Recent Activity ❌
+              Recent Booking Statuses
             </Text>
             <Text fontSize="sm" color="gray.600">
-              Latest system activities and user actions
+              Most recent confirmed and cancelled bookings
             </Text>
           </Box>
-          <RecentActivity />
+          <RecentBookings />
         </Box>
+
       </Grid>
 
-      <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
+      <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6} mb={6}>
         <Box bg={bgColor} p={6} borderRadius="lg" shadow="sm" border="1px" borderColor="gray.200">
           <Box mb={4}>
             <Text fontSize="lg" fontWeight="semibold" mb={1}>
-              Pending Approvals ❌
+              Pending Approvals
             </Text>
             <Text fontSize="sm" color="gray.600">
               Booking requests awaiting your approval
@@ -184,6 +215,8 @@ export function Dashboard() {
           <QuickActions />
         </Box>
       </Grid>
+
+
     </Box>
   )
 }

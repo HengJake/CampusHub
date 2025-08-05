@@ -4,6 +4,7 @@ import {
   getAllResponds,
   getRespondById,
   getRespondsByFeedbackId,
+  getRespondsBySchoolId,
   updateRespond,
   deleteRespond,
   deleteAllResponds
@@ -13,8 +14,9 @@ const router = express.Router();
 
 router.post("/", createRespond);
 router.get("/", getAllResponds);
-router.get("/:id", getRespondById);
 router.get("/feedback/:feedbackId", getRespondsByFeedbackId);
+router.get("/school/:schoolId", getRespondsBySchoolId);
+router.get("/:id", getRespondById);
 router.put("/:id", updateRespond);
 router.delete("/all", deleteAllResponds);
 router.delete("/:id", deleteRespond);

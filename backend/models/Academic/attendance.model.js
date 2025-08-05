@@ -30,7 +30,7 @@ const attendanceSchema = new mongoose.Schema({
         required: true,
         // Each attendance record belongs to a specific school
     }
-});
+}, { timestamps: true });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);
 export default Attendance;

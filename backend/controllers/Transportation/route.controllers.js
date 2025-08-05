@@ -33,12 +33,12 @@ export const createRoute = controllerWrapper(async (req, res) => {
 });
 
 export const getAllRoutes = controllerWrapper(async (req, res) => {
-  return await getAllRecords(Route, "route", ["StopID"]);
+  return await getAllRecords(Route, "route", ["stopIds"]);
 });
 
 export const getRouteById = controllerWrapper(async (req, res) => {
   const { id } = req.params;
-  return await getRecordById(Route, id, "route", ["StopID"]);
+  return await getRecordById(Route, id, "route", ["stopIds"]);
 });
 
 // Get Routes by Stop ID
@@ -47,8 +47,19 @@ export const getRoutesByStopId = controllerWrapper(async (req, res) => {
   return await getAllRecords(
     Route,
     "routes",
-    ["StopID"],
-    { StopID: stopId }
+    ["stopIds"],
+    { stopIds: { $in: [stopId] } }
+  );
+});
+
+// Get Routes by School ID
+export const getRoutesBySchoolId = controllerWrapper(async (req, res) => {
+  const { schoolId } = req.params;
+  return await getAllRecords(
+    Route,
+    "routes",
+    ["stopIds"],
+    { schoolId: schoolId }
   );
 });
 

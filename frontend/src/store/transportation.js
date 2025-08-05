@@ -71,7 +71,7 @@ export const useTransportationStore = create((set, get) => ({
     fetchBusSchedules: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, busSchedules: true } }));
         try {
-            const url = get().buildUrl("/api/busSchedule", filters);
+            const url = get().buildUrl("/api/bus-schedule", filters);
             const res = await fetch(url);
             const data = await res.json();
             if (!data.success) {
@@ -101,7 +101,7 @@ export const useTransportationStore = create((set, get) => ({
                     busScheduleData.schoolId = schoolId;
                 }
             }
-            const res = await fetch("/api/busSchedule", {
+            const res = await fetch("/api/bus-schedule", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(busScheduleData),
@@ -118,7 +118,7 @@ export const useTransportationStore = create((set, get) => ({
     },
     updateBusSchedule: async (id, updates) => {
         try {
-            const res = await fetch(`/api/busSchedule/${id}`, {
+            const res = await fetch(`/api/bus-schedule/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(updates),
@@ -139,7 +139,7 @@ export const useTransportationStore = create((set, get) => ({
     },
     deleteBusSchedule: async (id) => {
         try {
-            const res = await fetch(`/api/busSchedule/${id}`, {
+            const res = await fetch(`/api/bus-schedule/${id}`, {
                 method: "DELETE",
             });
             const data = await res.json();
@@ -159,7 +159,7 @@ export const useTransportationStore = create((set, get) => ({
     fetchEHailings: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, eHailings: true } }));
         try {
-            const url = get().buildUrl("/api/eHailing", filters);
+            const url = get().buildUrl("/api/e-hailing", filters);
             const res = await fetch(url);
             const data = await res.json();
             if (!data.success) {
@@ -189,7 +189,7 @@ export const useTransportationStore = create((set, get) => ({
                     eHailingData.schoolId = schoolId;
                 }
             }
-            const res = await fetch("/api/eHailing", {
+            const res = await fetch("/api/e-hailing", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(eHailingData),
@@ -206,7 +206,7 @@ export const useTransportationStore = create((set, get) => ({
     },
     updateEHailing: async (id, updates) => {
         try {
-            const res = await fetch(`/api/eHailing/${id}`, {
+            const res = await fetch(`/api/e-hailing/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(updates),
@@ -227,7 +227,7 @@ export const useTransportationStore = create((set, get) => ({
     },
     deleteEHailing: async (id) => {
         try {
-            const res = await fetch(`/api/eHailing/${id}`, {
+            const res = await fetch(`/api/e-hailing/${id}`, {
                 method: "DELETE",
             });
             const data = await res.json();

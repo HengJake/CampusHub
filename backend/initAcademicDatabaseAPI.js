@@ -96,7 +96,6 @@ async function createFullSchoolData({
         resources: [],
         bookings: [],
         lockerUnits: [],
-        timeSlots: [],
         parkingLots: [],
         // Transportation
         stops: [],
@@ -470,6 +469,102 @@ async function createFullSchoolData({
             assessmentMethods: ["exam", "project"],
             isActive: true,
             schoolId: createdIds.school
+        },
+        {
+            moduleName: "Computer Networks",
+            code: "CS304",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: [],
+            moduleDescription: "Fundamentals of computer networking",
+            learningOutcomes: [
+                "Understand network protocols",
+                "Configure network devices",
+                "Troubleshoot network issues"
+            ],
+            assessmentMethods: ["exam", "assignment"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Data Structures & Algorithms",
+            code: "CS305",
+            totalCreditHours: 4,
+            courseId: createdIds.courses[0],
+            prerequisites: [],
+            moduleDescription: "Advanced data structures and algorithm analysis",
+            learningOutcomes: [
+                "Implement complex data structures",
+                "Analyze algorithm efficiency",
+                "Solve algorithmic problems"
+            ],
+            assessmentMethods: ["exam", "assignment", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Artificial Intelligence",
+            code: "CS306",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: [],
+            moduleDescription: "Introduction to AI and machine learning",
+            learningOutcomes: [
+                "Understand AI concepts",
+                "Implement ML algorithms",
+                "Build AI applications"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "IT Infrastructure",
+            code: "IT301",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: [],
+            moduleDescription: "IT infrastructure and system administration",
+            learningOutcomes: [
+                "Manage IT infrastructure",
+                "Configure servers",
+                "Implement security measures"
+            ],
+            assessmentMethods: ["exam", "assignment"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Cybersecurity",
+            code: "IT302",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: [],
+            moduleDescription: "Cybersecurity principles and practices",
+            learningOutcomes: [
+                "Understand security threats",
+                "Implement security measures",
+                "Conduct security audits"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Cloud Computing",
+            code: "IT303",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: [],
+            moduleDescription: "Cloud computing technologies and services",
+            learningOutcomes: [
+                "Deploy cloud applications",
+                "Manage cloud resources",
+                "Understand cloud security"
+            ],
+            assessmentMethods: ["exam", "assignment"],
+            isActive: true,
+            schoolId: createdIds.school
         }
     ];
     for (let i = 0; i < modulesData.length; i++) {
@@ -614,6 +709,97 @@ async function createFullSchoolData({
             schoolId: createdIds.school,
             moduleStartDate: "2024-06-01T00:00:00.000Z",
             moduleEndDate: "2024-10-31T23:59:59.000Z"
+        },
+        {
+            roomId: createdIds.rooms.tech_lab,
+            moduleId: createdIds.modules[2],
+            lecturerId: createdIds.lecturers[0],
+            dayOfWeek: "Wednesday",
+            startTime: "10:00",
+            endTime: "13:00",
+            intakeCourseId: createdIds.intakeCourses[0],
+            semesterId: createdIds.semesters[0],
+            schoolId: createdIds.school,
+            moduleStartDate: "2024-02-01T00:00:00.000Z",
+            moduleEndDate: "2024-06-30T23:59:59.000Z"
+        },
+        {
+            roomId: createdIds.rooms.classroom,
+            moduleId: createdIds.modules[3],
+            lecturerId: createdIds.lecturers[1],
+            dayOfWeek: "Thursday",
+            startTime: "14:00",
+            endTime: "17:00",
+            intakeCourseId: createdIds.intakeCourses[1],
+            semesterId: createdIds.semesters[1],
+            schoolId: createdIds.school,
+            moduleStartDate: "2024-06-01T00:00:00.000Z",
+            moduleEndDate: "2024-10-31T23:59:59.000Z"
+        },
+        {
+            roomId: createdIds.rooms.tech_lab,
+            moduleId: createdIds.modules[4],
+            lecturerId: createdIds.lecturers[0],
+            dayOfWeek: "Friday",
+            startTime: "09:00",
+            endTime: "12:00",
+            intakeCourseId: createdIds.intakeCourses[0],
+            semesterId: createdIds.semesters[0],
+            schoolId: createdIds.school,
+            moduleStartDate: "2024-02-01T00:00:00.000Z",
+            moduleEndDate: "2024-06-30T23:59:59.000Z"
+        },
+        {
+            roomId: createdIds.rooms.classroom,
+            moduleId: createdIds.modules[5],
+            lecturerId: createdIds.lecturers[1],
+            dayOfWeek: "Monday",
+            startTime: "14:00",
+            endTime: "17:00",
+            intakeCourseId: createdIds.intakeCourses[1],
+            semesterId: createdIds.semesters[1],
+            schoolId: createdIds.school,
+            moduleStartDate: "2024-06-01T00:00:00.000Z",
+            moduleEndDate: "2024-10-31T23:59:59.000Z"
+        },
+        {
+            roomId: createdIds.rooms.tech_lab,
+            moduleId: createdIds.modules[6],
+            lecturerId: createdIds.lecturers[0],
+            dayOfWeek: "Tuesday",
+            startTime: "09:00",
+            endTime: "12:00",
+            intakeCourseId: createdIds.intakeCourses[2],
+            semesterId: createdIds.semesters[2],
+            schoolId: createdIds.school,
+            moduleStartDate: "2024-10-01T00:00:00.000Z",
+            moduleEndDate: "2025-02-28T23:59:59.000Z"
+        },
+        {
+            roomId: createdIds.rooms.classroom,
+            moduleId: createdIds.modules[7],
+            lecturerId: createdIds.lecturers[1],
+            dayOfWeek: "Wednesday",
+            startTime: "13:00",
+            endTime: "16:00",
+            intakeCourseId: createdIds.intakeCourses[2],
+            semesterId: createdIds.semesters[2],
+            schoolId: createdIds.school,
+            moduleStartDate: "2024-10-01T00:00:00.000Z",
+            moduleEndDate: "2025-02-28T23:59:59.000Z"
+        },
+        {
+            roomId: createdIds.rooms.tech_lab,
+            moduleId: createdIds.modules[8],
+            lecturerId: createdIds.lecturers[0],
+            dayOfWeek: "Thursday",
+            startTime: "10:00",
+            endTime: "13:00",
+            intakeCourseId: createdIds.intakeCourses[2],
+            semesterId: createdIds.semesters[2],
+            schoolId: createdIds.school,
+            moduleStartDate: "2024-10-01T00:00:00.000Z",
+            moduleEndDate: "2025-02-28T23:59:59.000Z"
         }
     ];
     for (let i = 0; i < classSchedulesData.length; i++) {
@@ -624,12 +810,17 @@ async function createFullSchoolData({
 
     // 12. Create Exam Schedules
     console.log(`[${schoolPrefix}] 12. Creating Exam Schedules...`);
+    // Calculate exam dates: current date + 1 week
+    const currentDate = new Date();
+    const examDate1 = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000); // +1 week
+    const examDate2 = new Date(currentDate.getTime() + 8 * 24 * 60 * 60 * 1000); // +1 week + 1 day
+
     const examSchedulesData = [
         {
             intakeCourseId: createdIds.intakeCourses[0],
             courseId: createdIds.courses[0],
             moduleId: createdIds.modules[0],
-            examDate: "2024-06-01",
+            examDate: examDate1.toISOString().split('T')[0],
             examTime: "09:00",
             semesterId: createdIds.semesters[0],
             roomId: createdIds.rooms.tech_lab,
@@ -642,7 +833,7 @@ async function createFullSchoolData({
             courseId: createdIds.courses[1],
             moduleId: createdIds.modules[1],
             semesterId: createdIds.semesters[1],
-            examDate: "2024-08-01",
+            examDate: examDate2.toISOString().split('T')[0],
             examTime: "14:00",
             roomId: createdIds.rooms.tech_lab,
             invigilators: [createdIds.lecturers[1]],
@@ -862,58 +1053,581 @@ async function createFullSchoolData({
     createdIds.invoice = invoiceRes.data._id;
 
     // 3. Facility
-    console.log(`[${schoolPrefix}] Facility: Creating Resource...`);
-    const resourceData = {
-        schoolId: createdIds.school,
-        name: "Main Library",
-        location: "Block D",
-        type: "study_room",
-        capacity: 50,
-        status: true
-    };
-    const resourceRes = await apiCall('POST', '/api/resource', resourceData);
-    createdIds.resources.push(resourceRes.data._id);
+    console.log(`[${schoolPrefix}] Facility: Creating Resources...`);
+    const resourceData = [
+        {
+            schoolId: createdIds.school,
+            name: "Main Library",
+            location: "Block D",
+            type: "study_room",
+            capacity: 50,
+            status: true,
+            timeslots: [
+                {
+                    dayOfWeek: "Monday",
+                    slots: [
+                        { start: "08:00", end: "10:00" },
+                        { start: "10:00", end: "12:00" },
+                        { start: "14:00", end: "16:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Tuesday",
+                    slots: [
+                        { start: "09:00", end: "11:00" },
+                        { start: "13:00", end: "15:00" }
+                    ]
+                }
+            ]
+        },
+        {
+            schoolId: createdIds.school,
+            name: "Computer Lab A",
+            location: "Block C",
+            type: "study_room",
+            capacity: 30,
+            status: true,
+            timeslots: [
+                {
+                    dayOfWeek: "Monday",
+                    slots: [
+                        { start: "09:00", end: "11:00" },
+                        { start: "14:00", end: "16:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Wednesday",
+                    slots: [
+                        { start: "10:00", end: "12:00" },
+                        { start: "15:00", end: "17:00" }
+                    ]
+                }
+            ]
+        },
+        {
+            schoolId: createdIds.school,
+            name: "Basketball Court",
+            location: "Sports Complex",
+            type: "court",
+            capacity: 20,
+            status: true,
+            timeslots: [
+                {
+                    dayOfWeek: "Monday",
+                    slots: [
+                        { start: "16:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Wednesday",
+                    slots: [
+                        { start: "17:00", end: "19:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Friday",
+                    slots: [
+                        { start: "15:00", end: "17:00" }
+                    ]
+                }
+            ]
+        },
+        {
+            schoolId: createdIds.school,
+            name: "Meeting Room 1",
+            location: "Block A",
+            type: "meeting_room",
+            capacity: 15,
+            status: true,
+            timeslots: [
+                {
+                    dayOfWeek: "Tuesday",
+                    slots: [
+                        { start: "09:00", end: "11:00" },
+                        { start: "14:00", end: "16:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Thursday",
+                    slots: [
+                        { start: "10:00", end: "12:00" }
+                    ]
+                }
+            ]
+        },
+        {
+            schoolId: createdIds.school,
+            name: "Seminar Hall",
+            location: "Block B",
+            type: "seminar_room",
+            capacity: 100,
+            status: true,
+            timeslots: [
+                {
+                    dayOfWeek: "Monday",
+                    slots: [
+                        { start: "14:00", end: "16:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Wednesday",
+                    slots: [
+                        { start: "10:00", end: "12:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Friday",
+                    slots: [
+                        { start: "15:00", end: "17:00" }
+                    ]
+                }
+            ]
+        },
+        {
+            schoolId: createdIds.school,
+            name: "Locker Bank A",
+            location: "Block D",
+            type: "locker",
+            capacity: 50,
+            status: true,
+            timeslots: [
+                {
+                    dayOfWeek: "Monday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Tuesday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Wednesday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Thursday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Friday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                }
+            ]
+        }
+    ];
 
-    console.log(`[${schoolPrefix}] Facility: Creating Booking...`);
-    const bookingData = {
-        studentId: createdIds.students[0],
-        resourceId: createdIds.resources[0],
-        schoolId: createdIds.school,
-        startTime: "09:00",
-        endTime: "11:00",
-        status: "confirmed"
-    };
-    const bookingRes = await apiCall('POST', '/api/booking', bookingData);
-    createdIds.bookings.push(bookingRes.data._id);
+    for (let i = 0; i < resourceData.length; i++) {
+        const resourceRes = await apiCall('POST', '/api/resource', resourceData[i]);
+        createdIds.resources.push(resourceRes.data._id);
+        console.log(`[${schoolPrefix}] ✅ Resource created: ${resourceData[i].name} (${resourceRes.data._id})`);
+    }
 
-    console.log(`[${schoolPrefix}] Facility: Creating LockerUnit...`);
-    const lockerUnitData = {
-        resourceId: createdIds.resources[0],
-        schoolId: createdIds.school,
-        isAvailable: true
-    };
-    const lockerUnitRes = await apiCall('POST', '/api/locker-unit', lockerUnitData);
-    createdIds.lockerUnits.push(lockerUnitRes.data._id);
+    console.log(`[${schoolPrefix}] Facility: Creating Bookings...`);
+    const bookingData = [
+        // Current month bookings (for active bookings calculation)
+        {
+            studentId: createdIds.students[0],
+            resourceId: createdIds.resources[0],
+            schoolId: createdIds.school,
+            bookingDate: new Date(),
+            startTime: "09:00",
+            endTime: "11:00",
+            status: "confirmed"
+        },
+        {
+            studentId: createdIds.students[1],
+            resourceId: createdIds.resources[1],
+            schoolId: createdIds.school,
+            bookingDate: new Date(),
+            startTime: "13:00",
+            endTime: "15:00",
+            status: "pending"
+        },
+        {
+            studentId: createdIds.students[2],
+            resourceId: createdIds.resources[2],
+            schoolId: createdIds.school,
+            bookingDate: new Date(),
+            startTime: "10:00",
+            endTime: "12:00",
+            status: "confirmed"
+        },
+        {
+            studentId: createdIds.students[3],
+            resourceId: createdIds.resources[3],
+            schoolId: createdIds.school,
+            bookingDate: new Date(),
+            startTime: "14:00",
+            endTime: "16:00",
+            status: "confirmed"
+        },
+        {
+            studentId: createdIds.students[4],
+            resourceId: createdIds.resources[4],
+            schoolId: createdIds.school,
+            bookingDate: new Date(),
+            startTime: "16:00",
+            endTime: "18:00",
+            status: "completed"
+        },
+        {
+            studentId: createdIds.students[5],
+            resourceId: createdIds.resources[0],
+            schoolId: createdIds.school,
+            bookingDate: new Date(),
+            startTime: "08:00",
+            endTime: "10:00",
+            status: "confirmed"
+        },
+        {
+            studentId: createdIds.students[6],
+            resourceId: createdIds.resources[1],
+            schoolId: createdIds.school,
+            bookingDate: new Date(),
+            startTime: "11:00",
+            endTime: "13:00",
+            status: "pending"
+        },
+        {
+            studentId: createdIds.students[7],
+            resourceId: createdIds.resources[2],
+            schoolId: createdIds.school,
+            bookingDate: new Date(),
+            startTime: "15:00",
+            endTime: "17:00",
+            status: "confirmed"
+        },
+        // Last month bookings (for comparison)
+        {
+            studentId: createdIds.students[0],
+            resourceId: createdIds.resources[0],
+            schoolId: createdIds.school,
+            bookingDate: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 15),
+            startTime: "09:00",
+            endTime: "11:00",
+            status: "confirmed"
+        },
+        {
+            studentId: createdIds.students[1],
+            resourceId: createdIds.resources[1],
+            schoolId: createdIds.school,
+            bookingDate: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 16),
+            startTime: "13:00",
+            endTime: "15:00",
+            status: "cancelled"
+        },
+        {
+            studentId: createdIds.students[2],
+            resourceId: createdIds.resources[2],
+            schoolId: createdIds.school,
+            bookingDate: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 17),
+            startTime: "10:00",
+            endTime: "12:00",
+            status: "completed"
+        },
+        {
+            studentId: createdIds.students[3],
+            resourceId: createdIds.resources[3],
+            schoolId: createdIds.school,
+            bookingDate: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 18),
+            startTime: "14:00",
+            endTime: "16:00",
+            status: "confirmed"
+        },
+        // Additional current month bookings for variety
+        {
+            studentId: createdIds.students[4],
+            resourceId: createdIds.resources[4],
+            schoolId: createdIds.school,
+            bookingDate: new Date(),
+            startTime: "09:00",
+            endTime: "11:00",
+            status: "confirmed"
+        },
+        {
+            studentId: createdIds.students[5],
+            resourceId: createdIds.resources[0],
+            schoolId: createdIds.school,
+            bookingDate: new Date(),
+            startTime: "14:00",
+            endTime: "16:00",
+            status: "pending"
+        },
+        {
+            studentId: createdIds.students[6],
+            resourceId: createdIds.resources[1],
+            schoolId: createdIds.school,
+            bookingDate: new Date(),
+            startTime: "10:00",
+            endTime: "12:00",
+            status: "confirmed"
+        }
+    ];
 
-    console.log(`[${schoolPrefix}] Facility: Creating TimeSlot...`);
-    const timeSlotData = {
-        resourceId: createdIds.resources[0],
-        schoolId: createdIds.school,
-        dayOfWeek: "Monday",
-        timeslot: [{ start: "09:00", end: "10:00" }]
-    };
-    const timeSlotRes = await apiCall('POST', '/api/time-slot', timeSlotData);
-    createdIds.timeSlots.push(timeSlotRes.data._id);
+    for (let i = 0; i < bookingData.length; i++) {
+        const bookingRes = await apiCall('POST', '/api/booking', bookingData[i]);
+        createdIds.bookings.push(bookingRes.data._id);
+        console.log(`[${schoolPrefix}] ✅ Booking created: ${bookingData[i].status} (${bookingRes.data._id})`);
+    }
 
-    console.log(`[${schoolPrefix}] Facility: Creating ParkingLot...`);
-    const parkingLotData = {
-        schoolId: createdIds.school,
-        zone: "A",
-        slotNumber: 10,
-        active: true
-    };
-    const parkingLotRes = await apiCall('POST', '/api/parking-lot', parkingLotData);
-    createdIds.parkingLots.push(parkingLotRes.data._id);
+    console.log(`[${schoolPrefix}] Facility: Creating LockerUnits...`);
+
+    // Create multiple locker units with variety for dashboard display
+    const lockerUnitData = [
+        // Available lockers (current month)
+        {
+            resourceId: createdIds.resources[5], // Locker Bank A
+            schoolId: createdIds.school,
+            isAvailable: true,
+            createdAt: new Date() // Current month
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: true,
+            createdAt: new Date()
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: true,
+            createdAt: new Date()
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: true,
+            createdAt: new Date()
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: true,
+            createdAt: new Date()
+        },
+        // Used lockers (current month)
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: false,
+            createdAt: new Date()
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: false,
+            createdAt: new Date()
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: false,
+            createdAt: new Date()
+        },
+        // Last month lockers (for comparison)
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: false,
+            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 15)
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: true,
+            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 20)
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: false,
+            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 25)
+        },
+        // Two months ago lockers
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: true,
+            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 10)
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: false,
+            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 15)
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: true,
+            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 20)
+        },
+        // Additional variety for better statistics
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: false,
+            createdAt: new Date()
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: true,
+            createdAt: new Date()
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: false,
+            createdAt: new Date()
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: true,
+            createdAt: new Date()
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: false,
+            createdAt: new Date()
+        },
+        {
+            resourceId: createdIds.resources[5],
+            schoolId: createdIds.school,
+            isAvailable: true,
+            createdAt: new Date()
+        }
+    ];
+
+    for (let i = 0; i < lockerUnitData.length; i++) {
+        const lockerUnitRes = await apiCall('POST', '/api/locker-unit', lockerUnitData[i]);
+        createdIds.lockerUnits.push(lockerUnitRes.data._id);
+        console.log(`[${schoolPrefix}] ✅ Locker Unit created: ${lockerUnitData[i].isAvailable ? 'Available' : 'Used'} (${lockerUnitRes.data._id})`);
+    }
+
+    console.log(`[${schoolPrefix}] Facility: Creating ParkingLots...`);
+
+    // Create multiple parking lots with variety for dashboard display
+    const parkingLotData = [
+        // Zone A parking lots
+        {
+            schoolId: createdIds.school,
+            zone: "A",
+            slotNumber: 1,
+            active: true,
+            createdAt: new Date()
+        },
+        {
+            schoolId: createdIds.school,
+            zone: "A",
+            slotNumber: 2,
+            active: true,
+            createdAt: new Date()
+        },
+        {
+            schoolId: createdIds.school,
+            zone: "A",
+            slotNumber: 3,
+            active: false,
+            createdAt: new Date()
+        },
+        {
+            schoolId: createdIds.school,
+            zone: "A",
+            slotNumber: 4,
+            active: true,
+            createdAt: new Date()
+        },
+        {
+            schoolId: createdIds.school,
+            zone: "A",
+            slotNumber: 5,
+            active: false,
+            createdAt: new Date()
+        },
+        // Zone B parking lots
+        {
+            schoolId: createdIds.school,
+            zone: "B",
+            slotNumber: 1,
+            active: true,
+            createdAt: new Date()
+        },
+        {
+            schoolId: createdIds.school,
+            zone: "B",
+            slotNumber: 2,
+            active: true,
+            createdAt: new Date()
+        },
+        {
+            schoolId: createdIds.school,
+            zone: "B",
+            slotNumber: 3,
+            active: false,
+            createdAt: new Date()
+        },
+        {
+            schoolId: createdIds.school,
+            zone: "B",
+            slotNumber: 4,
+            active: true,
+            createdAt: new Date()
+        },
+        {
+            schoolId: createdIds.school,
+            zone: "B",
+            slotNumber: 5,
+            active: false,
+            createdAt: new Date()
+        },
+        // Last month parking lots (for comparison)
+        {
+            schoolId: createdIds.school,
+            zone: "A",
+            slotNumber: 6,
+            active: true,
+            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 10)
+        },
+        {
+            schoolId: createdIds.school,
+            zone: "A",
+            slotNumber: 7,
+            active: false,
+            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 15)
+        },
+        {
+            schoolId: createdIds.school,
+            zone: "B",
+            slotNumber: 6,
+            active: true,
+            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 20)
+        },
+        {
+            schoolId: createdIds.school,
+            zone: "B",
+            slotNumber: 7,
+            active: false,
+            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 25)
+        }
+    ];
+
+    for (let i = 0; i < parkingLotData.length; i++) {
+        const parkingLotRes = await apiCall('POST', '/api/parking-lot', parkingLotData[i]);
+        createdIds.parkingLots.push(parkingLotRes.data._id);
+        console.log(`[${schoolPrefix}] ✅ Parking Lot created: Zone ${parkingLotData[i].zone} Slot ${parkingLotData[i].slotNumber} - ${parkingLotData[i].active ? 'Active' : 'Inactive'} (${parkingLotRes.data._id})`);
+    }
 
     // 4. Transportation
     console.log(`[${schoolPrefix}] Transportation: Creating Stop...`);
@@ -1054,7 +1768,6 @@ const clearDatabase = async () => {
         await apiCall('DELETE', '/api/booking/all');
         await apiCall('DELETE', '/api/resource/all');
         await apiCall('DELETE', '/api/locker-unit/all');
-        await apiCall('DELETE', '/api/time-slot/all');
         await apiCall('DELETE', '/api/parking-lot/all');
         // Transportation
         await apiCall('DELETE', '/api/bus-schedule/all');

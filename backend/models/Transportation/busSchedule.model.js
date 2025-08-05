@@ -11,7 +11,7 @@ const busScheduleSchema = new mongoose.Schema(
     ],
     vehicleId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Vehicles",
+      ref: "Vehicle",
       required: true,
     },
     departureTime: {
@@ -30,6 +30,11 @@ const busScheduleSchema = new mongoose.Schema(
     active: {
       type: Boolean,
       default: true,
+    },
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
     },
   },
   {

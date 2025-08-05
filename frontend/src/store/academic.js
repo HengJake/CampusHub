@@ -164,8 +164,6 @@ export const useAcademicStore = create((set, get) => ({
             const res = await fetch(url);
             const data = await res.json();
 
-            console.log(data);
-
             if (!data.success) {
                 throw new Error(data.message || "Failed to fetch schools");
             }

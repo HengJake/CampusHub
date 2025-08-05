@@ -4,14 +4,12 @@ import { useAuthStore } from "./auth.js";
 export const useServiceStore = create((set, get) => ({
     // State - Store data for each entity
     feedback: [],
-    foundItems: [],
     lostItems: [],
     responds: [],
 
     // Loading states
     loading: {
         feedback: false,
-        foundItems: false,
         lostItems: false,
         responds: false,
     },
@@ -19,7 +17,6 @@ export const useServiceStore = create((set, get) => ({
     // Error states
     errors: {
         feedback: null,
-        foundItems: null,
         lostItems: null,
         responds: null,
     },
@@ -156,99 +153,6 @@ export const useServiceStore = create((set, get) => ({
             }
             set((state) => ({
                 feedback: state.feedback.filter((item) => item._id !== id),
-            }));
-            return { success: true };
-        } catch (error) {
-            return { success: false, message: error.message };
-        }
-    },
-
-    // ===== FOUND ITEM OPERATIONS =====
-    fetchFoundItems: async (filters = {}) => {
-        set((state) => ({ loading: { ...state.loading, foundItems: true } }));
-        try {
-            const url = get().buildUrl("/api/found-item", filters);
-            const res = await fetch(url, {
-                credentials: 'include'
-            });
-            const data = await res.json();
-            if (!data.success) {
-                throw new Error(data.message || "Failed to fetch found items");
-            }
-            set((state) => ({
-                foundItems: data.data,
-                loading: { ...state.loading, foundItems: false },
-                errors: { ...state.errors, foundItems: null },
-            }));
-            return { success: true, data: data.data };
-        } catch (error) {
-            set((state) => ({
-                loading: { ...state.loading, foundItems: false },
-                errors: { ...state.errors, foundItems: error.message },
-            }));
-            return { success: false, message: error.message };
-        }
-    },
-    createFoundItem: async (itemData) => {
-        try {
-            const authStore = useAuthStore.getState();
-            const userContext = authStore.getCurrentUser();
-            if (userContext.role === "schoolAdmin" || userContext.role === "student") {
-                const schoolId = authStore.getSchoolId();
-                if (schoolId) {
-                    itemData.schoolId = schoolId;
-                }
-            }
-            const res = await fetch("/api/found-item", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: 'include',
-                body: JSON.stringify(itemData),
-            });
-            const data = await res.json();
-            if (!data.success) {
-                throw new Error(data.message || "Failed to create found item");
-            }
-            set((state) => ({ foundItems: [...state.foundItems, data.data] }));
-            return { success: true, data: data.data };
-        } catch (error) {
-            return { success: false, message: error.message };
-        }
-    },
-    updateFoundItem: async (id, updates) => {
-        try {
-            const res = await fetch(`/api/found-item/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                credentials: 'include',
-                body: JSON.stringify(updates),
-            });
-            const data = await res.json();
-            if (!data.success) {
-                throw new Error(data.message || "Failed to update found item");
-            }
-            set((state) => ({
-                foundItems: state.foundItems.map((item) =>
-                    item._id === id ? data.data : item
-                ),
-            }));
-            return { success: true, data: data.data };
-        } catch (error) {
-            return { success: false, message: error.message };
-        }
-    },
-    deleteFoundItem: async (id) => {
-        try {
-            const res = await fetch(`/api/found-item/${id}`, {
-                method: "DELETE",
-                credentials: 'include',
-            });
-            const data = await res.json();
-            if (!data.success) {
-                throw new Error(data.message || "Failed to delete found item");
-            }
-            set((state) => ({
-                foundItems: state.foundItems.filter((item) => item._id !== id),
             }));
             return { success: true };
         } catch (error) {
@@ -450,7 +354,6 @@ export const useServiceStore = create((set, get) => ({
         set((state) => ({
             errors: {
                 feedback: null,
-                foundItems: null,
                 lostItems: null,
                 responds: null,
             },
@@ -459,7 +362,6 @@ export const useServiceStore = create((set, get) => ({
     clearData: () => {
         set({
             feedback: [],
-            foundItems: [],
             lostItems: [],
             responds: [],
         });

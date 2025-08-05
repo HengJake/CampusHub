@@ -7,7 +7,6 @@ export const useFacilityStore = create((set, get) => ({
     // State - Store data for each entity
     bookings: [],
     resources: [],
-    timeSlots: [],
     parkingLots: [],
     lockerUnits: [],
 
@@ -15,7 +14,6 @@ export const useFacilityStore = create((set, get) => ({
     loading: {
         bookings: false,
         resources: false,
-        timeSlots: false,
         parkingLots: false,
         lockerUnits: false,
     },
