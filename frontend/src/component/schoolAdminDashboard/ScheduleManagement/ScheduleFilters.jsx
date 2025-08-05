@@ -59,18 +59,18 @@ export default function ScheduleFilters({
                             setAvailableSemesters(response.data)
                             // Reset year and semester when course changes
                             setSelectedYear("")
-                            setSelectedSemester("")
+                            setSelectedSemester(null)
                         }
                     } catch (error) {
                         console.error("Error fetching semesters:", error)
                         setAvailableSemesters([])
-                        setSelectedSemester("")
+                        setSelectedSemester(null)
                         setSelectedYear("")
                     }
                 }
             } else {
                 setAvailableSemesters([])
-                setSelectedSemester("")
+                setSelectedSemester(null)
                 setSelectedYear("")
             }
         }
@@ -94,7 +94,7 @@ export default function ScheduleFilters({
                                     setSelectedIntake(e.target.value)
                                     setSelectedCourse("")
                                     setSelectedModule("")
-                                    setSelectedSemester("")
+                                    setSelectedSemester(null)
                                     setAvailableSemesters([])
                                 }}
                             >
@@ -143,7 +143,7 @@ export default function ScheduleFilters({
                                 value={selectedYear}
                                 onChange={e => {
                                     setSelectedYear(e.target.value)
-                                    setSelectedSemester("")
+                                    setSelectedSemester(null)
                                 }}
                             >
                                 {availableSemesters?.reduce((years, semester) => {
@@ -167,8 +167,11 @@ export default function ScheduleFilters({
                             <Select
                                 disabled={selectedCourse === "" || selectedIntake === "" || selectedYear === "" || availableSemesters.length === 0}
                                 placeholder="Select Semester"
-                                value={selectedSemester}
-                                onChange={e => setSelectedSemester(e.target.value)}
+                                value={selectedSemester?._id || ""}
+                                onChange={e => {
+                                    const selectedSemesterObj = availableSemesters?.find(semester => semester._id === e.target.value);
+                                    setSelectedSemester(selectedSemesterObj || null);
+                                }}
                             >
                                 {availableSemesters?.filter(semester => semester.year?.toString() === selectedYear).map(semester => (
                                     <option key={semester._id} value={semester._id}>
@@ -209,12 +212,12 @@ export default function ScheduleFilters({
                             }}
                             isDisabled={!selectedCourse || !selectedIntake || !selectedYear || !selectedSemester || allItems.length > 0}
                         >
-                            {(allItems.length > 0) ? "Schedule for selected intake course existed" : "Generate"}
+                            {(allItems.length > 0) ? "Schedule existed" : "Generate"}
                         </Button>
                     </VStack>
                 </HStack>
 
-                <HStack justify="space-between">
+                <HStack justify="space-between" mt={2}>
                     {(!selectedCourse || !selectedIntake || !selectedYear || !selectedSemester) && (
                         <Text color="gray.500" fontSize="sm" mt={2}>
                             Select an intake, course, year, and semester to view/ generate class schedule
@@ -224,7 +227,7 @@ export default function ScheduleFilters({
                         setSelectedIntake("")
                         setSelectedCourse("")
                         setSelectedModule("")
-                        setSelectedSemester("")
+                        setSelectedSemester(null)
                         setSelectedYear("")
                     }}>
                         Clear

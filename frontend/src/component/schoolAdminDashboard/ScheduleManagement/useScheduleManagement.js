@@ -5,7 +5,7 @@ import { useShowToast } from "../../../store/utils/toast.js"
 import * as XLSX from "xlsx"
 import generateClassSchedule from "./generateClassSchedule.js"
 import generateExamSchedule from "./generateExamSchedule.js"
-import { combineScheduleData, getCombinedAndFilteredData } from "./ScheduleUtils.js"
+import { combineScheduleData } from "./ScheduleUtils.js"
 
 export const useScheduleManagement = () => {
     const {
@@ -28,6 +28,7 @@ export const useScheduleManagement = () => {
         fetchExamSchedules
     } = useAcademicStore()
 
+
     const { exportTemplate } = useGeneralStore()
     const showToast = useShowToast()
 
@@ -38,7 +39,7 @@ export const useScheduleManagement = () => {
     const [selectedIntake, setSelectedIntake] = useState("")
     const [selectedCourse, setSelectedCourse] = useState("")
     const [selectedModule, setSelectedModule] = useState("")
-    const [selectedSemester, setSelectedSemester] = useState("")
+    const [selectedSemester, setSelectedSemester] = useState(null)
     const [selectedYear, setSelectedYear] = useState("")
     const [availableSemesters, setAvailableSemesters] = useState([])
     const [isLoading, setIsLoading] = useState(false)
@@ -75,18 +76,18 @@ export const useScheduleManagement = () => {
                         if (response.success) {
                             setAvailableSemesters(response.data)
                             setSelectedYear("")
-                            setSelectedSemester("")
+                            setSelectedSemester(null)
                         }
                     } catch (error) {
                         console.error("Error fetching semesters:", error)
                         setAvailableSemesters([])
-                        setSelectedSemester("")
+                        setSelectedSemester(null)
                         setSelectedYear("")
                     }
                 }
             } else {
                 setAvailableSemesters([])
-                setSelectedSemester("")
+                setSelectedSemester(null)
                 setSelectedYear("")
             }
         }
@@ -134,7 +135,8 @@ export const useScheduleManagement = () => {
                 rooms,
                 lecturers,
                 scheduleConfig,
-                selectedSemester
+                selectedSemester,
+                selectedModule
             )
 
             if (schedule.length === 0) {
@@ -155,7 +157,7 @@ export const useScheduleManagement = () => {
                 moduleCode: item.moduleCode,
                 intakeId: item.intakeId,
                 intakeName: item.intakeName,
-                semesterId: selectedSemester,
+                semesterId: selectedSemester._id,
                 dayOfWeek: item.dayOfWeek,
                 startTime: item.startTime,
                 endTime: item.endTime,
@@ -175,7 +177,7 @@ export const useScheduleManagement = () => {
             combinedScheduleData = [...formattedClassSchedule]
 
             if (generateExam) {
-                const examSchedule = generateExamSchedule(schedule, rooms, lecturers, selectedSemester)
+                const examSchedule = generateExamSchedule(schedule, rooms, lecturers, selectedSemester, selectedModule)
 
                 const formattedExamSchedule = examSchedule.map(item => ({
                     type: "exam",
@@ -188,7 +190,7 @@ export const useScheduleManagement = () => {
                     moduleCode: "",
                     intakeId: "",
                     intakeName: "",
-                    semesterId: selectedSemester,
+                    semesterId: selectedSemester._id,
                     dayOfWeek: "",
                     startTime: "",
                     endTime: "",
@@ -339,17 +341,76 @@ export const useScheduleManagement = () => {
 
     // Get combined schedule data
     const scheduleData = combineScheduleData(classSchedules, examSchedules)
-    const allItems = getCombinedAndFilteredData(
-        classSchedules,
-        examSchedules,
-        showClasses,
-        showExams,
-        selectedCourse,
-        selectedIntake,
-        selectedYear,
-        selectedSemester,
-        selectedModule
-    )
+
+
+
+    // For now, use a simple filtering approach until we can properly import the function
+    let allItems = []
+
+    if (showClasses && classSchedules) {
+        allItems = [...allItems, ...classSchedules]
+    }
+
+    if (showExams && examSchedules) {
+        allItems = [...allItems, ...examSchedules]
+    }
+
+    // Apply comprehensive filtering
+    allItems = scheduleData.filter(item => {
+        // Check if required filters are selected
+        if (!selectedCourse || !selectedIntake || !selectedYear || !selectedSemester) {
+            return false;
+        }
+
+        // Default: don't include
+        let include = false;
+
+        // Type filtering
+        if (item.type === 'exam' && showExams) include = true;
+        if (item.type === 'class' && showClasses) include = true;
+
+        // Filter by intake (deep path check)
+        if (
+            selectedIntake &&
+            item.intakeCourseId?.intakeId?._id !== selectedIntake
+        ) {
+            return false;
+        }
+
+        // Filter by course (assuming courseId is under intakeCourseId.courseId._id)
+        if (
+            selectedCourse &&
+            item.intakeCourseId?.courseId?._id !== selectedCourse
+        ) {
+            return false;
+        }
+
+        // Filter by module
+        if (
+            selectedModule &&
+            item.moduleId?._id !== selectedModule
+        ) {
+            return false;
+        }
+
+        // Filter by year 
+        if (
+            selectedYear &&
+            item.semesterId?.year !== parseInt(selectedYear)
+        ) {
+            return false;
+        }
+
+        // Filter by semester
+        if (
+            selectedSemester &&
+            item.semesterId?.semesterNumber !== selectedSemester.semesterNumber
+        ) {
+            return false;
+        }
+
+        return include;
+    });
 
     return {
         // State

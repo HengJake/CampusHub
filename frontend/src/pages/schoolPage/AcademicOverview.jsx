@@ -9,6 +9,8 @@ import {
   Avatar,
   useColorModeValue,
   Progress,
+  Button,
+  useToast,
 } from "@chakra-ui/react"
 import { FaBuilding } from "react-icons/fa";
 import {
@@ -22,9 +24,14 @@ import {
 import { FaGraduationCap } from "react-icons/fa";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
 import { useAcademicStore } from "../../store/academic.js";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { StatsCard } from "../../component/common/StatsCard.jsx";
 import RefreshData from "../../component/common/RefreshData.jsx";
+import {
+  updateStudentAcademicPerformance,
+  updateAllStudentsAcademicPerformance
+} from "../../component/schoolAdminDashboard/dashboard/updateStudent.js";
+import { updateIntakeCourseEnrollments } from "../../component/schoolAdminDashboard/dashboard/updateIntakeCourseEnrollments.js";
 
 import {
   FiCheckCircle,
@@ -57,6 +64,8 @@ export function AcademicOverview() {
     modules,
     departments,
     intakes,
+    intakeCourses,
+    rooms,
     examSchedules,
     attendance,
     classSchedules,
@@ -67,15 +76,127 @@ export function AcademicOverview() {
     fetchModules,
     fetchDepartments,
     fetchIntakes,
+    fetchIntakeCourses,
+    fetchRooms,
     fetchExamSchedules,
     fetchAttendance,
     fetchClassSchedules,
     fetchResults,
+    updateIntakeCourse,
     getCourseCompletionRate,
     getAllCourseCompletionRate,
     getAverageAttendance,
     getExamPassRate,
   } = useAcademicStore();
+
+  const [isUpdatingPerformance, setIsUpdatingPerformance] = useState(false);
+  const [isUpdatingEnrollments, setIsUpdatingEnrollments] = useState(false);
+  const toast = useToast();
+
+  /**
+   * HANDLE UPDATE ALL STUDENTS PERFORMANCE
+   * =====================================
+   * Updates academic performance for all students
+   */
+  const handleUpdateAllStudentsPerformance = async () => {
+    if (isUpdatingPerformance) return;
+
+    setIsUpdatingPerformance(true);
+
+    try {
+      toast({
+        title: "Updating Academic Performance",
+        description: "Calculating CGPA and credit hours for all students...",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      const results = await updateAllStudentsAcademicPerformance();
+
+      // Refresh data to get updated values
+      await fetchStudents();
+
+      toast({
+        title: "Update Complete",
+        description: `Successfully updated ${results.successCount} students. ${results.errorCount} errors occurred.`,
+        status: results.errorCount === 0 ? "success" : "warning",
+        duration: 5000,
+        isClosable: true,
+      });
+
+    } catch (error) {
+      console.error("Error updating academic performance:", error);
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update academic performance",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsUpdatingPerformance(false);
+    }
+  };
+
+  /**
+   * UPDATE INTAKE COURSE ENROLLMENT COUNTS
+   * ======================================
+   * Calculates and updates currentEnrollment for all intake courses
+   */
+
+
+  /**
+   * HANDLE REFRESH WITH ENROLLMENT UPDATE
+   * =====================================
+   * Refreshes all data and updates enrollment counts
+   */
+  const handleRefreshWithEnrollmentUpdate = async () => {
+    if (isUpdatingEnrollments) return;
+
+    setIsUpdatingEnrollments(true);
+
+    try {
+      toast({
+        title: "Refreshing Data",
+        description: "Updating enrollment counts and refreshing all data...",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Update enrollment counts first
+      const enrollmentResults = await updateIntakeCourseEnrollments(
+        intakeCourses,
+        students,
+        updateIntakeCourse,
+        fetchIntakeCourses
+      );
+
+      // Then refresh all data
+      await fetchAllData();
+
+      toast({
+        title: "Refresh Complete",
+        description: enrollmentResults.message,
+        status: enrollmentResults.success ? "success" : "warning",
+        duration: 5000,
+        isClosable: true,
+      });
+
+    } catch (error) {
+      console.error("Error during refresh:", error);
+      toast({
+        title: "Refresh Failed",
+        description: error.message || "Failed to refresh data",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsUpdatingEnrollments(false);
+    }
+  };
 
   /**
    * DEBUG MODE CONFIGURATION
@@ -86,7 +207,7 @@ export function AcademicOverview() {
 
   const debugLog = (section, data) => {
     if (DEBUG_MODE) {
-      // console.log(`📊 [AcademicOverview] ${section}:`, data);
+      // console.log(`[AcademicOverview] ${section}:`, data);
     }
   };
 
@@ -96,30 +217,36 @@ export function AcademicOverview() {
    * Fetch all academic data on component mount
    * Includes debugging for data loading status
    */
+  /**
+   * FETCH ALL DATA FUNCTION
+   * ======================
+   * Centralized function to fetch all academic data
+   */
+  const fetchAllData = async () => {
+    try {
+      await Promise.all([
+        fetchStudents(),
+        fetchLecturers?.(),
+        fetchCourses(),
+        fetchModules?.(),
+        fetchDepartments?.(),
+        fetchIntakes?.(),
+        fetchIntakeCourses?.(),
+        fetchRooms?.(),
+        fetchExamSchedules?.(),
+        fetchAttendance?.(),
+        fetchClassSchedules?.(),
+        fetchResults?.()
+      ]);
+
+      debugLog("Data Fetching", "All data fetched successfully");
+    } catch (error) {
+      debugLog("Data Fetching", "Error fetching data:", error);
+    }
+  };
+
   useEffect(() => {
     debugLog("Data Fetching", "Starting to fetch all academic data...");
-
-    const fetchAllData = async () => {
-      try {
-        await Promise.all([
-          fetchStudents(),
-          fetchLecturers?.(),
-          fetchCourses(),
-          fetchModules?.(),
-          fetchDepartments?.(),
-          fetchIntakes?.(),
-          fetchExamSchedules?.(),
-          fetchAttendance?.(),
-          fetchClassSchedules?.(),
-          fetchResults?.()
-        ]);
-
-        debugLog("Data Fetching", "✅ All data fetched successfully");
-      } catch (error) {
-        debugLog("Data Fetching", "❌ Error fetching data:", error);
-      }
-    };
-
     fetchAllData();
   }, []);
 
@@ -163,14 +290,16 @@ export function AcademicOverview() {
    * Includes debugging and fallbacks for missing data
    */
 
-  // console.log(students)
   const dashboardStats = (() => {
     debugLog("Data Arrays", {
       students: students?.length || 0,
       lecturers: lecturers?.length || 0,
       courses: courses?.length || 0,
       modules: modules?.length || 0,
+      departments: departments?.length || 0,
       intakes: intakes?.length || 0,
+      intakeCourses: intakeCourses?.length || 0,
+      rooms: rooms?.length || 0,
       attendance: attendance?.length || 0,
       results: results?.length || 0
     });
@@ -203,7 +332,7 @@ export function AcademicOverview() {
       })(),
 
       // ============================================
-      // 📚 STUDENT ACADEMIC PERFORMANCE
+      // STUDENT ACADEMIC PERFORMANCE
       // ============================================
       passRate: (() => {
         if (!results?.length) return 0;
@@ -246,19 +375,7 @@ export function AcademicOverview() {
         if (!students?.length || !results?.length) return 0;
 
         const topPerformers = students.filter(student => {
-          const studentResults = results.filter(r => r.studentId._id === student._id);
-          if (!studentResults.length) return false;
-
-          console.log(studentResults.length)
-          console.log( studentResults.reduce((sum, r) => sum + r.creditHours, 0))
-
-          // get when cgpa > 3.8
-          const avgGPA = safeDivide(
-            studentResults.reduce((sum, r) => sum + r.creditHours, 0),
-            studentResults.length
-          );
-
-          return avgGPA > 3.5; // Above 3.5 GPA threshold
+          return student.cgpa > 3.8; // Top performer threshold
         }).length;
 
         debugLog("Top Performers", {
@@ -270,33 +387,118 @@ export function AcademicOverview() {
       })(),
 
       // ============================================
-      // 🧑‍🏫 LECTURER/SUBJECT OVERVIEW
+      // LECTURER/SUBJECT OVERVIEW
       // ============================================
-      avgSubjectLoad: (() => {
-        if (!lecturers?.length || !modules?.length) return 0;
-        const avgLoad = Math.round(safeDivide(modules.length, lecturers.length));
+      totalModules: (() => {
+        if (!modules?.length) return 0;
+        const totalModules = modules.length;
 
-        debugLog("Subject Load", {
-          totalModules: modules.length,
-          totalLecturers: lecturers.length,
-          avgLoad
+        debugLog("Total Modules", {
+          totalModules: modules.length
         });
 
-        return avgLoad;
+        return totalModules;
       })(),
 
-      totalContactHours: (() => {
-        if (!classSchedules?.length) return 0;
-        const totalHours = classSchedules.reduce((total, schedule) => {
-          return total + (schedule.duration || 0);
-        }, 0);
+      totalLecturers: (() => {
+        if (!lecturers?.length) return 0;
+        const totalLecturers = lecturers.length;
 
-        debugLog("Contact Hours", {
-          totalSchedules: classSchedules.length,
-          totalHours
+        debugLog("Total Lecturers", {
+          totalLecturers: lecturers.length
         });
 
-        return totalHours;
+        return totalLecturers;
+      })(),
+
+      avgWorkingHours: (() => {
+        if (!lecturers?.length) return 0;
+
+        const calculateTimeDifference = (startTime, endTime) => {
+          const [startHour, startMinute] = startTime.split(':').map(Number);
+          const [endHour, endMinute] = endTime.split(':').map(Number);
+
+          let hours = endHour - startHour;
+          let minutes = endMinute - startMinute;
+
+          if (minutes < 0) {
+            hours -= 1;
+            minutes += 60;
+          }
+
+          return hours + (minutes / 60);
+        };
+
+        const lecturerWorkingHours = lecturers.map(lecturer => {
+          let totalHours = 0;
+
+          // Calculate teaching hours from class schedules
+          const teachingSchedules = classSchedules?.filter(schedule =>
+            schedule.lecturerId === lecturer._id
+          ) || [];
+
+          const teachingHours = teachingSchedules.reduce((total, schedule) => {
+            return total + calculateTimeDifference(schedule.startTime, schedule.endTime);
+          }, 0);
+
+          // Calculate office hours
+          const officeHours = lecturer.officeHours?.reduce((total, officeHour) => {
+            return total + calculateTimeDifference(officeHour.startTime, officeHour.endTime);
+          }, 0) || 0;
+
+          totalHours = teachingHours + officeHours;
+
+          debugLog(`Lecturer ${lecturer._id} Working Hours`, {
+            lecturerId: lecturer._id,
+            teachingHours: parseFloat(teachingHours.toFixed(2)),
+            officeHours: parseFloat(officeHours.toFixed(2)),
+            totalHours: parseFloat(totalHours.toFixed(2))
+          });
+
+          return totalHours;
+        });
+
+        const totalWorkingHours = lecturerWorkingHours.reduce((sum, hours) => sum + hours, 0);
+        const averageWorkingHours = safeDivide(totalWorkingHours, lecturers.length);
+
+        debugLog("Average Working Hours", {
+          totalLecturers: lecturers.length,
+          totalWorkingHours: parseFloat(totalWorkingHours.toFixed(2)),
+          averageWorkingHours: parseFloat(averageWorkingHours.toFixed(2))
+        });
+
+        return parseFloat(averageWorkingHours.toFixed(2));
+      })(),
+
+      averageModulesPerLecturer: (() => {
+        if (!modules?.length || !lecturers?.length) return 0;
+
+        // Count unique modules per lecturer from class schedules
+        const lecturerModuleCount = {};
+
+        classSchedules?.forEach(schedule => {
+          if (schedule.lecturerId && schedule.moduleId) {
+            if (!lecturerModuleCount[schedule.lecturerId]) {
+              lecturerModuleCount[schedule.lecturerId] = new Set();
+            }
+            lecturerModuleCount[schedule.lecturerId].add(schedule.moduleId);
+          }
+        });
+
+        // Calculate average modules per lecturer
+        const totalModules = Object.values(lecturerModuleCount).reduce((sum, moduleSet) => {
+          return sum + moduleSet.size;
+        }, 0);
+
+        const averageModules = safeDivide(totalModules, lecturers.length);
+
+        debugLog("Average Modules per Lecturer", {
+          totalLecturers: lecturers.length,
+          totalModules,
+          averageModules: parseFloat(averageModules.toFixed(2))
+        });
+
+        return parseFloat(averageModules.toFixed(2));
       })(),
 
       highFailRateSubjects: (() => {
@@ -340,64 +542,10 @@ export function AcademicOverview() {
         return parseFloat(calculatedScore.toFixed(1));
       })(),
 
-      // ============================================
-      // 🏫 CLASS & SEMESTER METRICS
-      // ============================================
-      activeSemesters: (() => {
-        if (!intakes?.length) return 0;
-        const activeIntakes = intakes.filter(isIntakeActive).length;
 
-        debugLog("Active Semesters", {
-          totalIntakes: intakes.length,
-          activeIntakes
-        });
-
-        return activeIntakes;
-      })(),
-
-      avgClassSize: (() => {
-        if (!classSchedules?.length || !students?.length) return 0;
-        const avgSize = Math.round(safeDivide(students.length, classSchedules.length));
-
-        debugLog("Average Class Size", {
-          totalStudents: students.length,
-          totalClasses: classSchedules.length,
-          avgSize
-        });
-
-        return avgSize;
-      })(),
-
-      courseRetakeRate: (() => {
-        if (!students?.length) return 0;
-        const retakeStudents = students.filter(s => s.completionStatus === 'retaking').length;
-        const rate = safePercentage(retakeStudents, students.length);
-
-        debugLog("Course Retake Rate", {
-          totalStudents: students.length,
-          retakeStudents,
-          rate
-        });
-
-        return rate;
-      })(),
-
-      enrollmentRate: (() => {
-        if (!students?.length) return 0;
-        const enrolledStudents = students.filter(s => s.enrollmentStatus === 'enrolled').length;
-        const rate = safePercentage(enrolledStudents, students.length);
-
-        debugLog("Enrollment Rate", {
-          totalStudents: students.length,
-          enrolledStudents,
-          rate
-        });
-
-        return rate;
-      })(),
 
       // ============================================
-      // 📅 ATTENDANCE TRACKING
+      // ATTENDANCE TRACKING
       // ============================================
       avgAttendanceRate: (() => {
         if (!attendance?.length) return 0;
@@ -488,7 +636,7 @@ export function AcademicOverview() {
       })(),
 
       // ============================================
-      // 📤 ASSESSMENT & EXAM INSIGHTS
+      // ASSESSMENT & EXAM INSIGHTS
       // ============================================
       resultSubmissionProgress: (() => {
         if (!modules?.length) return 0;
@@ -538,6 +686,323 @@ export function AcademicOverview() {
 
         return pending;
       })(),
+
+      // ============================================
+      // ENHANCED ACADEMIC PERFORMANCE METRICS
+      // ============================================
+      averageGPA: (() => {
+        if (!results?.length) return 0;
+        const totalGPA = results.reduce((sum, result) => sum + (result.gpa || 0), 0);
+        const average = safeDivide(totalGPA, results.length);
+
+        debugLog("Average GPA", {
+          totalResults: results.length,
+          totalGPA,
+          average: parseFloat(average.toFixed(2))
+        });
+
+        return parseFloat(average.toFixed(2));
+      })(),
+
+      gradeDistribution: (() => {
+        if (!results?.length) return { A: 0, B: 0, C: 0, D: 0, F: 0 };
+
+        const distribution = results.reduce((acc, result) => {
+          const grade = result.grade?.charAt(0) || 'F';
+          acc[grade] = (acc[grade] || 0) + 1;
+          return acc;
+        }, {});
+
+        debugLog("Grade Distribution", {
+          totalResults: results.length,
+          distribution
+        });
+
+        return distribution;
+      })(),
+
+      atRiskStudents: (() => {
+        if (!students?.length) return 0;
+        const atRisk = students.filter(student => student.cgpa < 2.5).length;
+
+        debugLog("At-Risk Students", {
+          totalStudents: students.length,
+          atRiskStudents: atRisk
+        });
+
+        return atRisk;
+      })(),
+
+      // ============================================
+      // ENHANCED ATTENDANCE ANALYTICS
+      // ============================================
+      lowAttendanceStudents: (() => {
+        if (!students?.length || !attendance?.length) return 0;
+
+        const lowAttendanceStudents = students.filter(student => {
+          const studentAttendance = attendance.filter(a => a.studentId === student._id);
+          if (!studentAttendance.length) return false;
+
+          const presentCount = studentAttendance.filter(a => a.status === "present").length;
+          const attendanceRate = safeDivide(presentCount, studentAttendance.length);
+
+          return attendanceRate < 0.75; // Below 75% threshold
+        }).length;
+
+        debugLog("Low Attendance Students", {
+          totalStudents: students.length,
+          lowAttendanceStudents
+        });
+
+        return lowAttendanceStudents;
+      })(),
+
+      attendancePerformanceCorrelation: (() => {
+        if (!students?.length || !attendance?.length || !results?.length) return 0;
+
+        let correlationSum = 0;
+        let validStudents = 0;
+
+        students.forEach(student => {
+          const studentAttendance = attendance.filter(a => a.studentId === student._id);
+          const studentResults = results.filter(r => r.studentId === student._id);
+
+          if (studentAttendance.length > 0 && studentResults.length > 0) {
+            const attendanceRate = safeDivide(
+              studentAttendance.filter(a => a.status === "present").length,
+              studentAttendance.length
+            );
+
+            const avgGPA = safeDivide(
+              studentResults.reduce((sum, r) => sum + (r.gpa || 0), 0),
+              studentResults.length
+            );
+
+            // Simple correlation: students with >80% attendance tend to have >3.0 GPA
+            if (attendanceRate > 0.8 && avgGPA > 3.0) correlationSum++;
+            validStudents++;
+          }
+        });
+
+        const correlation = safePercentage(correlationSum, validStudents);
+
+        debugLog("Attendance-Performance Correlation", {
+          validStudents,
+          correlationSum,
+          correlation
+        });
+
+        return correlation;
+      })(),
+
+      // ============================================
+      // COURSE & ENROLLMENT ANALYTICS
+      // ============================================
+      enrollmentRate: (() => {
+        if (!intakeCourses?.length) return 0;
+
+        const totalCapacity = intakeCourses.reduce((sum, ic) => sum + ic.maxStudents, 0);
+        const totalEnrolled = intakeCourses.reduce((sum, ic) => sum + ic.currentEnrollment, 0);
+        const rate = safePercentage(totalEnrolled, totalCapacity);
+
+        debugLog("Enrollment Rate", {
+          totalCapacity,
+          totalEnrolled,
+          rate
+        });
+
+        return rate;
+      })(),
+
+      courseCompletionRate: (() => {
+        if (!students?.length || !courses?.length) return 0;
+
+        const graduatedStudents = students.filter(s => s.status === 'graduated').length;
+        const rate = safePercentage(graduatedStudents, students.length);
+
+        debugLog("Course Completion Rate", {
+          totalStudents: students.length,
+          graduatedStudents,
+          rate
+        });
+
+        return rate;
+      })(),
+
+      moduleDifficultyIndex: (() => {
+        if (!modules?.length || !results?.length) return 0;
+
+        const moduleDifficulties = modules.map(module => {
+          const moduleResults = results.filter(r => r.moduleId === module._id);
+          if (!moduleResults.length) return 0;
+
+          const avgGPA = safeDivide(
+            moduleResults.reduce((sum, r) => sum + (r.gpa || 0), 0),
+            moduleResults.length
+          );
+
+          // Difficulty index: lower GPA = higher difficulty
+          return 4.0 - avgGPA;
+        }).filter(difficulty => difficulty > 0);
+
+        const avgDifficulty = safeDivide(
+          moduleDifficulties.reduce((sum, d) => sum + d, 0),
+          moduleDifficulties.length
+        );
+
+        debugLog("Module Difficulty Index", {
+          totalModules: modules.length,
+          modulesWithResults: moduleDifficulties.length,
+          avgDifficulty: parseFloat(avgDifficulty.toFixed(2))
+        });
+
+        return parseFloat(avgDifficulty.toFixed(2));
+      })(),
+
+      // ============================================
+      // LECTURER & DEPARTMENT ANALYTICS
+      // ============================================
+      lecturerWorkloadDistribution: (() => {
+        if (!lecturers?.length || !classSchedules?.length) return 0;
+
+        const lecturerWorkloads = lecturers.map(lecturer => {
+          const lecturerSchedules = classSchedules.filter(s => s.lecturerId === lecturer._id);
+          return lecturerSchedules.length;
+        });
+
+        const avgWorkload = safeDivide(
+          lecturerWorkloads.reduce((sum, w) => sum + w, 0),
+          lecturerWorkloads.length
+        );
+
+        debugLog("Lecturer Workload Distribution", {
+          totalLecturers: lecturers.length,
+          avgWorkload: parseFloat(avgWorkload.toFixed(2))
+        });
+
+        return parseFloat(avgWorkload.toFixed(2));
+      })(),
+
+      officeHoursUtilization: (() => {
+        if (!lecturers?.length) return 0;
+
+        const lecturersWithOfficeHours = lecturers.filter(l => l.officeHours?.length > 0).length;
+        const utilization = safePercentage(lecturersWithOfficeHours, lecturers.length);
+
+        debugLog("Office Hours Utilization", {
+          totalLecturers: lecturers.length,
+          lecturersWithOfficeHours,
+          utilization
+        });
+
+        return utilization;
+      })(),
+
+      departmentPerformanceComparison: (() => {
+        if (!departments?.length || !results?.length || !lecturers?.length) return 0;
+
+        const departmentStats = departments.map(dept => {
+          const deptLecturers = lecturers.filter(l => l.departmentId === dept._id);
+          const lecturerIds = deptLecturers.map(l => l._id);
+
+          // Get results for modules taught by department lecturers
+          const deptResults = results.filter(r =>
+            modules.some(m => m._id === r.moduleId &&
+              classSchedules.some(cs => cs.moduleId === m._id && lecturerIds.includes(cs.lecturerId)))
+          );
+
+          if (!deptResults.length) return 0;
+
+          const avgGPA = safeDivide(
+            deptResults.reduce((sum, r) => sum + (r.gpa || 0), 0),
+            deptResults.length
+          );
+
+          return avgGPA;
+        }).filter(gpa => gpa > 0);
+
+        const avgDepartmentGPA = safeDivide(
+          departmentStats.reduce((sum, gpa) => sum + gpa, 0),
+          departmentStats.length
+        );
+
+        debugLog("Department Performance Comparison", {
+          totalDepartments: departments.length,
+          departmentsWithData: departmentStats.length,
+          avgDepartmentGPA: parseFloat(avgDepartmentGPA.toFixed(2))
+        });
+
+        return parseFloat(avgDepartmentGPA.toFixed(2));
+      })(),
+
+      // ============================================
+      // INFRASTRUCTURE & SCHEDULING ANALYTICS
+      // ============================================
+      roomUtilizationRate: (() => {
+        if (!rooms?.length || !classSchedules?.length) return 0;
+
+        const totalRooms = rooms.filter(r => r.isActive).length;
+        const utilizedRooms = new Set(classSchedules.map(cs => cs.roomId)).size;
+        const rate = safePercentage(utilizedRooms, totalRooms);
+
+        debugLog("Room Utilization Rate", {
+          totalRooms,
+          utilizedRooms,
+          rate
+        });
+
+        return rate;
+      })(),
+
+      scheduleConflictAlerts: (() => {
+        if (!classSchedules?.length || !examSchedules?.length) return 0;
+
+        let conflicts = 0;
+        const today = new Date();
+
+        // Check for conflicts between class schedules and exam schedules
+        classSchedules.forEach(cs => {
+          examSchedules.forEach(es => {
+            if (cs.roomId === es.roomId && cs.dayOfWeek === 'Monday') { // Simplified conflict check
+              conflicts++;
+            }
+          });
+        });
+
+        debugLog("Schedule Conflict Alerts", {
+          totalClassSchedules: classSchedules.length,
+          totalExamSchedules: examSchedules.length,
+          conflicts
+        });
+
+        return conflicts;
+      })(),
+
+      capacityEfficiency: (() => {
+        if (!rooms?.length || !classSchedules?.length) return 0;
+
+        const roomEfficiencies = rooms.map(room => {
+          const roomSchedules = classSchedules.filter(cs => cs.roomId === room._id);
+          if (!roomSchedules.length) return 0;
+
+          // Simplified efficiency calculation
+          const avgUtilization = safeDivide(roomSchedules.length, room.capacity);
+          return Math.min(avgUtilization, 1); // Cap at 100%
+        }).filter(efficiency => efficiency > 0);
+
+        const avgEfficiency = safeDivide(
+          roomEfficiencies.reduce((sum, e) => sum + e, 0),
+          roomEfficiencies.length
+        );
+
+        debugLog("Capacity Efficiency", {
+          totalRooms: rooms.length,
+          roomsWithSchedules: roomEfficiencies.length,
+          avgEfficiency: parseFloat(avgEfficiency.toFixed(2))
+        });
+
+        return parseFloat(avgEfficiency.toFixed(2));
+      })(),
     };
   })(); // End of dashboardStats calculation
 
@@ -545,8 +1010,7 @@ export function AcademicOverview() {
   debugLog("Dashboard Summary", {
     totalStudents: dashboardStats.totalStudents,
     passRate: dashboardStats.passRate,
-    avgAttendance: dashboardStats.avgAttendanceRate,
-    activeIntakes: dashboardStats.activeSemesters
+    avgAttendance: dashboardStats.avgAttendanceRate
   });
 
   /**
@@ -653,13 +1117,34 @@ export function AcademicOverview() {
             <Text color="gray.600">Welcome to the Academic Management Dashboard</Text>
           </Box>
 
-          <RefreshData />
+          <HStack>
+            <Button
+              onClick={handleUpdateAllStudentsPerformance}
+              isLoading={isUpdatingPerformance}
+              loadingText="Updating..."
+              colorScheme="blue"
+              size="sm"
+              leftIcon={<FiRefreshCw />}
+            >
+              Update All Students
+            </Button>
+            <Button
+              onClick={handleRefreshWithEnrollmentUpdate}
+              isLoading={isUpdatingEnrollments}
+              loadingText="Updating..."
+              colorScheme="green"
+              size="sm"
+              leftIcon={<FiRefreshCw />}
+            >
+              Refresh & Update Enrollments
+            </Button>
+          </HStack>
 
         </HStack>
         {/* Academic Performance Stats */}
         <Box>
           <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
-            📚 Student Academic Performance
+            Student Academic Performance
           </Text>
           <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
             <StatsCard
@@ -677,7 +1162,7 @@ export function AcademicOverview() {
               color="blue.500"
             />
             <StatsCard
-              title="At-Risk Students (GPA < 2.5)"
+              title="At-Risk Students"
               value={dashboardStats.atRiskStudents}
               change={-3}
               icon={<FiAlertTriangle />}
@@ -692,68 +1177,68 @@ export function AcademicOverview() {
           </Grid>
         </Box>
 
-        {/* Lecturer Overview Stats */}
+        {/* Enhanced Academic Analytics */}
         <Box>
           <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
-            🧑‍🏫 Lecturer/Subject Overview
+            Enhanced Academic Analytics
           </Text>
           <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
-            <StatsCard
-              title="Avg Subject Load"
-              value={dashboardStats.avgSubjectLoad}
-              icon={<FiBook />}
-              color="purple.500"
-            />
-            <StatsCard
-              title="Contact Hours"
-              value={dashboardStats.totalContactHours}
-              icon={<FiClock />}
-              color="teal.500"
-            />
-            <StatsCard
-              title="High Fail Rate Subjects"
-              value={dashboardStats.highFailRateSubjects}
-              icon={<FiAlertCircle />}
-              color="orange.500"
-            />
-            <StatsCard
-              title="Avg Feedback Score"
-              value={`${dashboardStats.avgFeedbackScore}/5`}
-              icon={<FiMessageSquare />}
-              color="pink.500"
-            />
-          </Grid>
-        </Box>
-
-        {/* Class & Semester Metrics */}
-        <Box>
-          <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
-            🏫 Class & Semester Metrics
-          </Text>
-          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
-            <StatsCard
-              title="Active Semesters"
-              value={dashboardStats.activeSemesters}
-              icon={<FiCalendar />}
-              color="indigo.500"
-            />
-            <StatsCard
-              title="Avg Class Size"
-              value={dashboardStats.avgClassSize}
-              icon={<FiUsers />}
-              color="cyan.500"
-            />
-            <StatsCard
-              title="Course Retake Rate"
-              value={`${dashboardStats.courseRetakeRate}%`}
-              icon={<FiRefreshCw />}
-              color="red.400"
-            />
             <StatsCard
               title="Enrollment Rate"
               value={`${dashboardStats.enrollmentRate}%`}
               icon={<FiUserPlus />}
-              color="green.400"
+              color="green.500"
+            />
+            <StatsCard
+              title="Course Completion Rate"
+              value={`${dashboardStats.courseCompletionRate}%`}
+              icon={<FaGraduationCap />}
+              color="blue.500"
+            />
+            <StatsCard
+              title="Module Difficulty Index"
+              value={dashboardStats.moduleDifficultyIndex}
+              icon={<FiAlertCircle />}
+              color="orange.500"
+            />
+            <StatsCard
+              title="Department Performance"
+              value={dashboardStats.departmentPerformanceComparison.toFixed(2)}
+              icon={<FiBarChart2 />}
+              color="purple.500"
+            />
+          </Grid>
+        </Box>
+
+        {/* Lecturer Overview Stats */}
+        <Box>
+          <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
+            Lecturer/Subject Overview
+          </Text>
+          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
+            <StatsCard
+              title="Total Modules"
+              value={dashboardStats.totalModules}
+              icon={<FiBook />}
+              color="purple.500"
+            />
+            <StatsCard
+              title="Total Lecturers"
+              value={dashboardStats.totalLecturers}
+              icon={<FiUser />}
+              color="blue.500"
+            />
+            <StatsCard
+              title="Avg Modules per Lecturer"
+              value={dashboardStats.averageModulesPerLecturer}
+              icon={<FiBook />}
+              color="teal.500"
+            />
+            <StatsCard
+              title="Avg Working Hours"
+              value={`${dashboardStats.avgWorkingHours}h`}
+              icon={<FiClock />}
+              color="orange.500"
             />
           </Grid>
         </Box>
@@ -761,7 +1246,7 @@ export function AcademicOverview() {
         {/* Attendance Tracking */}
         <Box>
           <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
-            📅 Attendance Tracking
+            Attendance Tracking
           </Text>
           <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
             <StatsCard
@@ -771,14 +1256,14 @@ export function AcademicOverview() {
               color="green.500"
             />
             <StatsCard
-              title="Low Attendance Alerts"
-              value={dashboardStats.lowAttendanceAlerts}
+              title="Low Attendance Students"
+              value={dashboardStats.lowAttendanceStudents}
               icon={<FiAlertTriangle />}
               color="red.500"
             />
             <StatsCard
-              title="Attendance vs Performance"
-              value={`${dashboardStats.attendancePerformanceCorr}%`}
+              title="Attendance-Performance Correlation"
+              value={`${dashboardStats.attendancePerformanceCorrelation}%`}
               icon={<FiTrendingUp />}
               color="blue.500"
             />
@@ -794,7 +1279,7 @@ export function AcademicOverview() {
         {/* Assessment & Exam Insights */}
         <Box>
           <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
-            📤 Assessment & Exam Insights
+            Assessment & Exam Insights
           </Text>
           <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
             <StatsCard
@@ -823,154 +1308,6 @@ export function AcademicOverview() {
             />
           </Grid>
         </Box>
-
-        <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={6}>
-          {/* Charts Section */}
-          <VStack spacing={6}>
-            {/* Enrollment Trends */}
-            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full">
-              <CardBody>
-                <Text fontSize="lg" fontWeight="semibold" mb={4} color="gray.800">
-                  Student Enrollment Trends
-                </Text>
-                <Box h="300px">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={enrollmentData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="students" stroke="#3182CE" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </Box>
-              </CardBody>
-            </Card>
-
-            {/* Department Distribution */}
-            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full">
-              <CardBody>
-                <Text fontSize="lg" fontWeight="semibold" mb={4} color="gray.800">
-                  Students by Department
-                </Text>
-                <Box h="300px">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={departmentData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="students" fill="#38A169" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Box>
-              </CardBody>
-            </Card>
-          </VStack>
-
-          {/* Sidebar */}
-          <VStack spacing={6}>
-            {/* Quick Stats */}
-            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full">
-              <CardBody>
-                <Text fontSize="lg" fontWeight="semibold" mb={4} color="gray.800">
-                  Quick Stats
-                </Text>
-                <VStack spacing={4} align="stretch">
-                  <Box>
-                    <HStack justify="space-between" mb={2}>
-                      <Text fontSize="sm">Course Completion Rate</Text>
-                      <Text fontSize="sm" fontWeight="medium">
-                        87%
-                      </Text>
-                    </HStack>
-                    <Progress value={87} colorScheme="green" size="sm" />
-                  </Box>
-                  <Box>
-                    <HStack justify="space-between" mb={2}>
-                      <Text fontSize="sm">Average Attendance</Text>
-                      <Text fontSize="sm" fontWeight="medium">
-                        92%
-                      </Text>
-                    </HStack>
-                    <Progress value={92} colorScheme="blue" size="sm" />
-                  </Box>
-                  <Box>
-                    <HStack justify="space-between" mb={2}>
-                      <Text fontSize="sm">Exam Pass Rate</Text>
-                      <Text fontSize="sm" fontWeight="medium">
-                        78%
-                      </Text>
-                    </HStack>
-                    <Progress value={78} colorScheme="purple" size="sm" />
-                  </Box>
-                </VStack>
-              </CardBody>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full">
-              <CardBody>
-                <Text fontSize="lg" fontWeight="semibold" mb={4} color="gray.800">
-                  Recent Activity
-                </Text>
-                <VStack spacing={3} align="stretch">
-                  {recentActivities.map((activity) => (
-                    <HStack key={activity.id} spacing={3}>
-                      <Avatar size="sm" name={activity.student} />
-                      <Box flex="1">
-                        <Text fontSize="sm" fontWeight="medium">
-                          {activity.student}
-                        </Text>
-                        <Text fontSize="xs" color="gray.600">
-                          {activity.action}
-                        </Text>
-                      </Box>
-                      <Text fontSize="xs" color="gray.500">
-                        {activity.time}
-                      </Text>
-                    </HStack>
-                  ))}
-                </VStack>
-              </CardBody>
-            </Card>
-
-            {/* Upcoming Events */}
-            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full">
-              <CardBody>
-                <Text fontSize="lg" fontWeight="semibold" mb={4} color="gray.800">
-                  Upcoming Events
-                </Text>
-                <VStack spacing={3} align="stretch">
-                  <Box p={3} bg="blue.50" borderRadius="md">
-                    <Text fontSize="sm" fontWeight="medium" color="blue.800">
-                      CS101 Final Exam
-                    </Text>
-                    <Text fontSize="xs" color="blue.600">
-                      Tomorrow, 9:00 AM
-                    </Text>
-                  </Box>
-                  <Box p={3} bg="green.50" borderRadius="md">
-                    <Text fontSize="sm" fontWeight="medium" color="green.800">
-                      New Intake Registration
-                    </Text>
-                    <Text fontSize="xs" color="green.600">
-                      Next Week
-                    </Text>
-                  </Box>
-                  <Box p={3} bg="orange.50" borderRadius="md">
-                    <Text fontSize="sm" fontWeight="medium" color="orange.800">
-                      Faculty Meeting
-                    </Text>
-                    <Text fontSize="xs" color="orange.600">
-                      Friday, 2:00 PM
-                    </Text>
-                  </Box>
-                </VStack>
-              </CardBody>
-            </Card>
-          </VStack>
-        </Grid>
       </VStack>
     </Box>
   )

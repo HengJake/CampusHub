@@ -1,31 +1,43 @@
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
-  Card,
-  CardBody,
-  Grid,
-  Text,
-  Badge,
-  VStack,
-  HStack,
-  Progress,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  useColorModeValue,
+  FormControl,
+  FormLabel,
+  Input,
+  Textarea,
+  Select,
   Table,
   Thead,
   Tbody,
   Tr,
   Th,
   Td,
+  Stack,
+  VStack,
+  HStack,
+  Flex,
+  Heading,
+  Text,
   IconButton,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  useDisclosure,
+  Badge,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  SimpleGrid,
+  Card,
+  CardBody,
+  CardHeader,
+  CheckboxGroup,
+  Checkbox,
+  useToast,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -33,351 +45,649 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
-  FormControl,
-  FormLabel,
-  Input,
-  Select,
-  NumberInput,
-  NumberInputField,
-  useToast,
-} from "@chakra-ui/react"
-import { FiPlus, FiEdit, FiTrash2, FiMoreVertical, FiHome, FiUsers } from "react-icons/fi"
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
-import { useFacilityStore } from "../../store/facility.js";
-import { useEffect, useState } from "react";
-import React from "react";
-import ComfirmationMessage from "../../component/common/ComfirmationMessage.jsx";
+  useDisclosure,
+  Divider,
+  Container,
+  Spinner,
+  Alert,
+  AlertIcon
+} from '@chakra-ui/react';
+import {
+  ViewIcon,
+  EditIcon,
+  DeleteIcon,
+  AddIcon,
+  CalendarIcon,
+  InfoIcon
+} from '@chakra-ui/icons';
+import { useFacilityStore } from '../../store/facility.js';
+import { utcToTimeString, timeStringToUTC, utcToMalaysiaDate, malaysiaToUTC } from '../../../../utility/dateTimeConversion.js';
 
-const COLORS = ["#344E41", "#A4C3A2", "#48BB78", "#ED8936", "#4299E1", "#F6AD55", "#9F7AEA"];
+const FacilityManagement = () => {
+  const {
+    resources,
+    loading,
+    errors,
+    fetchFacilities,
+    createFacility,
+    updateFacility,
+    deleteFacility,
+    formatTimeslotsForDisplay,
+    formatTimeslotsForAPI
+  } = useFacilityStore();
 
-const FACILITY_TYPES = [
-  { value: "court", label: "Court" },
-  { value: "study_room", label: "Study Room" },
-  { value: "meeting_room", label: "Meeting Room" },
-  { value: "seminar_room", label: "Seminar Room" },
-];
-
-export function FacilityManagement() {
-  const { resources, fetchResources, createResource, updateResource, deleteResource, lockerUnits, fetchLockerUnits, createLockerUnit, updateLockerUnits, deleteLockerUnits, bookings, fetchBookings, createBooking, updateBooking, deleteBooking } = useFacilityStore();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [facilityType, setFacilityType] = useState("All");
+  const [selectedFacility, setSelectedFacility] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [facilityForm, setFacilityForm] = useState({
+    name: '',
+    type: 'locker',
+    location: '',
+    capacity: 1
+  });
+  const [availabilityForm, setAvailabilityForm] = useState({
+    days: [],
+    startTime: '',
+    endTime: ''
+  });
+  const [currentAvailability, setCurrentAvailability] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [isEdit, setIsEdit] = useState(false);
+  const [modalType, setModalType] = useState('');
   const toast = useToast();
-  const [form, setForm] = React.useState({
-    schoolId: "",
-    name: "",
-    location: "",
-    type: "study_room",
-    capacity: 1,
-  });
 
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const resourceTypes = [
+    { value: 'locker', label: 'Locker' },
+    { value: 'court', label: 'Court' },
+    { value: 'study_room', label: 'Study Room' },
+    { value: 'meeting_room', label: 'Meeting Room' },
+    { value: 'seminar_room', label: 'Seminar Room' }
+  ];
 
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [selectedFacility, setSelectedFacility] = React.useState(null);
-  const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
-  const [facilityToDelete, setFacilityToDelete] = React.useState(null);
-  const [totalFacilities, setTotalFacilities] = useState(0);
-  const [avgCapacity, setAvgCapacity] = useState(0);
-
+  // Load facilities on component mount
   useEffect(() => {
-    fetchResources();
-    fetchLockerUnits();
-    fetchBookings();
-  }, [fetchResources, fetchLockerUnits, fetchBookings]);
-  console.log("🚀 ~ FacilityManagement ~ bookings:", bookings)
-  console.log("🚀 ~ FacilityManagement ~ lockerUnits:", lockerUnits)
-  console.log("🚀 ~ FacilityManagement ~ resources:", resources)
+    loadFacilities();
+  }, []);
 
-  const filteredResources = resources.filter((resource) => {
-    const matchesType = facilityType === "All" || resource.type === facilityType;
-    const matchesSearch = resource.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesType && matchesSearch;
-  });
-  // Helper: status badge color
-  const getStatusColor = (status) => (status ? "green" : "red");
-
-  // Filter out lockers from all resource displays
-
-
-  // Use filteredResources instead of resources throughout the component
-  // For stats, pie chart, and table:
-  // - totalFacilities, avgCapacity, typeCounts, pieData, and the table rows should all use filteredResources
-
-  // **Calculating total facilities and average capacity**
-  useEffect(() => {
-    // When the resources are fetched, calculate total and average capacity
-    if (resources.length > 0) {
-      const total = resources.length; // Total number of facilities
-      const avgCap =
-        total > 0 ? Math.round(resources.reduce((sum, f) => sum + (f.capacity || 0), 0) / total) : 0; // Average capacity calculation
-      setTotalFacilities(total); // Set total facilities count
-      setAvgCapacity(avgCap); // Set average capacity
-    }
-  }, [resources]);
-
-
-  const typeCounts = filteredResources.reduce((acc, curr) => {
-    acc[curr.type] = (acc[curr.type] || 0) + 1;
-    return acc;
-  }, {});
-  const pieData = Object.entries(typeCounts).map(([type, count]) => ({ name: type.replace("_", " "), value: count }));
-
-  // Helper: count related locker units/bookings for a resource
-  const getBookingCount = (resourceId) => bookings.filter(b => b.resourceId === resourceId).length;
-
-  // In the table, map over filteredResources instead of resources
-  // {filteredResources.map((facility) => ( ... ))}
-
-  const openAddModal = () => {
-    setForm({ name: "", location: "", type: "study_room", capacity: 1 });
-    setIsEditing(false);
-    setSelectedFacility(null);
-    onOpen();
-  };
-
-  const openEditModal = (facility) => {
-    console.log("🚀 ~ openEditModal ~ facility:", facility)
-    setForm({
-      schoolId: facility.schoolId,
-      name: facility.name || "",
-      location: facility.location || "",
-      type: facility.type || "study_room",
-      capacity: facility.capacity || 1,
-    });
-    setIsEditing(true);
-    setSelectedFacility(facility);
-    onOpen();
-  };
-
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      let res;
-      if (isEditing && selectedFacility) {
-        console.log("🚀 ~ handleSubmit ~ selectedFacility._id,:", selectedFacility._id)
-        console.log("🚀 ~ handleSubmit ~ form:", form)
-        res = await updateResource(selectedFacility._id, form);
-      } else {
-        res = await createResource(form);
-      }
-      if (res.success) {
-        toast({ title: isEditing ? "Facility updated!" : "Facility added!", status: "success", duration: 2000, isClosable: true });
-        fetchResources();
-        onClose();
-        setForm({ name: "", location: "", type: "study_room", capacity: 1 });
-        setIsEditing(false);
-        setSelectedFacility(null);
-      } else {
-        toast({ title: "Error", description: res.message, status: "error", duration: 3000, isClosable: true });
-      }
-    } catch (err) {
-      toast({ title: "Error", description: err.message, status: "error", duration: 3000, isClosable: true });
-    } finally {
-      setIsSubmitting(false);
+  const loadFacilities = async () => {
+    const result = await fetchFacilities();
+    if (!result.success) {
+      toast({
+        title: 'Error',
+        description: result.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
-  const openDeleteDialog = (facility) => {
-    setFacilityToDelete(facility);
-    setIsDeleteOpen(true);
-  };
-  const closeDeleteDialog = () => {
-    setIsDeleteOpen(false);
-    setFacilityToDelete(null);
-  };
-  const handleDelete = async () => {
-    if (!facilityToDelete) return;
-    const res = await deleteResource(facilityToDelete._id);
-    if (res.success) {
-      toast({ title: "Facility deleted!", status: "success", duration: 2000, isClosable: true });
-      fetchResources();
+  const handleFacilitySubmit = async () => {
+    if (!facilityForm.name || !facilityForm.location) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all required fields',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const facilityData = {
+      ...facilityForm,
+      timeslots: formatTimeslotsForAPI(currentAvailability)
+    };
+
+    let result;
+    if (selectedFacility) {
+      result = await updateFacility(selectedFacility._id, facilityData);
     } else {
-      toast({ title: "Error", description: res.message, status: "error", duration: 3000, isClosable: true });
+      result = await createFacility(facilityData);
     }
-    closeDeleteDialog();
+
+    if (result.success) {
+      toast({
+        title: 'Success',
+        description: selectedFacility ? 'Facility updated successfully' : 'Facility created successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      await loadFacilities();
+      resetForms();
+      onClose();
+    } else {
+      toast({
+        title: 'Error',
+        description: result.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
+
+  const handleAddAvailability = () => {
+    if (!availabilityForm.days.length || !availabilityForm.startTime || !availabilityForm.endTime) {
+      toast({
+        title: 'Error',
+        description: 'Please select days and times',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Validate time format
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(availabilityForm.startTime) || !timeRegex.test(availabilityForm.endTime)) {
+      toast({
+        title: 'Error',
+        description: 'Please enter valid time format (HH:MM)',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Validate that end time is after start time
+    const startTime = new Date(`2000-01-01T${availabilityForm.startTime}:00`);
+    const endTime = new Date(`2000-01-01T${availabilityForm.endTime}:00`);
+    if (endTime <= startTime) {
+      toast({
+        title: 'Error',
+        description: 'End time must be after start time',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const newSlots = availabilityForm.days.map(day => ({
+      day,
+      startTime: availabilityForm.startTime,
+      endTime: availabilityForm.endTime
+    }));
+
+    setCurrentAvailability([...currentAvailability, ...newSlots]);
+    setAvailabilityForm({ days: [], startTime: '', endTime: '' });
+  };
+
+  const handleDeleteAvailability = (index) => {
+    setCurrentAvailability(currentAvailability.filter((_, i) => i !== index));
+  };
+
+  const handleDeleteFacility = async (id) => {
+    const result = await deleteFacility(id);
+    if (result.success) {
+      toast({
+        title: 'Success',
+        description: 'Facility deleted successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      await loadFacilities();
+    } else {
+      toast({
+        title: 'Error',
+        description: result.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleEditFacility = (facility) => {
+    setSelectedFacility(facility);
+    setFacilityForm({
+      name: facility.name,
+      type: facility.type,
+      description: facility.description || '',
+      location: facility.location,
+      capacity: facility.capacity || 1
+    });
+    const displayTimeslots = formatTimeslotsForDisplay(facility.timeslots);
+    setCurrentAvailability(displayTimeslots);
+    setModalType('edit');
+    onOpen();
+  };
+
+  const handleViewFacility = (facility) => {
+    setSelectedFacility(facility);
+    setModalType('view');
+    onOpen();
+  };
+
+  const resetForms = () => {
+    setFacilityForm({ name: '', type: 'locker', description: '', location: '', capacity: 1 });
+    setAvailabilityForm({ days: [], startTime: '', endTime: '' });
+    setCurrentAvailability([]);
+    setSelectedFacility(null);
+  };
+
+  const openCreateModal = () => {
+    resetForms();
+    setModalType('create');
+    onOpen();
+  };
+
+  const getResourceTypeLabel = (type) => {
+    const resourceType = resourceTypes.find(rt => rt.value === type);
+    return resourceType ? resourceType.label : type;
+  };
+
+  const getAvailabilitySummary = (timeslots) => {
+    if (!timeslots || timeslots.length === 0) return 'No availability set';
+    const displayTimeslots = formatTimeslotsForDisplay(timeslots);
+    return `${displayTimeslots.length} time slot${displayTimeslots.length > 1 ? 's' : ''} configured`;
+  };
+
+  // Helper function to format time with timezone info
+  const formatTimeWithTimezone = (timeString) => {
+    if (!timeString) return '';
+    return `${timeString} (MYT)`;
+  };
+
+  // Helper function to get current Malaysia time for default values
+  const getCurrentMalaysiaTime = () => {
+    const now = new Date();
+    const malaysiaTime = utcToMalaysiaDate(now);
+    return malaysiaTime.toTimeString().slice(0, 5); // HH:MM format
+  };
+
+  const filteredFacilities = activeTab === 0 ? resources :
+    activeTab === 1 ? resources.filter(f => f.type === 'study_room' || f.type === 'meeting_room' || f.type === 'seminar_room') :
+      resources.filter(f => f.type === 'court');
+
+  if (loading.resources) {
+    return (
+      <Container maxW="8xl" py={8}>
+        <Flex justify="center" align="center" minH="400px">
+          <VStack spacing={4}>
+            <Spinner size="xl" color="blue.500" />
+            <Text>Loading facilities...</Text>
+          </VStack>
+        </Flex>
+      </Container>
+    );
+  }
 
   return (
-    <Box p={6} minH="100vh" flex={1}>
-      <VStack spacing={6} align="stretch">
+    <Container maxW="8xl" py={8}>
+      <VStack spacing={8} align="stretch">
         {/* Header */}
-        <HStack justify="space-between">
-          <Box>
-            <Text fontSize="2xl" fontWeight="bold" color="#333333">
-              Facility Management
-            </Text>
-            <Text color="gray.600">Monitor and manage campus resources</Text>
-          </Box>
-          <Button leftIcon={<FiPlus />} bg="#344E41" color="white" _hover={{ bg: "#2a3d33" }} onClick={openAddModal}>
-            Add Facility
+        <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
+          <Heading size="xl" color="blue.600">
+            Facility Management System
+          </Heading>
+          <Button
+            leftIcon={<AddIcon />}
+            colorScheme="blue"
+            onClick={openCreateModal}
+            size="lg"
+          >
+            Add New Facility
           </Button>
-        </HStack>
+        </Flex>
 
-        {/* Add/Edit Facility Modal */}
-        <Modal isOpen={isOpen} onClose={onClose}>
+        {/* Error Alert */}
+        {errors.resources && (
+          <Alert status="error">
+            <AlertIcon />
+            {errors.resources}
+          </Alert>
+        )}
+
+        {/* Facility List Section */}
+        <Box bg="white" borderRadius="lg" shadow="md" p={6}>
+          <Heading size="lg" mb={6} color="gray.700">
+            Facilities Overview
+          </Heading>
+
+          <Tabs index={activeTab} onChange={setActiveTab} variant="enclosed" colorScheme="blue">
+            <TabList>
+              <Tab>All Facilities ({resources.length})</Tab>
+              <Tab>Academic ({resources.filter(f => f.type === 'study_room' || f.type === 'meeting_room' || f.type === 'seminar_room').length})</Tab>
+              <Tab>Sport ({resources.filter(f => f.type === 'court').length})</Tab>
+            </TabList>
+
+            <TabPanels>
+              {[0, 1, 2].map(tabIndex => (
+                <TabPanel key={tabIndex} px={0}>
+                  {filteredFacilities.length === 0 ? (
+                    <Box textAlign="center" py={12}>
+                      <InfoIcon color="gray.400" boxSize={12} mb={4} />
+                      <Text color="gray.500" fontSize="lg">
+                        No facilities found for this category
+                      </Text>
+                    </Box>
+                  ) : (
+                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} mt={6}>
+                      {filteredFacilities.map((facility) => (
+                        <Card key={facility._id} variant="outline" _hover={{ shadow: 'lg', transform: 'translateY(-2px)' }} transition="all 0.2s">
+                          <CardHeader pb={3}>
+                            <HStack justify="space-between" align="start">
+                              <VStack align="start" spacing={1}>
+                                <Heading size="md" color="gray.700" noOfLines={1}>
+                                  {facility.name}
+                                </Heading>
+                                <Badge
+                                  colorScheme={facility.type === 'court' ? 'green' : 'purple'}
+                                  variant="subtle"
+                                  borderRadius="full"
+                                  px={3}
+                                >
+                                  {getResourceTypeLabel(facility.type)}
+                                </Badge>
+                              </VStack>
+                              <HStack spacing={1}>
+                                <IconButton
+                                  icon={<ViewIcon />}
+                                  size="sm"
+                                  variant="ghost"
+                                  colorScheme="blue"
+                                  onClick={() => handleViewFacility(facility)}
+                                  aria-label="View facility"
+                                />
+                                <IconButton
+                                  icon={<EditIcon />}
+                                  size="sm"
+                                  variant="ghost"
+                                  colorScheme="orange"
+                                  onClick={() => handleEditFacility(facility)}
+                                  aria-label="Edit facility"
+                                />
+                                <IconButton
+                                  icon={<DeleteIcon />}
+                                  size="sm"
+                                  variant="ghost"
+                                  colorScheme="red"
+                                  onClick={() => handleDeleteFacility(facility._id)}
+                                  aria-label="Delete facility"
+                                />
+                              </HStack>
+                            </HStack>
+                          </CardHeader>
+                          <CardBody pt={0}>
+                            <VStack align="start" spacing={3}>
+                              <Text color="gray.600" fontSize="sm" noOfLines={2}>
+                                {facility.description || 'No description available'}
+                              </Text>
+                              <Text color="gray.500" fontSize="sm">
+                                📍 {facility.location}
+                              </Text>
+                              <Text color="gray.500" fontSize="sm">
+                                👥 Capacity: {facility.capacity}
+                              </Text>
+                              <HStack>
+                                <CalendarIcon color="gray.400" boxSize={4} />
+                                <Text color="gray.500" fontSize="sm">
+                                  {getAvailabilitySummary(facility.timeslots)}
+                                </Text>
+                              </HStack>
+                              <Text color="gray.400" fontSize="xs">
+                                ⏰ All times in Malaysia Time (UTC+8)
+                              </Text>
+                            </VStack>
+                          </CardBody>
+                        </Card>
+                      ))}
+                    </SimpleGrid>
+                  )}
+                </TabPanel>
+              ))}
+            </TabPanels>
+          </Tabs>
+        </Box>
+
+        {/* Modal for Create/Edit/View */}
+        <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
           <ModalOverlay />
           <ModalContent>
-            <ModalHeader>{isEditing ? "Edit Facility" : "Add New Facility"}</ModalHeader>
+            <ModalHeader>
+              {modalType === 'create' && 'Create New Facility'}
+              {modalType === 'edit' && 'Edit Facility'}
+              {modalType === 'view' && 'Facility Details'}
+            </ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              <FormControl isRequired mb={3}>
-                <FormLabel>Name</FormLabel>
-                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Facility Name" />
-              </FormControl>
-              <FormControl isRequired mb={3}>
-                <FormLabel>Location</FormLabel>
-                <Input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Location" />
-              </FormControl>
-              <FormControl isRequired mb={3}>
-                <FormLabel>Type</FormLabel>
-                <Select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
-                  {FACILITY_TYPES.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl isRequired mb={3}>
-                <FormLabel>Capacity</FormLabel>
-                <NumberInput min={1} value={form.capacity} onChange={(_, v) => setForm(f => ({ ...f, capacity: v }))}>
-                  <NumberInputField />
-                </NumberInput>
-              </FormControl>
+              {modalType === 'view' ? (
+                <VStack align="start" spacing={4}>
+                  <Box w="full">
+                    <Text fontWeight="bold" color="gray.600">Name:</Text>
+                    <Text fontSize="lg">{selectedFacility?.name}</Text>
+                  </Box>
+                  <Box w="full">
+                    <Text fontWeight="bold" color="gray.600">Type:</Text>
+                    <Badge colorScheme={selectedFacility?.type === 'court' ? 'green' : 'purple'}>
+                      {getResourceTypeLabel(selectedFacility?.type)}
+                    </Badge>
+                  </Box>
+                  <Box w="full">
+                    <Text fontWeight="bold" color="gray.600">Description:</Text>
+                    <Text>{selectedFacility?.description || 'No description available'}</Text>
+                  </Box>
+                  <Box w="full">
+                    <Text fontWeight="bold" color="gray.600">Location:</Text>
+                    <Text>{selectedFacility?.location}</Text>
+                  </Box>
+                  <Box w="full">
+                    <Text fontWeight="bold" color="gray.600">Capacity:</Text>
+                    <Text>{selectedFacility?.capacity}</Text>
+                  </Box>
+                  <Box w="full">
+                    <Text fontWeight="bold" color="gray.600" mb={2}>Weekly Availability:</Text>
+                    {selectedFacility?.timeslots?.length > 0 ? (
+                      <Table size="sm" variant="simple">
+                        <Thead>
+                          <Tr>
+                            <Th>Day</Th>
+                            <Th>Start Time (MYT)</Th>
+                            <Th>End Time (MYT)</Th>
+                          </Tr>
+                        </Thead>
+                        <Tbody>
+                          {formatTimeslotsForDisplay(selectedFacility.timeslots).map((slot, index) => (
+                            <Tr key={index}>
+                              <Td>{slot.day}</Td>
+                              <Td>{formatTimeWithTimezone(slot.startTime)}</Td>
+                              <Td>{formatTimeWithTimezone(slot.endTime)}</Td>
+                            </Tr>
+                          ))}
+                        </Tbody>
+                      </Table>
+                    ) : (
+                      <Text color="gray.500">No availability configured</Text>
+                    )}
+                  </Box>
+                </VStack>
+              ) : (
+                <VStack spacing={6} align="stretch">
+                  <Accordion defaultIndex={[0]} allowMultiple>
+                    <AccordionItem>
+                      <AccordionButton>
+                        <Box flex="1" textAlign="left" fontWeight="bold">
+                          Facility Information
+                        </Box>
+                        <AccordionIcon />
+                      </AccordionButton>
+                      <AccordionPanel pb={4}>
+                        <VStack spacing={4}>
+                          <FormControl isRequired>
+                            <FormLabel>Facility Name</FormLabel>
+                            <Input
+                              value={facilityForm.name}
+                              onChange={(e) => setFacilityForm({ ...facilityForm, name: e.target.value })}
+                              placeholder="Enter facility name"
+                            />
+                          </FormControl>
+
+                          <FormControl isRequired>
+                            <FormLabel>Facility Type</FormLabel>
+                            <Select
+                              value={facilityForm.type}
+                              onChange={(e) => setFacilityForm({ ...facilityForm, type: e.target.value })}
+                            >
+                              {resourceTypes.map(type => {
+
+                                if (type.label !== 'Locker') {
+                                  return (
+                                    <option key={type.value} value={type.value}>
+                                      {type.label}
+                                    </option>
+                                  )
+                                }
+
+                              })}
+                            </Select>
+                          </FormControl>
+
+                          <FormControl isRequired>
+                            <FormLabel>Location</FormLabel>
+                            <Input
+                              value={facilityForm.location}
+                              onChange={(e) => setFacilityForm({ ...facilityForm, location: e.target.value })}
+                              placeholder="Enter facility location"
+                            />
+                          </FormControl>
+
+                          <FormControl>
+                            <FormLabel>Capacity</FormLabel>
+                            <Input
+                              type="number"
+                              value={facilityForm.capacity}
+                              onChange={(e) => setFacilityForm({ ...facilityForm, capacity: parseInt(e.target.value) || 1 })}
+                              placeholder="Enter capacity"
+                              min={1}
+                            />
+                          </FormControl>
+                        </VStack>
+                      </AccordionPanel>
+                    </AccordionItem>
+
+                    <AccordionItem>
+                      <AccordionButton>
+                        <Box flex="1" textAlign="left" fontWeight="bold">
+                          Weekly Availability
+                        </Box>
+                        <AccordionIcon />
+                      </AccordionButton>
+                      <AccordionPanel pb={4}>
+                        <VStack spacing={4}>
+                          <FormControl>
+                            <FormLabel>Days of Week</FormLabel>
+                            <CheckboxGroup
+                              value={availabilityForm.days}
+                              onChange={(value) => setAvailabilityForm({ ...availabilityForm, days: value })}
+                            >
+                              <SimpleGrid columns={2} spacing={2}>
+                                {daysOfWeek.map(day => (
+                                  <Checkbox key={day} value={day}>{day}</Checkbox>
+                                ))}
+                              </SimpleGrid>
+                            </CheckboxGroup>
+                          </FormControl>
+
+                          <HStack w="full">
+                            <FormControl>
+                              <FormLabel>Start Time (MYT)</FormLabel>
+                              <Input
+                                type="time"
+                                value={availabilityForm.startTime}
+                                onChange={(e) => setAvailabilityForm({ ...availabilityForm, startTime: e.target.value })}
+                                placeholder="HH:MM"
+                              />
+                              <Text fontSize="xs" color="gray.500" mt={1}>
+                                Malaysia Time (UTC+8)
+                              </Text>
+                            </FormControl>
+
+                            <FormControl>
+                              <FormLabel>End Time (MYT)</FormLabel>
+                              <Input
+                                type="time"
+                                value={availabilityForm.endTime}
+                                onChange={(e) => setAvailabilityForm({ ...availabilityForm, endTime: e.target.value })}
+                                placeholder="HH:MM"
+                              />
+                              <Text fontSize="xs" color="gray.500" mt={1}>
+                                Malaysia Time (UTC+8)
+                              </Text>
+                            </FormControl>
+                          </HStack>
+
+                          <Button
+                            leftIcon={<AddIcon />}
+                            onClick={handleAddAvailability}
+                            colorScheme="green"
+                            size="sm"
+                            w="full"
+                          >
+                            Add Time Slot
+                          </Button>
+
+                          {currentAvailability.length > 0 && (
+                            <Box w="full">
+                              <Text fontWeight="bold" mb={2}>Current Availability:</Text>
+                              <Table size="sm" variant="simple">
+                                <Thead>
+                                  <Tr>
+                                    <Th>Day</Th>
+                                    <Th>Start (MYT)</Th>
+                                    <Th>End (MYT)</Th>
+                                    <Th>Action</Th>
+                                  </Tr>
+                                </Thead>
+                                <Tbody>
+                                  {currentAvailability.map((slot, index) => (
+                                    <Tr key={index}>
+                                      <Td>{slot.day}</Td>
+                                      <Td>{formatTimeWithTimezone(slot.startTime)}</Td>
+                                      <Td>{formatTimeWithTimezone(slot.endTime)}</Td>
+                                      <Td>
+                                        <IconButton
+                                          icon={<DeleteIcon />}
+                                          size="xs"
+                                          colorScheme="red"
+                                          variant="ghost"
+                                          onClick={() => handleDeleteAvailability(index)}
+                                          aria-label="Delete time slot"
+                                        />
+                                      </Td>
+                                    </Tr>
+                                  ))}
+                                </Tbody>
+                              </Table>
+                            </Box>
+                          )}
+                        </VStack>
+                      </AccordionPanel>
+                    </AccordionItem>
+                  </Accordion>
+                </VStack>
+              )}
             </ModalBody>
-            <ModalFooter>
-              <Button variant="ghost" mr={3} onClick={onClose}>Cancel</Button>
-              <Button colorScheme="green" onClick={handleSubmit} isLoading={isSubmitting}>
-                {isEditing ? "Update Facility" : "Add Facility"}
-              </Button>
-            </ModalFooter>
+
+            {modalType !== 'view' && (
+              <ModalFooter>
+                <Button variant="ghost" mr={3} onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button colorScheme="blue" onClick={handleFacilitySubmit}>
+                  {modalType === 'edit' ? 'Update Facility' : 'Create Facility'}
+                </Button>
+              </ModalFooter>
+            )}
           </ModalContent>
         </Modal>
-
-        {/* Stats Cards */}
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
-          <Card bg="white">
-            <CardBody>
-              <Stat>
-                <HStack justify="space-between">
-                  <Box>
-                    <StatLabel color="gray.600">Total Facilities</StatLabel>
-                    <StatNumber color="#344E41">{totalFacilities}</StatNumber>
-                    <StatHelpText>Across campus</StatHelpText>
-                  </Box>
-                  <Box color="#344E41" fontSize="2xl">
-                    <FiHome />
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
-          <Card bg="white">
-            <CardBody>
-              <Stat>
-                <HStack justify="space-between">
-                  <Box>
-                    <StatLabel color="gray.600">Average Capacity</StatLabel>
-                    <StatNumber color="#A4C3A2">{avgCapacity}</StatNumber>
-                    <StatHelpText>People per facility</StatHelpText>
-                  </Box>
-                  <Box color="#A4C3A2" fontSize="2xl">
-                    <FiUsers />
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
-        </Grid>
-
-        {/* Facility Type Pie Chart */}
-        <Card bg="white">
-          <CardBody>
-            <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
-              Facility Types Distribution
-            </Text>
-            <Box h={{ base: "250px", md: "350px" }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {pieData.map((entry, idx) => (
-                      <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </Box>
-          </CardBody>
-        </Card>
-
-        {/* Facilities Table */}
-        <Card bg="white">
-          <CardBody>
-            <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
-              All Facilities
-            </Text>
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Name</Th>
-                  <Th>Location</Th>
-                  <Th>Type</Th>
-                  <Th>Capacity</Th>
-                  <Th>Status</Th>
-                  <Th>Bookings</Th>
-                  <Th>Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {filteredResources.map((facility) => (
-                  <Tr key={facility._id}>
-                    <Td>{facility.name}</Td>
-                    <Td>{facility.location}</Td>
-                    <Td>
-                      <Badge colorScheme="blue">{facility.type.replace("_", " ")}</Badge>
-                    </Td>
-                    <Td>{facility.capacity}</Td>
-                    <Td>
-                      <Badge colorScheme={getStatusColor(facility.status)}>
-                        {facility.status ? "Active" : "Inactive"}
-                      </Badge>
-                    </Td>
-                    <Td>{getBookingCount(facility._id)}</Td>
-                    <Td>
-                      <Menu>
-                        <MenuButton as={IconButton} icon={<FiMoreVertical />} variant="ghost" size="sm" />
-                        <MenuList>
-                          <MenuItem icon={<FiEdit />} onClick={() => openEditModal(facility)}>Edit</MenuItem>
-                          <MenuItem icon={<FiTrash2 />} color="red.500" onClick={() => openDeleteDialog(facility)}>
-                            Delete
-                          </MenuItem>
-                        </MenuList>
-                      </Menu>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </CardBody>
-        </Card>
-        <ComfirmationMessage
-          title="Confirm delete facility?"
-          description="This facility will be permanently deleted and cannot be restored."
-          isOpen={isDeleteOpen}
-          onClose={closeDeleteDialog}
-          onConfirm={handleDelete}
-        />
       </VStack>
-    </Box>
+    </Container>
   );
-}
+};
+
+export default FacilityManagement;

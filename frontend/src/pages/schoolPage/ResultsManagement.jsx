@@ -419,8 +419,8 @@ export default function ResultsBulkUpload() {
     };
 
     return (
-        <Box>
-            <VStack spacing={3} align="stretch">
+        <Box maxW={"calc(100vw - 120px)"}>
+            <VStack spacing={3} align="stretch" >
                 <HStack justify={"space-between"}>
                     <Box>
                         <Text fontSize="2xl" fontWeight="bold" color="gray.800" mb={2}>

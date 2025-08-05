@@ -16,121 +16,438 @@ import {
   Input,
   useToast,
   IconButton,
-  useColorModeValue,
   Stat,
   StatLabel,
   StatNumber,
   StatHelpText,
   Grid,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Button,
+  FormControl,
+  FormLabel,
+  useDisclosure,
 } from "@chakra-ui/react"
-import { FiCheck, FiX, FiCalendar, FiClock } from "react-icons/fi"
-import { useState } from "react"
+import { FiCheck, FiX, FiCalendar, FiClock, FiEdit, FiTrash2 } from "react-icons/fi"
+import { useState, useMemo, useEffect } from "react"
 import { useFacilityStore } from "../../store/facility"
+
+// Constants
+const STATUS_OPTIONS = [
+  { value: "All", label: "All Status" },
+  { value: "pending", label: "Pending" },
+  { value: "confirmed", label: "Confirmed" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "completed", label: "Completed" },
+]
+
+const FACILITY_OPTIONS = [
+  { value: "All", label: "All Facilities" },
+  { value: "Basketball", label: "Basketball Courts" },
+  { value: "Study", label: "Study Rooms" },
+  { value: "Conference", label: "Conference Halls" },
+]
+
+const STATUS_COLORS = {
+  confirmed: "green",
+  cancelled: "red",
+  pending: "yellow",
+  completed: "blue",
+  default: "gray",
+}
+
+// Helper functions
+const getStatusColor = (status) => {
+  return STATUS_COLORS[status] || STATUS_COLORS.default
+}
+
+const isBookingValid = (booking) => {
+  return booking && typeof booking === 'object'
+}
+
+const formatDate = (dateString) => {
+  if (!dateString) return "-"
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  } catch (error) {
+    return dateString
+  }
+}
+
+const formatTime = (timeString) => {
+  if (!timeString) return "-"
+  return timeString
+}
+
+// Stats Card Component
+const StatsCard = ({ label, value, helpText, icon: Icon, color }) => (
+  <Card bg="white"  >
+    <CardBody>
+      <Stat>
+        <HStack justify="space-between">
+          <Box>
+            <StatLabel color="gray.600">{label}</StatLabel>
+            <StatNumber color={color}>{value}</StatNumber>
+            <StatHelpText>{helpText}</StatHelpText>
+          </Box>
+          <Box color={color} fontSize="2xl">
+            <Icon />
+          </Box>
+        </HStack>
+      </Stat>
+    </CardBody>
+  </Card>
+)
+
+// Filter Component
+const FilterSection = ({ statusFilter, setStatusFilter, facilityFilter, setFacilityFilter, dateFilter, setDateFilter }) => (
+  <Card bg="white">
+    <CardBody>
+      <HStack spacing={4}>
+        <Select w="200px" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          {STATUS_OPTIONS.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
+        <Select w="200px" value={facilityFilter} onChange={(e) => setFacilityFilter(e.target.value)}>
+          {FACILITY_OPTIONS.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
+        <Input
+          type="date"
+          w="200px"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+          placeholder="Filter by date"
+        />
+      </HStack>
+    </CardBody>
+  </Card>
+)
+
+// Edit Booking Modal Component
+const EditBookingModal = ({ isOpen, onClose, booking, onUpdate }) => {
+  const [formData, setFormData] = useState({
+    bookingDate: '',
+    startTime: '',
+    endTime: '',
+    status: 'pending'
+  })
+
+  useEffect(() => {
+    if (booking) {
+      setFormData({
+        bookingDate: booking.bookingDate ? new Date(booking.bookingDate).toISOString().split('T')[0] : '',
+        startTime: booking.startTime || '',
+        endTime: booking.endTime || '',
+        status: booking.status || 'pending'
+      })
+    }
+  }, [booking])
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    onUpdate(booking.id, formData)
+    onClose()
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>Edit Booking</ModalHeader>
+        <ModalCloseButton />
+        <form onSubmit={handleSubmit}>
+          <ModalBody>
+            <VStack spacing={4}>
+              <FormControl isRequired>
+                <FormLabel>Booking Date</FormLabel>
+                <Input
+                  type="date"
+                  value={formData.bookingDate}
+                  onChange={(e) => setFormData({ ...formData, bookingDate: e.target.value })}
+                />
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel>Start Time</FormLabel>
+                <Input
+                  type="time"
+                  value={formData.startTime}
+                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                />
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel>End Time</FormLabel>
+                <Input
+                  type="time"
+                  value={formData.endTime}
+                  onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Status</FormLabel>
+                <Select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="completed">Completed</option>
+                </Select>
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button colorScheme="blue" type="submit">
+              Update Booking
+            </Button>
+          </ModalFooter>
+        </form>
+      </ModalContent>
+    </Modal>
+  )
+}
+
+// Booking Row Component
+const BookingRow = ({ booking, onApprove, onReject, onEdit, onDelete }) => (
+  <Tr key={booking?.id || Math.random()}>
+    <Td>
+      <Text fontWeight="medium">{booking?.studentId?.userId?.name || booking?.studentName || "-"}</Text>
+    </Td>
+    <Td>{booking?.resourceId?.name || booking?.facility || "-"}</Td>
+    <Td>
+      <VStack align="start" spacing={0}>
+        <Text fontSize="sm">{formatDate(booking?.bookingDate)}</Text>
+        <Text fontSize="xs" color="gray.600">
+          {formatTime(booking?.startTime)} - {formatTime(booking?.endTime)}
+        </Text>
+      </VStack>
+    </Td>
+    <Td>
+      <Badge colorScheme={getStatusColor(booking?.status)}>
+        {booking?.status || "-"}
+      </Badge>
+    </Td>
+    <Td>
+      <HStack spacing={2}>
+        {booking?.status === "pending" && (
+          <>
+            <IconButton
+              icon={<FiCheck />}
+              colorScheme="green"
+              size="sm"
+              onClick={() => onApprove(booking?.id)}
+              aria-label="Approve booking"
+            />
+            <IconButton
+              icon={<FiX />}
+              colorScheme="red"
+              size="sm"
+              onClick={() => onReject(booking?.id)}
+              aria-label="Reject booking"
+            />
+          </>
+        )}
+        <IconButton
+          icon={<FiEdit />}
+          colorScheme="blue"
+          size="sm"
+          onClick={() => onEdit(booking)}
+          aria-label="Edit booking"
+        />
+        <IconButton
+          icon={<FiTrash2 />}
+          colorScheme="red"
+          size="sm"
+          onClick={() => onDelete(booking?.id)}
+          aria-label="Delete booking"
+        />
+      </HStack>
+    </Td>
+  </Tr>
+)
 
 export function BookingManagement() {
   const toast = useToast()
+  const { isOpen, onOpen, onClose } = useDisclosure()
   const [statusFilter, setStatusFilter] = useState("All")
   const [facilityFilter, setFacilityFilter] = useState("All")
   const [dateFilter, setDateFilter] = useState("")
+  const [selectedBooking, setSelectedBooking] = useState(null)
 
-  const { bookings, fetchBookings } = useFacilityStore();
+  const { bookings, fetchBookings, updateBookingStatus, updateBooking, deleteBooking } = useFacilityStore()
 
-  // Defensive: Ensure bookings is an array
-  const safeBookings = Array.isArray(bookings) ? bookings : [];
+  useEffect(() => {
+    fetchBookings();
+  }, [])
+  console.log("🚀 ~ BookingManagement ~ bookings:", bookings)
 
-  const filteredBookings = safeBookings.filter((booking) => {
-    // Defensive: Check booking object structure
-    if (!booking || typeof booking !== 'object') return false;
-    const status = booking.status || "";
-    const facility = booking.facility || "";
-    const date = booking.date || "";
-    const matchesStatus = statusFilter === "All" || status === statusFilter;
-    const matchesFacility = facilityFilter === "All" || (typeof facility === 'string' && facility.includes(facilityFilter));
-    const matchesDate = !dateFilter || date === dateFilter;
-    return matchesStatus && matchesFacility && matchesDate;
-  });
+  // Memoized computed values
+  const safeBookings = useMemo(() => {
+    return Array.isArray(bookings) ? bookings : []
+  }, [bookings])
 
-  // Defensive: Check if updateBookingStatus exists
-  const { updateBookingStatus } = useFacilityStore();
+  const filteredBookings = useMemo(() => {
+    return safeBookings.filter((booking) => {
+      if (!isBookingValid(booking)) return false
 
-  const handleApprove = (id) => {
-    if (typeof updateBookingStatus === 'function') {
-      try {
-        updateBookingStatus(id, "Approved");
-        toast({
-          title: "Booking Approved",
-          description: "The booking has been approved successfully.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: error.message || "Failed to approve booking.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+      const status = booking.status || ""
+      const facility = booking.resourceId?.name || booking.facility || ""
+      const bookingDate = booking.bookingDate || ""
+
+      const matchesStatus = statusFilter === "All" || status === statusFilter
+      const matchesFacility = facilityFilter === "All" || (typeof facility === 'string' && facility.includes(facilityFilter))
+
+      // Date filtering logic
+      let matchesDate = true
+      if (dateFilter && bookingDate) {
+        const filterDate = new Date(dateFilter)
+        const bookingDateObj = new Date(bookingDate)
+        matchesDate = filterDate.toDateString() === bookingDateObj.toDateString()
       }
-    } else {
+
+      return matchesStatus && matchesFacility && matchesDate
+    })
+  }, [safeBookings, statusFilter, facilityFilter, dateFilter])
+
+  const bookingStats = useMemo(() => {
+    const pendingCount = safeBookings.filter((b) => b.status === "pending").length
+    const confirmedCount = safeBookings.filter((b) => b.status === "confirmed").length
+    const cancelledCount = safeBookings.filter((b) => b.status === "cancelled").length
+    const completedCount = safeBookings.filter((b) => b.status === "completed").length
+
+    return {
+      pendingCount,
+      confirmedCount,
+      cancelledCount,
+      completedCount,
+      totalCount: safeBookings.length
+    }
+  }, [safeBookings])
+
+  // Event handlers
+  const handleBookingAction = (id, action, status) => {
+    if (typeof updateBookingStatus !== 'function') {
       toast({
         title: "Error",
         description: "Booking status update function is unavailable.",
         status: "error",
         duration: 3000,
         isClosable: true,
-      });
+      })
+      return
     }
-  };
 
-  const handleReject = (id) => {
-    if (typeof updateBookingStatus === 'function') {
-      try {
-        updateBookingStatus(id, "Rejected");
-        toast({
-          title: "Booking Rejected",
-          description: "The booking has been rejected.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: error.message || "Failed to reject booking.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } else {
+    try {
+      updateBookingStatus(id, status)
+      toast({
+        title: `Booking ${action}`,
+        description: `The booking has been ${action.toLowerCase()} successfully.`,
+        status: action === "Confirmed" ? "success" : "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Booking status update function is unavailable.",
+        description: error.message || `Failed to ${action.toLowerCase()} booking.`,
         status: "error",
         duration: 3000,
         isClosable: true,
-      });
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Approved":
-        return "green"
-      case "Rejected":
-        return "red"
-      case "Pending":
-        return "yellow"
-      default:
-        return "gray"
+      })
     }
   }
 
-  const pendingCount = bookings.filter((b) => b.status === "Pending").length
-  const approvedCount = bookings.filter((b) => b.status === "Approved").length
-  const rejectedCount = bookings.filter((b) => b.status === "Rejected").length
+  const handleApprove = (id) => handleBookingAction(id, "Confirmed", "confirmed")
+  const handleReject = (id) => handleBookingAction(id, "Cancelled", "cancelled")
+
+  const handleEdit = (booking) => {
+    setSelectedBooking(booking)
+    onOpen()
+  }
+
+  const handleUpdate = async (id, formData) => {
+    if (typeof updateBooking !== 'function') {
+      toast({
+        title: "Error",
+        description: "Booking update function is unavailable.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+      return
+    }
+
+    try {
+      await updateBooking(id, formData)
+      toast({
+        title: "Booking Updated",
+        description: "The booking has been updated successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update booking.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (typeof deleteBooking !== 'function') {
+      toast({
+        title: "Error",
+        description: "Booking delete function is unavailable.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+      return
+    }
+
+    try {
+      await deleteBooking(id)
+      toast({
+        title: "Booking Deleted",
+        description: "The booking has been deleted successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete booking.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
 
   return (
     <Box p={6} minH="100vh" flex={1}>
@@ -146,82 +463,49 @@ export function BookingManagement() {
         </HStack>
 
         {/* Stats Cards */}
-        <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={6}>
-          <Card bg={"white"} borderColor={"gray.800"} borderWidth="1px">
-            <CardBody>
-              <Stat>
-                <HStack justify="space-between">
-                  <Box>
-                    <StatLabel color="gray.600">Pending Approvals</StatLabel>
-                    <StatNumber color="#ED8936">{pendingCount}</StatNumber>
-                    <StatHelpText>Awaiting review</StatHelpText>
-                  </Box>
-                  <Box color="#ED8936" fontSize="2xl">
-                    <FiClock />
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
-
-          <Card bg={"white"} borderColor={"gray.800"} borderWidth="1px">
-            <CardBody>
-              <Stat>
-                <HStack justify="space-between">
-                  <Box>
-                    <StatLabel color="gray.600">Approved Today</StatLabel>
-                    <StatNumber color="#48BB78">{approvedCount}</StatNumber>
-                    <StatHelpText>Successfully approved</StatHelpText>
-                  </Box>
-                  <Box color="#48BB78" fontSize="2xl">
-                    <FiCheck />
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
-
-          <Card bg={"white"} borderColor={"gray.800"} borderWidth="1px">
-            <CardBody>
-              <Stat>
-                <HStack justify="space-between">
-                  <Box>
-                    <StatLabel color="gray.600">Total Bookings</StatLabel>
-                    <StatNumber color="#344E41">{bookings.length}</StatNumber>
-                    <StatHelpText>All time</StatHelpText>
-                  </Box>
-                  <Box color="#344E41" fontSize="2xl">
-                    <FiCalendar />
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
+        <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={6}>
+          <StatsCard
+            label="Pending Approvals"
+            value={bookingStats.pendingCount}
+            helpText="Awaiting review"
+            icon={FiClock}
+            color="#ED8936"
+          />
+          <StatsCard
+            label="Confirmed Bookings"
+            value={bookingStats.confirmedCount}
+            helpText="Successfully confirmed"
+            icon={FiCheck}
+            color="#48BB78"
+          />
+          <StatsCard
+            label="Cancelled Bookings"
+            value={bookingStats.cancelledCount}
+            helpText="Rejected bookings"
+            icon={FiX}
+            color="#E53E3E"
+          />
+          <StatsCard
+            label="Total Bookings"
+            value={bookingStats.totalCount}
+            helpText="All time"
+            icon={FiCalendar}
+            color="#344E41"
+          />
         </Grid>
 
         {/* Filters */}
-        <Card bg={"white"} borderColor={"gray.800"} borderWidth="1px">
-          <CardBody>
-            <HStack spacing={4}>
-              <Select w="200px" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                <option value="All">All Status</option>
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-              </Select>
-              <Select w="200px" value={facilityFilter} onChange={(e) => setFacilityFilter(e.target.value)}>
-                <option value="All">All Facilities</option>
-                <option value="Basketball">Basketball Courts</option>
-                <option value="Study">Study Rooms</option>
-                <option value="Conference">Conference Halls</option>
-              </Select>
-              <Input type="date" w="200px" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
-            </HStack>
-          </CardBody>
-        </Card>
+        <FilterSection
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          facilityFilter={facilityFilter}
+          setFacilityFilter={setFacilityFilter}
+          dateFilter={dateFilter}
+          setDateFilter={setDateFilter}
+        />
 
         {/* Bookings Table */}
-        <Card bg={"white"} borderColor={"gray.800"} borderWidth="1px">
+        <Card bg="white"  >
           <CardBody>
             <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
               Booking Requests ({filteredBookings.length})
@@ -232,59 +516,34 @@ export function BookingManagement() {
                   <Th>Student</Th>
                   <Th>Facility</Th>
                   <Th>Date & Time</Th>
-                  <Th>Purpose</Th>
                   <Th>Status</Th>
                   <Th>Actions</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {filteredBookings.map((booking) => (
-                  <Tr key={booking?.id || Math.random()}>
-                    <Td>
-                      <Text fontWeight="medium">{booking?.studentName || "-"}</Text>
-                    </Td>
-                    <Td>{booking?.facility || "-"}</Td>
-                    <Td>
-                      <VStack align="start" spacing={0}>
-                        <Text fontSize="sm">{booking?.date || "-"}</Text>
-                        <Text fontSize="xs" color="gray.600">
-                          {booking?.time || "-"}
-                        </Text>
-                      </VStack>
-                    </Td>
-                    <Td>
-                      <Text fontSize="sm">{booking?.purpose || "-"}</Text>
-                    </Td>
-                    <Td>
-                      <Badge colorScheme={getStatusColor(booking?.status)}>{booking?.status || "-"}</Badge>
-                    </Td>
-                    <Td>
-                      {booking?.status === "Pending" && (
-                        <HStack>
-                          <IconButton
-                            icon={<FiCheck />}
-                            colorScheme="green"
-                            size="sm"
-                            onClick={() => handleApprove(booking?.id)}
-                            aria-label="Approve booking"
-                          />
-                          <IconButton
-                            icon={<FiX />}
-                            colorScheme="red"
-                            size="sm"
-                            onClick={() => handleReject(booking?.id)}
-                            aria-label="Reject booking"
-                          />
-                        </HStack>
-                      )}
-                    </Td>
-                  </Tr>
+                  <BookingRow
+                    key={booking?.id || Math.random()}
+                    booking={booking}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
                 ))}
               </Tbody>
             </Table>
           </CardBody>
         </Card>
       </VStack>
+
+      {/* Edit Booking Modal */}
+      <EditBookingModal
+        isOpen={isOpen}
+        onClose={onClose}
+        booking={selectedBooking}
+        onUpdate={handleUpdate}
+      />
     </Box>
   )
 }

@@ -46,6 +46,13 @@ import {
   AlertDescription,
   Spinner,
   Center,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
 } from "@chakra-ui/react"
 import {
   Search,
@@ -61,8 +68,88 @@ import {
   BookOpen,
   Thermometer,
   Shield,
+  CalendarDays,
 } from "lucide-react"
 import { useAcademicStore } from "../../store/academic"
+
+// Utility functions for schedule handling
+const getCurrentDayOfWeek = () => {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return days[new Date().getDay()];
+};
+
+const getCurrentTime = () => {
+  const now = new Date();
+  return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+};
+
+const isTimeBetween = (currentTime, startTime, endTime) => {
+  return currentTime >= startTime && currentTime <= endTime;
+};
+
+const formatTime = (time) => {
+  if (!time) return '';
+  const [hours, minutes] = time.split(':');
+  const hour = parseInt(hours);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${minutes} ${ampm}`;
+};
+
+const getRoomStatus = (room, classSchedules) => {
+  const currentDay = getCurrentDayOfWeek();
+  const currentTime = getCurrentTime();
+
+  // Find schedules for this room on current day
+  const todaySchedules = classSchedules.filter(schedule =>
+    schedule.roomId === room._id && schedule.dayOfWeek === currentDay
+  );
+
+  // Check if room is currently occupied
+  const isCurrentlyOccupied = todaySchedules.some(schedule =>
+    isTimeBetween(currentTime, schedule.startTime, schedule.endTime)
+  );
+
+  if (isCurrentlyOccupied) {
+    const currentSchedule = todaySchedules.find(schedule =>
+      isTimeBetween(currentTime, schedule.startTime, schedule.endTime)
+    );
+    return {
+      status: 'occupied',
+      currentClass: currentSchedule,
+      nextClass: null
+    };
+  }
+
+  // Find next class today
+  const futureSchedules = todaySchedules.filter(schedule =>
+    schedule.startTime > currentTime
+  ).sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  const nextClass = futureSchedules.length > 0 ? futureSchedules[0] : null;
+
+  return {
+    status: 'available',
+    currentClass: null,
+    nextClass: nextClass
+  };
+};
+
+const getRoomSchedules = (roomId, classSchedules) => {
+  return classSchedules.filter(schedule => schedule.roomId._id === roomId);
+};
+
+const groupSchedulesByDay = (schedules) => {
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const grouped = {};
+
+  days.forEach(day => {
+    grouped[day] = schedules.filter(schedule => schedule.dayOfWeek === day)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  });
+
+  return grouped;
+};
 
 const ClassFinder = () => {
   const [searchTerm, setSearchTerm] = useState("")
@@ -81,16 +168,16 @@ const ClassFinder = () => {
   const toast = useToast()
 
   const { rooms, fetchRooms, classSchedules, fetchClassSchedules } = useAcademicStore();
-  
+
   useEffect(() => {
     if (rooms.length === 0) {
       fetchRooms();
     }
-    
+
     if (classSchedules.length === 0) {
       fetchClassSchedules();
     }
-    
+
   }, []);
   console.log("🚀 ~ ClassFinder ~ classSchedule:", classSchedules)
   console.log("🚀 ~ ClassFinder ~ rooms:", rooms)
@@ -98,40 +185,44 @@ const ClassFinder = () => {
   // const filteredRooms = rooms.filter(room => room.status === "available")
   const filteredRooms = rooms
 
-
-
-  // Initialize classrooms with real data
+  // Initialize classrooms with real data and schedule-based status
   useEffect(() => {
-    if (rooms.length > 0) {
+    if (rooms.length > 0 && classSchedules.length > 0) {
       setIsLoading(true)
-      // Map the fetched room data to the expected structure
-      const mappedRooms = rooms.map((room) => ({
-        id: room._id,
-        name: `Room ${room.roomNumber}`,
-        building: room.block,
-        floor: room.floor,
-        capacity: room.capacity,
-        currentOccupancy: 0, // Default since not provided in API
-        status: room.roomStatus,
-        nextClass: "No scheduled classes", // Default since not provided in API
-        availableUntil: room.roomStatus === "available" ? "All day" : "Check schedule",
-        features: room.facilities || [],
-        type: room.type,
-        location: { lat: 0, lng: 0 }, // Default since not provided in API
-        walkingTime: "Unknown", // Default since not provided in API
-        bookingAllowed: room.isActive,
-        maxBookingHours: 4, // Default since not provided in API
-        currentTemp: "22°C", // Default since not provided in API
-        lightingLevel: "Bright", // Default since not provided in API
-        cleaningStatus: "Clean", // Default since not provided in API
-      }))
+      // Map the fetched room data to the expected structure with schedule-based status
+      const mappedRooms = rooms.map((room) => {
+        const roomStatus = getRoomStatus(room, classSchedules);
+
+        return {
+          id: room._id,
+          name: `Room ${room.roomNumber}`,
+          building: room.block,
+          floor: room.floor,
+          capacity: room.capacity,
+          status: roomStatus.status,
+          currentClass: roomStatus.currentClass,
+          nextClass: roomStatus.nextClass,
+          availableUntil: roomStatus.status === "available"
+            ? (roomStatus.nextClass ? `Until ${formatTime(roomStatus.nextClass.startTime)}` : "All day")
+            : "Currently occupied",
+          features: room.facilities || [],
+          type: room.type,
+          location: { lat: 0, lng: 0 }, // Default since not provided in API
+          walkingTime: "Unknown", // Default since not provided in API
+          bookingAllowed: room.isActive,
+          maxBookingHours: 4, // Default since not provided in API
+          currentTemp: "22°C", // Default since not provided in API
+          lightingLevel: "Bright", // Default since not provided in API
+          cleaningStatus: "Clean", // Default since not provided in API
+        }
+      })
 
       setClassrooms(mappedRooms)
       setFilteredClassrooms(mappedRooms)
       setIsLoading(false)
       setLastUpdated(new Date())
     }
-  }, [rooms])
+  }, [rooms, classSchedules])
 
   // Auto-refresh functionality
   useEffect(() => {
@@ -140,11 +231,12 @@ const ClassFinder = () => {
     const interval = setInterval(() => {
       // Refresh data from the store
       fetchRooms()
+      fetchClassSchedules()
       setLastUpdated(new Date())
     }, 30000) // Refresh every 30 seconds
 
     return () => clearInterval(interval)
-  }, [autoRefresh, fetchRooms])
+  }, [autoRefresh, fetchRooms, fetchClassSchedules])
 
   // Filter classrooms
   useEffect(() => {
@@ -205,10 +297,9 @@ const ClassFinder = () => {
     }
   }
 
-
   const refreshData = () => {
     setIsLoading(true)
-    fetchRooms().then(() => {
+    Promise.all([fetchRooms(), fetchClassSchedules()]).then(() => {
       setLastUpdated(new Date())
       setIsLoading(false)
       toast({
@@ -424,32 +515,33 @@ const ClassFinder = () => {
                         <HStack>
                           <Icon as={Users} size="16px" color="gray.500" />
                           <Text fontSize="sm">
-                            {classroom.currentOccupancy}/{classroom.capacity} people
+                            Capacity: {classroom.capacity} people
                           </Text>
                         </HStack>
                         <Text fontSize="sm" color="gray.500">
                           {classroom.type}
                         </Text>
                       </Flex>
-                      <Progress
-                        value={(classroom.currentOccupancy / classroom.capacity) * 100}
-                        colorScheme={classroom.status === "available" ? "green" : "red"}
-                        size="sm"
-                        rounded="full"
-                      />
                     </Box>
 
-                    {/* Next Class */}
+                    {/* Current/Next Class */}
                     <Box>
                       <HStack mb={1}>
                         <Icon as={Clock} size="16px" color="gray.500" />
                         <Text fontSize="sm" fontWeight="medium">
-                          Available until: {classroom.availableUntil}
+                          {classroom.availableUntil}
                         </Text>
                       </HStack>
-                      <Text fontSize="xs" color="gray.500">
-                        Next: {classroom.nextClass}
-                      </Text>
+                      {classroom.currentClass && (
+                        <Text fontSize="xs" color="red.500" fontWeight="medium">
+                          Currently: {classroom.currentClass.moduleId?.moduleName || 'Class in session'}
+                        </Text>
+                      )}
+                      {classroom.nextClass && !classroom.currentClass && (
+                        <Text fontSize="xs" color="blue.500">
+                          Next: {classroom.nextClass.moduleId?.moduleName || 'Scheduled class'} at {formatTime(classroom.nextClass.startTime)}
+                        </Text>
+                      )}
                     </Box>
 
                     {/* Features */}
@@ -510,6 +602,7 @@ const ClassFinder = () => {
                 <Tabs>
                   <TabList>
                     <Tab>Overview</Tab>
+                    <Tab>Schedule</Tab>
                     <Tab>Features</Tab>
                     <Tab>Environment</Tab>
                   </TabList>
@@ -550,45 +643,48 @@ const ClassFinder = () => {
                         {/* Capacity */}
                         <Box>
                           <Text fontSize="sm" color="gray.500" mb={2}>
-                            Capacity & Occupancy
+                            Capacity
                           </Text>
                           <HStack justify="space-between" mb={2}>
                             <Text>
-                              {selectedClassroom.currentOccupancy} / {selectedClassroom.capacity} people
+                              {selectedClassroom.capacity} people
                             </Text>
                             <Text fontSize="sm" color="gray.500">
-                              {Math.round((selectedClassroom.currentOccupancy / selectedClassroom.capacity) * 100)}%
-                              occupied
+                              Room Type: {selectedClassroom.type}
                             </Text>
                           </HStack>
-                          <Progress
-                            value={(selectedClassroom.currentOccupancy / selectedClassroom.capacity) * 100}
-                            colorScheme={selectedClassroom.status === "available" ? "green" : "red"}
-                            size="md"
-                            rounded="full"
-                          />
                         </Box>
 
                         <Divider />
 
-                        {/* Room Status & Information */}
+                        {/* Current Status */}
                         <Box>
                           <Text fontSize="sm" color="gray.500" mb={2}>
-                            Room Information
+                            Current Status
                           </Text>
                           <VStack align="stretch" spacing={2}>
                             <HStack>
-                              <Icon as={Clock} color="green.500" />
+                              <Icon as={Clock} color={selectedClassroom.status === "available" ? "green.500" : "red.500"} />
                               <Text fontSize="sm">
                                 Status: <strong>{selectedClassroom.status}</strong>
                               </Text>
                             </HStack>
-                            <HStack>
-                              <Icon as={BookOpen} color="blue.500" />
-                              <Text fontSize="sm">
-                                Active: {selectedClassroom.bookingAllowed ? "Yes" : "No"}
-                              </Text>
-                            </HStack>
+                            {selectedClassroom.currentClass && (
+                              <HStack>
+                                <Icon as={BookOpen} color="red.500" />
+                                <Text fontSize="sm">
+                                  Current Class: {selectedClassroom.currentClass.moduleId?.moduleName || 'Class in session'}
+                                </Text>
+                              </HStack>
+                            )}
+                            {selectedClassroom.nextClass && !selectedClassroom.currentClass && (
+                              <HStack>
+                                <Icon as={Calendar} color="blue.500" />
+                                <Text fontSize="sm">
+                                  Next Class: {selectedClassroom.nextClass.moduleId?.moduleName || 'Scheduled class'} at {formatTime(selectedClassroom.nextClass.startTime)}
+                                </Text>
+                              </HStack>
+                            )}
                           </VStack>
                         </Box>
 
@@ -612,6 +708,69 @@ const ClassFinder = () => {
                             </HStack>
                           </VStack>
                         </Box>
+                      </VStack>
+                    </TabPanel>
+
+                    <TabPanel>
+                      <VStack align="stretch" spacing={4}>
+                        <HStack>
+                          <Icon as={CalendarDays} color="blue.500" />
+                          <Text fontSize="lg" fontWeight="medium">
+                            Weekly Schedule
+                          </Text>
+                        </HStack>
+
+                        {(() => {
+                          const roomSchedules = getRoomSchedules(selectedClassroom.id, classSchedules);
+                          const groupedSchedules = groupSchedulesByDay(roomSchedules);
+                          const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+                          return (
+                            <VStack align="stretch" spacing={4}>
+                              {days.map(day => {
+                                const daySchedules = groupedSchedules[day];
+                                return (
+                                  <Box key={day} border="1px" borderColor="gray.200" rounded="md" p={3}>
+                                    <Text fontWeight="bold" mb={2} color="blue.600">
+                                      {day}
+                                    </Text>
+                                    {daySchedules.length > 0 ? (
+                                      <VStack align="stretch" spacing={2}>
+                                        {daySchedules.map((schedule, index) => (
+                                          <HStack key={index} justify="space-between" p={2} bg="gray.50" rounded="md">
+                                            <VStack align="start" spacing={0}>
+                                              <Text fontSize="sm" fontWeight="medium">
+                                                {schedule.moduleId?.moduleName || 'Module'}
+                                              </Text>
+                                              <Text fontSize="xs" color="gray.600">
+                                                {schedule.lecturerId?.firstName} {schedule.lecturerId?.lastName}
+                                              </Text>
+                                            </VStack>
+                                            <VStack align="end" spacing={0}>
+                                              <Text fontSize="sm" fontWeight="medium">
+                                                {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
+                                              </Text>
+                                              <Badge
+                                                size="sm"
+                                                colorScheme={isTimeBetween(getCurrentTime(), schedule.startTime, schedule.endTime) ? "red" : "blue"}
+                                              >
+                                                {isTimeBetween(getCurrentTime(), schedule.startTime, schedule.endTime) ? "Now" : "Scheduled"}
+                                              </Badge>
+                                            </VStack>
+                                          </HStack>
+                                        ))}
+                                      </VStack>
+                                    ) : (
+                                      <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                                        No classes scheduled
+                                      </Text>
+                                    )}
+                                  </Box>
+                                );
+                              })}
+                            </VStack>
+                          );
+                        })()}
                       </VStack>
                     </TabPanel>
 

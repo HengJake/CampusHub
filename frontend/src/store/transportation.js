@@ -67,34 +67,10 @@ export const useTransportationStore = create((set, get) => ({
         return url;
     },
 
-    // Helper to wait for authentication
-    waitForAuth: async () => {
-        const authStore = useAuthStore.getState();
-        let attempts = 0;
-        const maxAttempts = 100;
-        while (!authStore.isAuthenticated && attempts < maxAttempts) {
-            await new Promise((resolve) => setTimeout(resolve, 100));
-            attempts++;
-            const currentAuthStore = useAuthStore.getState();
-            if (currentAuthStore.isAuthenticated) {
-                break;
-            }
-        }
-        if (!authStore.isAuthenticated) {
-            throw new Error("Authentication timeout - please log in again");
-        }
-        const schoolId = authStore.getSchoolId();
-        if (!schoolId && (authStore.getCurrentUser().role === "schoolAdmin" || authStore.getCurrentUser().role === "student")) {
-            throw new Error("School ID not available - authentication incomplete");
-        }
-        return schoolId;
-    },
-
     // ===== BUS SCHEDULE OPERATIONS =====
     fetchBusSchedules: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, busSchedules: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/busSchedule", filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -183,7 +159,6 @@ export const useTransportationStore = create((set, get) => ({
     fetchEHailings: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, eHailings: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/eHailing", filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -272,7 +247,6 @@ export const useTransportationStore = create((set, get) => ({
     fetchRoutes: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, routes: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/route", filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -361,7 +335,6 @@ export const useTransportationStore = create((set, get) => ({
     fetchStops: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, stops: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/stop", filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -450,7 +423,6 @@ export const useTransportationStore = create((set, get) => ({
     fetchVehicles: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, vehicles: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/vehicle", filters);
             const res = await fetch(url);
             const data = await res.json();

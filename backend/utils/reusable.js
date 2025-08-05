@@ -239,7 +239,6 @@ export const updateRecord = async (Model, id, updates, entityName = "record", va
     try {
         // Custom validation if provided
         if (validationFn) {
-            console.log("🚀 ~ updateRecord ~ updates:", updates)
             const validationResult = await validationFn(updates);
             if (validationResult && !validationResult.isValid) {
                 return {

@@ -28,10 +28,9 @@ import Profile from "./pages/studentPage/Profile.jsx";
 import Feedback from "./pages/studentPage/Feedback.jsx";
 import Academic from "./pages/studentPage/Academic.jsx";
 import Transportation from "./pages/studentPage/Transportation.jsx";
-import StudyRoom from "./pages/studentPage/StudyRoom.jsx";
+import StudyRoom from "./pages/studentPage/Booking.jsx";
 import Parking from "./pages/studentPage/Parking.jsx";
 import Locker from "./pages/studentPage/Locker.jsx";
-import Courts from "./pages/studentPage/Courts.jsx";
 import Schedule from "./pages/studentPage/Schedule.jsx";
 import Exams from "./pages/studentPage/Exams.jsx";
 import Attendance from "./pages/studentPage/Attendance.jsx";
@@ -39,7 +38,7 @@ import Attendance from "./pages/studentPage/Attendance.jsx";
 // School Admin Pages
 import { Dashboard as AdminDashboard } from "./pages/schoolPage/Dashboard.jsx";
 import { UserManagement } from "./pages/schoolPage/UserManagement.jsx";
-import { FacilityManagement } from "./pages/schoolPage/FacilityManagement.jsx";
+import FacilityManagement from "./pages/schoolPage/FacilityManagement.jsx";
 import { ParkingManagement } from "./pages/schoolPage/ParkingManagement.jsx";
 import { LockerManagement } from "./pages/schoolPage/LockerManagement.jsx";
 import { BookingManagement } from "./pages/schoolPage/BookingManagement.jsx";
@@ -49,7 +48,6 @@ import { AdminSetting } from "./pages/schoolPage/AdminSetting.jsx";
 import { AdminProfile } from "./pages/schoolPage/AdminProfile.jsx";
 import { CourseManagementPage } from "./pages/schoolPage/CourseManagement.jsx";
 import { AcademicOverview } from "./pages/schoolPage/AcademicOverview.jsx";
-import CourtsManagement from "./pages/schoolPage/CourtsManagement.jsx";
 import ResultsManagement from "./pages/schoolPage/ResultsManagement.jsx";
 import ScheduleManagement from "./pages/schoolPage/ScheduleManagement.jsx";
 
@@ -231,6 +229,7 @@ function App() {
         pr={{ base: 6, lg: 2 }}
         pl={{ base: 6, lg: 2 }}
         pt={6}
+        maxW="100%"
       >
         <Routes>
           {/* Common Pages - No auth required */}
@@ -255,7 +254,6 @@ function App() {
           <Route path="/facility/room" element={wrapWithAuth(<StudyRoom />)} />
           <Route path="/facility/parking" element={wrapWithAuth(<Parking />)} />
           <Route path="/facility/locker" element={wrapWithAuth(<Locker />)} />
-          <Route path="/facility/courts" element={wrapWithAuth(<Courts />)} />
           <Route path="/academic/schedule" element={wrapWithAuth(<Schedule />)} />
           <Route path="/academic/exams" element={wrapWithAuth(<Exams />)} />
           <Route path="/academic/attendance" element={wrapWithAuth(<Attendance />)} />
@@ -275,7 +273,6 @@ function App() {
           <Route path="/admin-profile" element={wrapWithAuth(<AdminProfile />)} />
 
           {/* School Admin Pages - Additional */}
-          <Route path="/admin/courts" element={wrapWithAuth(<CourtsManagement />)} />
           <Route path="/admin/results" element={wrapWithAuth(<ResultsManagement />)} />
           <Route path="/admin/schedule" element={wrapWithAuth(<ScheduleManagement />)} />
 

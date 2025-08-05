@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { useAuthStore } from "./auth.js";
 import { useShowToast } from "./utils/toast"
+import { utcToTimeString, timeStringToUTC, utcToMalaysiaDate, malaysiaToUTC } from "../../../utility/dateTimeConversion.js";
 
 export const useFacilityStore = create((set, get) => ({
     // State - Store data for each entity
@@ -68,34 +69,10 @@ export const useFacilityStore = create((set, get) => ({
         return url;
     },
 
-    // Helper to wait for authentication (reference @auth.js)
-    waitForAuth: async () => {
-        const authStore = useAuthStore.getState();
-        let attempts = 0;
-        const maxAttempts = 100;
-        while (!authStore.isAuthenticated && attempts < maxAttempts) {
-            await new Promise((resolve) => setTimeout(resolve, 100));
-            attempts++;
-            const currentAuthStore = useAuthStore.getState();
-            if (currentAuthStore.isAuthenticated) {
-                break;
-            }
-        }
-        if (!authStore.isAuthenticated) {
-            throw new Error("Authentication timeout - please log in again");
-        }
-        const schoolId = authStore.getSchoolId();
-        if (!schoolId && (authStore.getCurrentUser().role === "schoolAdmin" || authStore.getCurrentUser().role === "student")) {
-            throw new Error("School ID not available - authentication incomplete");
-        }
-        return schoolId;
-    },
-
     // ===== BOOKING OPERATIONS =====
     fetchBookings: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, bookings: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/booking", filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -184,7 +161,6 @@ export const useFacilityStore = create((set, get) => ({
     fetchResources: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, resources: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/resource", filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -232,7 +208,7 @@ export const useFacilityStore = create((set, get) => ({
     },
     updateResource: async (id, updates) => {
         try {
-            
+
             const res = await fetch(`/api/resource/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
@@ -274,7 +250,6 @@ export const useFacilityStore = create((set, get) => ({
     fetchTimeSlots: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, timeSlots: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/timeSlot", filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -359,11 +334,25 @@ export const useFacilityStore = create((set, get) => ({
         }
     },
 
+    // Get available timeslots for a resource on a specific day
+    getAvailableTimeslots: async (resourceId, dayOfWeek) => {
+        try {
+            const url = get().buildUrl(`/api/resource/available/${resourceId}/${dayOfWeek}`);
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch available timeslots");
+            }
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
     // ===== PARKING LOT OPERATIONS =====
     fetchParkingLots: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, parkingLots: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/parkingLot", filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -452,7 +441,6 @@ export const useFacilityStore = create((set, get) => ({
     fetchLockerUnits: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, lockerUnits: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/locker-unit", filters);
             const res = await fetch(url);
             const data = await res.json();
@@ -562,5 +550,201 @@ export const useFacilityStore = create((set, get) => ({
             parkingLots: [],
             lockerUnits: [],
         });
+    },
+
+    // ===== FACILITY MANAGEMENT (RESOURCES + TIMESLOTS) =====
+    fetchFacilities: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, resources: true } }));
+        try {
+            const url = get().buildUrl("/api/resource", filters);
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch facilities");
+            }
+
+            // Resources now contain timeslots directly
+            const resourcesWithTimeslots = data.data.map(resource => ({
+                ...resource,
+                timeslots: resource.timeslots || []
+            }));
+
+            set((state) => ({
+                resources: resourcesWithTimeslots,
+                loading: { ...state.loading, resources: false },
+                errors: { ...state.errors, resources: null },
+            }));
+            return { success: true, data: resourcesWithTimeslots };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, resources: false },
+                errors: { ...state.errors, resources: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    createFacility: async (facilityData) => {
+        try {
+            const { timeslots, ...resourceData } = facilityData;
+
+            // Create resource with timeslots included
+            const authStore = useAuthStore.getState();
+            const userContext = authStore.getCurrentUser();
+            if (userContext.role === "schoolAdmin") {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    resourceData.schoolId = schoolId;
+                }
+            }
+
+            // Include timeslots in the resource data
+            if (timeslots && timeslots.length > 0) {
+                resourceData.timeslots = timeslots;
+            }
+
+            const resourceRes = await fetch("/api/resource", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(resourceData),
+            });
+            const resourceResponse = await resourceRes.json();
+            if (!resourceResponse.success) {
+                throw new Error(resourceResponse.message || "Failed to create resource");
+            }
+
+            const newResource = resourceResponse.data;
+
+            // Fetch the complete facility with timeslots
+            const completeFacility = await get().fetchFacilities();
+            return { success: true, data: newResource };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    updateFacility: async (id, facilityData) => {
+        try {
+            const { timeslots, ...resourceData } = facilityData;
+
+            // Include timeslots in the resource data
+            if (timeslots && timeslots.length > 0) {
+                resourceData.timeslots = timeslots;
+            }
+
+            const schoolId = get().getCurrentUser().schoolId;
+            resourceData.schoolId = schoolId;
+
+            console.log("🚀 ~ facilityData:", resourceData)
+            console.log(get().resources)
+
+            // Update resource with timeslots included
+            const resourceRes = await fetch(`/api/resource/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(resourceData),
+            });
+            const resourceResponse = await resourceRes.json();
+            if (!resourceResponse.success) {
+                throw new Error(resourceResponse.message || "Failed to update resource");
+            }
+
+            // Refresh the facility data
+            await get().fetchFacilities();
+            console.log(get().resources)
+            return { success: true, data: resourceResponse.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteFacility: async (id) => {
+        try {
+            // Delete the resource (timeslots are embedded, so they get deleted too)
+            const res = await fetch(`/api/resource/${id}`, {
+                method: "DELETE",
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete facility");
+            }
+
+            set((state) => ({
+                resources: state.resources.filter((resource) => resource._id !== id),
+            }));
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    // Helper function to format timeslots for display
+    formatTimeslotsForDisplay: (timeslots) => {
+        if (!timeslots || timeslots.length === 0) return [];
+
+        return timeslots.map(daySlot => {
+            const { dayOfWeek, slots } = daySlot;
+            return slots.map(slot => ({
+                day: dayOfWeek,
+                startTime: slot.start,
+                endTime: slot.end,
+                timeslotId: `${dayOfWeek}-${slot.start}-${slot.end}` // Generate unique ID
+            }));
+        }).flat();
+    },
+
+    // Helper function to format timeslots for API
+    formatTimeslotsForAPI: (timeslots) => {
+        if (!timeslots || timeslots.length === 0) return [];
+
+        // Group by day
+        const groupedByDay = timeslots.reduce((acc, slot) => {
+            if (!acc[slot.day]) {
+                acc[slot.day] = [];
+            }
+            acc[slot.day].push({
+                start: slot.startTime,
+                end: slot.endTime
+            });
+            return acc;
+        }, {});
+
+        // Convert to API format
+        return Object.entries(groupedByDay).map(([dayOfWeek, slots]) => ({
+            dayOfWeek,
+            slots
+        }));
+    },
+
+    // Helper function to validate and convert time formats
+    validateAndConvertTime: (timeString) => {
+        if (!timeString) return null;
+
+        // Validate time format (HH:mm)
+        const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+        if (!timeRegex.test(timeString)) {
+            return null;
+        }
+
+        return timeString;
+    },
+
+    // Helper function to get current Malaysia time
+    getCurrentMalaysiaTime: () => {
+        const now = new Date();
+        return utcToMalaysiaDate(now);
+    },
+
+    // Helper function to convert time to Malaysia timezone
+    convertTimeToMalaysia: (timeString) => {
+        if (!timeString) return null;
+
+        // Create a date object for today with the given time
+        const [hours, minutes] = timeString.split(':').map(Number);
+        const today = new Date();
+        today.setHours(hours, minutes, 0, 0);
+
+        // Convert to Malaysia timezone
+        return utcToMalaysiaDate(today);
     },
 }));

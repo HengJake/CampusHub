@@ -156,6 +156,8 @@ export default function ScheduleManagement() {
           borderColor={borderColor}
           gridBg={gridBg}
         />
+
+
       </VStack>
 
       {/* Modals */}

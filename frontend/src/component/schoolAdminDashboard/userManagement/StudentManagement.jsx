@@ -39,11 +39,11 @@ import {
 } from "@chakra-ui/react"
 import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiDownload } from "react-icons/fi"
 import { useEffect, useState } from "react"
-import { useAcademicStore } from "../../store/academic.js";
-import { useShowToast } from "../../store/utils/toast.js";
-import { useUserStore } from "../../store/user.js";
+import { useAcademicStore } from "../../../store/academic.js";
+import { useShowToast } from "../../../store/utils/toast.js";
+import { useUserStore } from "../../../store/user.js";
 import { Spinner } from "@chakra-ui/react";
-import ComfirmationMessage from "../../component/common/ComfirmationMessage.jsx";
+import ComfirmationMessage from "../../common/ComfirmationMessage.jsx";
 
 export function StudentManagement({ selectedIntakeCourse, filterBy }) {
 

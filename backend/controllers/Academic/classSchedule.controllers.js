@@ -5,6 +5,7 @@ import Lecturer from '../../models/Academic/lecturer.model.js';
 import IntakeCourse from '../../models/Academic/intakeCourse.model.js';
 import Semester from '../../models/Academic/semester.model.js';
 import School from '../../models/Billing/school.model.js';
+import Student from '../../models/Academic/student.model.js';
 import {
     createRecord,
     getAllRecords,
@@ -16,6 +17,61 @@ import {
     controllerWrapper,
     deleteAllRecords
 } from "../../utils/reusable.js";
+
+// Helper function to check for time conflicts
+const checkTimeConflict = (start1, end1, start2, end2) => {
+    // Convert time strings to minutes for easier comparison
+    const timeToMinutes = (timeStr) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+    };
+
+    const start1Minutes = timeToMinutes(start1);
+    const end1Minutes = timeToMinutes(end1);
+    const start2Minutes = timeToMinutes(start2);
+    const end2Minutes = timeToMinutes(end2);
+
+    // Check if times overlap
+    return (start1Minutes < end2Minutes && end1Minutes > start2Minutes);
+};
+
+// Function to check for room and time conflicts
+const checkRoomTimeConflict = async (roomId, dayOfWeek, startTime, endTime, semesterId, excludeId = null) => {
+    try {
+        // Build query to find existing schedules with the same room and day
+        const query = {
+            roomId: roomId,
+            dayOfWeek: dayOfWeek,
+            semesterId: semesterId
+        };
+
+        // Exclude current record if updating
+        if (excludeId) {
+            query._id = { $ne: excludeId };
+        }
+
+        const existingSchedules = await ClassSchedule.find(query);
+
+        // Check for time conflicts
+        for (const schedule of existingSchedules) {
+            if (checkTimeConflict(startTime, endTime, schedule.startTime, schedule.endTime)) {
+                return {
+                    hasConflict: true,
+                    conflictingSchedule: schedule,
+                    message: `Room conflict: Another class is scheduled in this room on ${dayOfWeek} from ${schedule.startTime} to ${schedule.endTime}`
+                };
+            }
+        }
+
+        return { hasConflict: false };
+    } catch (error) {
+        console.error('Error checking room time conflict:', error);
+        return {
+            hasConflict: false,
+            error: error.message
+        };
+    }
+};
 
 // Custom validation function for class schedule data
 const validateClassScheduleData = async (data) => {
@@ -41,6 +97,17 @@ const validateClassScheduleData = async (data) => {
         return {
             isValid: false,
             message: "endTime must be in HH:MM format (24-hour)"
+        };
+    }
+
+    // Validate that end time is after start time
+    const startMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
+    const endMinutes = parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1]);
+
+    if (endMinutes <= startMinutes) {
+        return {
+            isValid: false,
+            message: "endTime must be after startTime"
         };
     }
 
@@ -95,6 +162,15 @@ const validateClassScheduleData = async (data) => {
         };
     }
 
+    // Check for room and time conflicts
+    const conflictCheck = await checkRoomTimeConflict(roomId, dayOfWeek, startTime, endTime, semesterId);
+    if (conflictCheck.hasConflict) {
+        return {
+            isValid: false,
+            message: conflictCheck.message
+        };
+    }
+
     return { isValid: true };
 };
 
@@ -140,12 +216,40 @@ export const getClassScheduleById = controllerWrapper(async (req, res) => {
 // Update Class Schedule
 export const updateClassSchedule = controllerWrapper(async (req, res) => {
     const { id } = req.params;
+
+    // Custom validation function for updates that excludes the current record
+    const validateClassScheduleDataForUpdate = async (data) => {
+        const validation = await validateClassScheduleData(data);
+        if (!validation.isValid) {
+            return validation;
+        }
+
+        // Check for conflicts excluding the current record
+        const conflictCheck = await checkRoomTimeConflict(
+            data.roomId,
+            data.dayOfWeek,
+            data.startTime,
+            data.endTime,
+            data.semesterId,
+            id
+        );
+
+        if (conflictCheck.hasConflict) {
+            return {
+                isValid: false,
+                message: conflictCheck.message
+            };
+        }
+
+        return { isValid: true };
+    };
+
     return await updateRecord(
         ClassSchedule,
         id,
         req.body,
         "classSchedule",
-        validateClassScheduleData
+        validateClassScheduleDataForUpdate
     );
 });
 
@@ -154,6 +258,7 @@ export const deleteClassSchedule = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(ClassSchedule, id, "class schedule");
 });
+
 // Delete All ClassSchedules
 export const deleteAllClassSchedules = controllerWrapper(async (req, res) => {
     return await deleteAllRecords(ClassSchedule, "classSchedules");
@@ -166,11 +271,72 @@ export const getClassSchedulesBySchool = controllerWrapper(async (req, res) => {
         "classSchedules",
         ['roomId', 'moduleId', 'semesterId', 'schoolId', {
             path: 'intakeCourseId',
-            populate: { path: ["intakeId", "courseId"] }
+            populate: ["intakeId", "courseId"]
         }, {
                 path: "lecturerId",
                 populate: { path: "userId" }
             }],
         { schoolId }
     );
+});
+
+// Get Class Schedules by Student ID
+export const getClassSchedulesByStudentId = controllerWrapper(async (req, res) => {
+    const { studentId } = req.params;
+
+    if (!studentId) {
+        return {
+            success: false,
+            message: "studentId is required",
+            statusCode: 400
+        };
+    }
+
+    try {
+        // First, get the student to find their intakeCourseId
+        const student = await Student.findById(studentId).populate('intakeCourseId');
+
+        if (!student) {
+            return {
+                success: false,
+                message: "Student not found",
+                statusCode: 404
+            };
+        }
+
+        // get all the class according to intake course
+        console.log(student.intakeCourseId.courseId._id)
+
+        // Get class schedules that match the student's intake course
+        const classSchedules = await ClassSchedule.find({
+            intakeCourseId: student.intakeCourseId._id
+        }).populate([
+            'roomId',
+            'moduleId',
+            'semesterId',
+            'schoolId',
+            {
+                path: 'intakeCourseId',
+                populate: ["intakeId", "courseId"]
+            },
+            {
+                path: "lecturerId",
+                populate: { path: "userId" }
+            }
+        ]);
+        console.log("🚀 ~ classSchedules:", classSchedules.length)
+
+        return {
+            success: true,
+            data: classSchedules,
+            message: "Class schedules retrieved successfully",
+            statusCode: 200
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message || "Failed to retrieve class schedules",
+            statusCode: 500
+        };
+    }
 });

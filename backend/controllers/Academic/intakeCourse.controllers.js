@@ -15,7 +15,7 @@ import {
 
 // Custom validation for intakeCourse data
 const validateIntakeCourseData = async (data) => {
-    const { intakeId, courseId, maxStudents, currentEnrollment, feeStructure, duration, maxDuration, requirements, isActive, status, schoolId } = data;
+    const { intakeId, courseId, maxStudents, currentEnrollment, feeStructure, maxDuration, requirements, isActive, status, schoolId } = data;
 
     // Check required fields
     if (!intakeId) {
@@ -42,19 +42,13 @@ const validateIntakeCourseData = async (data) => {
             message: "feeStructure is required"
         };
     }
-    if (!duration) {
-        return {
-            isValid: false,
-            message: "duration is required"
-        };
-    }
     if (!maxDuration) {
         return {
             isValid: false,
             message: "maxDuration is required"
         };
     }
-    if (!schoolId) {
+    if (!schoolId) {    
         return {
             isValid: false,
             message: "schoolId is required"
@@ -88,22 +82,6 @@ const validateIntakeCourseData = async (data) => {
         return {
             isValid: false,
             message: "Fees must be non-negative"
-        };
-    }
-
-    // Validate duration
-    if (duration < 1) {
-        return {
-            isValid: false,
-            message: "duration must be at least 1"
-        };
-    }
-
-    // Validate maxDuration
-    if (maxDuration < duration) {
-        return {
-            isValid: false,
-            message: "maxDuration must be greater than or equal to duration"
         };
     }
 

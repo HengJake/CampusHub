@@ -75,10 +75,10 @@ export const useAuthStore = create((set, get) => ({
 
         if (studentData.success) {
           enhancedUser.schoolId = studentData.schoolId;
-          enhancedUser.student = studentData.student;
+          enhancedUser.studentId = studentData.student._id;
           set({
             schoolId: studentData.schoolId,
-            studentId: studentData.student?._id
+            studentId: studentData.student._id
           });
         }
       }

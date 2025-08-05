@@ -31,7 +31,10 @@ import { useDisclosure } from '@chakra-ui/react';
 const transformExamData = (examData) => {
     return examData
         .map(exam => {
-            if (typeof exam !== 'object' || !exam || !exam.examTime) return null;
+            if (typeof exam !== 'object' || !exam || !exam.examTime) {
+                return null;
+            }
+
             try {
                 const examDate = new Date(exam.examDate);
                 const dayOfWeek = examDate.toLocaleDateString('en-US', { weekday: 'long' });
@@ -41,7 +44,9 @@ const transformExamData = (examData) => {
                 startDate.setHours(hours, minutes, 0, 0);
                 const endDate = new Date(startDate.getTime() + (exam.durationMinute * 60000));
                 const endTime = endDate.toTimeString().slice(0, 5);
-                return {
+
+
+                const transformedExam = {
                     id: exam._id,
                     code: exam.moduleId?.code ?? 'N/A',
                     subject: exam.moduleId?.moduleName ?? 'Unknown',
@@ -61,9 +66,13 @@ const transformExamData = (examData) => {
                     invigilators: exam.invigilators,
                     durationMinute: exam.durationMinute,
                     intakeCourseId: exam.intakeCourseId,
-                    courseId: exam.courseId,
-                    moduleId: exam.moduleId
+                    courseId: exam.intakeCourseId.courseId._id,
+                    moduleId: exam.moduleId,
+                    year: exam.semesterId.year,
+                    semesterId: exam.semesterId
                 };
+
+                return transformedExam;
             } catch (e) {
                 return null;
             }
@@ -74,9 +83,12 @@ const transformExamData = (examData) => {
 const transformClassData = (classData) => {
     return classData
         .map(classItem => {
-            if (typeof classItem !== 'object' || !classItem || !classItem.startTime) return null;
+            if (typeof classItem !== 'object' || !classItem || !classItem.startTime) {
+                return null;
+            }
+
             try {
-                return {
+                const transformedClass = {
                     id: classItem._id,
                     code: classItem.moduleId?.code ?? 'N/A',
                     subject: classItem.moduleId?.moduleName ?? 'Unknown',
@@ -92,8 +104,12 @@ const transformClassData = (classData) => {
                     intakeCourseId: classItem.intakeCourseId,
                     courseId: classItem.courseId,
                     moduleId: classItem.moduleId,
-                    lecturerId: classItem.lecturerId
+                    lecturerId: classItem.lecturerId,
+                    year: classItem.year,
+                    semesterId: classItem.semesterId
                 };
+
+                return transformedClass;
             } catch (e) {
                 return null;
             }
@@ -123,23 +139,15 @@ const getCombinedAndFilteredData = (
     allItems = allItems.filter(Boolean);
 
     // Apply filters
-    return allItems.filter(item => {
-        // console.log("🚀 ~ getCombinedAndFilteredData ~ filter.selectedCourse:", filter.selectedCourse)
-        // console.log("🚀 ~ getCombinedAndFilteredData ~ filter.selectedIntake:", filter.selectedIntake)
+    const filteredItems = allItems.filter(item => {
 
-        if (!filter.selectedCourse || !filter.selectedIntake) {
-            return false
+        // Check if required filters are selected
+        if (!filter.selectedCourse || !filter.selectedIntake || !filter.selectedYear || !filter.selectedSemester) {
+            return false;
         }
-
-        // const itemDay = item.dayOfWeek;
-        // const itemStartTime = item.startTime;
 
         // Default: don't include
         let include = false;
-
-        // Check if item matches time slot
-        // const isTimeMatch = itemDay === day && itemStartTime === time;
-        // if (!isTimeMatch) return false;
 
         // Type filtering
         if (item.type === 'exam' && showExams) include = true;
@@ -149,24 +157,45 @@ const getCombinedAndFilteredData = (
         if (
             filter?.selectedIntake &&
             item.intakeCourseId?.intakeId?._id !== filter.selectedIntake
-        ) return false;
+        ) {
+            return false;
+        }
 
         // Filter by course (assuming courseId is under intakeCourseId.courseId._id)
         if (
             filter?.selectedCourse &&
             item.intakeCourseId?.courseId?._id !== filter.selectedCourse
-        ) return false;
+        ) {
+            return false;
+        }
 
         // Filter by module
         if (
             filter?.selectedModule &&
             item.moduleId?._id !== filter.selectedModule
-        ) return false;
+        ) {
+            return false;
+        }
 
+        // Filter by year 
+        if (
+            filter?.selectedYear &&
+            item.semesterId.year !== parseInt(filter.selectedYear)
+        ) {
+            return false;
+        }
 
-        // console.log("🚀 ~ getItemsForSlot ~ include:", include)
+        // Filter by semester
+        if (
+            filter?.selectedSemester &&
+            item.semesterId?.semesterNumber !== filter.selectedSemester.semesterNumber
+        ) {
+            return false;
+        }
+
         return include;
     });
+    return filteredItems;
 };
 
 // Component for rendering individual class item
@@ -317,7 +346,6 @@ const findConsecutiveClasses = (items, timeSlots) => {
 // Enhanced table row component for list view
 const EnhancedTableRow = ({ item, getTypeColor, onEditClick }) => {
     const isExam = item.type === "exam";
-    console.log("🚀 ~ EnhancedTableRow ~ item:", item)
 
     return (
         <Tr
@@ -570,9 +598,9 @@ export const ClusteredScheduleGrid = ({
     // Updated getItemsForSlot function
     const getItemsForSlot = (day, time) => {
         const items = allItems.filter(item => {
-
-            if (!filter.selectedCourse || !filter.selectedIntake || !filter.selectedSemester) {
-                return false
+            // Check if required filters are selected
+            if (!filter.selectedCourse || !filter.selectedIntake || !filter.selectedYear || !filter.selectedSemester) {
+                return false;
             }
 
             const itemDay = item.dayOfWeek;
@@ -601,18 +629,21 @@ export const ClusteredScheduleGrid = ({
                 item.intakeCourseId?.courseId?._id !== filter.selectedCourse
             ) return false;
 
-            // Filter by module
+            // Filter by year
             if (
-                filter?.selectedModule &&
-                item.moduleId?._id !== filter.selectedModule
+                filter?.selectedYear &&
+                item.semesterId.year != filter.selectedYear
             ) return false;
 
-
-            if (!filter.selectedYear) return false;
-
-    
-            if (filter?.selectedSemester &&
-                item.semesterId?._id !== filter.selectedSemester
+            // Filter by semester
+            if (
+                filter?.selectedSemester &&
+                item.semesterId?.semesterNumber != filter.selectedSemester.semesterNumber
+            ) return false;
+      
+            if (
+                filter?.selectedModule &&
+                item.moduleId._id != filter.selectedModule
             ) return false;
 
             return include;

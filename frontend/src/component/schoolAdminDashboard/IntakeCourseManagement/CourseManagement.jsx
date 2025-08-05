@@ -308,7 +308,7 @@ export function CourseManagement() {
     }
 
     return (
-        <Box minH="100vh" flex={1}>
+        <Box flex={1}>
 
             <VStack spacing={6} align="stretch">
                 {/* Header */}

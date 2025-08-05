@@ -52,6 +52,7 @@ import {
   TabPanels,
   Tab,
   TabPanel,
+  Spinner,
 } from "@chakra-ui/react"
 import {
   FiSearch,
@@ -66,224 +67,31 @@ import {
   FiDownload,
   FiEye,
 } from "react-icons/fi"
-import { useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { FaChartBar } from "react-icons/fa";
-
-// Mock data for attendance tracking
-const mockAttendanceData = {
-  studentProfile: {
-    id: "STU001",
-    name: "Alex Johnson",
-    studentId: "2024CS001",
-    program: "Computer Science",
-    year: 3,
-    semester: "Fall 2024",
-  },
-
-  attendanceRecords: [
-    {
-      id: "AT001",
-      courseCode: "CS301",
-      courseName: "Data Structures & Algorithms",
-      attended: 28,
-      total: 30,
-      percentage: 93.3,
-      status: "excellent",
-      lastUpdated: "2024-01-15",
-      requiredPercentage: 75,
-      sessionsLeft: 5,
-      canMiss: 2,
-      instructor: "Dr. Michael Smith",
-      weeklySchedule: ["Monday 9:00 AM", "Wednesday 2:00 PM"],
-      recentSessions: [
-        { date: "2024-01-15", status: "present", method: "QR Code" },
-        { date: "2024-01-13", status: "present", method: "Manual" },
-        { date: "2024-01-10", status: "present", method: "QR Code" },
-        { date: "2024-01-08", status: "absent", method: "Auto" },
-        { date: "2024-01-06", status: "present", method: "QR Code" },
-      ],
-    },
-    {
-      id: "AT002",
-      courseCode: "CS302",
-      courseName: "Database Management Systems",
-      attended: 25,
-      total: 32,
-      percentage: 78.1,
-      status: "good",
-      lastUpdated: "2024-01-14",
-      requiredPercentage: 75,
-      sessionsLeft: 4,
-      canMiss: 1,
-      instructor: "Prof. Emily Johnson",
-      weeklySchedule: ["Tuesday 11:00 AM"],
-      recentSessions: [
-        { date: "2024-01-14", status: "present", method: "Manual" },
-        { date: "2024-01-11", status: "present", method: "QR Code" },
-        { date: "2024-01-09", status: "absent", method: "Auto" },
-        { date: "2024-01-07", status: "present", method: "QR Code" },
-        { date: "2024-01-04", status: "present", method: "Manual" },
-      ],
-    },
-    {
-      id: "AT003",
-      courseCode: "CS303",
-      courseName: "Software Engineering",
-      attended: 30,
-      total: 30,
-      percentage: 100,
-      status: "excellent",
-      lastUpdated: "2024-01-15",
-      requiredPercentage: 75,
-      sessionsLeft: 6,
-      canMiss: 6,
-      instructor: "Dr. Robert Brown",
-      weeklySchedule: ["Wednesday 2:00 PM"],
-      recentSessions: [
-        { date: "2024-01-15", status: "present", method: "QR Code" },
-        { date: "2024-01-12", status: "present", method: "QR Code" },
-        { date: "2024-01-10", status: "present", method: "Manual" },
-        { date: "2024-01-08", status: "present", method: "QR Code" },
-        { date: "2024-01-05", status: "present", method: "QR Code" },
-      ],
-    },
-    {
-      id: "AT004",
-      courseCode: "CS304",
-      courseName: "Computer Networks",
-      attended: 22,
-      total: 31,
-      percentage: 71.0,
-      status: "warning",
-      lastUpdated: "2024-01-13",
-      requiredPercentage: 75,
-      sessionsLeft: 3,
-      canMiss: 0,
-      instructor: "Dr. Lisa Davis",
-      weeklySchedule: ["Thursday 10:00 AM"],
-      recentSessions: [
-        { date: "2024-01-13", status: "absent", method: "Auto" },
-        { date: "2024-01-11", status: "present", method: "QR Code" },
-        { date: "2024-01-09", status: "absent", method: "Auto" },
-        { date: "2024-01-06", status: "present", method: "Manual" },
-        { date: "2024-01-04", status: "absent", method: "Auto" },
-      ],
-    },
-    {
-      id: "AT005",
-      courseCode: "CS301L",
-      courseName: "Data Structures Lab",
-      attended: 14,
-      total: 15,
-      percentage: 93.3,
-      status: "excellent",
-      lastUpdated: "2024-01-12",
-      requiredPercentage: 75,
-      sessionsLeft: 2,
-      canMiss: 2,
-      instructor: "Mr. James Wilson",
-      weeklySchedule: ["Friday 2:00 PM"],
-      recentSessions: [
-        { date: "2024-01-12", status: "present", method: "Manual" },
-        { date: "2024-01-05", status: "present", method: "QR Code" },
-        { date: "2024-01-03", status: "absent", method: "Auto" },
-        { date: "2023-12-29", status: "present", method: "QR Code" },
-        { date: "2023-12-22", status: "present", method: "Manual" },
-      ],
-    },
-    {
-      id: "AT006",
-      courseCode: "CS302L",
-      courseName: "Database Lab",
-      attended: 13,
-      total: 15,
-      percentage: 86.7,
-      status: "good",
-      lastUpdated: "2024-01-12",
-      requiredPercentage: 75,
-      sessionsLeft: 2,
-      canMiss: 2,
-      instructor: "Ms. Sarah Lee",
-      weeklySchedule: ["Friday 4:00 PM"],
-      recentSessions: [
-        { date: "2024-01-12", status: "present", method: "QR Code" },
-        { date: "2024-01-05", status: "present", method: "Manual" },
-        { date: "2024-01-03", status: "absent", method: "Auto" },
-        { date: "2023-12-29", status: "present", method: "QR Code" },
-        { date: "2023-12-22", status: "absent", method: "Auto" },
-      ],
-    },
-  ],
-
-  attendanceLog: [
-    {
-      id: "AL001",
-      courseCode: "CS301",
-      courseName: "Data Structures & Algorithms",
-      date: "2024-01-15",
-      time: "9:00 AM",
-      status: "present",
-      method: "QR Code",
-      location: "CS-101",
-      instructor: "Dr. Michael Smith",
-    },
-    {
-      id: "AL002",
-      courseCode: "CS302",
-      courseName: "Database Management Systems",
-      date: "2024-01-14",
-      time: "11:00 AM",
-      status: "present",
-      method: "Manual",
-      location: "CS-205",
-      instructor: "Prof. Emily Johnson",
-    },
-    {
-      id: "AL003",
-      courseCode: "CS303",
-      courseName: "Software Engineering",
-      date: "2024-01-13",
-      time: "2:00 PM",
-      status: "present",
-      method: "QR Code",
-      location: "CS-301",
-      instructor: "Dr. Robert Brown",
-    },
-    {
-      id: "AL004",
-      courseCode: "CS304",
-      courseName: "Computer Networks",
-      date: "2024-01-13",
-      time: "10:00 AM",
-      status: "absent",
-      method: "Auto",
-      location: "CS-102",
-      instructor: "Dr. Lisa Davis",
-    },
-    {
-      id: "AL005",
-      courseCode: "CS301L",
-      courseName: "Data Structures Lab",
-      date: "2024-01-12",
-      time: "2:00 PM",
-      status: "present",
-      method: "Manual",
-      location: "CS-Lab1",
-      instructor: "Mr. James Wilson",
-    },
-  ],
-
-  monthlyStats: {
-    January: { attended: 45, total: 52, percentage: 86.5 },
-    December: { attended: 38, total: 42, percentage: 90.5 },
-    November: { attended: 41, total: 48, percentage: 85.4 },
-    October: { attended: 44, total: 50, percentage: 88.0 },
-  },
-}
+import { useAcademicStore } from "../../store/academic";
+import { useAuthStore } from "../../store/auth";
 
 export default function Attendance() {
+  const { fetchAttendanceByStudentId, fetchAttendance, createAttendance, fetchClassSchedulesByStudentId, attendance, loading, classSchedules } = useAcademicStore();
+
+  useEffect(() => {
+    // Get current user's student ID from auth store
+    const authStore = useAuthStore.getState();
+    const user = authStore.getCurrentUser();
+
+    if (user) {
+      // For students, fetch their own attendance and class schedules
+      fetchAttendanceByStudentId(user.studentId);
+      fetchClassSchedulesByStudentId(user.studentId);
+    }
+  }, [fetchAttendanceByStudentId, fetchClassSchedulesByStudentId]);
+
+  console.log(classSchedules)
+
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCourse, setSelectedCourse] = useState("")
+  const [selectedModule, setSelectedModule] = useState("")
+  const [selectedClass, setSelectedClass] = useState("")
   const [attendanceCode, setAttendanceCode] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [lastRefresh, setLastRefresh] = useState(new Date())
@@ -297,6 +105,143 @@ export default function Attendance() {
   const borderColor = useColorModeValue("gray.200", "gray.600")
   const toast = useToast()
 
+  // Process attendance data to group by module/course
+  const processedAttendanceData = useMemo(() => {
+    if (!attendance || attendance.length === 0) {
+      return {
+        attendanceRecords: [],
+        attendanceLog: [],
+        monthlyStats: {},
+        overallStats: { attended: 0, total: 0, percentage: 0 }
+      };
+    }
+
+    // Group attendance by scheduleId (which represents a course/module)
+    const courseGroups = {};
+
+    attendance.forEach(record => {
+      const scheduleId = record.scheduleId._id;
+      if (!courseGroups[scheduleId]) {
+        courseGroups[scheduleId] = {
+          scheduleId: scheduleId,
+          moduleId: record.scheduleId.moduleId,
+          moduleName: record.scheduleId.moduleId?.moduleName || 'Unknown Module',
+          moduleCode: record.scheduleId.moduleId?.code || 'UNK',
+          lecturerId: record.scheduleId.lecturerId,
+          lecturerName: record.scheduleId.lecturerId?.userId?.name || 'Unknown Lecturer',
+          roomId: record.scheduleId.roomId,
+          roomName: record.scheduleId.roomId?.roomName || 'Unknown Room',
+          dayOfWeek: record.scheduleId.dayOfWeek,
+          startTime: record.scheduleId.startTime,
+          endTime: record.scheduleId.endTime,
+          records: []
+        };
+      }
+      courseGroups[scheduleId].records.push(record);
+    });
+
+    // Convert to attendance records format
+    const attendanceRecords = Object.values(courseGroups).map(course => {
+      const totalSessions = course.records.length;
+      const attendedSessions = course.records.filter(r => r.status === 'present').length;
+      const lateSessions = course.records.filter(r => r.status === 'late').length;
+      const absentSessions = course.records.filter(r => r.status === 'absent').length;
+
+      // Calculate percentage (present + late count as attended)
+      const effectiveAttended = attendedSessions + lateSessions;
+      const percentage = totalSessions > 0 ? Math.round((effectiveAttended / totalSessions) * 100) : 0;
+
+      // Calculate sessions left (assuming 15 weeks per semester)
+      const totalWeeks = 15;
+      const sessionsLeft = Math.max(0, totalWeeks - totalSessions);
+      const canMiss = Math.max(0, Math.floor(totalWeeks * 0.25) - absentSessions); // 25% can be missed
+
+      // Get recent sessions (last 5)
+      const recentSessions = course.records
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5)
+        .map(record => ({
+          date: new Date(record.date).toLocaleDateString(),
+          status: record.status,
+          method: 'Manual' // Default method since it's not in the data
+        }));
+
+      return {
+        id: course.scheduleId,
+        courseCode: course.moduleCode,
+        courseName: course.moduleName,
+        attended: effectiveAttended,
+        total: totalSessions,
+        percentage: percentage,
+        status: percentage >= 90 ? 'excellent' : percentage >= 80 ? 'good' : percentage >= 75 ? 'satisfactory' : 'critical',
+        lastUpdated: course.records.length > 0 ? new Date(course.records[course.records.length - 1].date).toLocaleDateString() : 'N/A',
+        requiredPercentage: 75,
+        sessionsLeft: sessionsLeft,
+        canMiss: canMiss,
+        instructor: course.lecturerName,
+        weeklySchedule: [`${course.dayOfWeek} ${course.startTime}-${course.endTime}`],
+        recentSessions: recentSessions,
+        roomName: course.roomName
+      };
+    });
+
+    // Create attendance log
+    const attendanceLog = attendance
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 10)
+      .map(record => ({
+        id: record._id,
+        courseCode: record.scheduleId.moduleId?.code || 'UNK',
+        courseName: record.scheduleId.moduleId?.moduleName || 'Unknown Module',
+        date: new Date(record.date).toLocaleDateString(),
+        time: record.scheduleId.startTime,
+        status: record.status,
+        method: 'Manual',
+        location: record.scheduleId.roomId?.roomName || 'Unknown Room',
+        instructor: record.scheduleId.lecturerId?.userId?.firstName + ' ' + record.scheduleId.lecturerId?.userId?.lastName || 'Unknown Lecturer'
+      }));
+
+    // Calculate monthly stats
+    const monthlyStats = {};
+    attendance.forEach(record => {
+      const date = new Date(record.date);
+      const month = date.toLocaleString('default', { month: 'long' });
+      const year = date.getFullYear();
+      const key = `${month} ${year}`;
+
+      if (!monthlyStats[key]) {
+        monthlyStats[key] = { attended: 0, total: 0, percentage: 0 };
+      }
+
+      monthlyStats[key].total++;
+      if (record.status === 'present' || record.status === 'late') {
+        monthlyStats[key].attended++;
+      }
+    });
+
+    // Calculate percentages
+    Object.keys(monthlyStats).forEach(month => {
+      const stats = monthlyStats[month];
+      stats.percentage = stats.total > 0 ? Math.round((stats.attended / stats.total) * 100) : 0;
+    });
+
+    // Calculate overall stats
+    const totalAttended = attendance.filter(r => r.status === 'present' || r.status === 'late').length;
+    const totalClasses = attendance.length;
+    const overallPercentage = totalClasses > 0 ? Math.round((totalAttended / totalClasses) * 100) : 0;
+
+    return {
+      attendanceRecords,
+      attendanceLog,
+      monthlyStats,
+      overallStats: {
+        attended: totalAttended,
+        total: totalClasses,
+        percentage: overallPercentage
+      }
+    };
+  }, [attendance]);
+
   const getAttendanceStatus = (percentage) => {
     if (percentage >= 90) return { status: "excellent", color: "green", icon: FiCheckCircle }
     if (percentage >= 80) return { status: "good", color: "blue", icon: FiCheckCircle }
@@ -305,18 +250,22 @@ export default function Attendance() {
   }
 
   const calculateOverallAttendance = () => {
-    const totalAttended = mockAttendanceData.attendanceRecords.reduce((sum, record) => sum + record.attended, 0)
-    const totalClasses = mockAttendanceData.attendanceRecords.reduce((sum, record) => sum + record.total, 0)
-    return totalClasses > 0 ? Math.round((totalAttended / totalClasses) * 100) : 0
+    return processedAttendanceData.overallStats.percentage;
   }
 
   const getAttendanceTrend = () => {
-    const months = Object.keys(mockAttendanceData.monthlyStats)
+    const months = Object.keys(processedAttendanceData.monthlyStats);
     if (months.length < 2) return { trend: "stable", change: 0 }
 
-    const current = mockAttendanceData.monthlyStats[months[0]]
-    const previous = mockAttendanceData.monthlyStats[months[1]]
-    const change = current.percentage - previous.percentage
+    const sortedMonths = months.sort((a, b) => {
+      const dateA = new Date(a);
+      const dateB = new Date(b);
+      return dateB - dateA;
+    });
+
+    const current = processedAttendanceData.monthlyStats[sortedMonths[0]];
+    const previous = processedAttendanceData.monthlyStats[sortedMonths[1]];
+    const change = current.percentage - previous.percentage;
 
     return {
       trend: change > 0 ? "up" : change < 0 ? "down" : "stable",
@@ -324,7 +273,7 @@ export default function Attendance() {
     }
   }
 
-  const handleAttendanceSubmit = () => {
+  const handleAttendanceSubmit = async () => {
     if (!attendanceCode.trim()) {
       toast({
         title: "Error",
@@ -336,10 +285,10 @@ export default function Attendance() {
       return
     }
 
-    if (!selectedCourse) {
+    if (!selectedClass) {
       toast({
         title: "Error",
-        description: "Please select a course",
+        description: "Please select a class schedule",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -349,23 +298,85 @@ export default function Attendance() {
 
     setIsLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      // Get current user's student ID from auth store
+      const authStore = useAuthStore.getState();
+      const user = authStore.getCurrentUser();
+
+      if (!user || user.role !== 'student') {
+        toast({
+          title: "Error",
+          description: "Only students can mark attendance",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        })
+        return
+      }
+
+      // Create attendance data
+      const attendanceData = {
+        studentId: user.studentId,
+        scheduleId: selectedClass, // This should be the schedule ID
+        status: "present", // Default to present when student marks attendance
+        date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
+        schoolId: authStore.getSchoolId(),
+        attendanceCode: attendanceCode.trim()
+      }
+
+      const result = await createAttendance(attendanceData)
+
+      if (result.success) {
+        toast({
+          title: "Attendance Recorded",
+          description: "Your attendance has been successfully recorded",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        })
+
+        // Refresh attendance data
+        await fetchAttendanceByStudentId(user.studentId)
+
+        setAttendanceCode("")
+        setSelectedModule("")
+        setSelectedClass("")
+        onAttendanceClose()
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "Failed to record attendance",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+    } catch (error) {
       toast({
-        title: "Attendance Recorded",
-        description: `Attendance marked for ${selectedCourse}`,
-        status: "success",
+        title: "Error",
+        description: error.message || "Failed to record attendance",
+        status: "error",
         duration: 3000,
         isClosable: true,
       })
-      setAttendanceCode("")
-      setSelectedCourse("")
-      onAttendanceClose()
-    }, 2000)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleRefresh = () => {
+    // Get current user's student ID from auth store
+    const authStore = useAuthStore.getState();
+    const user = authStore.getCurrentUser();
+
+    if (user && user.role === 'student') {
+      // For students, fetch their own attendance
+      fetchAttendanceByStudentId(user._id);
+    } else {
+      // For other roles, fetch all attendance (fallback)
+      fetchAttendance();
+    }
+
     setLastRefresh(new Date())
     toast({
       title: "Data Refreshed",
@@ -376,7 +387,7 @@ export default function Attendance() {
     })
   }
 
-  const filteredRecords = mockAttendanceData.attendanceRecords.filter((record) => {
+  const filteredRecords = processedAttendanceData.attendanceRecords.filter((record) => {
     const matchesSearch =
       record.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.courseCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -388,6 +399,53 @@ export default function Attendance() {
   })
 
   const attendanceTrend = getAttendanceTrend()
+
+  // Show loading state
+  if (loading?.attendance) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minH="400px">
+        <VStack spacing={4}>
+          <Spinner thickness="4px" speed="0.65s" emptyColor="gray.200" color="blue.500" boxSize="40px" />
+          <Text>Loading attendance data...</Text>
+        </VStack>
+      </Box>
+    );
+  }
+
+  // Show empty state
+  if (!attendance || attendance.length === 0) {
+    return (
+      <Box>
+        <VStack spacing={6} align="stretch">
+          <Flex justify="space-between" align="center">
+            <Box>
+              <Text fontSize="2xl" fontWeight="bold" color="gray.800" mb={2}>
+                Attendance Tracking
+              </Text>
+              <Text color="gray.600">Monitor your class attendance and maintain academic requirements</Text>
+            </Box>
+          </Flex>
+
+          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
+            <CardBody>
+              <VStack spacing={4}>
+                <Icon as={FiCalendar} color="gray.400" />
+                <Text fontSize="lg" fontWeight="medium" color="gray.600">
+                  No attendance records found
+                </Text>
+                <Text fontSize="sm" color="gray.500" textAlign="center">
+                  Your attendance records will appear here once they are recorded by your instructors.
+                </Text>
+                <Button onClick={handleRefresh} leftIcon={<FiRefreshCw />}>
+                  Refresh Data
+                </Button>
+              </VStack>
+            </CardBody>
+          </Card>
+        </VStack>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -434,7 +492,7 @@ export default function Attendance() {
               <Stat>
                 <StatLabel>Courses at Risk</StatLabel>
                 <StatNumber color="red.500">
-                  {mockAttendanceData.attendanceRecords.filter((r) => r.percentage < 75).length}
+                  {processedAttendanceData.attendanceRecords.filter((r) => r.percentage < 75).length}
                 </StatNumber>
                 <StatHelpText>
                   <Icon as={FiAlertCircle} mr={1} />
@@ -449,7 +507,7 @@ export default function Attendance() {
               <Stat>
                 <StatLabel>Perfect Attendance</StatLabel>
                 <StatNumber color="green.500">
-                  {mockAttendanceData.attendanceRecords.filter((r) => r.percentage >= 95).length}
+                  {processedAttendanceData.attendanceRecords.filter((r) => r.percentage >= 95).length}
                 </StatNumber>
                 <StatHelpText>
                   <Icon as={FiCheckCircle} mr={1} />
@@ -464,7 +522,7 @@ export default function Attendance() {
               <Stat>
                 <StatLabel>Total Classes</StatLabel>
                 <StatNumber color="purple.500">
-                  {mockAttendanceData.attendanceRecords.reduce((sum, r) => sum + r.total, 0)}
+                  {processedAttendanceData.overallStats.total}
                 </StatNumber>
                 <StatHelpText>
                   <Icon as={FiCalendar} mr={1} />
@@ -522,7 +580,7 @@ export default function Attendance() {
                           <option value="all">All Status</option>
                           <option value="excellent">Excellent</option>
                           <option value="good">Good</option>
-                          <option value="warning">Warning</option>
+                          <option value="satisfactory">Satisfactory</option>
                           <option value="critical">Critical</option>
                         </Select>
                       </HStack>
@@ -645,17 +703,35 @@ export default function Attendance() {
                     <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={6}>
                       <VStack spacing={4} align="stretch">
                         <FormControl>
-                          <FormLabel>Select Course</FormLabel>
+                          <FormLabel>Select Module (Optional)</FormLabel>
                           <Select
-                            placeholder="Choose a course"
-                            value={selectedCourse}
-                            onChange={(e) => setSelectedCourse(e.target.value)}
+                            placeholder="Choose a module to filter schedules"
+                            value={selectedModule}
+                            onChange={(e) => setSelectedModule(e.target.value)}
                           >
-                            {mockAttendanceData.attendanceRecords.map((course) => (
-                              <option key={course.id} value={course.courseName}>
-                                {course.courseCode} - {course.courseName}
+                            <option value="">All Modules</option>
+                            {classSchedules && classSchedules.length > 0 && classSchedules.map((schedule) => (
+                              <option key={schedule.moduleId?._id} value={schedule.moduleId?.moduleName}>
+                                {schedule.moduleId?.code} - {schedule.moduleId?.moduleName}
                               </option>
                             ))}
+                          </Select>
+                        </FormControl>
+
+                        <FormControl>
+                          <FormLabel>Select Class</FormLabel>
+                          <Select
+                            placeholder="Choose a Class Schedule"
+                            value={selectedClass}
+                            onChange={(e) => setSelectedClass(e.target.value)}
+                          >
+                            {classSchedules && classSchedules.length > 0 && classSchedules
+                              .filter(schedule => !selectedModule || schedule.moduleId?.moduleName === selectedModule)
+                              .map((schedule) => (
+                                <option key={schedule._id} value={schedule._id}>
+                                  {schedule.moduleId?.code} - {schedule.moduleId?.moduleName} ({schedule.dayOfWeek} {schedule.startTime}-{schedule.endTime}, {schedule.roomId?.roomName})
+                                </option>
+                              ))}
                           </Select>
                         </FormControl>
 
@@ -673,7 +749,7 @@ export default function Attendance() {
                           onClick={handleAttendanceSubmit}
                           isLoading={isLoading}
                           loadingText="Marking..."
-                          isDisabled={!selectedCourse || !attendanceCode.trim()}
+                          isDisabled={!selectedClass || !attendanceCode.trim()}
                           size="lg"
                         >
                           Mark Present
@@ -685,7 +761,7 @@ export default function Attendance() {
                         <Box>
                           <AlertTitle fontSize="sm">How to mark attendance:</AlertTitle>
                           <AlertDescription fontSize="sm">
-                            1. Select your course from the dropdown
+                            1. Select your class schedule from the dropdown (optional: filter by module first)
                             <br />
                             2. Enter the attendance code provided by your instructor
                             <br />
@@ -705,33 +781,37 @@ export default function Attendance() {
                 <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                   <CardBody>
                     <Text fontSize="lg" fontWeight="semibold" mb={4}>
-                      Today's Classes
+                      Your Courses
                     </Text>
 
                     <VStack spacing={3} align="stretch">
-                      {mockAttendanceData.attendanceRecords.slice(0, 3).map((course) => (
-                        <Box key={course.id} p={3} bg="gray.50" borderRadius="md" borderWidth="1px">
+                      {classSchedules && classSchedules.length > 0 ? classSchedules.slice(0, 3).map((schedule) => (
+                        <Box key={schedule._id} p={3} bg="gray.50" borderRadius="md" borderWidth="1px">
                           <HStack justify="space-between">
                             <VStack align="start" spacing={1}>
-                              <Text fontWeight="medium">{course.courseCode}</Text>
+                              <Text fontWeight="medium">{schedule.moduleId?.code}</Text>
                               <Text fontSize="sm" color="gray.600">
-                                {course.courseName}
+                                {schedule.moduleId?.moduleName}
                               </Text>
                               <Text fontSize="xs" color="gray.500">
-                                {course.weeklySchedule.join(", ")}
+                                {schedule.dayOfWeek} {schedule.startTime}-{schedule.endTime}, {schedule.roomId?.roomName}
                               </Text>
                             </VStack>
                             <VStack align="end" spacing={1}>
                               <Badge colorScheme="blue" variant="outline">
-                                {course.percentage.toFixed(1)}%
+                                {schedule.lecturerId?.userId?.firstName} {schedule.lecturerId?.userId?.lastName}
                               </Badge>
                               <Text fontSize="xs" color="gray.500">
-                                {course.instructor}
+                                {schedule.intakeCourseId?.courseId?.courseName}
                               </Text>
                             </VStack>
                           </HStack>
                         </Box>
-                      ))}
+                      )) : (
+                        <Text fontSize="sm" color="gray.500" textAlign="center">
+                          No class schedules found
+                        </Text>
+                      )}
                     </VStack>
                   </CardBody>
                 </Card>
@@ -759,7 +839,7 @@ export default function Attendance() {
                         </Tr>
                       </Thead>
                       <Tbody>
-                        {mockAttendanceData.attendanceLog.map((log) => (
+                        {processedAttendanceData.attendanceLog.map((log) => (
                           <Tr key={log.id}>
                             <Td>{log.date}</Td>
                             <Td>
@@ -772,7 +852,7 @@ export default function Attendance() {
                             </Td>
                             <Td>{log.time}</Td>
                             <Td>
-                              <Badge colorScheme={log.status === "present" ? "green" : "red"} variant="subtle">
+                              <Badge colorScheme={log.status === "present" ? "green" : log.status === "late" ? "yellow" : "red"} variant="subtle">
                                 {log.status.toUpperCase()}
                               </Badge>
                             </Td>
@@ -872,7 +952,7 @@ export default function Attendance() {
                     {selectedRecord.recentSessions.map((session, index) => (
                       <HStack key={index} justify="space-between" p={2} bg="gray.50" borderRadius="md">
                         <Text fontSize="sm">{session.date}</Text>
-                        <Badge colorScheme={session.status === "present" ? "green" : "red"} variant="subtle">
+                        <Badge colorScheme={session.status === "present" ? "green" : session.status === "late" ? "yellow" : "red"} variant="subtle">
                           {session.status}
                         </Badge>
                         <Badge

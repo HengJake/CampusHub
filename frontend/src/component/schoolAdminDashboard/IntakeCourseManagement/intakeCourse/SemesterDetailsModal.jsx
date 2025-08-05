@@ -138,10 +138,10 @@ export function SemesterDetailsModal({
 
     return (
         <>
-            <Modal isOpen={isOpen} onClose={onClose} size="4xl">
+            <Modal isOpen={isOpen} onClose={onClose} size="4xl" >
                 <ModalOverlay />
                 <ModalContent>
-                    <Flex w="full" h="600px">
+                    <Flex w="full" h="600px" >
                         {/* Right Side - Details */}
                         <Box flex="1" p={6}>
                             <VStack align="start" spacing={4} h="full">
