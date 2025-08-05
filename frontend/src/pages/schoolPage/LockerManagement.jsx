@@ -178,9 +178,11 @@ export function LockerManagement() {
             let submitData = { ...formData };
             
             if (isEdit && selectedLocker) {
-                // For edit, allow changing name and status
+                // For edit, send all required fields
                 submitData = {
                     name: formData.name,
+                    schoolId: formData.schoolId,
+                    resourceId: formData.resourceId,
                     status: formData.status,
                     isAvailable: formData.status === "Available"
                 };
