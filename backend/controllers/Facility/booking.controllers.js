@@ -12,12 +12,19 @@ import Student from "../../models/Academic/student.model.js";
 import Resource from "../../models/Facility/resource.model.js";
 
 const validateBookingData = async (data) => {
-  const { studentId, resourceId, startTime, endTime, status } = data;
+  const { studentId, resourceId, bookingDate, startTime, endTime, status } = data;
   if (!studentId) return { isValid: false, message: "studentId is required" };
   if (!resourceId) return { isValid: false, message: "resourceId is required" };
+  if (!bookingDate) return { isValid: false, message: "bookingDate is required" };
   if (!startTime) return { isValid: false, message: "startTime is required" };
   if (!endTime) return { isValid: false, message: "endTime is required" };
   if (status && !['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) return { isValid: false, message: "Invalid status value" };
+
+  // Validate bookingDate is a valid date
+  if (bookingDate && isNaN(new Date(bookingDate).getTime())) {
+    return { isValid: false, message: "Invalid bookingDate format" };
+  }
+
   const referenceValidation = await validateMultipleReferences({
     studentId: { id: studentId, Model: Student },
     resourceId: { id: resourceId, Model: Resource }
@@ -33,12 +40,18 @@ export const createBooking = controllerWrapper(async (req, res) => {
 });
 
 export const getAllBookings = controllerWrapper(async (req, res) => {
-  return await getAllRecords(Booking, "booking", ["studentId", "resourceId"]);
+  return await getAllRecords(Booking, "booking", [{
+    path: "studentId",
+    populate: "userId"
+  }, "resourceId"]);
 });
 
 export const getBookingById = controllerWrapper(async (req, res) => {
   const { id } = req.params;
-  return await getRecordById(Booking, id, "booking", ["studentId", "resourceId"]);
+  return await getRecordById(Booking, id, "booking", [{
+    path: "studentId",
+    populate: "userId"
+  }, "resourceId"]);
 });
 
 // Get Bookings by Student ID
@@ -47,7 +60,10 @@ export const getBookingsByStudentId = controllerWrapper(async (req, res) => {
   return await getAllRecords(
     Booking,
     "bookings",
-    ["studentId", "resourceId"],
+    [{
+      path: "studentId",
+      populate: "userId"
+    }, "resourceId"],
     { studentId }
   );
 });
@@ -58,7 +74,10 @@ export const getBookingsByResourceId = controllerWrapper(async (req, res) => {
   return await getAllRecords(
     Booking,
     "bookings",
-    ["studentId", "resourceId"],
+    [{
+      path: "studentId",
+      populate: "userId"
+    }, "resourceId"],
     { resourceId }
   );
 });
@@ -68,7 +87,10 @@ export const getBookingsBySchoolId = controllerWrapper(async (req, res) => {
   return await getAllRecords(
     Booking,
     "bookings",
-    ["studentId", "resourceId"],
+    ["resourceId", {
+      path: "studentId",
+      populate: "userId"
+    }],
     { schoolId }
   );
 });

@@ -26,7 +26,7 @@ const navConfig = {
             children: [
                 { label: "Parking🗿", path: "/facility/parking", icon: FaParking },
                 { label: "Locker", path: "/facility/locker", icon: GiLockers },
-                { label: "Study Rooms", path: "/facility/room", icon: MdClass }
+                { label: "Booking", path: "/facility/room", icon: MdClass }
             ]
         },
         {

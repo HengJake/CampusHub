@@ -28,10 +28,9 @@ import Profile from "./pages/studentPage/Profile.jsx";
 import Feedback from "./pages/studentPage/Feedback.jsx";
 import Academic from "./pages/studentPage/Academic.jsx";
 import Transportation from "./pages/studentPage/Transportation.jsx";
-import StudyRoom from "./pages/studentPage/StudyRoom.jsx";
+import StudyRoom from "./pages/studentPage/Booking.jsx";
 import Parking from "./pages/studentPage/Parking.jsx";
 import Locker from "./pages/studentPage/Locker.jsx";
-import Courts from "./pages/studentPage/Courts.jsx";
 import Schedule from "./pages/studentPage/Schedule.jsx";
 import Exams from "./pages/studentPage/Exams.jsx";
 import Attendance from "./pages/studentPage/Attendance.jsx";
@@ -255,7 +254,6 @@ function App() {
           <Route path="/facility/room" element={wrapWithAuth(<StudyRoom />)} />
           <Route path="/facility/parking" element={wrapWithAuth(<Parking />)} />
           <Route path="/facility/locker" element={wrapWithAuth(<Locker />)} />
-          <Route path="/facility/courts" element={wrapWithAuth(<Courts />)} />
           <Route path="/academic/schedule" element={wrapWithAuth(<Schedule />)} />
           <Route path="/academic/exams" element={wrapWithAuth(<Exams />)} />
           <Route path="/academic/attendance" element={wrapWithAuth(<Attendance />)} />

@@ -637,7 +637,7 @@ export const useFacilityStore = create((set, get) => ({
 
             console.log("🚀 ~ facilityData:", resourceData)
             console.log(get().resources)
-            
+
             // Update resource with timeslots included
             const resourceRes = await fetch(`/api/resource/${id}`, {
                 method: "PUT",
@@ -648,7 +648,7 @@ export const useFacilityStore = create((set, get) => ({
             if (!resourceResponse.success) {
                 throw new Error(resourceResponse.message || "Failed to update resource");
             }
-            
+
             // Refresh the facility data
             await get().fetchFacilities();
             console.log(get().resources)
