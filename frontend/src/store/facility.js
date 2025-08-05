@@ -483,7 +483,7 @@ export const useFacilityStore = create((set, get) => ({
                     lockerUnitData.schoolId = schoolId;
                 }
             }
-            const res = await fetch("/api/lockerUnit", {
+            const res = await fetch("/api/locker-unit", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(lockerUnitData),
@@ -500,11 +500,11 @@ export const useFacilityStore = create((set, get) => ({
     },
     updateLockerUnit: async (id, updates) => {
         try {
-            const res = await fetch(`/api/lockerUnit/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updates),
-            });
+                    const res = await fetch(`/api/locker-unit/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updates),
+        });
             const data = await res.json();
             if (!data.success) {
                 throw new Error(data.message || "Failed to update locker unit");
@@ -521,9 +521,9 @@ export const useFacilityStore = create((set, get) => ({
     },
     deleteLockerUnit: async (id) => {
         try {
-            const res = await fetch(`/api/lockerUnit/${id}`, {
-                method: "DELETE",
-            });
+                    const res = await fetch(`/api/locker-unit/${id}`, {
+            method: "DELETE",
+        });
             const data = await res.json();
             if (!data.success) {
                 throw new Error(data.message || "Failed to delete locker unit");

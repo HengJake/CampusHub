@@ -10,11 +10,12 @@ import {
 } from "../../utils/reusable.js";
 
 import School from "../../models/Billing/school.model.js";
+import Resource from "../../models/Facility/resource.model.js";
 import LockerUnit from "../../models/Facility/lockerUnit.model.js";
 
-// Custom validation function for payment data
+// Custom validation function for locker unit data
 const validateLockerUnitData = async (data) => {
-    const { schoolId } = data;
+    const { schoolId, name, resourceId } = data;
 
     // Check required fields
     if (!schoolId) {
@@ -24,9 +25,24 @@ const validateLockerUnitData = async (data) => {
         };
     }
 
+    if (!name) {
+        return {
+            isValid: false,
+            message: "name is required"
+        };
+    }
+
+    if (!resourceId) {
+        return {
+            isValid: false,
+            message: "resourceId is required"
+        };
+    }
+
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
         schoolId: { id: schoolId, Model: School },
+        resourceId: { id: resourceId, Model: Resource },
     });
 
     if (referenceValidation) {
@@ -48,7 +64,9 @@ export const createLockerUnit = controllerWrapper(async (req, res) => {
     )
 })
 export const getAllLockerUnit = controllerWrapper(async (req, res) => {
-    return await getAllRecords(LockerUnit, "lockerUnit", ["resourceId"]);
+    const lockerUnits = await LockerUnit.find({ schoolId: req.params.schoolId })
+        .populate('resourceId', 'name'); 
+    return res.status(200).json({ data: lockerUnits });
 });
 export const getLockerUnitById = controllerWrapper(async (req, res) => {
     const { id } = req.params;
