@@ -212,7 +212,7 @@ export default function ScheduleFilters({
                             }}
                             isDisabled={!selectedCourse || !selectedIntake || !selectedYear || !selectedSemester || allItems.length > 0}
                         >
-                            {(allItems.length > 0) ? "Schedule for selected intake course existed" : "Generate"}
+                            {(allItems.length > 0) ? "Schedule existed" : "Generate"}
                         </Button>
                     </VStack>
                 </HStack>

@@ -1,4 +1,4 @@
-const generateExamSchedule = (classSchedule, rooms, lecturers, selectedSemester = null) => {
+const generateExamSchedule = (classSchedule, rooms, lecturers, selectedSemester = null, selectedModule = null) => {
     if (!classSchedule || classSchedule.length === 0) {
         return [];
     }
@@ -36,6 +36,11 @@ const generateExamSchedule = (classSchedule, rooms, lecturers, selectedSemester 
 
         // Skip if we've already processed this module for this intake course
         if (processedModules.has(moduleKey)) {
+            return;
+        }
+
+        // If selectedModule is provided, only generate exam for that specific module
+        if (selectedModule && classItem.moduleId !== selectedModule) {
             return;
         }
 

@@ -64,34 +64,10 @@ export const useServiceStore = create((set, get) => ({
         return url;
     },
 
-    // Helper to wait for authentication
-    waitForAuth: async () => {
-        const authStore = useAuthStore.getState();
-        let attempts = 0;
-        const maxAttempts = 100;
-        while (!authStore.isAuthenticated && attempts < maxAttempts) {
-            await new Promise((resolve) => setTimeout(resolve, 100));
-            attempts++;
-            const currentAuthStore = useAuthStore.getState();
-            if (currentAuthStore.isAuthenticated) {
-                break;
-            }
-        }
-        if (!authStore.isAuthenticated) {
-            throw new Error("Authentication timeout - please log in again");
-        }
-        const schoolId = authStore.getSchoolId();
-        if (!schoolId && (authStore.getCurrentUser().role === "schoolAdmin" || authStore.getCurrentUser().role === "student")) {
-            throw new Error("School ID not available - authentication incomplete");
-        }
-        return schoolId;
-    },
-
     // ===== FEEDBACK OPERATIONS =====
     fetchFeedback: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, feedback: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/feedback", filters);
             const res = await fetch(url, {
                 credentials: 'include'
@@ -191,7 +167,6 @@ export const useServiceStore = create((set, get) => ({
     fetchFoundItems: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, foundItems: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/found-item", filters);
             const res = await fetch(url, {
                 credentials: 'include'
@@ -285,7 +260,6 @@ export const useServiceStore = create((set, get) => ({
     fetchLostItems: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, lostItems: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/lost-item", filters);
             const res = await fetch(url, {
                 credentials: 'include'
@@ -379,7 +353,6 @@ export const useServiceStore = create((set, get) => ({
     fetchResponds: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, responds: true } }));
         try {
-            await get().waitForAuth();
             const url = get().buildUrl("/api/respond", filters);
             const res = await fetch(url, {
                 credentials: 'include'

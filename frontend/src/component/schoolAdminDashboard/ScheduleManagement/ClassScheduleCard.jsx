@@ -640,6 +640,11 @@ export const ClusteredScheduleGrid = ({
                 filter?.selectedSemester &&
                 item.semesterId?.semesterNumber != filter.selectedSemester.semesterNumber
             ) return false;
+      
+            if (
+                filter?.selectedModule &&
+                item.moduleId._id != filter.selectedModule
+            ) return false;
 
             return include;
         });

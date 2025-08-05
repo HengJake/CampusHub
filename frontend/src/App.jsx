@@ -39,7 +39,7 @@ import Attendance from "./pages/studentPage/Attendance.jsx";
 // School Admin Pages
 import { Dashboard as AdminDashboard } from "./pages/schoolPage/Dashboard.jsx";
 import { UserManagement } from "./pages/schoolPage/UserManagement.jsx";
-import { FacilityManagement } from "./pages/schoolPage/FacilityManagement.jsx";
+import FacilityManagement from "./pages/schoolPage/FacilityManagement.jsx";
 import { ParkingManagement } from "./pages/schoolPage/ParkingManagement.jsx";
 import { LockerManagement } from "./pages/schoolPage/LockerManagement.jsx";
 import { BookingManagement } from "./pages/schoolPage/BookingManagement.jsx";
@@ -49,7 +49,6 @@ import { AdminSetting } from "./pages/schoolPage/AdminSetting.jsx";
 import { AdminProfile } from "./pages/schoolPage/AdminProfile.jsx";
 import { CourseManagementPage } from "./pages/schoolPage/CourseManagement.jsx";
 import { AcademicOverview } from "./pages/schoolPage/AcademicOverview.jsx";
-import CourtsManagement from "./pages/schoolPage/CourtsManagement.jsx";
 import ResultsManagement from "./pages/schoolPage/ResultsManagement.jsx";
 import ScheduleManagement from "./pages/schoolPage/ScheduleManagement.jsx";
 
@@ -276,7 +275,6 @@ function App() {
           <Route path="/admin-profile" element={wrapWithAuth(<AdminProfile />)} />
 
           {/* School Admin Pages - Additional */}
-          <Route path="/admin/courts" element={wrapWithAuth(<CourtsManagement />)} />
           <Route path="/admin/results" element={wrapWithAuth(<ResultsManagement />)} />
           <Route path="/admin/schedule" element={wrapWithAuth(<ScheduleManagement />)} />
 

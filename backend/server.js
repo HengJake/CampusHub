@@ -7,7 +7,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
- 
+
 // 1 Academic
 import userRoutes from "./routes/Academic/user.routes.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -42,7 +42,6 @@ import eHailingRoutes from "./routes/Transportation/eHailing.routes.js";
 import resourceRoutes from "./routes/Facility/resource.routes.js";
 import bookingRoutes from "./routes/Facility/booking.routes.js";
 import lockerUnitRoutes from "./routes/Facility/lockerUnit.routes.js";
-import timeSlotRoutes from "./routes/Facility/timeSlot.routes.js";
 import parkingLotRoutes from "./routes/Facility/parkingLot.routes.js";
 
 // 5 Service
@@ -171,7 +170,6 @@ app.use("/api/e-hailing", eHailingRoutes);
 app.use("/api/resource", resourceRoutes);
 app.use("/api/booking", bookingRoutes);
 app.use("/api/locker-unit", lockerUnitRoutes);
-app.use("/api/time-slot", timeSlotRoutes);
 app.use("/api/parking-lot", parkingLotRoutes);
 
 // 5 Service

@@ -1,4 +1,4 @@
-const generateClassSchedule = async (selectedIntake, selectedCourse, selectedIntakeCourse, modules, rooms, lecturers, scheduleConfig = {}, selectedSemester = null) => {
+const generateClassSchedule = async (selectedIntake, selectedCourse, selectedIntakeCourse, modules, rooms, lecturers, scheduleConfig = {}, selectedSemester = null, selectedModule = null) => {
     // Configuration with defaults
     const CLASSES_PER_MODULE_PER_WEEK = scheduleConfig.classesPerWeek || 2;
     const DAYS_OF_WEEK = scheduleConfig.daysOfWeek || ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
@@ -19,9 +19,15 @@ const generateClassSchedule = async (selectedIntake, selectedCourse, selectedInt
     }
 
     // Get all modules for the selected course
-    const courseModules = modules?.filter(module =>
+    let courseModules = modules?.filter(module =>
         module.courseId.some(courseId => courseId._id === selectedCourse)
     ) || [];
+
+
+    // If selectedModule is provided, filter to only that specific module
+    if (selectedModule) {
+        courseModules = courseModules.filter(module => module._id === selectedModule);
+    }
 
     if (courseModules.length === 0) {
         throw new Error("No modules found for the selected course");

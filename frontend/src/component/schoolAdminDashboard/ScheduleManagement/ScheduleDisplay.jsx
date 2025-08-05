@@ -85,7 +85,7 @@ export default function ScheduleDisplay({
                                                                 p={3}
                                                                 bg={`${getTypeColor(item.type)}.50`}
                                                                 borderLeft="4px solid"
-                                                                borderLeftColor={`${getTypeColor(item.type)}.400`}
+                                                                borderLeftColor={`${getTypeColor(item.type).border}`}
                                                                 borderRadius="md"
                                                                 onClick={() => onEditClick(item)}
                                                                 cursor="pointer"
@@ -96,7 +96,7 @@ export default function ScheduleDisplay({
                                                                     <Text fontWeight="bold" fontSize="sm">
                                                                         {item.code}
                                                                     </Text>
-                                                                    <Badge colorScheme={getTypeColor(item.type)} size="sm">
+                                                                    <Badge colorScheme={getTypeColor(item.type).text} size="sm">
                                                                         {item.type === "exam" ? "Exam" : "Class"}
                                                                     </Badge>
                                                                 </HStack>

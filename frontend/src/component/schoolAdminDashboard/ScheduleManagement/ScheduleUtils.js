@@ -43,25 +43,25 @@ export const transformExamToScheduleFormat = (examSchedules) => {
 // Helper function to transform class schedule data
 export const transformClassToScheduleFormat = (classSchedules) => {
     return classSchedules.map(classItem => {
-    return ({
-        id: classItem._id,
-        type: 'class', // Add type field
-        dayOfWeek: classItem.dayOfWeek,
-        startTime: classItem.startTime,
-        endTime: classItem.endTime,
-        moduleId: classItem.moduleId,
-        intakeCourseId: classItem.intakeCourseId,
-        lecturerId: classItem.lecturerId,
-        roomId: classItem.roomId,
-        schoolId: classItem.schoolId,
-        semesterId: classItem.semesterId, // Add semester ID
-        // Additional class-specific fields
-        subject: classItem.moduleId?.moduleName || 'Unknown Module',
-        code: classItem.moduleId?.code || 'Unknown Code',
-        room: classItem.roomId,
-        lecturer: classItem.lecturerId,
-    });
-})
+        return ({
+            id: classItem._id,
+            type: 'class', // Add type field
+            dayOfWeek: classItem.dayOfWeek,
+            startTime: classItem.startTime,
+            endTime: classItem.endTime,
+            moduleId: classItem.moduleId,
+            intakeCourseId: classItem.intakeCourseId,
+            lecturerId: classItem.lecturerId,
+            roomId: classItem.roomId,
+            schoolId: classItem.schoolId,
+            semesterId: classItem.semesterId, // Add semester ID
+            // Additional class-specific fields
+            subject: classItem.moduleId?.moduleName || 'Unknown Module',
+            code: classItem.moduleId?.code || 'Unknown Code',
+            room: classItem.roomId,
+            lecturer: classItem.lecturerId?.userId?.name || 'Unassigned', // Fix: Extract lecturer name
+        });
+    })
 }
 
 // Main function to combine schedules
@@ -74,16 +74,18 @@ export const combineScheduleData = (classSchedules, examSchedules) => {
 
 // Get color scheme for schedule types
 export const getTypeColor = (type, examType = null) => {
-    if (type === "class") {
+    console.log("🚀 ~ getTypeColor ~ type:", type)
+    if (type == "class") {
         return { bg: 'gray.100', border: 'gray.400', text: 'gray.800' }
     }
-    if (type === 'exam') {
+    if (type == 'exam') {
         return {
             bg: 'red.100',
             border: 'red.400',
             text: 'red.800'
         }
     }
+    return "gray"
 }
 
 // Transform exam data for display
@@ -178,7 +180,7 @@ export const getCombinedAndFilteredData = (
 
     // Apply filters
     return allItems.filter(item => {
-        if (!selectedCourse || !selectedIntake || !selectedSemester ) return false
+        if (!selectedCourse || !selectedIntake || !selectedSemester) return false
 
         if (
             (selectedCourse &&

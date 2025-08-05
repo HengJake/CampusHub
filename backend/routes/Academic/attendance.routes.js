@@ -6,7 +6,8 @@ import {
     updateAttendance,
     deleteAttendance,
     deleteAllAttendances,
-    getAttendanceBySchoolId
+    getAttendanceBySchoolId,
+    getAttendanceByStudentId
 } from "../../controllers/Academic/attendance.controllers.js";
 
 const router = e.Router();
@@ -21,6 +22,7 @@ router.get("/", getAllAttendance);
 router.get("/:id", getAttendanceById);
 
 router.get('/school/:schoolId', getAttendanceBySchoolId);
+router.get('/student/:studentId', getAttendanceByStudentId);
 
 // Update attendance record by ID
 router.put("/:id", updateAttendance);

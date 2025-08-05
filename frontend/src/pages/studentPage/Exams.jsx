@@ -103,13 +103,11 @@ export default function Exams() {
   const currentUser = getCurrentUser()
 
   // Get current user/student ID
-  const currentUserId = currentUser.user?._id
   const currentStudentId = currentUser.studentId
-  const currentSchoolId = currentUser.schoolId
 
   // Responsive breakpoint values
   const headerDirection = useBreakpointValue({ base: "column", md: "row" })
-  const statsGridCols = useBreakpointValue({ base: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" })
+  const statsGridCols = useBreakpointValue({ base: "1fr", sm: "repeat(1, 1fr)", lg: "repeat(3, 1fr)" })
   const examGridCols = useBreakpointValue({ base: "1fr", lg: "repeat(2, 1fr)" })
   const analyticsGridCols = useBreakpointValue({ base: "1fr", lg: "repeat(2, 1fr)" })
   const controlsDirection = useBreakpointValue({ base: "column", md: "row" })
@@ -337,20 +335,6 @@ export default function Exams() {
             </CardBody>
           </Card>
 
-          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-            <CardBody>
-              <Stat>
-                <StatLabel fontSize={{ base: "xs", md: "sm" }}>Total Credits</StatLabel>
-                <StatNumber color="blue.500" fontSize={{ base: "lg", md: "xl" }}>
-                  {results.reduce((sum, result) => sum + (result.credits || 0), 0)}
-                </StatNumber>
-                <StatHelpText fontSize={{ base: "xs", md: "sm" }}>
-                  <Icon as={FiAward} mr={1} />
-                  Credits Earned
-                </StatHelpText>
-              </Stat>
-            </CardBody>
-          </Card>
 
           <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
             <CardBody>
@@ -601,11 +585,8 @@ export default function Exams() {
                                 <Badge colorScheme="blue" variant="solid" fontSize="xs">
                                   GPA: {semester.semesterGPA}
                                 </Badge>
-                                <Badge colorScheme="green" variant="outline" fontSize="xs">
-                                  {semester.totalCredits} Credits
-                                </Badge>
                                 <Badge colorScheme="purple" variant="outline" fontSize="xs">
-                                  {semester.courses.length} Courses
+                                  {semester.courses.length} Module(s)
                                 </Badge>
                               </HStack>
                             </Stack>
@@ -616,7 +597,6 @@ export default function Exams() {
                                   <Thead>
                                     <Tr>
                                       <Th fontSize={{ base: "xs", md: "sm" }}>Course</Th>
-                                      <Th fontSize={{ base: "xs", md: "sm" }}>Credits</Th>
                                       <Th fontSize={{ base: "xs", md: "sm" }}>Marks</Th>
                                       <Th fontSize={{ base: "xs", md: "sm" }}>Grade</Th>
                                       <Th fontSize={{ base: "xs", md: "sm" }}>GPA Points</Th>
@@ -631,6 +611,7 @@ export default function Exams() {
                                       )
                                       .map((course, index) => (
                                         <Tr key={index}>
+
                                           <Td>
                                             <VStack align="start" spacing={1}>
                                               <Text fontWeight="medium" fontSize={{ base: "xs", md: "sm" }}>
@@ -641,31 +622,35 @@ export default function Exams() {
                                               </Text>
                                             </VStack>
                                           </Td>
-                                          <Td fontSize={{ base: "xs", md: "sm" }}>{course.credits || 0}</Td>
+
                                           <Td>
                                             <VStack align="start" spacing={1}>
                                               <Text fontWeight="medium" fontSize={{ base: "xs", md: "sm" }}>
                                                 {course.marks || 0}/{course.totalMarks || 100}
                                               </Text>
+
                                               <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
-                                                {course.percentage || 0}%
+                                                {(course.marks / course.totalMarks) * 100 || 0}%
                                               </Text>
                                             </VStack>
                                           </Td>
+
                                           <Td>
                                             <Badge colorScheme={getGradeColor(course.grade)} variant="subtle" fontSize="xs">
                                               {course.grade || "N/A"}
                                             </Badge>
                                           </Td>
+
                                           <Td fontSize={{ base: "xs", md: "sm" }}>{course.gpa?.toFixed(1) || "0.0"}</Td>
+
                                           <Td>
                                             <Box w={{ base: "60px", md: "100px" }}>
                                               <Progress
-                                                value={course.percentage || 0}
+                                                value={(course.marks / course.totalMarks) * 100 || 0}
                                                 colorScheme={
-                                                  (course.percentage || 0) >= 80
+                                                  ((course.marks / course.totalMarks) * 100 || 0) >= 80
                                                     ? "green"
-                                                    : (course.percentage || 0) >= 60
+                                                    : ((course.marks / course.totalMarks) * 100 || 0) >= 60
                                                       ? "blue"
                                                       : "orange"
                                                 }
@@ -673,9 +658,9 @@ export default function Exams() {
                                                 borderRadius="full"
                                               />
                                               <Text fontSize="xs" color="gray.500" mt={1} noOfLines={1}>
-                                                {(course.percentage || 0) >= 80
+                                                {((course.marks / course.totalMarks) * 100 || 0) >= 80
                                                   ? "Excellent"
-                                                  : (course.percentage || 0) >= 60
+                                                  : ((course.marks / course.totalMarks) * 100 || 0) >= 60
                                                     ? "Good"
                                                     : "Average"}
                                               </Text>
@@ -771,12 +756,12 @@ export default function Exams() {
                       </Alert>
                     ) : (
                       <VStack spacing={3} align="stretch">
-                        {results.slice(0, 10).map((course) => (
+                        {results.filter((result) => result.studentId?._id === currentStudentId).slice(0, 10).map((course) => (
                           <Box key={course._id} p={3} bg="gray.50" borderRadius="md">
                             <HStack justify="space-between" mb={2}>
                               <VStack align="start" spacing={0} minW="0" flex="1">
                                 <Text fontWeight="medium" fontSize={{ base: "xs", md: "sm" }} noOfLines={1}>
-                                  {course.moduleId?.moduleCode || "N/A"}
+                                  {course.moduleId?.code || "N/A"}
                                 </Text>
                                 <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" noOfLines={2}>
                                   {course.moduleId?.moduleName || "N/A"}
@@ -787,14 +772,14 @@ export default function Exams() {
                               </Badge>
                             </HStack>
                             <Progress
-                              value={course.percentage || 0}
+                              value={(course.marks / course.totalMarks) * 100 || 0}
                               colorScheme={getGradeColor(course.grade)}
                               size="sm"
                               borderRadius="full"
                             />
                             <HStack justify="space-between" mt={2}>
                               <Text fontSize="xs" color="gray.600">
-                                {course.percentage || 0}%
+                                {((course.marks / course.totalMarks) * 100 || 0)}%
                               </Text>
                               <Text fontSize="xs" color="gray.600">
                                 {course.gpa?.toFixed(1) || "0.0"} GPA

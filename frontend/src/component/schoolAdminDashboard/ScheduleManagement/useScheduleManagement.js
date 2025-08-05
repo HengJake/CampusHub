@@ -28,6 +28,7 @@ export const useScheduleManagement = () => {
         fetchExamSchedules
     } = useAcademicStore()
 
+
     const { exportTemplate } = useGeneralStore()
     const showToast = useShowToast()
 
@@ -134,7 +135,8 @@ export const useScheduleManagement = () => {
                 rooms,
                 lecturers,
                 scheduleConfig,
-                selectedSemester
+                selectedSemester,
+                selectedModule
             )
 
             if (schedule.length === 0) {
@@ -155,7 +157,7 @@ export const useScheduleManagement = () => {
                 moduleCode: item.moduleCode,
                 intakeId: item.intakeId,
                 intakeName: item.intakeName,
-                semesterId: selectedSemester,
+                semesterId: selectedSemester._id,
                 dayOfWeek: item.dayOfWeek,
                 startTime: item.startTime,
                 endTime: item.endTime,
@@ -175,7 +177,7 @@ export const useScheduleManagement = () => {
             combinedScheduleData = [...formattedClassSchedule]
 
             if (generateExam) {
-                const examSchedule = generateExamSchedule(schedule, rooms, lecturers, selectedSemester)
+                const examSchedule = generateExamSchedule(schedule, rooms, lecturers, selectedSemester, selectedModule)
 
                 const formattedExamSchedule = examSchedule.map(item => ({
                     type: "exam",
@@ -188,7 +190,7 @@ export const useScheduleManagement = () => {
                     moduleCode: "",
                     intakeId: "",
                     intakeName: "",
-                    semesterId: selectedSemester,
+                    semesterId: selectedSemester._id,
                     dayOfWeek: "",
                     startTime: "",
                     endTime: "",

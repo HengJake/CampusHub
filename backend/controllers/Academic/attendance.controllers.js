@@ -120,6 +120,39 @@ export const getAttendanceBySchoolId = controllerWrapper(async (req, res) => {
     );
 });
 
+export const getAttendanceByStudentId = controllerWrapper(async (req, res) => {
+    const { studentId } = req.params;
+    if (!studentId) {
+        return {
+            success: false,
+            message: "studentId is required",
+            statusCode: 400
+        };
+    }
+    // Pass filter to getAllRecords
+    return await getAllRecords(
+        Attendance,
+        "attendance",
+        ["studentId", {
+            path: "scheduleId",
+            populate: [
+                "moduleId",
+                {
+                    path:"lecturerId",
+                    populate: ["userId"]
+                },
+                "semesterId",
+                "roomId",
+                {
+                    path: "intakeCourseId",
+                    populate: ["intakeId", "courseId"]
+                }
+            ]
+        }, "schoolId"],
+        { studentId }
+    );
+});
+
 export const updateAttendance = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await updateRecord(Attendance, id, req.body, "attendance", validateAttendanceData);

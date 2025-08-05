@@ -15,7 +15,7 @@ import {
 export function CourseManagementPage() {
   return (
     <Box>
-      <Tabs variant="enclosed" colorScheme="blue">
+      <Tabs variant="enclosed" colorScheme="blue" height={"fit-content"}>
         <TabList>
           <Tab>Intake</Tab>
           <Tab>Courses</Tab>

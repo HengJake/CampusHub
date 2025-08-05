@@ -3,6 +3,7 @@ import {
     ButtonGroup,
     Button,
     Badge,
+    Text
 } from "@chakra-ui/react"
 import React from "react"
 
@@ -33,24 +34,12 @@ export default function ScheduleControls({
                         List View
                     </Button>
                 </ButtonGroup>
-                <ButtonGroup size="sm" isAttached variant="outline">
-                    <Button
-                        colorScheme={showExams ? "blue" : "gray"}
-                        onClick={() => setShowExams(!showExams)}
-                    >
-                        Exams
-                    </Button>
-                    <Button
-                        colorScheme={showClasses ? "blue" : "gray"}
-                        onClick={() => setShowClasses(!showClasses)}
-                    >
-                        Classes
-                    </Button>
-                </ButtonGroup>
+
+                <Text ml={3}>Total Schedule : {allItems.length}</Text>
             </HStack>
 
             <HStack>
-             
+
                 <Badge colorScheme={"purple"}>
                     {allItems.filter(i => i.type == "class").length} classes
                 </Badge>

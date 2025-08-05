@@ -35,14 +35,4 @@ const attendanceSchema = new mongoose.Schema({
 const Attendance = mongoose.model('Attendance', attendanceSchema);
 export default Attendance;
 
-// Middleware to ensure users can only access their school's data
-const schoolAuthMiddleware = (req, res, next) => {
-    const userSchoolId = req.user.schoolId;
-    const requestedSchoolId = req.params.schoolId || req.body.schoolId;
-
-    if (userSchoolId !== requestedSchoolId) {
-        return res.status(403).json({ message: "Access denied" });
-    }
-    next();
-};
 

@@ -18,6 +18,74 @@ import {
     deleteAllRecords
 } from "../../utils/reusable.js";
 
+// Helper function to check for time conflicts
+const checkTimeConflict = (start1, end1, start2, end2) => {
+    // Convert time strings to minutes for easier comparison
+    const timeToMinutes = (timeStr) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+    };
+
+    const start1Minutes = timeToMinutes(start1);
+    const end1Minutes = timeToMinutes(end1);
+    const start2Minutes = timeToMinutes(start2);
+    const end2Minutes = timeToMinutes(end2);
+
+    // Check if times overlap
+    return (start1Minutes < end2Minutes && end1Minutes > start2Minutes);
+};
+
+// Function to calculate end time from start time and duration
+const calculateEndTime = (startTime, durationMinutes) => {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + durationMinutes;
+    const endHours = Math.floor(totalMinutes / 60);
+    const endMinutes = totalMinutes % 60;
+    return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+};
+
+// Function to check for room and time conflicts for exams
+const checkExamRoomTimeConflict = async (roomId, examDate, examTime, durationMinute, excludeId = null) => {
+    try {
+        // Build query to find existing exams with the same room and date
+        const query = {
+            roomId: roomId,
+            examDate: examDate
+        };
+
+        // Exclude current record if updating
+        if (excludeId) {
+            query._id = { $ne: excludeId };
+        }
+
+        const existingExams = await ExamSchedule.find(query);
+
+        // Calculate end time for the new exam
+        const newExamEndTime = calculateEndTime(examTime, durationMinute);
+
+        // Check for time conflicts
+        for (const exam of existingExams) {
+            const existingExamEndTime = calculateEndTime(exam.examTime, exam.durationMinute);
+
+            if (checkTimeConflict(examTime, newExamEndTime, exam.examTime, existingExamEndTime)) {
+                return {
+                    hasConflict: true,
+                    conflictingExam: exam,
+                    message: `Room conflict: Another exam is scheduled in this room on ${examDate} from ${exam.examTime} to ${existingExamEndTime}`
+                };
+            }
+        }
+
+        return { hasConflict: false };
+    } catch (error) {
+        console.error('Error checking exam room time conflict:', error);
+        return {
+            hasConflict: false,
+            error: error.message
+        };
+    }
+};
+
 // Custom validation function for exam schedule data
 const validateExamScheduleData = async (data) => {
     const {
@@ -74,6 +142,18 @@ const validateExamScheduleData = async (data) => {
         };
     }
 
+    // Validate that exam date is not in the past
+    const examDateObj = new Date(examDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (examDateObj < today) {
+        return {
+            isValid: false,
+            message: "examDate cannot be in the past"
+        };
+    }
+
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
         intakeCourseId: { id: intakeCourseId, Model: IntakeCourse },
@@ -101,6 +181,15 @@ const validateExamScheduleData = async (data) => {
         }
     }
 
+    // Check for room and time conflicts
+    const conflictCheck = await checkExamRoomTimeConflict(roomId, examDate, examTime, durationMinute);
+    if (conflictCheck.hasConflict) {
+        return {
+            isValid: false,
+            message: conflictCheck.message
+        };
+    }
+
     return { isValid: true };
 };
 
@@ -119,7 +208,7 @@ export const getExamSchedules = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         ExamSchedule,
         "exam schedules",
-        ['roomId', 'moduleId',  'semesterId', 'intakeCourseId']
+        ['roomId', 'moduleId', 'semesterId', 'intakeCourseId']
     );
 });
 
@@ -130,19 +219,46 @@ export const getExamScheduleById = controllerWrapper(async (req, res) => {
         ExamSchedule,
         id,
         "exam schedule",
-        ['roomId', 'moduleId',  'semesterId', 'intakeCourseId']
+        ['roomId', 'moduleId', 'semesterId', 'intakeCourseId']
     );
 });
 
 // Update Exam Schedule
 export const updateExamSchedule = controllerWrapper(async (req, res) => {
     const { id } = req.params;
+
+    // Custom validation function for updates that excludes the current record
+    const validateExamScheduleDataForUpdate = async (data) => {
+        const validation = await validateExamScheduleData(data);
+        if (!validation.isValid) {
+            return validation;
+        }
+
+        // Check for conflicts excluding the current record
+        const conflictCheck = await checkExamRoomTimeConflict(
+            data.roomId,
+            data.examDate,
+            data.examTime,
+            data.durationMinute,
+            id
+        );
+
+        if (conflictCheck.hasConflict) {
+            return {
+                isValid: false,
+                message: conflictCheck.message
+            };
+        }
+
+        return { isValid: true };
+    };
+
     return await updateRecord(
         ExamSchedule,
         id,
         req.body,
         "examSchedules",
-        validateExamScheduleData
+        validateExamScheduleDataForUpdate
     );
 });
 
@@ -151,6 +267,7 @@ export const deleteExamSchedule = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(ExamSchedule, id, "examSchedules");
 });
+
 // Delete All ExamSchedules
 export const deleteAllExamSchedules = controllerWrapper(async (req, res) => {
     return await deleteAllRecords(ExamSchedule, "examSchedules");
