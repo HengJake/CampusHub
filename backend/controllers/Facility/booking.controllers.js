@@ -133,11 +133,12 @@ export const deleteBooking = controllerWrapper(async (req, res) => {
   return await deleteRecord(Booking, id, "booking");
 });
 
-export const deleteAllBookings = async (req, res) => {
-  try {
-    await Booking.deleteMany({});
-    res.status(200).json({ message: 'All bookings deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting all bookings', error: error.message });
-  }
-};
+export const deleteAllBookings = controllerWrapper(async (req, res) => {
+  const result = await Booking.deleteMany({});
+  return {
+    success: true,
+    data: { deletedCount: result.deletedCount },
+    message: `${result.deletedCount} bookings deleted successfully`,
+    statusCode: 200
+  };
+});

@@ -66,7 +66,12 @@ export const createLockerUnit = controllerWrapper(async (req, res) => {
 export const getAllLockerUnit = controllerWrapper(async (req, res) => {
     const lockerUnits = await LockerUnit.find({ schoolId: req.params.schoolId })
         .populate('resourceId', 'name'); 
-    return res.status(200).json({ data: lockerUnits });
+    return {
+        success: true,
+        data: lockerUnits,
+        message: "Locker units retrieved successfully",
+        statusCode: 200
+    };
 });
 export const getLockerUnitById = controllerWrapper(async (req, res) => {
     const { id } = req.params;
@@ -99,14 +104,15 @@ export const deleteLockerUnit = controllerWrapper(async (req, res) => {
     return await deleteRecord(LockerUnit, id, "lockerUnit");
 });
 
-export const deleteAllLockerUnits = async (req, res) => {
-    try {
-        await LockerUnit.deleteMany({});
-        res.status(200).json({ message: 'All locker units deleted' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error deleting all locker units', error: error.message });
-    }
-};
+export const deleteAllLockerUnits = controllerWrapper(async (req, res) => {
+    const result = await LockerUnit.deleteMany({});
+    return {
+        success: true,
+        data: { deletedCount: result.deletedCount },
+        message: `${result.deletedCount} locker units deleted successfully`,
+        statusCode: 200
+    };
+});
 
 
 

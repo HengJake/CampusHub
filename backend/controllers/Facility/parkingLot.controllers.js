@@ -57,12 +57,13 @@ export const deleteParkingLot = controllerWrapper(async (req, res) => {
   return await deleteRecord(ParkingLot, id, "parkingLot");
 });
 
-export const deleteAllParkingLots = async (req, res) => {
-  try {
-    await ParkingLot.deleteMany({});
-    res.status(200).json({ message: 'All parking lots deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting all parking lots', error: error.message });
-  }
-};
+export const deleteAllParkingLots = controllerWrapper(async (req, res) => {
+  const result = await ParkingLot.deleteMany({});
+  return {
+    success: true,
+    data: { deletedCount: result.deletedCount },
+    message: `${result.deletedCount} parking lots deleted successfully`,
+    statusCode: 200
+  };
+});
 

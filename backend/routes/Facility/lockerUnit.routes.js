@@ -17,7 +17,7 @@ router.get("/", getAllLockerUnit);
 router.get("/resource/:resourceId", getLockerUnitsByResourceId);
 router.get("/school/:schoolId", getLockerUnitsBySchoolId);
 router.get("/:id", getLockerUnitById);
-router.put("/:id", updateLockerUnit);
+router.put("/:id", updateLockerUnit); 
 router.delete('/all', deleteAllLockerUnits);
 router.delete("/:id", deleteLockerUnit);
 

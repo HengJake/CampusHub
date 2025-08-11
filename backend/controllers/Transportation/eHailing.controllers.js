@@ -119,13 +119,14 @@ export const deleteEHailing = controllerWrapper(async (req, res) => {
   return await deleteRecord(EHailing, id, "eHailing");
 });
 
-export const deleteAllEHailings = async (req, res) => {
-  try {
-    await EHailing.deleteMany({});
-    res.status(200).json({ message: 'All e-hailing records deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting all e-hailing records', error: error.message });
-  }
-};
+export const deleteAllEHailings = controllerWrapper(async (req, res) => {
+  const result = await EHailing.deleteMany({});
+  return {
+    success: true,
+    data: { deletedCount: result.deletedCount },
+    message: `${result.deletedCount} e-hailing records deleted successfully`,
+    statusCode: 200
+  };
+});
 
 

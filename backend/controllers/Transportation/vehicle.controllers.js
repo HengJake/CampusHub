@@ -49,11 +49,12 @@ export const deleteVehicle = controllerWrapper(async (req, res) => {
   return await deleteRecord(Vehicle, id, "vehicle");
 });
 
-export const deleteAllVehicles = async (req, res) => {
-  try {
-    await Vehicle.deleteMany({});
-    res.status(200).json({ message: 'All vehicles deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting all vehicles', error: error.message });
-  }
-};
+export const deleteAllVehicles = controllerWrapper(async (req, res) => {
+  const result = await Vehicle.deleteMany({});
+  return {
+    success: true,
+    data: { deletedCount: result.deletedCount },
+    message: `${result.deletedCount} vehicles deleted successfully`,
+    statusCode: 200
+  };
+});
