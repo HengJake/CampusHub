@@ -6,6 +6,7 @@ import {
     updateSchool,
     deleteSchool,
     getSchoolByUserId,
+    getSchoolsBySchoolId,
     deleteAllSchools
 } from "../../controllers/Billing/school.controllers.js";
 
@@ -17,10 +18,12 @@ router.post("/", createSchool);
 // Get all schools
 router.get("/", getAllSchool);
 
+router.get("/user/:id", getSchoolByUserId);
+
+router.get("/school/:schoolId", getSchoolsBySchoolId);
+
 // Get school by ID
 router.get("/:id", getSchoolById);
-
-router.get("/user/:id", getSchoolByUserId);
 
 // Update school by ID
 router.put("/:id", updateSchool);

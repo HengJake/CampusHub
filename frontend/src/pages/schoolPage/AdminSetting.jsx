@@ -17,6 +17,7 @@ import {
   Grid,
   Badge,
   Progress,
+  Center,
 } from "@chakra-ui/react"
 import { FiSave, FiDownload, FiUpload, FiShield, FiBell, FiDatabase } from "react-icons/fi"
 import { useState } from "react"
@@ -62,7 +63,40 @@ export function AdminSetting() {
   }
 
   return (
-    <Box p={6} minH="100vh">
+    <Box p={6} minH="100vh" position="relative">
+      {/* Coming Soon Overlay */}
+      <Box
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        bg="rgba(0, 0, 0, 0.7)"
+        zIndex={99}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        borderRadius="lg"
+      >
+        <Center>
+          <VStack spacing={6} textAlign="center" color="white">
+            <Box fontSize="6xl" mb={4}>
+              ⚙️
+            </Box>
+            <Text fontSize="3xl" fontWeight="bold">
+              Coming Soon!
+            </Text>
+            <Text fontSize="lg" maxW="400px">
+              The System Settings feature is currently under development.
+              You'll be able to configure system preferences and security settings soon.
+            </Text>
+            <Badge colorScheme="blue" fontSize="md" p={3}>
+              Feature in Development
+            </Badge>
+          </VStack>
+        </Center>
+      </Box>
+
       <VStack spacing={6} align="stretch">
         {/* Header */}
         <Box>

@@ -162,7 +162,7 @@ const EditBookingModal = ({ isOpen, onClose, booking, onUpdate }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onUpdate(booking.id, formData)
+    onUpdate(booking._id, formData)
     onClose()
   }
 
@@ -229,7 +229,7 @@ const EditBookingModal = ({ isOpen, onClose, booking, onUpdate }) => {
 
 // Booking Row Component
 const BookingRow = ({ booking, onApprove, onReject, onEdit, onDelete }) => (
-  <Tr key={booking?.id || Math.random()}>
+  <Tr key={booking?._id || Math.random()}>
     <Td>
       <Text fontWeight="medium">{booking?.studentId?.userId?.name || booking?.studentName || "-"}</Text>
     </Td>
@@ -255,14 +255,14 @@ const BookingRow = ({ booking, onApprove, onReject, onEdit, onDelete }) => (
               icon={<FiCheck />}
               colorScheme="green"
               size="sm"
-              onClick={() => onApprove(booking?.id)}
+              onClick={() => onApprove(booking?._id, booking)}
               aria-label="Approve booking"
             />
             <IconButton
               icon={<FiX />}
               colorScheme="red"
               size="sm"
-              onClick={() => onReject(booking?.id)}
+              onClick={() => onReject(booking?._id, booking)}
               aria-label="Reject booking"
             />
           </>
@@ -278,7 +278,7 @@ const BookingRow = ({ booking, onApprove, onReject, onEdit, onDelete }) => (
           icon={<FiTrash2 />}
           colorScheme="red"
           size="sm"
-          onClick={() => onDelete(booking?.id)}
+          onClick={() => onDelete(booking?._id)}
           aria-label="Delete booking"
         />
       </HStack>
@@ -294,7 +294,7 @@ export function BookingManagement() {
   const [dateFilter, setDateFilter] = useState("")
   const [selectedBooking, setSelectedBooking] = useState(null)
 
-  const { bookings, fetchBookings, updateBookingStatus, updateBooking, deleteBooking } = useFacilityStore()
+  const { bookings, fetchBookings, updateBooking, deleteBooking } = useFacilityStore()
 
   useEffect(() => {
     fetchBookings();
@@ -345,11 +345,11 @@ export function BookingManagement() {
   }, [safeBookings])
 
   // Event handlers
-  const handleBookingAction = (id, action, status) => {
-    if (typeof updateBookingStatus !== 'function') {
+  const handleBookingAction = async (id, action, status, booking) => {
+    if (typeof updateBooking !== 'function') {
       toast({
         title: "Error",
-        description: "Booking status update function is unavailable.",
+        description: "Booking update function is unavailable.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -358,14 +358,29 @@ export function BookingManagement() {
     }
 
     try {
-      updateBookingStatus(id, status)
-      toast({
-        title: `Booking ${action}`,
-        description: `The booking has been ${action.toLowerCase()} successfully.`,
-        status: action === "Confirmed" ? "success" : "error",
-        duration: 3000,
-        isClosable: true,
-      })
+
+      const updatedBooking = {
+        ...booking,
+        resourceId: booking.resourceId?._id,
+        studentId: booking.studentId?._id,
+        status: status
+      }
+
+
+      const result = await updateBooking(id, updatedBooking)
+      if (result.success) {
+        toast({
+          title: `Booking ${action}`,
+          description: `The booking has been ${action.toLowerCase()} successfully.`,
+          status: action === "Confirmed" ? "success" : "info",
+          duration: 3000,
+          isClosable: true,
+        })
+        // Refresh bookings after status update
+        fetchBookings()
+      } else {
+        throw new Error(result.message || `Failed to ${action.toLowerCase()} booking`)
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -377,8 +392,8 @@ export function BookingManagement() {
     }
   }
 
-  const handleApprove = (id) => handleBookingAction(id, "Confirmed", "confirmed")
-  const handleReject = (id) => handleBookingAction(id, "Cancelled", "cancelled")
+  const handleApprove = (id, booking) => handleBookingAction(id, "Confirmed", "confirmed", booking)
+  const handleReject = (id, booking) => handleBookingAction(id, "Cancelled", "cancelled", booking)
 
   const handleEdit = (booking) => {
     setSelectedBooking(booking)
@@ -398,14 +413,21 @@ export function BookingManagement() {
     }
 
     try {
-      await updateBooking(id, formData)
-      toast({
-        title: "Booking Updated",
-        description: "The booking has been updated successfully.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      })
+      console.log("🚀 ~ handleUpdate ~ formData:", formData)
+      const result = await updateBooking(id, formData)
+      if (result.success) {
+        toast({
+          title: "Booking Updated",
+          description: "The booking has been updated successfully.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        })
+        // Refresh bookings after successful update
+        fetchBookings()
+      } else {
+        throw new Error(result.message || "Failed to update booking")
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -508,7 +530,7 @@ export function BookingManagement() {
         <Card bg="white"  >
           <CardBody>
             <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
-              Booking Requests ({filteredBookings.length})
+              Pending Requests ({filteredBookings.filter(b => b.status === "pending").length})
             </Text>
             <Table variant="simple">
               <Thead>
@@ -521,16 +543,52 @@ export function BookingManagement() {
                 </Tr>
               </Thead>
               <Tbody>
-                {filteredBookings.map((booking) => (
-                  <BookingRow
-                    key={booking?.id || Math.random()}
-                    booking={booking}
-                    onApprove={handleApprove}
-                    onReject={handleReject}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                  />
-                ))}
+                {filteredBookings
+                  .filter(booking => booking.status === "pending")
+                  .map((booking) => (
+                    <BookingRow
+                      key={booking?._id || Math.random()}
+                      booking={booking}
+                      onApprove={handleApprove}
+                      onReject={handleReject}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+              </Tbody>
+            </Table>
+          </CardBody>
+        </Card>
+
+        {/* Handled Requests */}
+        <Card bg="white"  >
+          <CardBody>
+            <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
+              Handled Requests ({filteredBookings.filter(b => b.status !== "pending").length})
+            </Text>
+            <Table variant="simple">
+              <Thead>
+                <Tr>
+                  <Th>Student</Th>
+                  <Th>Facility</Th>
+                  <Th>Date & Time</Th>
+                  <Th>Status</Th>
+                  <Th>Actions</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {filteredBookings
+                  .filter(booking => booking.status !== "pending")
+                  .map((booking) => (
+                    <BookingRow
+                      key={booking?._id || Math.random()}
+                      booking={booking}
+                      onApprove={handleApprove}
+                      onReject={handleReject}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
+                  ))}
               </Tbody>
             </Table>
           </CardBody>

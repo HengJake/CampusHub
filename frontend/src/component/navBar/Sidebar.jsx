@@ -29,9 +29,9 @@ const Sidebar = ({ isOpen, onClose, role = "student", sidebarColors, glassBG }) 
 
     return (
         <Box
-            left={isMobile ? (isOpen ? 2 : "-100%") : 2}
+            left={isMobile ? (isOpen ? 6 : "-100%") : 2}
             right={isMobile ? 2 : "auto"}
-            width={isMobile ? "calc(100% - 1rem)" : isCollapsed ? "80px" : "16rem"}
+            width={isMobile ? "calc(100% - 3rem)" : isCollapsed ? "80px" : "16rem"}
             top={{ base: 20, lg: 2 }}
             bottom={2}
             borderRadius={10}

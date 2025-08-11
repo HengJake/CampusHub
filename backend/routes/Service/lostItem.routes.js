@@ -5,6 +5,7 @@ import {
   getLostItemById,
   getLostItemsByOwner,
   getLostItemsByMatchedItem,
+  getLostItemsBySchoolId,
   updateLostItem,
   deleteLostItem,
   deleteAllLostItems
@@ -14,9 +15,10 @@ const router = express.Router();
 
 router.post("/", createLostItem);
 router.get("/", getAllLostItems);
-router.get("/:id", getLostItemById);
 router.get("/owner/:owner", getLostItemsByOwner);
 router.get("/matchedItem/:matchedItem", getLostItemsByMatchedItem);
+router.get("/school/:schoolId", getLostItemsBySchoolId);
+router.get("/:id", getLostItemById);
 router.put("/:id", updateLostItem);
 router.delete("/all", deleteAllLostItems);
 router.delete("/:id", deleteLostItem);

@@ -1,5 +1,6 @@
 import { Grid, Box, VStack, Text, Icon, useColorModeValue } from "@chakra-ui/react"
-import { FiUsers, FiMapPin, FiLock, FiCalendar, FiSettings, FiDownload } from "react-icons/fi"
+import { FiUsers, FiLock, FiCalendar, FiBarChart2, FiMapPin } from "react-icons/fi"
+import { useNavigate } from "react-router-dom"
 
 const quickActions = [
   {
@@ -9,10 +10,11 @@ const quickActions = [
     action: "add-user",
   },
   {
-    title: "Manage Parking",
-    description: "Update parking zones",
-    icon: FiMapPin,
-    action: "manage-parking",
+    title: "Result Management",
+    description: "Manage student results and grades",
+    icon: FiBarChart2,
+    action: "result-management",
+    path: "/admin/results",
   },
   {
     title: "Locker Assignment",
@@ -21,10 +23,11 @@ const quickActions = [
     action: "manage-lockers",
   },
   {
-    title: "Generate Report",
-    description: "Export usage analytics",
-    icon: FiDownload,
-    action: "generate-report",
+    title: "Facility Management",
+    description: "Manage campus facilities and resources",
+    icon: FiMapPin,
+    action: "facility-management",
+    path: "/facility-management",
   },
   {
     title: "Update Calendar",
@@ -32,17 +35,17 @@ const quickActions = [
     icon: FiCalendar,
     action: "update-calendar",
   },
-  {
-    title: "System Settings",
-    description: "Configure system parameters",
-    icon: FiSettings,
-    action: "system-settings",
-  },
 ]
 
 export function QuickActions() {
   const hoverBg = useColorModeValue("gray.50", "gray.700")
+  const navigate = useNavigate()
 
+  const handleActionClick = (action) => {
+    if (action.path) {
+      navigate(action.path)
+    }
+  }
   return (
     <Grid templateColumns="repeat(2, 1fr)" gap={3}>
       {quickActions.map((action) => (
@@ -55,6 +58,7 @@ export function QuickActions() {
           cursor="pointer"
           _hover={{ bg: hoverBg }}
           transition="background-color 0.2s"
+          onClick={() => handleActionClick(action)}
         >
           <VStack align="start" spacing={2}>
             <Icon as={action.icon} boxSize={4} color="campus.primary" />

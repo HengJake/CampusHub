@@ -7,7 +7,7 @@ import {
   validateMultipleReferences,
   controllerWrapper
 } from "../../utils/reusable.js";
-import BusSchedule from "../../models/Transportation/busShcedule.model.js";
+import BusSchedule from "../../models/Transportation/busSchedule.model.js";
 import Route from "../../models/Transportation/route.model.js";
 import Vehicle from "../../models/Transportation/vehicle.model.js";
 
@@ -35,12 +35,12 @@ export const createBusSchedule = controllerWrapper(async (req, res) => {
 });
 
 export const getAllBusSchedules = controllerWrapper(async (req, res) => {
-  return await getAllRecords(BusSchedule, "busSchedule", ["routeID", "vehicleID"]);
+  return await getAllRecords(BusSchedule, "busSchedule", ["routeId", "vehicleId"]);
 });
 
 export const getBusScheduleById = controllerWrapper(async (req, res) => {
   const { id } = req.params;
-  return await getRecordById(BusSchedule, id, "busSchedule", ["routeID", "vehicleID"]);
+  return await getRecordById(BusSchedule, id, "busSchedule", ["routeId", "vehicleId"]);
 });
 
 // Get BusSchedules by Route ID
@@ -49,8 +49,8 @@ export const getBusSchedulesByRouteId = controllerWrapper(async (req, res) => {
   return await getAllRecords(
     BusSchedule,
     "busSchedules",
-    ["routeID", "vehicleID"],
-    { routeID: routeID }
+    ["routeId", "vehicleId"],
+    { routeId: { $in: [routeID] } }
   );
 });
 
@@ -60,8 +60,19 @@ export const getBusSchedulesByVehicleId = controllerWrapper(async (req, res) => 
   return await getAllRecords(
     BusSchedule,
     "busSchedules",
-    ["routeID", "vehicleID"],
-    { vehicleID: vehicleID }
+    ["routeId", "vehicleId"],
+    { vehicleId: vehicleID }
+  );
+});
+
+// Get BusSchedules by School ID
+export const getBusSchedulesBySchoolId = controllerWrapper(async (req, res) => {
+  const { schoolId } = req.params;
+  return await getAllRecords(
+    BusSchedule,
+    "busSchedules",
+    ["routeId", "vehicleId"],
+    { schoolId: schoolId }
   );
 });
 

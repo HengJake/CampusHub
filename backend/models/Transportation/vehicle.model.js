@@ -11,7 +11,7 @@ const vehicleSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["bus", "minibus", "private_car", "van", "motorcycle"],
+      enum: ["bus", "car"],
       required: true,
     },
     // to record how many people the vehicle can afford

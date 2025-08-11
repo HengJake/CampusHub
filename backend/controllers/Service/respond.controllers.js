@@ -28,6 +28,17 @@ export const getRespondsByFeedbackId = controllerWrapper(async (req, res) => {
     );
 });
 
+// Get Responds by School ID
+export const getRespondsBySchoolId = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(
+        Respond,
+        "responds",
+        [],
+        { schoolId: schoolId }
+    );
+});
+
 // Update Respond
 export const updateRespond = controllerWrapper(async (req, res) => {
     const { id } = req.params;

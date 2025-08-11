@@ -30,6 +30,6 @@ const ResourceSchema = new mongoose.Schema({
       ]
     }
   ]
-});
+}, { timestamps: true });
 
 export default mongoose.model('Resource', ResourceSchema);

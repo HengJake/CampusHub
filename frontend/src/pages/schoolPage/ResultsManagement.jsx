@@ -419,7 +419,7 @@ export default function ResultsBulkUpload() {
     };
 
     return (
-        <Box maxW={"calc(100vw - 120px)"}>
+        <Box w={"100%"}>
             <VStack spacing={3} align="stretch" >
                 <HStack justify={"space-between"}>
                     <Box>
@@ -621,7 +621,6 @@ export default function ResultsBulkUpload() {
                                 intakeCourseId: intakeCourses.find(ic => ic._id === row.intakeCourseId)
                             };
                         });
-                        console.log("🚀 ~ processedData:", processedData)
                         setCsvData(processedData);
                         setIsSubmitting(false);
                     }}
@@ -664,9 +663,6 @@ export default function ResultsBulkUpload() {
                     semesters={semesters}
                     previewResultsLength={previewResults.length}
                 />
-
-
-
 
             </VStack>
         </Box>

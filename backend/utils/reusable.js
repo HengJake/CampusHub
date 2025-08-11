@@ -164,7 +164,7 @@ export const getAllRecords = async (Model, entityName = "records", populateField
                     query = query.populate(field);
                 }
             });
-        }
+        } 
 
         const records = await query;
 

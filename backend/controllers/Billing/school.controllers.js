@@ -86,10 +86,15 @@ export const getSchoolById = controllerWrapper(async (req, res) => {
 });
 
 export const getSchoolByUserId = controllerWrapper(async (req, res) => {
-    const { userId } = req.params;
-    return await getRecordById(User, userId, "user", ["schoolId"])
-    //  get the user id and also respond and then use the user id to get the school
-})
+    const { id } = req.params;
+    return await getAllRecords(School, "schools", ["userId"], { userId: id });
+});
+
+// Get Schools by School ID (for filtering)
+export const getSchoolsBySchoolId = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(School, "schools", ["userId"], { _id: schoolId });
+});
 
 export const updateSchool = controllerWrapper(async (req, res) => {
     const { id } = req.params;

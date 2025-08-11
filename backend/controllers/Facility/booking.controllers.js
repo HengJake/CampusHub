@@ -35,6 +35,34 @@ const validateBookingData = async (data) => {
   return { isValid: true };
 };
 
+const validateBookingUpdate = async (data) => {
+  const { studentId, resourceId, bookingDate, startTime, endTime, status } = data;
+
+  // Only validate fields that are being updated
+  if (status !== undefined && !['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
+    return { isValid: false, message: "Invalid status value" };
+  }
+
+  // Validate bookingDate if it's being updated
+  if (bookingDate !== undefined && isNaN(new Date(bookingDate).getTime())) {
+    return { isValid: false, message: "Invalid bookingDate format" };
+  }
+
+  // Validate references only if they're being updated
+  const referencesToValidate = {};
+  if (studentId) referencesToValidate.studentId = { id: studentId, Model: Student };
+  if (resourceId) referencesToValidate.resourceId = { id: resourceId, Model: Resource };
+
+  if (Object.keys(referencesToValidate).length > 0) {
+    const referenceValidation = await validateMultipleReferences(referencesToValidate);
+    if (referenceValidation) {
+      return { isValid: false, message: referenceValidation.message };
+    }
+  }
+
+  return { isValid: true };
+};
+
 export const createBooking = controllerWrapper(async (req, res) => {
   return await createRecord(Booking, req.body, "booking", validateBookingData);
 });
@@ -97,7 +125,7 @@ export const getBookingsBySchoolId = controllerWrapper(async (req, res) => {
 
 export const updateBooking = controllerWrapper(async (req, res) => {
   const { id } = req.params;
-  return await updateRecord(Booking, id, req.body, "booking", validateBookingData);
+  return await updateRecord(Booking, id, req.body, "booking", validateBookingUpdate);
 });
 
 export const deleteBooking = controllerWrapper(async (req, res) => {

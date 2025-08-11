@@ -33,6 +33,12 @@ export const getVehicleById = controllerWrapper(async (req, res) => {
   return await getRecordById(Vehicle, id, "vehicle");
 });
 
+// Get Vehicles by School ID
+export const getVehiclesBySchoolId = controllerWrapper(async (req, res) => {
+  const { schoolId } = req.params;
+  return await getAllRecords(Vehicle, "vehicle", [], { schoolId: schoolId });
+});
+
 export const updateVehicle = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await updateRecord(Vehicle, id, req.body, "vehicle", validateVehicleData);

@@ -11,7 +11,7 @@ import {
     FiTrendingUp,       // For analytics
     FiUserCheck         // For user oversight
 } from "react-icons/fi";
-import { FaCar, FaParking, FaChalkboardTeacher } from "react-icons/fa";
+import { FaCar, FaParking, FaChalkboardTeacher, FaBus } from "react-icons/fa";
 import { MdMeetingRoom, MdClass, MdEventNote } from "react-icons/md";
 import { GiLockers } from "react-icons/gi";
 import { GoMegaphone } from "react-icons/go";
@@ -26,7 +26,8 @@ const navConfig = {
             children: [
                 { label: "Parking🗿", path: "/facility/parking", icon: FaParking },
                 { label: "Locker", path: "/facility/locker", icon: GiLockers },
-                { label: "Booking", path: "/facility/room", icon: MdClass }
+                { label: "Booking☑️", path: "/facility/room", icon: MdClass },
+                { label: "Transportation", path: "/transportation", icon: FaCar }
             ]
         },
         {
@@ -35,14 +36,14 @@ const navConfig = {
             children: [
                 { label: "Schedule☑️", path: "/academic/schedule", icon: MdEventNote },
                 { label: "Exams/ Result☑️", path: "/academic/exams", icon: FiFileText },
-                { label: "Attendance", path: "/academic/attendance", icon: FiList }
+                { label: "Attendance☑️", path: "/academic/attendance", icon: FiList }
             ]
         },
-        { label: "Feedback", path: "/feedback", icon: FiMessageSquare }
+        { label: "Feedback☑️", path: "/feedback", icon: FiMessageSquare }
     ],
 
     schoolAdmin: [
-        { label: "Dashboard", path: "/admin-dashboard", icon: FiHome },
+        { label: "Dashboard☑️", path: "/admin-dashboard", icon: FiHome },
         { label: "Users☑️", path: "/student-management", icon: FiUsers },
         {
             label: "Facilities",
@@ -51,7 +52,8 @@ const navConfig = {
                 { label: "Facility Overview☑️", path: "/facility-management", icon: MdMeetingRoom },
                 { label: "Parking", path: "/parking-management", icon: FaParking },
                 { label: "Lockers", path: "/locker-management", icon: GiLockers },
-                { label: "Booking Management", path: "/booking-management", icon: MdEventNote }
+                { label: "Booking Management☑️", path: "/booking-management", icon: MdEventNote },
+                { label: "Transportation", path: "/transportation-management", icon: FaBus }
             ]
         },
         {

@@ -24,8 +24,8 @@ import {
   Grid,
   Switch,
 } from "@chakra-ui/react"
-import { FiEdit, FiSave, FiCamera, FiActivity, FiShield, FiUser } from "react-icons/fi"
-import { useState } from "react"
+import { FiEdit, FiSave, FiCamera, FiActivity, FiShield, FiUser, FiSettings, FiCheckCircle, FiMessageSquare, FiBell, FiUsers, FiFileText } from "react-icons/fi"
+import { useState, useEffect } from "react"
 import { useBillingStore } from "../../store/billing"
 import { useUserStore } from "../../store/user"
 
@@ -43,13 +43,14 @@ export function AdminProfile() {
 
   const toast = useToast()
   const [isEditing, setIsEditing] = useState(false)
+  const [sessionDuration, setSessionDuration] = useState("Loading...")
   const [profileData, setProfileData] = useState({
-    name: "John Administrator",
-    email: "admin@campushub.edu",
-    phone: "+1-555-0100",
-    department: "Administration",
-    role: "System Administrator",
-    joinDate: "2020-08-15",
+    name: "",
+    email: "",
+    phone: "",
+    department: "",
+    role: "",
+    joinDate: "",
   })
   const [preferences, setPreferences] = useState({
     emailNotifications: true,
@@ -61,31 +62,147 @@ export function AdminProfile() {
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
 
-  const handleSave = () => {
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been updated successfully",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    })
-    setIsEditing(false)
+  // Fetch user profile data and session duration
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/auth/is-auth', {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Update session duration
+          if (data.tokenExpiration) {
+            const { hours, minutes } = data.tokenExpiration.timeLeft;
+            setSessionDuration(`${hours}h ${minutes}m`);
+          } else {
+            setSessionDuration("Session active");
+          }
+
+          // Update profile data with real user data
+          if (data.id) {
+            // Fetch detailed user information
+            const userResponse = await fetch(`/api/user/${data.id}`, {
+              method: 'GET',
+              credentials: 'include',
+            });
+
+            if (userResponse.ok) {
+              const userData = await userResponse.json();
+              if (userData.success && userData.data) {
+                const user = userData.data;
+
+                // Format join date from createdAt
+                const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A";
+
+                setProfileData({
+                  name: user.name || "",
+                  email: user.email || "",
+                  phone: user.phoneNumber || "",
+                  department: data.role === "schoolAdmin" ? "Administration" :
+                    data.role === "student" ? "Student Affairs" :
+                      data.role === "lecturer" ? "Academic" : "",
+                  role: data.role || "",
+                  joinDate: joinDate,
+                });
+              }
+            }
+          }
+        } else {
+          setSessionDuration("Session expired");
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setSessionDuration("Unable to load");
+      }
+    };
+
+    fetchUserData();
+
+    // Update session duration every minute
+    const interval = setInterval(() => {
+      fetchUserData();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      // Get current user ID from auth
+      const authResponse = await fetch('/auth/is-auth', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (authResponse.ok) {
+        const authData = await authResponse.json();
+
+        if (authData.id) {
+          // Update user profile
+          const updateResponse = await fetch(`/api/user/${authData.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              name: profileData.name,
+              email: profileData.email,
+              phoneNumber: profileData.phone,
+            }),
+          });
+
+          if (updateResponse.ok) {
+            toast({
+              title: "Profile Updated",
+              description: "Your profile has been updated successfully",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            });
+            setIsEditing(false);
+          } else {
+            const errorData = await updateResponse.json();
+            toast({
+              title: "Update Failed",
+              description: errorData.message || "Failed to update profile",
+              status: "error",
+              duration: 3000,
+              isClosable: true,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Update Failed",
+        description: "An error occurred while updating your profile",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   }
 
   const getActivityIcon = (type) => {
     switch (type) {
       case "settings":
-        return "⚙️"
+        return <FiSettings />
       case "approval":
-        return "✅"
+        return <FiCheckCircle />
       case "announcement":
-        return "📢"
+        return <FiBell />
       case "feedback":
-        return "💬"
+        return <FiMessageSquare />
       case "user":
-        return "👤"
+        return <FiUsers />
       default:
-        return "📝"
+        return <FiFileText />
     }
   }
 
@@ -201,15 +318,12 @@ export function AdminProfile() {
                   </Text>
                 </HStack>
                 <VStack spacing={4} align="stretch">
-                  <Button variant="outline" w="full">
-                    Change Password
-                  </Button>
-                  <Button variant="outline" w="full">
-                    Enable Two-Factor Authentication
-                  </Button>
-                  <Button variant="outline" w="full">
-                    View Login History
-                  </Button>
+                  <HStack justify="center" py={4}>
+                    <FiShield color="gray.500" />
+                    <Text fontSize="sm" color="gray.500">
+                      Security features coming soon
+                    </Text>
+                  </HStack>
                 </VStack>
               </CardBody>
             </Card>
@@ -230,11 +344,11 @@ export function AdminProfile() {
                   </HStack>
                   <HStack justify="space-between">
                     <Text fontSize="sm">Last Login</Text>
-                    <Text fontSize="sm">Today, 9:30 AM</Text>
+                    <Text fontSize="sm">Coming Soon</Text>
                   </HStack>
                   <HStack justify="space-between">
                     <Text fontSize="sm">Session Duration</Text>
-                    <Text fontSize="sm">2h 45m</Text>
+                    <Text fontSize="sm">{sessionDuration}</Text>
                   </HStack>
                   <HStack justify="space-between">
                     <Text fontSize="sm">Permissions</Text>
@@ -251,37 +365,11 @@ export function AdminProfile() {
                   Preferences
                 </Text>
                 <VStack spacing={4} align="stretch">
-                  <HStack justify="space-between">
-                    <Text fontSize="sm">Email Notifications</Text>
-                    <Switch
-                      isChecked={preferences.emailNotifications}
-                      onChange={(e) => setPreferences({ ...preferences, emailNotifications: e.target.checked })}
-                      colorScheme="green"
-                    />
-                  </HStack>
-                  <HStack justify="space-between">
-                    <Text fontSize="sm">SMS Notifications</Text>
-                    <Switch
-                      isChecked={preferences.smsNotifications}
-                      onChange={(e) => setPreferences({ ...preferences, smsNotifications: e.target.checked })}
-                      colorScheme="green"
-                    />
-                  </HStack>
-                  <HStack justify="space-between">
-                    <Text fontSize="sm">Dark Mode</Text>
-                    <Switch
-                      isChecked={preferences.darkMode}
-                      onChange={(e) => setPreferences({ ...preferences, darkMode: e.target.checked })}
-                      colorScheme="green"
-                    />
-                  </HStack>
-                  <HStack justify="space-between">
-                    <Text fontSize="sm">Auto Logout</Text>
-                    <Switch
-                      isChecked={preferences.autoLogout}
-                      onChange={(e) => setPreferences({ ...preferences, autoLogout: e.target.checked })}
-                      colorScheme="green"
-                    />
+                  <HStack justify="center" py={4}>
+                    <FiSettings color="gray.500" />
+                    <Text fontSize="sm" color="gray.500">
+                      Preference settings coming soon
+                    </Text>
                   </HStack>
                 </VStack>
               </CardBody>
@@ -297,19 +385,12 @@ export function AdminProfile() {
                   </Text>
                 </HStack>
                 <VStack spacing={3} align="stretch">
-                  {recentActivity.slice(0, 5).map((activity) => (
-                    <HStack key={activity.id} spacing={3}>
-                      <Text fontSize="lg">{getActivityIcon(activity.type)}</Text>
-                      <Box flex="1">
-                        <Text fontSize="sm" fontWeight="medium">
-                          {activity.action}
-                        </Text>
-                        <Text fontSize="xs" color="gray.600">
-                          {activity.timestamp}
-                        </Text>
-                      </Box>
-                    </HStack>
-                  ))}
+                  <HStack justify="center" py={4}>
+                    <FiActivity color="gray.500" />
+                    <Text fontSize="sm" color="gray.500">
+                      Activity tracking coming soon
+                    </Text>
+                  </HStack>
                 </VStack>
               </CardBody>
             </Card>
@@ -322,26 +403,12 @@ export function AdminProfile() {
             <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
               Activity Log
             </Text>
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Action</Th>
-                  <Th>Timestamp</Th>
-                  <Th>Type</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {recentActivity.map((activity) => (
-                  <Tr key={activity.id}>
-                    <Td>{activity.action}</Td>
-                    <Td>{activity.timestamp}</Td>
-                    <Td>
-                      <Badge colorScheme="blue">{activity.type}</Badge>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
+            <HStack justify="center" py={8}>
+              <FiFileText color="gray.500" />
+              <Text fontSize="sm" color="gray.500">
+                Detailed activity logs coming soon
+              </Text>
+            </HStack>
           </CardBody>
         </Card>
       </VStack>

@@ -27,8 +27,8 @@ const feedbackSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['open', 'in_progress', 'resolved', 'closed'],
-    default: 'open',
+    enum: ['sent', 'open', 'in_progress', 'resolved', 'closed'],
+    default: 'sent',
   }
 }, {
   timestamps: true

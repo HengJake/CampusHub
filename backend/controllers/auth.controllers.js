@@ -295,6 +295,15 @@ export const isAuthenticated = async (req, res) => {
       });
     }
 
+    // Calculate token expiration time
+    const currentTime = Math.floor(Date.now() / 1000);
+    const tokenExp = decoded.exp;
+    const timeLeft = tokenExp - currentTime;
+
+    // Convert to hours and minutes
+    const hoursLeft = Math.floor(timeLeft / 3600);
+    const minutesLeft = Math.floor((timeLeft % 3600) / 60);
+
     // Enhanced response based on user role
     let responseData = {
       success: true,
@@ -302,7 +311,15 @@ export const isAuthenticated = async (req, res) => {
       id: user._id,
       role: user.role,
       email: user.email,
-      twoFA_enabled: user.twoFA_enabled
+      twoFA_enabled: user.twoFA_enabled,
+      tokenExpiration: {
+        expiresAt: new Date(tokenExp * 1000),
+        timeLeft: {
+          total: timeLeft,
+          hours: hoursLeft,
+          minutes: minutesLeft
+        }
+      }
     };
 
     // Add role-specific data
@@ -430,6 +447,54 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// Get token duration information
+export const getTokenDuration = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "No token provided"
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Calculate token expiration time
+    const currentTime = Math.floor(Date.now() / 1000);
+    const tokenExp = decoded.exp;
+    const timeLeft = tokenExp - currentTime;
+
+    // Convert to different time units
+    const daysLeft = Math.floor(timeLeft / 86400);
+    const hoursLeft = Math.floor((timeLeft % 86400) / 3600);
+    const minutesLeft = Math.floor((timeLeft % 3600) / 60);
+    const secondsLeft = timeLeft % 60;
+
+    return res.status(200).json({
+      success: true,
+      tokenExpiration: {
+        expiresAt: new Date(tokenExp * 1000),
+        timeLeft: {
+          total: timeLeft,
+          days: daysLeft,
+          hours: hoursLeft,
+          minutes: minutesLeft,
+          seconds: secondsLeft
+        },
+        isExpired: timeLeft <= 0
+      }
+    });
+  } catch (error) {
+    console.error("Token duration error:", error);
+    res.status(401).json({
+      success: false,
+      message: "Invalid token"
+    });
   }
 };
 

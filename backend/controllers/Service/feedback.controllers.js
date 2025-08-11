@@ -1,52 +1,84 @@
+import {
+    createRecord,
+    getAllRecords,
+    getRecordById,
+    updateRecord,
+    deleteRecord,
+    validateReferenceExists,
+    validateMultipleReferences,
+    controllerWrapper,
+    deleteAllRecords
+} from "../../utils/reusable.js";
 import Feedback from "../../models/Service/feedback.model.js";
-import { createRecord, getAllRecords, getRecordById, updateRecord, deleteRecord, controllerWrapper } from "../../utils/reusable.js";
+import Student from "../../models/Academic/student.model.js";
+import School from "../../models/Billing/school.model.js";
 
-// Create Feedback
+const validateFeedbackData = async (data) => {
+    const { studentId, schoolId, message, feedbackType, status, priority } = data;
+
+    // Check required fields
+    if (!studentId) return { isValid: false, message: "studentId is required" };
+    if (!schoolId) return { isValid: false, message: "schoolId is required" };
+    if (!message) return { isValid: false, message: "message is required" };
+    if (!feedbackType) return { isValid: false, message: "feedbackType is required" };
+
+    // Validate feedbackType enum
+    const validFeedbackTypes = ['complaint', 'compliment', 'suggestion', 'query', 'issue'];
+    if (!validFeedbackTypes.includes(feedbackType)) {
+        return { isValid: false, message: `feedbackType must be one of: ${validFeedbackTypes.join(', ')}` };
+    }
+
+    // Validate status enum if provided
+    if (status) {
+        const validStatuses = ['open', 'in_progress', 'resolved', 'closed'];
+        if (!validStatuses.includes(status)) {
+            return { isValid: false, message: `status must be one of: ${validStatuses.join(', ')}` };
+        }
+    }
+
+    // Validate priority enum if provided
+    if (priority) {
+        const validPriorities = ['Low', 'Medium', 'High', 'Urgent'];
+        if (!validPriorities.includes(priority)) {
+            return { isValid: false, message: `priority must be one of: ${validPriorities.join(', ')}` };
+        }
+    }
+
+    // Validate references exist
+    const referenceValidation = await validateMultipleReferences({
+        studentId: { id: studentId, Model: Student },
+        schoolId: { id: schoolId, Model: School }
+    });
+
+    if (referenceValidation) {
+        return { isValid: false, message: referenceValidation.message };
+    }
+
+    return { isValid: true };
+};
+
 export const createFeedback = controllerWrapper(async (req, res) => {
-    console.log("Creating feedback with body:", req.body);
-    
-    // Add the authenticated user's ID if not provided
-    if (!req.body.studentId && req.body.id) {
-        req.body.studentId = req.body.id;
-    }
-    
-    // Ensure we have a studentId
-    if (!req.body.studentId) {
-        return res.status(400).json({ 
-            success: false, 
-            message: "Student ID is required" 
-        });
-    }
-    
-    console.log("Final feedback data:", req.body);
-    return await createRecord(Feedback, req.body, "feedback");
+    return await createRecord(Feedback, req.body, "feedback", validateFeedbackData);
 });
 
-// Get all Feedbacks
 export const getAllFeedbacks = controllerWrapper(async (req, res) => {
-    return await getAllRecords(Feedback, "feedbacks");
+    return await getAllRecords(Feedback, "feedbacks", ["studentId", "schoolId"]);
 });
 
-// Get Feedback by ID
 export const getFeedbackById = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    return await getRecordById(Feedback, id, "feedback");
+    return await getRecordById(Feedback, id, "feedback", ["studentId", "schoolId"]);
 });
 
 // Get Feedbacks by Student ID
 export const getFeedbacksByStudentId = controllerWrapper(async (req, res) => {
     const { studentId } = req.params;
-    console.log("Fetching feedback for student ID:", studentId);
-    
-    const result = await getAllRecords(
+    return await getAllRecords(
         Feedback,
         "feedbacks",
-        [],
+        ["studentId", "schoolId"],
         { studentId: studentId }
     );
-    
-    console.log("Found feedback records:", result);
-    return result;
 });
 
 // Get Feedbacks by Feedback Type
@@ -55,29 +87,50 @@ export const getFeedbacksByFeedbackType = controllerWrapper(async (req, res) => 
     return await getAllRecords(
         Feedback,
         "feedbacks",
-        [],
+        ["studentId", "schoolId"],
         { feedbackType: feedbackType }
     );
 });
 
-// Update Feedback
-export const updateFeedback = controllerWrapper(async (req, res) => {
-    const { id } = req.params;
-    return await updateRecord(Feedback, id, req.body, "feedback");
+// Get Feedbacks by School ID
+export const getFeedbacksBySchoolId = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(
+        Feedback,
+        "feedbacks",
+        [{
+            path: "studentId",
+            populate: ["userId"]
+        }, "schoolId"],
+        { schoolId: schoolId }
+    );
 });
 
-// Delete Feedback
+// Get Feedbacks by School ID and Student ID
+export const getFeedbacksBySchoolAndStudent = controllerWrapper(async (req, res) => {
+    const { schoolId, studentId } = req.params;
+    return await getAllRecords(
+        Feedback,
+        "feedbacks",
+        [{
+            path: "studentId",
+            populate: ["userId"]
+        }, "schoolId"],
+        { schoolId: schoolId, studentId: studentId }
+    );
+});
+
+export const updateFeedback = controllerWrapper(async (req, res) => {
+    const { id } = req.params;
+    return await updateRecord(Feedback, id, req.body, "feedback", validateFeedbackData);
+});
+
 export const deleteFeedback = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await deleteRecord(Feedback, id, "feedback");
 });
 
-export const deleteAllFeedbacks = async (req, res) => {
-    try {
-        await Feedback.deleteMany({});
-        res.status(200).json({ message: 'All feedbacks deleted' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error deleting all feedbacks', error: error.message });
-    }
-};
+export const deleteAllFeedbacks = controllerWrapper(async (req, res) => {
+    return await deleteAllRecords(Feedback, "feedbacks");
+});
 

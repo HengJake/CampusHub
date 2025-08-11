@@ -79,14 +79,12 @@ import {
   FiSun,
   FiMonitor,
   FiWifi,
-  FiCheck,
-  FiX,
-  FiEdit,
   FiTrash2,
   FiClock,
 } from "react-icons/fi"
 import { useFacilityStore } from "../../store/facility"
 import { useAuthStore } from "../../store/auth"
+import ComfirmationMessage from "../../component/common/ComfirmationMessage"
 
 const StudyRoom = () => {
   const [searchTerm, setSearchTerm] = useState("")
@@ -101,6 +99,8 @@ const StudyRoom = () => {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState("")
   const [availableTimeSlots, setAvailableTimeSlots] = useState([])
   const [groupSize, setGroupSize] = useState(1)
+  const [bookingToDelete, setBookingToDelete] = useState(null)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
 
   const { isOpen: isBookingOpen, onOpen: onBookingOpen, onClose: onBookingClose } = useDisclosure()
   const toast = useToast()
@@ -145,6 +145,12 @@ const StudyRoom = () => {
     const date = new Date(dateString)
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     return days[date.getDay()]
+  }
+
+  // Get available days for a resource
+  const getAvailableDays = (resource) => {
+    if (!resource?.timeslots) return []
+    return resource.timeslots.map(ts => ts.dayOfWeek)
   }
 
   // Load available time slots when date is selected
@@ -239,17 +245,10 @@ const StudyRoom = () => {
   })
 
   // Filter user's bookings
-  const myBookings = bookings.filter(booking =>
-    booking?.studentId?.userId?._id === currentUser?._id
+  const myBookings = bookings.filter(booking => {
+    return booking?.studentId?._id === currentUser?.studentId;
+  }
   )
-
-  // Calculate statistics
-  const availableCount = resources.filter((r) => r?.status === true).length
-  const occupiedCount = resources.filter((r) => r?.status === false).length
-  const maintenanceCount = resources.filter((r) => typeof r?.status !== 'boolean').length
-  const totalSpent = myBookings.reduce((sum, booking) => sum + (booking?.totalCost || 0), 0)
-  const freeResources = resources.filter((r) => (r?.hourlyRate || 0) === 0).length
-  const paidResources = resources.filter((r) => (r?.hourlyRate || 0) > 0).length
 
   const handleBookRoom = (resource) => {
     setSelectedRoom(resource)
@@ -291,9 +290,10 @@ const StudyRoom = () => {
 
     const totalCost = duration * (selectedRoom?.hourlyRate || 0)
 
+
     const bookingData = {
       resourceId: selectedRoom._id,
-      studentId: currentUser._id,
+      studentId: currentUser.user.student._id,
       bookingDate: new Date(bookingDate).toISOString(),
       startTime,
       endTime,
@@ -358,70 +358,16 @@ const StudyRoom = () => {
     }
   }
 
-  const handleApproveBooking = async (bookingId) => {
-    try {
-      const result = await updateBooking(bookingId, { status: "confirmed" })
-      if (result.success) {
-        toast({
-          title: "Booking Approved",
-          description: "Booking has been approved successfully",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        })
-      } else {
-        throw new Error(result.message)
-      }
-    } catch (error) {
-      toast({
-        title: "Approval Failed",
-        description: error.message || "Failed to approve booking",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      })
-    }
+  const handleDeleteBooking = (booking) => {
+    setBookingToDelete(booking)
+    setIsDeleteConfirmOpen(true)
   }
 
-  const handleRejectBooking = async (bookingId) => {
-    try {
-      const result = await updateBooking(bookingId, { status: "cancelled" })
-      if (result.success) {
-        toast({
-          title: "Booking Rejected",
-          description: "Booking has been rejected",
-          status: "info",
-          duration: 3000,
-          isClosable: true,
-        })
-      } else {
-        throw new Error(result.message)
-      }
-    } catch (error) {
-      toast({
-        title: "Rejection Failed",
-        description: error.message || "Failed to reject booking",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      })
-    }
-  }
+  const confirmDeleteBooking = async () => {
+    if (!bookingToDelete) return
 
-  const handleEditBooking = (booking) => {
-    // For now, just show a toast - you can implement edit modal later
-    toast({
-      title: "Edit Booking",
-      description: "Edit functionality coming soon",
-      status: "info",
-      duration: 3000,
-      isClosable: true,
-    })
-  }
-
-  const handleDeleteBooking = async (bookingId) => {
     try {
-      const result = await deleteBooking(bookingId)
+      const result = await deleteBooking(bookingToDelete._id)
       if (result.success) {
         toast({
           title: "Booking Deleted",
@@ -441,6 +387,9 @@ const StudyRoom = () => {
         duration: 3000,
         isClosable: true,
       })
+    } finally {
+      setIsDeleteConfirmOpen(false)
+      setBookingToDelete(null)
     }
   }
 
@@ -481,12 +430,16 @@ const StudyRoom = () => {
   };
 
   // Booking Row Component
-  const BookingRow = ({ booking, onApprove, onReject, onEdit, onDelete }) => (
+  const BookingRow = ({ booking, onDelete }) => (
     <Tr key={booking?._id || Math.random()}>
       <Td>
-        <Text fontWeight="medium">{booking?.studentId?.userId?.name || booking?.studentName || "-"}</Text>
+        <Text fontWeight="medium">{booking?.resourceId?.name || "-"}</Text>
       </Td>
-      <Td>{booking?.resourceId?.name || booking?.facility || "-"}</Td>
+      <Td>
+        <Badge colorScheme={getTypeColor(booking?.resourceId?.type)} variant="subtle">
+          {booking?.resourceId?.type || "-"}
+        </Badge>
+      </Td>
       <Td>
         <VStack align="start" spacing={0}>
           <Text fontSize="sm">{formatDate(booking?.bookingDate)}</Text>
@@ -496,51 +449,34 @@ const StudyRoom = () => {
         </VStack>
       </Td>
       <Td>
+        <Text fontSize="sm">
+          {(() => {
+            const start = new Date(`2024-01-01 ${booking?.startTime}`)
+            const end = new Date(`2024-01-01 ${booking?.endTime}`)
+            const duration = (end - start) / (1000 * 60 * 60)
+            return duration > 0 ? `${duration.toFixed(1)}h` : "-"
+          })()}
+        </Text>
+      </Td>
+      <Td>
         <Badge colorScheme={getStatusColor(booking?.status)}>
           {(booking?.status || "-")?.toUpperCase()}
         </Badge>
       </Td>
       <Td>
-        <HStack spacing={2}>
-          {booking?.status === "pending" && (
-            <>
-              <IconButton
-                icon={<FiCheck />}
-                colorScheme="green"
-                size="sm"
-                onClick={() => onApprove(booking?._id)}
-                aria-label="Approve booking"
-              />
-              <IconButton
-                icon={<FiX />}
-                colorScheme="red"
-                size="sm"
-                onClick={() => onReject(booking?._id)}
-                aria-label="Reject booking"
-              />
-            </>
-          )}
-          <IconButton
-            icon={<FiEdit />}
-            colorScheme="blue"
-            size="sm"
-            onClick={() => onEdit(booking)}
-            aria-label="Edit booking"
-          />
-          <IconButton
-            icon={<FiTrash2 />}
-            colorScheme="red"
-            size="sm"
-            onClick={() => onDelete(booking?._id)}
-            aria-label="Delete booking"
-          />
-        </HStack>
+        <IconButton
+          icon={<FiTrash2 />}
+          colorScheme="red"
+          size="sm"
+          onClick={() => onDelete(booking)}
+          aria-label="Delete booking"
+        />
       </Td>
     </Tr>
   )
 
   return (
-    <Box p={6} bg="gray.50" minH="100vh">
+    <Box minH="100vh">
       <VStack spacing={6} align="stretch">
         {/* Header */}
         <HStack justify="space-between" wrap="wrap">
@@ -561,96 +497,91 @@ const StudyRoom = () => {
           </HStack>
         </HStack>
 
-        {/* Stats Dashboard */}
-        <SimpleGrid columns={{ base: 2, md: 5 }} spacing={4}>
-          <Card>
-            <CardBody>
-              <Stat>
-                <HStack>
-                  <Icon as={FiCheckCircle} color="green.500" boxSize={6} />
-                  <Box>
-                    <StatNumber color="green.500" fontSize="xl">
-                      {availableCount}
-                    </StatNumber>
-                    <StatLabel fontSize="sm">Available</StatLabel>
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardBody>
-              <Stat>
-                <HStack>
-                  <Icon as={FiUsers} color="red.500" boxSize={6} />
-                  <Box>
-                    <StatNumber color="red.500" fontSize="xl">
-                      {occupiedCount}
-                    </StatNumber>
-                    <StatLabel fontSize="sm">Occupied</StatLabel>
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardBody>
-              <Stat>
-                <HStack>
-                  <Icon as={FiAlertCircle} color="orange.500" boxSize={6} />
-                  <Box>
-                    <StatNumber color="orange.500" fontSize="xl">
-                      {maintenanceCount}
-                    </StatNumber>
-                    <StatLabel fontSize="sm">Maintenance</StatLabel>
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardBody>
-              <Stat>
-                <HStack>
-                  <Icon as={FiBook} color="blue.500" boxSize={6} />
-                  <Box>
-                    <StatNumber color="blue.500" fontSize="xl">
-                      {freeResources}
-                    </StatNumber>
-                    <StatLabel fontSize="sm">Free Resources</StatLabel>
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardBody>
-              <Stat>
-                <HStack>
-                  <Icon as={FiDollarSign} color="purple.500" boxSize={6} />
-                  <Box>
-                    <StatNumber color="purple.500" fontSize="xl">
-                      ${totalSpent}
-                    </StatNumber>
-                    <StatLabel fontSize="sm">Total Spent</StatLabel>
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
-        </SimpleGrid>
-
         <Tabs variant="enclosed" colorScheme="blue">
           <TabList>
-            <Tab>Available Resources ({filteredResources.length})</Tab>
             <Tab>My Bookings ({myBookings.length})</Tab>
+            <Tab>Available Resources ({filteredResources.length})</Tab>
           </TabList>
 
           <TabPanels>
+            {/* My Bookings Tab */}
+            <TabPanel>
+              <VStack spacing={4} align="stretch">
+                {myBookings.length === 0 ? (
+                  <Card>
+                    <CardBody textAlign="center" py={10}>
+                      <Icon as={FiCalendar} boxSize={12} color="gray.400" mb={4} />
+                      <Text fontSize="lg" color="gray.600" mb={2}>
+                        No bookings yet
+                      </Text>
+                      <Text color="gray.500">Book your first resource to get started</Text>
+                    </CardBody>
+                  </Card>
+                ) : (
+                  <>
+                    {/* Bookings Summary */}
+                    <Card>
+                      <CardBody>
+                        <Text fontWeight="bold" mb={4}>
+                          Booking Summary
+                        </Text>
+                        <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+                          <Stat>
+                            <StatLabel>Confirmed Bookings</StatLabel>
+                            <StatNumber color="green.500">
+                              {myBookings.filter((b) => b.status === "confirmed").length}
+                            </StatNumber>
+                          </Stat>
+                          <Stat>
+                            <StatLabel>Pending Bookings</StatLabel>
+                            <StatNumber color="yellow.500">
+                              {myBookings.filter((b) => b.status === "pending").length}
+                            </StatNumber>
+                          </Stat>
+                          <Stat>
+                            <StatLabel>Total Hours</StatLabel>
+                            <StatNumber color="blue.500">
+                              {myBookings.reduce((sum, b) => {
+                                const start = new Date(`2024-01-01 ${b.startTime}`)
+                                const end = new Date(`2024-01-01 ${b.endTime}`)
+                                const duration = (end - start) / (1000 * 60 * 60)
+                                return sum + duration
+                              }, 0).toFixed(1)}h
+                            </StatNumber>
+                          </Stat>
+                        </SimpleGrid>
+                      </CardBody>
+                    </Card>
+
+                    {/* Bookings List */}
+                    <TableContainer>
+                      <Table variant="simple">
+                        <Thead>
+                          <Tr>
+                            <Th>Resource</Th>
+                            <Th>Type</Th>
+                            <Th>Date & Time</Th>
+                            <Th>Duration</Th>
+                            <Th>Status</Th>
+                            <Th>Delete</Th>
+                          </Tr>
+                        </Thead>
+                        <Tbody>
+                          {myBookings.map((booking) => (
+                            <BookingRow
+                              key={booking._id}
+                              booking={booking}
+                              onDelete={handleDeleteBooking}
+                            />
+                          ))}
+                        </Tbody>
+                      </Table>
+                    </TableContainer>
+                  </>
+                )}
+              </VStack>
+            </TabPanel>
+
             {/* Available Resources Tab */}
             <TabPanel>
               {/* Advanced Filters */}
@@ -724,7 +655,6 @@ const StudyRoom = () => {
               {/* Resources Grid */}
               <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }} gap={6}>
                 {filteredResources.map((resource) => {
-                  console.log("🚀 ~ resource:", resource)
                   return (<Card key={resource._id} _hover={{ transform: "translateY(-4px)", shadow: "xl" }} transition="all 0.3s" border="1px solid" borderColor="gray.200">
                     <CardBody>
                       <VStack align="stretch" spacing={4}>
@@ -831,92 +761,7 @@ const StudyRoom = () => {
               )}
             </TabPanel>
 
-            {/* My Bookings Tab */}
-            <TabPanel>
-              <VStack spacing={4} align="stretch">
-                {myBookings.length === 0 ? (
-                  <Card>
-                    <CardBody textAlign="center" py={10}>
-                      <Icon as={FiCalendar} boxSize={12} color="gray.400" mb={4} />
-                      <Text fontSize="lg" color="gray.600" mb={2}>
-                        No bookings yet
-                      </Text>
-                      <Text color="gray.500">Book your first resource to get started</Text>
-                    </CardBody>
-                  </Card>
-                ) : (
-                  <>
-                    {/* Bookings Summary */}
-                    <Card>
-                      <CardBody>
-                        <Text fontWeight="bold" mb={4}>
-                          Booking Summary
-                        </Text>
-                        <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
-                          <Stat>
-                            <StatLabel>Confirmed Bookings</StatLabel>
-                            <StatNumber color="green.500">
-                              {myBookings.filter((b) => b.status === "confirmed").length}
-                            </StatNumber>
-                          </Stat>
-                          <Stat>
-                            <StatLabel>Pending Bookings</StatLabel>
-                            <StatNumber color="yellow.500">
-                              {myBookings.filter((b) => b.status === "pending").length}
-                            </StatNumber>
-                          </Stat>
-                          <Stat>
-                            <StatLabel>Total Hours</StatLabel>
-                            <StatNumber color="blue.500">
-                              {myBookings.reduce((sum, b) => {
-                                const start = new Date(`2024-01-01 ${b.startTime}`)
-                                const end = new Date(`2024-01-01 ${b.endTime}`)
-                                const duration = (end - start) / (1000 * 60 * 60)
-                                return sum + duration
-                              }, 0).toFixed(1)}h
-                            </StatNumber>
-                          </Stat>
-                          <Stat>
-                            <StatLabel>Total Spent</StatLabel>
-                            <StatNumber color="purple.500">${totalSpent}</StatNumber>
-                          </Stat>
-                        </SimpleGrid>
-                      </CardBody>
-                    </Card>
 
-                    {/* Bookings List */}
-                    <TableContainer>
-                      <Table variant="simple">
-                        <Thead>
-                          <Tr>
-                            <Th>Resource</Th>
-                            <Th>Type</Th>
-                            <Th>Date & Time</Th>
-                            <Th>Duration</Th>
-                            <Th>Attendees</Th>
-                            <Th>Cost</Th>
-                            <Th>Status</Th>
-                            <Th>Actions</Th>
-                          </Tr>
-                        </Thead>
-                        <Tbody>
-                          {myBookings.map((booking) => (
-                            <BookingRow
-                              key={booking._id}
-                              booking={booking}
-                              onApprove={handleApproveBooking}
-                              onReject={handleRejectBooking}
-                              onEdit={handleEditBooking}
-                              onDelete={handleDeleteBooking}
-                            />
-                          ))}
-                        </Tbody>
-                      </Table>
-                    </TableContainer>
-                  </>
-                )}
-              </VStack>
-            </TabPanel>
           </TabPanels>
         </Tabs>
       </VStack>
@@ -941,6 +786,30 @@ const StudyRoom = () => {
 
               <FormControl isRequired>
                 <FormLabel>Booking Date</FormLabel>
+
+                {/* Available Days Badges */}
+                {selectedRoom && (
+                  <Box mb={3}>
+                    <Text fontSize="sm" color="gray.600" mb={2}>
+                      Available Days:
+                    </Text>
+                    <HStack spacing={2} flexWrap="wrap">
+                      {getAvailableDays(selectedRoom).map((day, index) => (
+                        <Badge
+                          key={index}
+                          colorScheme="green"
+                          variant="subtle"
+                          fontSize="xs"
+                          px={2}
+                          py={1}
+                        >
+                          {day}
+                        </Badge>
+                      ))}
+                    </HStack>
+                  </Box>
+                )}
+
                 <Input
                   type="date"
                   value={bookingDate}
@@ -1038,6 +907,18 @@ const StudyRoom = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <ComfirmationMessage
+        title="Delete Booking"
+        description={`Are you sure you want to delete your booking for ${bookingToDelete?.resourceId?.name || 'this resource'}? This action cannot be undone.`}
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => {
+          setIsDeleteConfirmOpen(false)
+          setBookingToDelete(null)
+        }}
+        onConfirm={confirmDeleteBooking}
+      />
     </Box>
   )
 }

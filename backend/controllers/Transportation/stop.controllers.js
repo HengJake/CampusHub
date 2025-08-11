@@ -41,6 +41,12 @@ export const getStopsByType = controllerWrapper(async (req, res) => {
   return await getAllRecords(Stop, "stop", [], { type });
 });
 
+// Get Stops by School ID
+export const getStopsBySchoolId = controllerWrapper(async (req, res) => {
+  const { schoolId } = req.params;
+  return await getAllRecords(Stop, "stop", [], { schoolId: schoolId });
+});
+
 export const updateStop = controllerWrapper(async (req, res) => {
   const { id } = req.params;
   return await updateRecord(Stop, id, req.body, "stop", validateStopData);

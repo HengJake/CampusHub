@@ -8,25 +8,26 @@ import {
     checkExistedUserDetails,
     deleteAllUsers
 } from "../../controllers/Academic/user.controllers.js";
+import { userAuth } from "../../utils/authMiddleware.js";
 
 const router = e.Router();
 
 // Create a new user
 router.post("/", createUser);
 
-// Get all users
+// Get all users (protected)
 router.get("/", getAllUsers);
 
-// Get user by ID
+// Get user by ID (protected)
 router.get("/:id", getUserById);
 
-// Delete all users
+// Delete all users (protected)
 router.delete("/all", deleteAllUsers);
 
-// Update user by ID
+// Update user by ID (protected)
 router.put("/:id", updateUser);
 
-// Delete user by ID
+// Delete user by ID (protected)
 router.delete("/:id", deleteUser);
 
 // Check if user details exist

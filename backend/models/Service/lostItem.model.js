@@ -42,7 +42,7 @@ const lostItemSchema = new mongoose.Schema({
     },
     matchedItem: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'FoundItem',
+        ref: 'LostItem',
         default: null
     },
     resolution: {

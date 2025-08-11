@@ -721,17 +721,7 @@ export function AcademicOverview() {
         return distribution;
       })(),
 
-      atRiskStudents: (() => {
-        if (!students?.length) return 0;
-        const atRisk = students.filter(student => student.cgpa < 2.5).length;
 
-        debugLog("At-Risk Students", {
-          totalStudents: students.length,
-          atRiskStudents: atRisk
-        });
-
-        return atRisk;
-      })(),
 
       // ============================================
       // ENHANCED ATTENDANCE ANALYTICS

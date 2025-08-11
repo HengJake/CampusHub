@@ -6,6 +6,8 @@ import {
   getFeedbackById,
   getFeedbacksByStudentId,
   getFeedbacksByFeedbackType,
+  getFeedbacksBySchoolId,
+  getFeedbacksBySchoolAndStudent,
   updateFeedback,
   deleteFeedback,
   deleteAllFeedbacks
@@ -16,9 +18,11 @@ const router = express.Router();
 // router.post("/", userAuth, createFeedback);
 router.post("/", createFeedback);
 router.get("/", getAllFeedbacks);
-router.get("/:id", getFeedbackById);
 router.get("/student/:studentId", getFeedbacksByStudentId);
 router.get("/type/:feedbackType", getFeedbacksByFeedbackType);
+router.get("/school/:schoolId", getFeedbacksBySchoolId);
+router.get("/school/:schoolId/student/:studentId", getFeedbacksBySchoolAndStudent);
+router.get("/:id", getFeedbackById);
 router.put("/:id", updateFeedback);
 router.delete('/all', deleteAllFeedbacks);
 router.delete("/:id", deleteFeedback);

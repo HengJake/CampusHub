@@ -5,6 +5,7 @@ import {
   getBusScheduleById,
   getBusSchedulesByRouteId,
   getBusSchedulesByVehicleId,
+  getBusSchedulesBySchoolId,
   updateBusSchedule,
   deleteBusSchedule,
   deleteAllBusSchedules
@@ -14,8 +15,9 @@ const router = express.Router();
 
 router.post("/", createBusSchedule);
 router.get("/", getAllBusSchedules);
-router.get("/route/:routeId", getBusSchedulesByRouteId);
-router.get("/vehicle/:vehicleId", getBusSchedulesByVehicleId);
+router.get("/route/:routeID", getBusSchedulesByRouteId);
+router.get("/vehicle/:vehicleID", getBusSchedulesByVehicleId);
+router.get("/school/:schoolId", getBusSchedulesBySchoolId);
 router.get("/:id", getBusScheduleById);
 router.put("/:id", updateBusSchedule);
 router.delete('/all', deleteAllBusSchedules);
