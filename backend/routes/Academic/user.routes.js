@@ -16,19 +16,19 @@ const router = e.Router();
 router.post("/", createUser);
 
 // Get all users (protected)
-router.get("/", userAuth, getAllUsers);
+router.get("/", getAllUsers);
 
 // Get user by ID (protected)
-router.get("/:id", userAuth, getUserById);
+router.get("/:id", getUserById);
 
 // Delete all users (protected)
-router.delete("/all", userAuth, deleteAllUsers);
+router.delete("/all", deleteAllUsers);
 
 // Update user by ID (protected)
-router.put("/:id", userAuth, updateUser);
+router.put("/:id", updateUser);
 
 // Delete user by ID (protected)
-router.delete("/:id", userAuth, deleteUser);
+router.delete("/:id", deleteUser);
 
 // Check if user details exist
 router.post("/check-user", checkExistedUserDetails);

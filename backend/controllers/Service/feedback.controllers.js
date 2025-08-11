@@ -106,6 +106,20 @@ export const getFeedbacksBySchoolId = controllerWrapper(async (req, res) => {
     );
 });
 
+// Get Feedbacks by School ID and Student ID
+export const getFeedbacksBySchoolAndStudent = controllerWrapper(async (req, res) => {
+    const { schoolId, studentId } = req.params;
+    return await getAllRecords(
+        Feedback,
+        "feedbacks",
+        [{
+            path: "studentId",
+            populate: ["userId"]
+        }, "schoolId"],
+        { schoolId: schoolId, studentId: studentId }
+    );
+});
+
 export const updateFeedback = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     return await updateRecord(Feedback, id, req.body, "feedback", validateFeedbackData);

@@ -710,11 +710,18 @@ export default function Attendance() {
                             onChange={(e) => setSelectedModule(e.target.value)}
                           >
                             <option value="">All Modules</option>
-                            {classSchedules && classSchedules.length > 0 && classSchedules.map((schedule) => (
-                              <option key={schedule.moduleId?._id} value={schedule.moduleId?.moduleName}>
-                                {schedule.moduleId?.code} - {schedule.moduleId?.moduleName}
-                              </option>
-                            ))}
+                            {classSchedules && classSchedules.length > 0 &&
+                              // Get unique modules to avoid duplicate keys
+                              [...new Map(classSchedules
+                                .filter(schedule => schedule.moduleId)
+                                .map(schedule => [schedule.moduleId._id, schedule.moduleId]))
+                                .values()]
+                                .map((module) => (
+                                  <option key={module._id} value={module.moduleName}>
+                                    {module.code} - {module.moduleName}
+                                  </option>
+                                ))
+                            }
                           </Select>
                         </FormControl>
 
@@ -726,10 +733,20 @@ export default function Attendance() {
                             onChange={(e) => setSelectedClass(e.target.value)}
                           >
                             {classSchedules && classSchedules.length > 0 && classSchedules
-                              .filter(schedule => !selectedModule || schedule.moduleId?.moduleName === selectedModule)
+                              .filter(schedule => {
+                                // Filter by module if selected
+                                const moduleFilter = !selectedModule || schedule.moduleId?.moduleName === selectedModule;
+
+                                // Filter out schedules that already have attendance logged
+                                const hasAttendanceLogged = attendance && attendance.some(record =>
+                                  record.scheduleId._id === schedule._id
+                                );
+
+                                return moduleFilter && !hasAttendanceLogged;
+                              })
                               .map((schedule) => (
                                 <option key={schedule._id} value={schedule._id}>
-                                  {schedule.moduleId?.code} - {schedule.moduleId?.moduleName} ({schedule.dayOfWeek} {schedule.startTime}-{schedule.endTime}, {schedule.roomId?.roomName})
+                                  {schedule.moduleId?.code} - {schedule.moduleId?.moduleName} ({schedule.dayOfWeek} {schedule.startTime}-{schedule.endTime}, {schedule.roomId?.block} - {schedule.roomId?.roomNumber} - {schedule.roomId?.floor})
                                 </option>
                               ))}
                           </Select>

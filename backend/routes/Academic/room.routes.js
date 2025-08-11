@@ -5,7 +5,8 @@ import {
     getRoomById,
     updateRoom,
     deleteRoom,
-    deleteAllRooms
+    deleteAllRooms,
+    checkRoomAvailability
 } from "../../controllers/Academic/room.controllers.js";
 import { getRoomsBySchool } from "../../controllers/Academic/room.controllers.js";
 
@@ -20,15 +21,19 @@ router.get("/", getAllRooms);
 // Get room by ID
 router.get("/:id", getRoomById);
 
-// Update room by ID
+// Update room
 router.put("/:id", updateRoom);
 
 // Delete all rooms
 router.delete("/all", deleteAllRooms);
 
-// Delete room by ID
+// Delete room
 router.delete("/:id", deleteRoom);
 
+// Check room availability
+router.post("/check-availability", checkRoomAvailability);
+
+// Get rooms by school
 router.get("/school/:schoolId", getRoomsBySchool);
 
 export default router;

@@ -74,6 +74,7 @@ export const useTransportationStore = create((set, get) => ({
             const url = get().buildUrl("/api/bus-schedule", filters);
             const res = await fetch(url);
             const data = await res.json();
+
             if (!data.success) {
                 throw new Error(data.message || "Failed to fetch bus schedules");
             }

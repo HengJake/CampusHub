@@ -147,6 +147,12 @@ const StudyRoom = () => {
     return days[date.getDay()]
   }
 
+  // Get available days for a resource
+  const getAvailableDays = (resource) => {
+    if (!resource?.timeslots) return []
+    return resource.timeslots.map(ts => ts.dayOfWeek)
+  }
+
   // Load available time slots when date is selected
   useEffect(() => {
     if (bookingDate && selectedRoom) {
@@ -470,7 +476,7 @@ const StudyRoom = () => {
   )
 
   return (
-    <Box p={6} bg="gray.50" minH="100vh">
+    <Box minH="100vh">
       <VStack spacing={6} align="stretch">
         {/* Header */}
         <HStack justify="space-between" wrap="wrap">
@@ -780,6 +786,30 @@ const StudyRoom = () => {
 
               <FormControl isRequired>
                 <FormLabel>Booking Date</FormLabel>
+
+                {/* Available Days Badges */}
+                {selectedRoom && (
+                  <Box mb={3}>
+                    <Text fontSize="sm" color="gray.600" mb={2}>
+                      Available Days:
+                    </Text>
+                    <HStack spacing={2} flexWrap="wrap">
+                      {getAvailableDays(selectedRoom).map((day, index) => (
+                        <Badge
+                          key={index}
+                          colorScheme="green"
+                          variant="subtle"
+                          fontSize="xs"
+                          px={2}
+                          py={1}
+                        >
+                          {day}
+                        </Badge>
+                      ))}
+                    </HStack>
+                  </Box>
+                )}
+
                 <Input
                   type="date"
                   value={bookingDate}

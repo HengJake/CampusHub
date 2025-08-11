@@ -65,7 +65,28 @@ export const useServiceStore = create((set, get) => ({
     fetchFeedback: async (filters = {}) => {
         set((state) => ({ loading: { ...state.loading, feedback: true } }));
         try {
-            const url = get().buildUrl("/api/feedback", filters);
+            let url;
+            const authStore = useAuthStore.getState();
+            const userContext = authStore.getCurrentUser();
+
+            if (userContext.role === "schoolAdmin" || userContext.role === "student") {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    if (filters.studentId) {
+                        // URL format: /api/feedback/school/{schoolId}/student/{studentId}
+                        url = `/api/feedback/school/${schoolId}/student/${filters.studentId}`;
+                    } else {
+                        // Default URL format: /api/feedback/school/{schoolId}
+                        url = `/api/feedback/school/${schoolId}`;
+                    }
+                } else {
+                    url = "/api/feedback";
+                }
+            } else {
+                url = "/api/feedback";
+            }
+
+            console.log("🚀 ~ url:", url)
             const res = await fetch(url, {
                 credentials: 'include'
             });

@@ -1,5 +1,3 @@
-"use client"
-
 import {
     Box,
     Grid,
@@ -38,6 +36,8 @@ import {
     Spinner,
     Center,
 } from "@chakra-ui/react"
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import {
     FiBook,
     FiCalendar,
@@ -81,32 +81,43 @@ const formatTime = (time) => {
 const transformClassScheduleData = (classSchedules, rooms, modules, lecturers, intakeCourse) => {
     // Filter modules that belong to the user's intake course
     const userModules = intakeCourse ? modules.filter(module =>
-        module.courseId.filter(course => {
+        module.courseId && module.courseId.some(course =>
             course._id === intakeCourse.courseId._id
-        })
+        )
     ) : modules;
+
+    // Add safety check for empty arrays
+    if (!classSchedules || classSchedules.length === 0) {
+        return [];
+    }
 
     return classSchedules
         .filter(schedule => {
             // Only include schedules for modules that belong to the user's intake course
+            // Add null checks to prevent errors
+            if (!schedule.moduleId || !schedule.intakeCourseId || !intakeCourse) {
+                return false;
+            }
+
             const module = modules.find(m => m._id === schedule.moduleId._id);
-            console.log("🚀 ~ transformClassScheduleData ~ schedule:", schedule.intakeCourseId.courseId.courseName)
-            console.log("🚀 ~ transformClassScheduleData ~ schedule:", schedule.intakeCourseId.intakeId.intakeName)
+            // console.log("🚀 ~ transformClassScheduleData ~ schedule:", schedule.intakeCourseId.courseId.courseName)
+            // console.log("🚀 ~ transformClassScheduleData ~ schedule:", schedule.intakeCourseId.intakeId.intakeName)
             const filterModule = module && userModules.some(userModule => userModule._id === module._id) && schedule.intakeCourseId._id === intakeCourse._id;
             console.log(filterModule)
             return filterModule;
         })
         .map(schedule => {
-            const room = rooms.find(r => r._id === schedule.roomId._id);
-            const module = modules.find(m => m._id === schedule.moduleId._id);
-            const lecturer = lecturers.find(l => l._id === schedule.lecturerId._id);
+            // Add null checks for all related objects
+            const room = schedule.roomId ? rooms.find(r => r._id === schedule.roomId._id) : null;
+            const module = schedule.moduleId ? modules.find(m => m._id === schedule.moduleId._id) : null;
+            const lecturer = schedule.lecturerId ? lecturers.find(l => l._id === schedule.lecturerId._id) : null;
 
             return {
                 id: schedule._id,
                 courseCode: module?.code || 'N/A',
                 courseName: module?.moduleName || 'N/A',
-                day: schedule.dayOfWeek,
-                time: `${formatTime(schedule.startTime)} - ${formatTime(schedule.endTime)}`,
+                day: schedule.dayOfWeek || 'N/A',
+                time: `${formatTime(schedule.startTime || '')} - ${formatTime(schedule.endTime || '')}`,
                 room: room ? `${room.block}-${room.roomNumber}` : 'N/A',
                 building: room?.block || 'N/A',
                 instructor: lecturer?.userId?.name || 'N/A',
@@ -189,7 +200,9 @@ export default function Schedule() {
 
     // Use useMemo to transform data when raw data changes
     const scheduleData = useMemo(() => {
-        if (classSchedules.length === 0) {
+        // Add safety checks for all required data
+        if (!classSchedules || classSchedules.length === 0 ||
+            !rooms || !modules || !lecturers || !intakeCourses) {
             return {
                 classSchedules: [],
                 studentProfile: {
@@ -203,6 +216,18 @@ export default function Schedule() {
         }
 
         // Get user's intake course
+        if (!currentUser) {
+            return {
+                classSchedules: [],
+                studentProfile: {
+                    name: "Loading...",
+                    studentId: "Loading...",
+                    intakeCourse: "Loading...",
+                    semester: "Loading...",
+                    advisor: "Loading...",
+                }
+            };
+        }
 
         const userIntakeCourseId = currentUser?.user?.student?.intakeCourseId;
         const userIntakeCourse = intakeCourses.find(ic => ic._id === userIntakeCourseId);
@@ -259,13 +284,173 @@ export default function Schedule() {
     }
 
     const handleExport = () => {
-        toast({
-            title: "Exporting Schedule",
-            description: "Your class schedule is being prepared for download",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-        })
+        try {
+            // Create new PDF document in portrait orientation for first page
+            const doc = new jsPDF()
+
+            // Add title
+            doc.setFontSize(20)
+            doc.setFont('helvetica', 'bold')
+            doc.text('Class Schedule', 20, 20)
+
+            // Add student information
+            doc.setFontSize(12)
+            doc.setFont('helvetica', 'normal')
+            doc.text(`Student: ${scheduleData.studentProfile.name}`, 20, 35)
+            doc.text(`Student ID: ${scheduleData.studentProfile.studentId}`, 20, 45)
+            doc.text(`Program: ${scheduleData.studentProfile.intakeCourse}`, 20, 55)
+            doc.text(`Semester: ${scheduleData.studentProfile.semester}`, 20, 65)
+            doc.text(`Academic Advisor: ${scheduleData.studentProfile.advisor}`, 20, 75)
+
+            // Add statistics
+            doc.setFontSize(14)
+            doc.setFont('helvetica', 'bold')
+            doc.text('Summary', 20, 95)
+            doc.setFontSize(10)
+            doc.setFont('helvetica', 'normal')
+            doc.text(`Total Credits: ${totalCredits}`, 20, 105)
+            doc.text(`Enrolled Courses: ${scheduleData.classSchedules.length}`, 20, 115)
+            doc.text(`Lectures: ${lectureCount}`, 20, 125)
+            doc.text(`Lab Sessions: ${labCount}`, 20, 135)
+
+            // Add course details section
+            if (filteredSchedule.length > 0) {
+                let currentY = 155
+
+                doc.setFontSize(14)
+                doc.setFont('helvetica', 'bold')
+                doc.text('Course Details', 20, currentY)
+                currentY += 10
+
+                filteredSchedule.forEach((course, index) => {
+                    if (currentY > 250) {
+                        doc.addPage()
+                        currentY = 20
+                    }
+
+                    doc.setFontSize(12)
+                    doc.setFont('helvetica', 'bold')
+                    doc.text(`${course.courseCode} - ${course.courseName}`, 20, currentY)
+                    currentY += 8
+
+                    doc.setFontSize(10)
+                    doc.setFont('helvetica', 'normal')
+                    doc.text(`Description: ${course.description}`, 20, currentY)
+                    currentY += 6
+                    doc.text(`Prerequisites: ${course.prerequisites}`, 20, currentY)
+                    currentY += 6
+                    doc.text(`Textbook: ${course.textbook}`, 20, currentY)
+                    currentY += 6
+                    doc.text(`Schedule: ${course.day} ${course.time}`, 20, currentY)
+                    currentY += 6
+                    doc.text(`Location: ${course.room} (${course.building})`, 20, currentY)
+                    currentY += 6
+                    doc.text(`Instructor: ${course.instructor}`, 20, currentY)
+                    currentY += 10
+                })
+            }
+
+            // Add footer to first page
+            doc.setFontSize(8)
+            doc.setFont('helvetica', 'normal')
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, doc.internal.pageSize.height - 20)
+
+            // Create a new landscape page for the schedule table
+            if (filteredSchedule.length > 0) {
+                doc.addPage([], 'landscape')
+
+                // Add title for the table page
+                doc.setFontSize(16)
+                doc.setFont('helvetica', 'bold')
+                doc.text('Class Schedule Table', 20, 20)
+
+                // Prepare table data
+                const tableData = filteredSchedule.map(schedule => [
+                    schedule.courseCode,
+                    schedule.courseName,
+                    schedule.day,
+                    schedule.time,
+                    schedule.room,
+                    schedule.instructor,
+                    `${schedule.credits} Credits`,
+                    schedule.type
+                ])
+
+                // Add table with better spacing for landscape
+                autoTable(doc, {
+                    startY: 35,
+                    head: [['Course Code', 'Course Name', 'Day', 'Time', 'Room', 'Instructor', 'Credits', 'Type']],
+                    body: tableData,
+                    theme: 'grid',
+                    headStyles: {
+                        fillColor: [66, 139, 202],
+                        textColor: 255,
+                        fontSize: 9
+                    },
+                    bodyStyles: {
+                        fontSize: 8,
+                        cellPadding: 3
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 25 }, // Course Code
+                        1: { cellWidth: 45 }, // Course Name
+                        2: { cellWidth: 20 }, // Day
+                        3: { cellWidth: 30 }, // Time
+                        4: { cellWidth: 25 }, // Room
+                        5: { cellWidth: 35 }, // Instructor
+                        6: { cellWidth: 20 }, // Credits
+                        7: { cellWidth: 15 }  // Type
+                    },
+                    margin: { top: 20, left: 10, right: 10 },
+                    tableWidth: 'auto',
+                    styles: {
+                        overflow: 'linebreak',
+                        cellWidth: 'auto'
+                    },
+                    didParseCell: function (data) {
+                        // Truncate long text to prevent overflow
+                        if (data.cell.text && data.cell.text.length > 25) {
+                            data.cell.text = data.cell.text.substring(0, 22) + '...';
+                        }
+                    }
+                })
+
+                // Add footer to table page
+                doc.setFontSize(8)
+                doc.setFont('helvetica', 'normal')
+                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, doc.internal.pageSize.height - 20)
+            }
+
+            // Add page numbers to all pages
+            const pageCount = doc.internal.getNumberOfPages()
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i)
+                doc.setFontSize(8)
+                doc.setFont('helvetica', 'normal')
+                doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 20)
+            }
+
+            // Save the PDF
+            const fileName = `class_schedule_${scheduleData.studentProfile.studentId}_${new Date().toISOString().split('T')[0]}.pdf`
+            doc.save(fileName)
+
+            toast({
+                title: "Schedule Exported",
+                description: "Your class schedule has been exported as PDF",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            })
+        } catch (error) {
+            console.error('Error exporting PDF:', error)
+            toast({
+                title: "Export Failed",
+                description: "Failed to export schedule as PDF",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            })
+        }
     }
 
     // Filter schedule based on search and filters
@@ -314,27 +499,27 @@ export default function Schedule() {
                         <AlertDescription>
                             {errors.classSchedules || errors.rooms}
                         </AlertDescription>
-                    </Box>
+                    </Box>F
                 </Alert>
             </Box>
         );
     }
 
     return (
-        <Box p={6} minH="100vh">
-            <VStack spacing={6} align="stretch">
+        <Box minH="100vh" w="100%" maxW="100%">
+            <VStack spacing={6} align="stretch" w="100%">
                 {/* Header */}
-                <Flex justify="space-between" align="center">
-                    <Box>
-                        <Text fontSize="2xl" fontWeight="bold" color="gray.800" mb={2}>
+                <Flex justify="space-between" align="start" direction={{ base: "column", md: "row" }} gap={4}>
+                    <Box flex="1" minW="0">
+                        <Text fontSize="2xl" fontWeight="bold" color="gray.800" mb={2} noOfLines={1}>
                             Class Schedule
                         </Text>
-                        <Text color="gray.600">
+                        <Text color="gray.600" noOfLines={2}>
                             {scheduleData.studentProfile.semester} • {scheduleData.studentProfile.intakeCourse}
                         </Text>
                     </Box>
-                    <HStack>
-                        <Text fontSize="sm" color="gray.500">
+                    <HStack flexShrink={0}>
+                        <Text fontSize="sm" color="gray.500" display={{ base: "none", sm: "block" }}>
                             Last updated: {lastRefresh.toLocaleTimeString()}
                         </Text>
                         <IconButton
@@ -348,7 +533,7 @@ export default function Schedule() {
                 </Flex>
 
                 {/* Quick Stats */}
-                <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
+                <Grid templateColumns={{ base: "1fr", md: "repeat(1, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
                     <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                         <CardBody>
                             <Stat>
@@ -405,268 +590,287 @@ export default function Schedule() {
                 {/* Controls */}
                 <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                     <CardBody>
-                        <Flex direction={{ base: "column", lg: "row" }} gap={4} align={{ lg: "center" }} justify="space-between">
-                            <HStack spacing={4} flex={1}>
-                                <InputGroup maxW="300px">
-                                    <InputLeftElement>
-                                        <Icon as={FiSearch} color="gray.400" />
-                                    </InputLeftElement>
-                                    <Input
-                                        placeholder="Search courses, instructors, rooms..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </InputGroup>
+                        <VStack spacing={4} align="stretch">
+                            <Flex direction={{ base: "column", md: "row" }} gap={4} align={{ md: "center" }} justify="space-between">
+                                <HStack spacing={4} flex={1} wrap="wrap" gap={2}>
+                                    <InputGroup maxW={{ base: "100%", sm: "300px" }} minW="200px">
+                                        <InputLeftElement>
+                                            <Icon as={FiSearch} color="gray.400" />
+                                        </InputLeftElement>
+                                        <Input
+                                            placeholder="Search courses, instructors, rooms..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                        />
+                                    </InputGroup>
 
-                                <Select maxW="150px" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-                                    <option value="all">All Types</option>
-                                    <option value="lecture">Lectures</option>
-                                    <option value="lab">Labs</option>
-                                </Select>
+                                    <Select maxW={{ base: "100%", sm: "150px" }} minW="120px" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+                                        <option value="all">All Types</option>
+                                        <option value="lecture">Lectures</option>
+                                        <option value="lab">Labs</option>
+                                    </Select>
 
-                                <Select maxW="150px" value={filterDay} onChange={(e) => setFilterDay(e.target.value)}>
-                                    <option value="all">All Days</option>
-                                    {days.map((day) => (
-                                        <option key={day} value={day.toLowerCase()}>
-                                            {day}
-                                        </option>
-                                    ))}
-                                </Select>
-                            </HStack>
-
-                            <HStack>
-                                <HStack bg="gray.100" p={1} borderRadius="md">
-                                    <IconButton
-                                        icon={<FiList />}
-                                        size="sm"
-                                        variant={viewMode === "table" ? "solid" : "ghost"}
-                                        colorScheme={viewMode === "table" ? "blue" : "gray"}
-                                        onClick={() => setViewMode("table")}
-                                        aria-label="Table view"
-                                    />
-                                    <IconButton
-                                        icon={<FiGrid />}
-                                        size="sm"
-                                        variant={viewMode === "grid" ? "solid" : "ghost"}
-                                        colorScheme={viewMode === "grid" ? "blue" : "gray"}
-                                        onClick={() => setViewMode("grid")}
-                                        aria-label="Grid view"
-                                    />
-                                    <IconButton
-                                        icon={<FiCalendar />}
-                                        size="sm"
-                                        variant={viewMode === "calendar" ? "solid" : "ghost"}
-                                        colorScheme={viewMode === "calendar" ? "blue" : "gray"}
-                                        onClick={() => setViewMode("calendar")}
-                                        aria-label="Calendar view"
-                                    />
+                                    <Select maxW={{ base: "100%", sm: "150px" }} minW="120px" value={filterDay} onChange={(e) => setFilterDay(e.target.value)}>
+                                        <option value="all">All Days</option>
+                                        {days.map((day) => (
+                                            <option key={day} value={day.toLowerCase()}>
+                                                {day}
+                                            </option>
+                                        ))}
+                                    </Select>
                                 </HStack>
 
-                                <Button leftIcon={<FiDownload />} size="sm" variant="outline" onClick={handleExport}>
-                                    Export
-                                </Button>
-                            </HStack>
-                        </Flex>
+                                <HStack flexShrink={0} gap={2}>
+                                    <HStack bg="gray.100" p={1} borderRadius="md" display={{ base: "none", lg: "flex" }}>
+                                        <IconButton
+                                            icon={<FiList />}
+                                            size="sm"
+                                            variant={viewMode === "table" ? "solid" : "ghost"}
+                                            colorScheme={viewMode === "table" ? "blue" : "gray"}
+                                            onClick={() => setViewMode("table")}
+                                            aria-label="Table view"
+                                        />
+                                        <IconButton
+                                            icon={<FiGrid />}
+                                            size="sm"
+                                            variant={viewMode === "grid" ? "solid" : "ghost"}
+                                            colorScheme={viewMode === "grid" ? "blue" : "gray"}
+                                            onClick={() => setViewMode("grid")}
+                                            aria-label="Grid view"
+                                        />
+                                        <IconButton
+                                            icon={<FiCalendar />}
+                                            size="sm"
+                                            variant={viewMode === "calendar" ? "solid" : "ghost"}
+                                            colorScheme={viewMode === "calendar" ? "blue" : "gray"}
+                                            onClick={() => setViewMode("calendar")}
+                                            aria-label="Calendar view"
+                                        />
+                                    </HStack>
+
+                                    <Button leftIcon={<FiDownload />} size="sm" variant="outline" onClick={handleExport}>
+                                        Export
+                                    </Button>
+                                </HStack>
+                            </Flex>
+                        </VStack>
                     </CardBody>
                 </Card>
 
                 {/* Schedule Display */}
-                {viewMode === "table" && (
-                    <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-                        <CardBody>
-                            <Text fontSize="lg" fontWeight="semibold" mb={4}>
-                                Course Schedule - Table View
-                            </Text>
+                {/* Show table and grid views only on lg screens and up */}
+                <Box display={{ base: "none", lg: "block" }}>
+                    {viewMode === "table" && (
+                        <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
+                            <CardBody>
+                                <Text fontSize="lg" fontWeight="semibold" mb={4}>
+                                    Course Schedule - Table View
+                                </Text>
 
-                            {filteredSchedule.length === 0 ? (
-                                <Center py={8}>
-                                    <Text color="gray.500">No courses found matching your criteria</Text>
-                                </Center>
-                            ) : (
-                                <TableContainer>
-                                    <Table variant="simple">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>Course</Th>
-                                                <Th>Day & Time</Th>
-                                                <Th>Location</Th>
-                                                <Th>Instructor</Th>
-                                                <Th>Credits</Th>
-                                                <Th>Type</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
-                                            {filteredSchedule.map((schedule) => (
-                                                <Tr key={schedule.id}>
-                                                    <Td>
-                                                        <VStack align="start" spacing={1}>
-                                                            <Text fontWeight="medium">{schedule.courseCode}</Text>
-                                                            <Text fontSize="sm" color="gray.600">
-                                                                {schedule.courseName}
-                                                            </Text>
-                                                        </VStack>
-                                                    </Td>
-                                                    <Td>
-                                                        <VStack align="start" spacing={1}>
-                                                            <Badge colorScheme={schedule.color} variant="subtle">
-                                                                {schedule.day}
-                                                            </Badge>
-                                                            <Text fontSize="sm">{schedule.time}</Text>
-                                                        </VStack>
-                                                    </Td>
-                                                    <Td>
-                                                        <VStack align="start" spacing={1}>
-                                                            <HStack>
-                                                                <Icon as={FiMapPin} color="gray.400" boxSize={3} />
-                                                                <Text fontWeight="medium">{schedule.room}</Text>
-                                                            </HStack>
-                                                            <Text fontSize="sm" color="gray.600">
-                                                                {schedule.building}
-                                                            </Text>
-                                                        </VStack>
-                                                    </Td>
-                                                    <Td>
-                                                        <Text>{schedule.instructor}</Text>
-                                                    </Td>
-                                                    <Td>
-                                                        <Badge colorScheme="blue" variant="outline">
-                                                            {schedule.credits} Credits
-                                                        </Badge>
-                                                    </Td>
-                                                    <Td>
-                                                        <Badge colorScheme={schedule.type === "Lab" ? "purple" : "green"} variant="subtle">
-                                                            {schedule.type}
-                                                        </Badge>
-                                                    </Td>
-                                                </Tr>
-                                            ))}
-                                        </Tbody>
-                                    </Table>
-                                </TableContainer>
-                            )}
-                        </CardBody>
-                    </Card>
-                )}
+                                {filteredSchedule.length === 0 ? (
+                                    <Center py={8}>
+                                        <Text color="gray.500">No courses found matching your criteria</Text>
+                                    </Center>
+                                ) : (
+                                    <Box overflowX="auto" w="100%">
+                                        <TableContainer minW="800px">
+                                            <Table variant="simple" size={{ base: "sm", md: "md" }}>
+                                                <Thead>
+                                                    <Tr>
+                                                        <Th minW="120px">Course</Th>
+                                                        <Th minW="100px">Day & Time</Th>
+                                                        <Th minW="120px">Location</Th>
+                                                        <Th minW="100px">Instructor</Th>
+                                                        <Th minW="80px">Credits</Th>
+                                                        <Th minW="80px">Type</Th>
+                                                    </Tr>
+                                                </Thead>
+                                                <Tbody>
+                                                    {filteredSchedule.map((schedule) => (
+                                                        <Tr key={schedule.id}>
+                                                            <Td>
+                                                                <VStack align="start" spacing={1}>
+                                                                    <Text fontWeight="medium" noOfLines={1}>{schedule.courseCode}</Text>
+                                                                    <Text fontSize="sm" color="gray.600" noOfLines={2}>
+                                                                        {schedule.courseName}
+                                                                    </Text>
+                                                                </VStack>
+                                                            </Td>
+                                                            <Td>
+                                                                <VStack align="start" spacing={1}>
+                                                                    <Badge colorScheme={schedule.color} variant="subtle" fontSize="xs">
+                                                                        {schedule.day}
+                                                                    </Badge>
+                                                                    <Text fontSize="sm" noOfLines={1}>{schedule.time}</Text>
+                                                                </VStack>
+                                                            </Td>
+                                                            <Td>
+                                                                <VStack align="start" spacing={1}>
+                                                                    <HStack>
+                                                                        <Icon as={FiMapPin} color="gray.400" boxSize={3} />
+                                                                        <Text fontWeight="medium" noOfLines={1}>{schedule.room}</Text>
+                                                                    </HStack>
+                                                                    <Text fontSize="sm" color="gray.600" noOfLines={1}>
+                                                                        {schedule.building}
+                                                                    </Text>
+                                                                </VStack>
+                                                            </Td>
+                                                            <Td>
+                                                                <Text noOfLines={2}>{schedule.instructor}</Text>
+                                                            </Td>
+                                                            <Td>
+                                                                <Badge colorScheme="blue" variant="outline" fontSize="xs">
+                                                                    {schedule.credits} Credits
+                                                                </Badge>
+                                                            </Td>
+                                                            <Td>
+                                                                <Badge colorScheme={schedule.type === "Lab" ? "purple" : "green"} variant="subtle" fontSize="xs">
+                                                                    {schedule.type}
+                                                                </Badge>
+                                                            </Td>
+                                                        </Tr>
+                                                    ))}
+                                                </Tbody>
+                                            </Table>
+                                        </TableContainer>
+                                    </Box>
+                                )}
+                            </CardBody>
+                        </Card>
+                    )}
 
-                {viewMode === "grid" && (
-                    <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }} gap={6}>
-                        {filteredSchedule.map((course) => (
-                            <Card key={course.id} bg={bgColor} borderColor={borderColor} borderWidth="1px" _hover={{ shadow: "md" }}>
-                                <CardBody>
-                                    <VStack align="stretch" spacing={4}>
-                                        <HStack justify="space-between">
-                                            <VStack align="start" spacing={1}>
-                                                <Text fontWeight="bold" fontSize="lg">
-                                                    {course.courseCode}
-                                                </Text>
-                                                <Text fontSize="sm" color="gray.600">
-                                                    {course.courseName}
-                                                </Text>
-                                            </VStack>
-                                            <Badge colorScheme={course.type === "Lab" ? "purple" : "green"} variant="solid">
-                                                {course.type}
-                                            </Badge>
-                                        </HStack>
-
-                                        <Divider />
-
-                                        <VStack align="stretch" spacing={2}>
-                                            <HStack>
-                                                <Icon as={FiCalendar} color={`${course.color}.500`} />
-                                                <Text fontWeight="medium">{course.day}</Text>
-                                            </HStack>
-                                            <HStack>
-                                                <Icon as={FiClock} color={`${course.color}.500`} />
-                                                <Text fontSize="sm">{course.time}</Text>
-                                            </HStack>
-                                            <HStack>
-                                                <Icon as={FiMapPin} color={`${course.color}.500`} />
-                                                <VStack align="start" spacing={0}>
-                                                    <Text fontSize="sm" fontWeight="medium">
-                                                        {course.room}
+                    {viewMode === "grid" && (
+                        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }} gap={6}>
+                            {filteredSchedule.map((course) => (
+                                <Card key={course.id} bg={bgColor} borderColor={borderColor} borderWidth="1px" _hover={{ shadow: "md" }}>
+                                    <CardBody>
+                                        <VStack align="stretch" spacing={4}>
+                                            <HStack justify="space-between">
+                                                <VStack align="start" spacing={1}>
+                                                    <Text fontWeight="bold" fontSize="lg">
+                                                        {course.courseCode}
                                                     </Text>
-                                                    <Text fontSize="xs" color="gray.600">
-                                                        {course.building}
+                                                    <Text fontSize="sm" color="gray.600">
+                                                        {course.courseName}
                                                     </Text>
                                                 </VStack>
+                                                <Badge colorScheme={course.type === "Lab" ? "purple" : "green"} variant="solid">
+                                                    {course.type}
+                                                </Badge>
                                             </HStack>
-                                            <HStack>
-                                                <Icon as={FiUser} color={`${course.color}.500`} />
-                                                <Text fontSize="sm">{course.instructor}</Text>
+
+                                            <Divider />
+
+                                            <VStack align="stretch" spacing={2}>
+                                                <HStack>
+                                                    <Icon as={FiCalendar} color={`${course.color}.500`} />
+                                                    <Text fontWeight="medium">{course.day}</Text>
+                                                </HStack>
+                                                <HStack>
+                                                    <Icon as={FiClock} color={`${course.color}.500`} />
+                                                    <Text fontSize="sm">{course.time}</Text>
+                                                </HStack>
+                                                <HStack>
+                                                    <Icon as={FiMapPin} color={`${course.color}.500`} />
+                                                    <VStack align="start" spacing={0}>
+                                                        <Text fontSize="sm" fontWeight="medium">
+                                                            {course.room}
+                                                        </Text>
+                                                        <Text fontSize="xs" color="gray.600">
+                                                            {course.building}
+                                                        </Text>
+                                                    </VStack>
+                                                </HStack>
+                                                <HStack>
+                                                    <Icon as={FiUser} color={`${course.color}.500`} />
+                                                    <Text fontSize="sm">{course.instructor}</Text>
+                                                </HStack>
+                                            </VStack>
+
+                                            <Divider />
+
+                                            <HStack justify="space-between">
+                                                <Badge colorScheme="blue" variant="outline">
+                                                    {course.credits} Credits
+                                                </Badge>
+                                                <Text fontSize="xs" color="gray.500">
+                                                    {course.prerequisites}
+                                                </Text>
                                             </HStack>
-                                        </VStack>
 
-                                        <Divider />
-
-                                        <HStack justify="space-between">
-                                            <Badge colorScheme="blue" variant="outline">
-                                                {course.credits} Credits
-                                            </Badge>
-                                            <Text fontSize="xs" color="gray.500">
-                                                {course.prerequisites}
+                                            <Text fontSize="sm" color="gray.600" noOfLines={2}>
+                                                {course.description}
                                             </Text>
-                                        </HStack>
+                                        </VStack>
+                                    </CardBody>
+                                </Card>
+                            ))}
+                        </Grid>
+                    )}
+                </Box>
 
-                                        <Text fontSize="sm" color="gray.600" noOfLines={2}>
-                                            {course.description}
-                                        </Text>
-                                    </VStack>
-                                </CardBody>
-                            </Card>
-                        ))}
-                    </Grid>
-                )}
-
-                {viewMode === "calendar" && (
+                {/* Always show calendar view on md screens and smaller */}
+                <Box display={{ base: "block", lg: "none" }}>
                     <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                         <CardBody>
-                            <Text fontSize="lg" fontWeight="semibold" mb={4}>
-                                Weekly Schedule - Calendar View
-                            </Text>
+                            <Flex justify="space-between" align="center" mb={4}>
+                                <Text fontSize="lg" fontWeight="semibold">
+                                    Weekly Schedule - Calendar View
+                                </Text>
+                                <Badge colorScheme="blue" variant="subtle" display={{ base: "block", lg: "none" }}>
+                                    Mobile View
+                                </Badge>
+                            </Flex>
 
-                            <Grid templateColumns="repeat(7, 1fr)" gap={2}>
-                                {days.map((day) => {
-                                    const daySchedules = filteredSchedule.filter(schedule =>
-                                        schedule.day === day
-                                    );
+                            <Box overflowX="auto" w="100%">
+                                <Grid
+                                    templateColumns={{ base: "repeat(1, 1fr)", sm: "repeat(2, 1fr)", md: "repeat(4, 1fr)", lg: "repeat(7, 1fr)" }}
+                                    gap={2}
+                                    minW={{ base: "100%", lg: "800px" }}
+                                >
+                                    {days.map((day) => {
+                                        const daySchedules = filteredSchedule.filter(schedule =>
+                                            schedule.day === day
+                                        );
 
-                                    return (
-                                        <Box key={day} p={3} bg="gray.100" borderRadius="md" minH="200px">
-                                            <Text fontWeight="bold" fontSize="sm" mb={3} textAlign="center">
-                                                {day}
-                                            </Text>
-                                            <VStack spacing={2} align="stretch">
-                                                {daySchedules.map((session, index) => (
-                                                    <Box
-                                                        key={index}
-                                                        p={2}
-                                                        bg={`${session.color}.100`}
-                                                        borderRadius="md"
-                                                        borderLeft="4px solid"
-                                                        borderColor={`${session.color}.500`}
-                                                    >
-                                                        <Text fontSize="xs" fontWeight="bold">
-                                                            {session.courseCode}
-                                                        </Text>
-                                                        <Text fontSize="xs" color="gray.600">
-                                                            {session.time}
-                                                        </Text>
-                                                        <Text fontSize="xs" color="gray.600">
-                                                            {session.room}
-                                                        </Text>
-                                                        <Badge size="xs" colorScheme={session.type === "Lab" ? "purple" : "green"} variant="subtle">
-                                                            {session.type}
-                                                        </Badge>
-                                                    </Box>
-                                                ))}
-                                            </VStack>
-                                        </Box>
-                                    );
-                                })}
-                            </Grid>
+                                        return (
+                                            <Box key={day} p={3} bg="gray.100" borderRadius="md" minH="200px">
+                                                <Text fontWeight="bold" fontSize="sm" mb={3} textAlign="center" noOfLines={1}>
+                                                    {day}
+                                                </Text>
+                                                <VStack spacing={2} align="stretch">
+                                                    {daySchedules.map((session, index) => (
+                                                        <Box
+                                                            key={index}
+                                                            p={2}
+                                                            bg={`${session.color}.100`}
+                                                            borderRadius="md"
+                                                            borderLeft="4px solid"
+                                                            borderColor={`${session.color}.500`}
+                                                        >
+                                                            <Text fontSize="xs" fontWeight="bold" noOfLines={1}>
+                                                                {session.courseCode}
+                                                            </Text>
+                                                            <Text fontSize="xs" color="gray.600" noOfLines={1}>
+                                                                {session.time}
+                                                            </Text>
+                                                            <Text fontSize="xs" color="gray.600" noOfLines={1}>
+                                                                {session.room}
+                                                            </Text>
+                                                            <Badge size="xs" colorScheme={session.type === "Lab" ? "purple" : "green"} variant="subtle">
+                                                                {session.type}
+                                                            </Badge>
+                                                        </Box>
+                                                    ))}
+                                                </VStack>
+                                            </Box>
+                                        );
+                                    })}
+                                </Grid>
+                            </Box>
                         </CardBody>
                     </Card>
-                )}
+                </Box>
 
                 {/* Course Details */}
                 <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
@@ -693,26 +897,26 @@ export default function Schedule() {
                                     <Box key={course.id} p={4} bg="gray.50" borderRadius="md" borderWidth="1px">
                                         <VStack align="stretch" spacing={3}>
                                             <HStack justify="space-between">
-                                                <Text fontWeight="bold">{course.courseCode}</Text>
-                                                <Badge colorScheme={course.color} variant="subtle">
+                                                <Text fontWeight="bold" noOfLines={1}>{course.courseCode}</Text>
+                                                <Badge colorScheme={course.color} variant="subtle" flexShrink={0}>
                                                     {course.credits} Credits
                                                 </Badge>
                                             </HStack>
-                                            <Text fontSize="sm" fontWeight="medium">
+                                            <Text fontSize="sm" fontWeight="medium" noOfLines={2}>
                                                 {course.courseName}
                                             </Text>
-                                            <Text fontSize="sm" color="gray.600">
+                                            <Text fontSize="sm" color="gray.600" noOfLines={3}>
                                                 {course.description}
                                             </Text>
                                             <Divider />
                                             <VStack align="stretch" spacing={1}>
-                                                <Text fontSize="xs" color="gray.500">
+                                                <Text fontSize="xs" color="gray.500" noOfLines={2}>
                                                     <strong>Prerequisites:</strong> {course.prerequisites}
                                                 </Text>
-                                                <Text fontSize="xs" color="gray.500">
+                                                <Text fontSize="xs" color="gray.500" noOfLines={2}>
                                                     <strong>Textbook:</strong> {course.textbook}
                                                 </Text>
-                                                <Text fontSize="xs" color="gray.500">
+                                                <Text fontSize="xs" color="gray.500" noOfLines={2}>
                                                     <strong>Instructor:</strong> {course.instructor}
                                                 </Text>
                                             </VStack>
@@ -724,6 +928,6 @@ export default function Schedule() {
                     </CardBody>
                 </Card>
             </VStack>
-        </Box>
+        </Box >
     )
 }

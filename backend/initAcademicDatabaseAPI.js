@@ -1646,16 +1646,52 @@ async function createFullSchoolData({
     const stopRes1 = await apiCall('POST', '/api/stop', stopData1);
     createdIds.stops.push(stopRes1.data._id);
 
-    console.log(`[${schoolPrefix}] Transportation: Creating Vehicle...`);
-    const vehicleData = {
-        plateNumber: `${schoolPrefix}-BUS-1234`, // e.g., "APU-BUS-1234", "BPU-BUS-1234"
+    console.log(`[${schoolPrefix}] Transportation: Creating Vehicles...`);
+
+    // Generate unique timestamp for plate numbers
+    const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+
+    // Create bus for busSchedule
+    const busData = {
+        plateNumber: `${schoolPrefix}-BUS-${timestamp}`, // e.g., "APU-BUS-123456", "BPU-BUS-123456"
         type: "bus",
         capacity: 40,
         status: "available",
         schoolId: createdIds.school
     };
-    const vehicleRes = await apiCall('POST', '/api/vehicle', vehicleData);
-    createdIds.vehicles.push(vehicleRes.data._id);
+    const busRes = await apiCall('POST', '/api/vehicle', busData);
+    createdIds.vehicles.push(busRes.data._id);
+
+    // Create cars for eHailing
+    const carData1 = {
+        plateNumber: `${schoolPrefix}-CAR-${timestamp}-01`, // e.g., "APU-CAR-123456-01", "BPU-CAR-123456-01"
+        type: "car",
+        capacity: 4,
+        status: "available",
+        schoolId: createdIds.school
+    };
+    const carRes1 = await apiCall('POST', '/api/vehicle', carData1);
+    createdIds.vehicles.push(carRes1.data._id);
+
+    const carData2 = {
+        plateNumber: `${schoolPrefix}-CAR-${timestamp}-02`, // e.g., "APU-CAR-123456-02", "BPU-CAR-123456-02"
+        type: "car",
+        capacity: 4,
+        status: "available",
+        schoolId: createdIds.school
+    };
+    const carRes2 = await apiCall('POST', '/api/vehicle', carData2);
+    createdIds.vehicles.push(carRes2.data._id);
+
+    const carData3 = {
+        plateNumber: `${schoolPrefix}-CAR-${timestamp}-03`, // e.g., "APU-CAR-123456-03", "BPU-CAR-123456-03"
+        type: "car",
+        capacity: 4,
+        status: "available",
+        schoolId: createdIds.school
+    };
+    const carRes3 = await apiCall('POST', '/api/vehicle', carData3);
+    createdIds.vehicles.push(carRes3.data._id);
 
     console.log(`[${schoolPrefix}] Transportation: Creating Route...`);
     const routeData = {
@@ -1672,11 +1708,12 @@ async function createFullSchoolData({
     console.log(`[${schoolPrefix}] Transportation: Creating BusSchedule...`);
     const busScheduleData = {
         routeId: [createdIds.routes[0]],
-        vehicleId: createdIds.vehicles[0],
+        vehicleId: createdIds.vehicles[0], // Bus vehicle (first vehicle)
         departureTime: new Date().toISOString(),
         arrivalTime: new Date(Date.now() + 3600000).toISOString(),
         dayActive: 1,
-        active: true
+        active: true,
+        schoolId: createdIds.school
     };
     const busScheduleRes = await apiCall('POST', '/api/bus-schedule', busScheduleData);
     createdIds.busSchedules.push(busScheduleRes.data._id);
@@ -1687,7 +1724,7 @@ async function createFullSchoolData({
         routeId: createdIds.routes[0],
         status: "waiting",
         requestAt: new Date().toISOString(),
-        vehicleId: createdIds.vehicles[0],
+        vehicleId: createdIds.vehicles[1], // Car vehicle (second vehicle)
         schoolId: createdIds.school
     };
     const eHailingRes = await apiCall('POST', '/api/e-hailing', eHailingData);

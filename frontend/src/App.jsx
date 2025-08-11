@@ -50,6 +50,7 @@ import { CourseManagementPage } from "./pages/schoolPage/CourseManagement.jsx";
 import { AcademicOverview } from "./pages/schoolPage/AcademicOverview.jsx";
 import ResultsManagement from "./pages/schoolPage/ResultsManagement.jsx";
 import ScheduleManagement from "./pages/schoolPage/ScheduleManagement.jsx";
+import TransportationManagement from "./pages/schoolPage/TransportationManagement.jsx";
 
 // CampusHub Admin Pages
 import CampushubDashboard from "./pages/companyPage/dashboard.jsx";
@@ -109,7 +110,8 @@ function App() {
     "/academic-overview",
     "/admin/courts",
     "/admin/results",
-    "/admin/schedule"];
+    "/admin/schedule",
+    "/transportation-management"];
   const companyRoutes = [
     "/campushub-dashboard",
     "/subscription",
@@ -222,7 +224,7 @@ function App() {
       </Box>
 
       <Box
-        ml={{ base: 0, md: 0, lg: margin }}
+        ml={{ sm: 0, md: 0, lg: margin }}
         flex="1"
         display={"flex"}
         mt={"64px"}
@@ -275,6 +277,7 @@ function App() {
           {/* School Admin Pages - Additional */}
           <Route path="/admin/results" element={wrapWithAuth(<ResultsManagement />)} />
           <Route path="/admin/schedule" element={wrapWithAuth(<ScheduleManagement />)} />
+          <Route path="/transportation-management" element={wrapWithAuth(<TransportationManagement />)} />
 
           {/* CampusHub Admin Pages - Require company admin authentication */}
           <Route path="/campushub-dashboard" element={wrapWithAuth(<CampushubDashboard />)} />
