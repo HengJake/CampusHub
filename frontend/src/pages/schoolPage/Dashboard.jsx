@@ -79,10 +79,37 @@ export function Dashboard() {
     stats.bookingChange = totalBookingsTM > 0 ? 100 : 0; // If no bookings last month but some this month, show 100% increase
   }
 
+  // LOCKER CHANGE - Track locker activity (new lockers or status changes) by month
+  const lockersThisMonth = lockerUnits.filter(locker => {
+    const updatedAt = new Date(locker.updatedAt || locker.createdAt);
+    return updatedAt >= firstDayOfThisMonth;
+  });
+
+  const lockersLastMonth = lockerUnits.filter(locker => {
+    const updatedAt = new Date(locker.updatedAt || locker.createdAt);
+    return updatedAt >= firstDayOfLastMonth && updatedAt <= lastDayOfLastMonth;
+  });
+
+  const totalLockersLM = lockersLastMonth.length;
+  const totalLockersTM = lockersThisMonth.length;
+
   // LOCKER USAGE CALCULATION
   const totalLockers = lockerUnits.length;
   const usedLockers = lockerUnits.filter(locker => !locker.isAvailable).length;
-  const lockerUsage = Math.round((usedLockers / totalLockers) * 100)
+
+  // Calculate locker changes (new lockers or status changes)
+  if (totalLockersLM > 0) {
+    // Calculate percentage increase from last month
+    const percentageIncrease = Math.round(((totalLockersTM - totalLockersLM) / totalLockersLM) * 100);
+    stats.lockerChange = percentageIncrease;
+  } else if (totalLockersTM > 0) {
+    // If last month was 0 but this month has activity, it's a new start
+    stats.lockerChange = 100;
+  } else {
+    // No activity in either month
+    stats.lockerChange = 0;
+  }
+
 
   // Display all intakes count
   const currentMonthIntakes = intakes.length;
@@ -149,13 +176,13 @@ export function Dashboard() {
           icon={<FiCalendar />}
         />
         <StatsCard
-          title="Locker Usage"
-          value={`${lockerUsage}%`}
+          title="Locker Changes"
+          value={totalLockersTM}
           change={stats.lockerChange}
           icon={<FiLock />}
         />
         <StatsCard
-          title="All Intake"
+          title="Total Number of Intake"
           value={currentMonthIntakes}
           icon={<FaBookReader />}
         />

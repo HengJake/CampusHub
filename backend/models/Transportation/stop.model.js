@@ -9,7 +9,7 @@ const stopSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["dorm", "campus", "shopping_mall", "airport", "train_station"],
+      enum: ["dorm", "campus", "bus_station"],
       required: true,
     },
     schoolId: {

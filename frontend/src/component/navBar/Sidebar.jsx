@@ -7,6 +7,8 @@ import NavItem from "./NavItem";
 import navConfig from "../../config/navConfig";
 import { useNavigate } from "react-router-dom";
 import { useBreakpointValue } from "@chakra-ui/react";
+import { useAuthStore } from "../../store/auth.js";
+import { useShowToast } from "../../store/utils/toast.js";
 
 const Sidebar = ({ isOpen, onClose, role = "student", sidebarColors, glassBG }) => {
     const [isCollapsed, setIsCollapsed] = useState(true);
@@ -15,6 +17,8 @@ const Sidebar = ({ isOpen, onClose, role = "student", sidebarColors, glassBG }) 
     const items = navItems;
     const isMobile = useBreakpointValue({ base: true, lg: false });
     const navigate = useNavigate();
+    const { logout } = useAuthStore();
+    const showToast = useShowToast();
 
     let navigateTo;
     if (role === "companyAdmin") {
@@ -26,6 +30,29 @@ const Sidebar = ({ isOpen, onClose, role = "student", sidebarColors, glassBG }) 
     }
 
     const toggleSidebar = () => setIsCollapsed((prev) => !prev);
+
+    const handleLogout = async () => {
+        try {
+            const res = await logout();
+            if (res.success) {
+                showToast.success(
+                    "Logged out successfully",
+                    res.message
+                );
+                navigate("/login");
+            } else {
+                showToast.error(
+                    "Failed to log out",
+                    res.message
+                );
+            }
+        } catch (error) {
+            showToast.error(
+                "Logout error",
+                "An unexpected error occurred during logout"
+            );
+        }
+    };
 
     return (
         <Box
@@ -84,6 +111,7 @@ const Sidebar = ({ isOpen, onClose, role = "student", sidebarColors, glassBG }) 
                                 py={2}
                                 px={4}
                                 leftIcon={<IoIosSettings />}
+                                onClick={() => { navigateTo() }}
                                 _hover={{ bg: "#374151" + "33" }}
                                 color={"gray.700"}
                             >
@@ -106,12 +134,14 @@ const Sidebar = ({ isOpen, onClose, role = "student", sidebarColors, glassBG }) 
                             leftIcon={<RiLogoutBoxRLine />}
                             _hover={{ bg: "#ef4444" + "33" }}
                             color={"red.700"}
+                            onClick={handleLogout}
                         >
                             Log Out
                         </Button>
                     ) : (
                         <Button w={"full"} py={2} variant={"ghost"} _hover={{ bg: "#ef4444" + "33" }}
-                            color={"red.700"} >
+                            color={"red.700"}
+                            onClick={handleLogout}>
                             <RiLogoutBoxRLine />
                         </Button>
                     )}

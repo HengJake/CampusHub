@@ -12,7 +12,7 @@ const validateStopData = async (data) => {
   const { name, type } = data;
   if (!name) return { isValid: false, message: "name is required" };
   if (!type) return { isValid: false, message: "type is required" };
-  if (!["dorm", "campus"].includes(type)) return { isValid: false, message: "type must be either 'dorm' or 'campus'" };
+  if (!["dorm", "campus", "bus_station"].includes(type)) return { isValid: false, message: "type must be either 'dorm', 'campus', or 'bus_station'" };
   return { isValid: true };
 };
 
@@ -31,10 +31,10 @@ export const getStopById = controllerWrapper(async (req, res) => {
 
 export const getStopsByType = controllerWrapper(async (req, res) => {
   const { type } = req.params;
-  if (!["dorm", "campus"].includes(type)) {
+  if (!["dorm", "campus", "bus_station"].includes(type)) {
     return {
       success: false,
-      message: "type must be either 'dorm' or 'campus'",
+      message: "type must be either 'dorm', 'campus', or 'bus_station'",
       statusCode: 400
     };
   }

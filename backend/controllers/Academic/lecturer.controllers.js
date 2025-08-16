@@ -18,7 +18,7 @@ const validateLecturerData = async (data) => {
     const { departmentId, schoolId } = data;
 
     // Check required fields
-    if (!departmentId  || !schoolId) {
+    if (!departmentId || !schoolId) {
         return {
             isValid: false,
             message: "Please provide all required fields (schoolId, departmentId)"
@@ -95,7 +95,7 @@ export const deleteAllLecturers = controllerWrapper(async (req, res) => {
     return await deleteAllRecords(Lecturer, "lecturers");
 });
 
-export const getLecturersBySchool = controllerWrapper(async (req, res) => {
+export const getLecturersBySchoolId = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
     return await getAllRecords(
         Lecturer,

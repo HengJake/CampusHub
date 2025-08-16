@@ -15,7 +15,7 @@ export const useUserStore = create((set) => ({
       error: { ...state.error, users: null },
     }));
     try {
-      const res = await fetch(`/api/user`, {
+      const res = await fetch(`/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(user),

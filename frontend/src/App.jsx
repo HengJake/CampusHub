@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import React from "react";
 import "./general.scss";
 import "./component/generalComponent.scss";
+import { useAuthStore } from "./store/auth.js";
 
 // middle ware to control auth
 import { SchoolAdminComponent, LecturerComponent, StudentComponent, CompanyAdminComponent } from "./component/common/RoleBasedComponent.jsx";
@@ -17,6 +18,7 @@ import ContactUs from "./pages/commonPage/contactUs/contactUs.jsx";
 import Pricing from "./pages/commonPage/pricing/pricing.jsx";
 import Login from "./pages/commonPage/login/login.jsx";
 import Signup from "./pages/commonPage/signup/signUpOuter.jsx";
+import SchoolSetup from "./pages/commonPage/signup/SchoolSetup.jsx";
 import About from "./pages/commonPage/about/about.jsx";
 // delete this when production
 import AuthTest from "./pages/authTest.jsx";
@@ -66,9 +68,6 @@ import LNavbar from "./component/navBar/landingNavBar";
 import RNavBar from "./component/navBar/registrationNavBar";
 import HeaderNavbar from "./component/navBar/HeaderNavbar";
 
-
-
-
 function App() {
   const path = useLocation().pathname;
   const [RenderedNavbar, setRenderedNavbar] = useState(null);
@@ -77,6 +76,24 @@ function App() {
   const [authComponent, setAuthComponent] = useState(null);
   const [userRole, setUserRole] = useState(Cookies.get("role") || null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const { initializeAuth, isAuthenticated, isLoading } = useAuthStore();
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize auth store on app startup
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        await initializeAuth();
+        setIsInitialized(true);
+      } catch (error) {
+        console.error("Failed to initialize auth:", error);
+        setIsInitialized(true); // Set to true even on error to prevent infinite loading
+      }
+    };
+
+    initAuth();
+  }, [initializeAuth]);
 
   const userRoutes = [
     "/user-dashboard",
@@ -127,7 +144,7 @@ function App() {
 
   const detectRoleFromPath = (path) => {
     // Registration pages
-    if (path === "/login" || path === "/signup") {
+    if (path === "/login" || path === "/signup" || path === "/school-setup") {
       return "register";
     }
 
@@ -198,6 +215,19 @@ function App() {
     }
   }, [path]);
 
+  // Initialize auth from cookies when app starts
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        await initializeAuth();
+      } catch (error) {
+        console.error("Failed to initialize auth:", error);
+      }
+    };
+
+    initAuth();
+  }, []);
+
   // Helper function to wrap component in auth component
   const wrapWithAuth = (component) => {
     if (!authComponent) {
@@ -206,8 +236,8 @@ function App() {
 
     return React.cloneElement(authComponent, {
       children: component,
-      onAuthSuccess: ({ schoolId, role }) => {
-        console.log(`✅ Authentication successful for ${role} at school ${schoolId}`);
+      onAuthSuccess: ({ role }) => {
+        console.log(`✅ Authentication successful for ${role}`);
       },
       onAuthError: (error) => {
         console.error('❌ Authentication failed:', error);
@@ -218,7 +248,7 @@ function App() {
   return (
     <Box minH="100vh" display="flex" flexDirection="column" bg={bgColor}>
       <Box display="flex">
-        <Box height={"fit-content"} width={"100%"}>
+        <Box height={"fit-content"} width={"100%"} >
           {RenderedNavbar}
         </Box>
       </Box>
@@ -227,7 +257,7 @@ function App() {
         ml={{ sm: 0, md: 0, lg: margin }}
         flex="1"
         display={"flex"}
-        mt={"64px"}
+        mt={path == "/school-setup" ? "0" : "64px"}
         pr={{ base: 6, lg: 2 }}
         pl={{ base: 6, lg: 2 }}
         pt={6}
@@ -241,6 +271,7 @@ function App() {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/school-setup" element={<SchoolSetup />} />
           <Route path="/about" element={<About />} />
           <Route path="/test" element={<AuthTest />} />
 

@@ -14,6 +14,7 @@ const RegisterBox = ({
   onBack = null,
   buttonText = "Next",
   buttonClick = null,
+  buttonDisabled = false,
   footer = null,
   isWaiting,
   skipOtp = false,
@@ -118,6 +119,7 @@ const RegisterBox = ({
         textAlign="center"
         width="auto"
         maxW="100%"
+        mb={5}
       >
         {heading}
       </Heading>
@@ -135,7 +137,7 @@ const RegisterBox = ({
           boxShadow: "lg",
         }}
         onClick={buttonClick}
-        isDisabled={isWaiting}
+        isDisabled={isWaiting || buttonDisabled}
       >
         {buttonText}
       </Button>

@@ -1,299 +1,220 @@
-import React from "react";
-import "./contactUs.scss";
-import { Box, Flex } from "@chakra-ui/react";
-import { Textarea } from "@chakra-ui/react";
-import { FaPhoneAlt } from "react-icons/fa";
-import { IoMail } from "react-icons/io5";
-import { BsFillPhoneFill } from "react-icons/bs";
-import { ImLocation2 } from "react-icons/im";
-import { BsFillClockFill } from "react-icons/bs";
-import { Divider } from "@chakra-ui/react";
-
+import { useState } from "react";
 import {
-  Stack,
-  Input,
+  Box,
   Heading,
-  Center,
   Text,
+  SimpleGrid,
+  VStack,
+  HStack,
   Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  Link as ChakraLink,
+  Input,
+  Textarea,
+  FormControl,
+  FormLabel,
+  Icon,
+  useToast,
+  Stack,
 } from "@chakra-ui/react";
+import { FiMail, FiPhone, FiMapPin, FiSend } from "react-icons/fi";
 
-function contactUs() {
+const contactUs = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const toast = useToast();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    // Simulate form submission
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    toast({
+      title: "Message sent successfully!",
+      description: "We'll get back to you within 24 hours.",
+      status: "success",
+      duration: 5000,
+      isClosable: true,
+    });
+
+    setIsSubmitting(false);
+    e.target.reset();
+  };
+
+  const contactInfo = [
+    {
+      icon: FiMail,
+      title: "Email",
+      info: "hello@campushub.edu",
+      description: "Send us an email anytime"
+    },
+    {
+      icon: FiPhone,
+      title: "Phone",
+      info: "+1 (555) 123-4567",
+      description: "Mon-Fri from 8am to 6pm"
+    },
+    {
+      icon: FiMapPin,
+      title: "Office",
+      info: "123 University Ave",
+      description: "Suite 100, Campus City"
+    }
+  ];
+
   return (
-    <Flex w="100%" h="100vh" justify="center" align="center">
-      <Box
-        className="ContactUs"
-        w={"90%"}
-        justifyContent={"center"}
-        height={"100%"}
-        p={"4"}
-        flexDirection={"column"}
-      >
-        <Box paddingTop={"8"}>
-          <Heading fontWeight={"medium"} fontSize={"24px"}>
-            Contact Us
-          </Heading>
-          <Text
-            paddingTop={"4"}
-            fontSize={"16px"}
-            color={"rgba(0, 0, 0, 0.46)"}
-            sx={{ wordSpacing: "1px" }}
-          >
-            Get in touch with our support team. We're here to help you with any
-            questions, technical issues, or feedback you may have about
-            CampusHub.
-          </Text>
-          <br />
-        </Box>
-        <Box width={"100%"} display={"flex"} flexDirection={"row"} gap={"50px"}>
-          <Box
-            bgColor={"#F8F9FA"}
-            boxShadow={"0px 4px 10px rgba(0, 0, 0, 0.2)"}
-            height={"800px"}
-            width={"100%"}
-          >
-            <Text fontSize={"20px"} paddingTop={"40px"} paddingLeft={"30px"}>
-              Send us a message
-            </Text>
+    <Box as="section" id="contact" px={20}>
+      <Box maxW="container.xl" mx="auto" px={4}>
+        <Stack spacing={16}>
+          <Stack spacing={4} textAlign="center">
+            <Heading size="xl" color="gray.800">
+              Get In Touch
+            </Heading>
             <Text
-              color={"rgba(0, 0, 0, 0.46)"}
-              fontSize={"16px"}
-              paddingTop={"5px"}
-              paddingLeft={"30px"}
+              fontSize="lg"
+              color="gray.600"
+              maxW="2xl"
+              mx="auto"
             >
-              Fill out the form below and we'll get back to you within 24 hours
+              Have questions about CampusHub? We'd love to hear from you.
+              Send us a message and we'll respond as soon as possible.
             </Text>
+          </Stack>
 
-            <Box paddingBottom={"30px"}>
-              <Box paddingTop={"30px"} paddingLeft={"30px"}>
-                <Text
-                  color={"rgb(0, 0, 0)"}
-                  fontSize={"16px"}
-                  paddingBottom={"15px"}
-                >
-                  Full Name
-                </Text>
-                <Box>
-                  <Input width={"95%"} p={"25px"} placeholder="Full Name" />
-                </Box>
-              </Box>
-              <Box paddingTop={"30px"} paddingLeft={"30px"}>
-                <Text
-                  color={"rgb(0, 0, 0)"}
-                  fontSize={"16px"}
-                  paddingBottom={"15px"}
-                >
-                  Email Address
-                </Text>
-                <Box>
-                  <Input
-                    width={"95%"}
-                    p={"25px"}
-                    placeholder="example@gmail.com"
-                  />
-                </Box>
-              </Box>
-              <Box paddingTop={"30px"} paddingLeft={"30px"}>
-                <Text
-                  color={"rgb(0, 0, 0)"}
-                  fontSize={"16px"}
-                  paddingBottom={"15px"}
-                >
-                  Subject
-                </Text>
-                <Box>
-                  <Input
-                    width={"95%"}
-                    p={"25px"}
-                    placeholder="What is this regarding?"
-                  />
-                </Box>
-              </Box>
-              <Box paddingTop={"30px"} paddingLeft={"30px"}>
-                <Text
-                  color={"rgb(0, 0, 0)"}
-                  fontSize={"16px"}
-                  paddingBottom={"15px"}
-                >
-                  Subject
-                </Text>
-                <Box>
-                  <Textarea
-                    width={"95%"}
-                    height={"150px"}
-                    placeholder="Please describe your inquiry, issue or feedback in detail. Include any relevant information that might help us assist you better. "
-                  />
-                </Box>
-              </Box>
-              <Box paddingTop={"30px"} paddingLeft={"30px"}>
-                <Button
-                  width={"95%"}
-                  height={"50px"}
-                  color={"white"}
-                  bgColor={"#FF5656"}
-                  _hover={{ bg: "#D34949" }}
-                  fontWeight={"bold"}
-                >
-                  SUBMIT INQUIRY
-                </Button>
-              </Box>
-            </Box>
-          </Box>
-
-          <Box
-            bgColor={"#F8F9FA"}
-            boxShadow={"0px 4px 10px rgba(0, 0, 0, 0.2)"}
-            height={"800px"}
-            width={"85%"}
-            paddingBottom={"30px"}
-          >
-            <Box>
-              <Heading
-                display={"flex"}
-                flexDirection={"row"}
-                fontSize={"20px"}
-                paddingTop={"40px"}
-                paddingLeft={"30px"}
-                gap={"20px"}
-              >
-                <FaPhoneAlt size={"25px"} />
-                Contact Information
+          <SimpleGrid columns={{ base: 1, lg: 2 }} gap={12} w="full">
+            {/* Contact Form */}
+            <Box
+              bg="white"
+              borderRadius="xl"
+              p={{ base: 6, md: 8 }}
+              boxShadow="sm"
+              border="1px"
+              borderColor="gray.200"
+            >
+              <Heading size="lg" color="gray.800" mb={6}>
+                Send us a message
               </Heading>
 
-              <Box
-                display={"flex"}
-                flexDirection={"column"}
-                fontSize={"20px"}
-                paddingTop={"40px"}
-                paddingLeft={"30px"}
-                gap={"20px"}
-              >
-                <Box
-                  display={"flex"}
-                  flexDirection={"row"}
-                  gap={"30px"}
-                  alignItems={"center"}
-                >
-                  <IoMail size={"25px"} />
-                  <Box fontSize={"16px"} fontWeight={"medium"}>
-                    Email Support
-                    <Text
-                      fontSize={"15px"}
-                      fontWeight={"medium"}
-                      color={"rgba(0, 0, 0, 0.46)"}
-                    >
-                      support@campushub.com
-                    </Text>
-                  </Box>
-                </Box>
-                <Box
-                  display={"flex"}
-                  flexDirection={"row"}
-                  gap={"30px"}
-                  alignItems={"center"}
-                >
-                  <BsFillPhoneFill size={"25px"} />
-                  <Box fontSize={"16px"} fontWeight={"medium"}>
-                    Phone Support
-                    <Text
-                      fontSize={"15px"}
-                      fontWeight={"medium"}
-                      color={"rgba(0, 0, 0, 0.46)"}
-                    >
-                      +60 1234 5678
-                    </Text>
-                  </Box>
-                </Box>
-                <Box
-                  display={"flex"}
-                  flexDirection={"row"}
-                  gap={"30px"}
-                  alignItems={"center"}
-                >
-                  <ImLocation2 size={"25px"} />
-                  <Box fontSize={"16px"} fontWeight={"medium"}>
-                    Office Address
-                    <Text
-                      fontSize={"15px"}
-                      fontWeight={"medium"}
-                      color={"rgba(0, 0, 0, 0.46)"}
-                    >
-                      Shah Alam, Selangor, <br />
-                      Malaysia
-                    </Text>
-                  </Box>
-                </Box>
-                <br />
-                <Divider borderColor={"gray.300"} width={"95%"} />
-                <br />
-                <Box
-                  width={"95%"}
-                  display={"flex"}
-                  flexDirection={"column"}
-                  gap={"30px"}
-                >
-                  <Box
-                    display={"flex"}
-                    flexDirection={"row"}
-                    gap={"30px"}
-                    alignItems={"center"}
+              <form onSubmit={handleSubmit}>
+                <Stack spacing={6}>
+                  <SimpleGrid columns={{ base: 1, md: 2 }} gap={4} w="full">
+                    <FormControl isRequired>
+                      <FormLabel>First name</FormLabel>
+                      <Input
+                        name="firstName"
+                        placeholder="Enter your first name"
+                        focusBorderColor="brand.500"
+                      />
+                    </FormControl>
+                    <FormControl isRequired>
+                      <FormLabel>Last name</FormLabel>
+                      <Input
+                        name="lastName"
+                        placeholder="Enter your last name"
+                        focusBorderColor="brand.500"
+                      />
+                    </FormControl>
+                  </SimpleGrid>
+
+                  <FormControl isRequired>
+                    <FormLabel>Email</FormLabel>
+                    <Input
+                      name="email"
+                      type="email"
+                      placeholder="Enter your email address"
+                      focusBorderColor="brand.500"
+                    />
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel>Subject</FormLabel>
+                    <Input
+                      name="subject"
+                      placeholder="What is this about?"
+                      focusBorderColor="brand.500"
+                    />
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel>Message</FormLabel>
+                    <Textarea
+                      name="message"
+                      rows={4}
+                      placeholder="Tell us more about your inquiry..."
+                      focusBorderColor="brand.500"
+                    />
+                  </FormControl>
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    colorScheme="brand"
+                    isLoading={isSubmitting}
+                    loadingText="Sending..."
+                    w="full"
+                    _hover={{ transform: "translateY(-2px)" }}
+                    transition="transform 0.2s"
                   >
-                    <BsFillClockFill size={"25px"} />
-                    <Heading fontSize={"20px"} fontWeight={"bold"}>
-                      Business Hours
-                    </Heading>
-                  </Box>
-                  <Box bgColor={"white"} borderRadius={"8px"}>
-                    <Box p={"20px"}>
-                      <Box
-                        fontSize={"16px"}
-                        fontWeight={"medium"}
-                        paddingTop={"25px"}
-                        paddingLeft={"20px"}
-                      >
-                        Monday - Friday <br />{" "}
-                        <Text fontWeight={"normal"}>
-                          9:00 AM - 5:00 PM (GMT+8)
-                        </Text>
-                      </Box>
-                      <Box
-                        fontSize={"16px"}
-                        fontWeight={"medium"}
-                        paddingTop={"25px"}
-                        paddingLeft={"20px"}
-                      >
-                        Saturday <br />{" "}
-                        <Text fontWeight={"normal"}>
-                          9:00 AM - 1:00 PM (GMT+8)
-                        </Text>
-                      </Box>
-                      <Box
-                        fontSize={"16px"}
-                        fontWeight={"medium"}
-                        paddingTop={"25px"}
-                        paddingLeft={"20px"}
-                      >
-                        Sunday & Public Holidays <br />{" "}
-                        <Text fontWeight={"normal"}>Closed</Text>
-                      </Box>
-                    </Box>
-                  </Box>
-                </Box>
-              </Box>
+                    Send Message <Box as={FiSend} ml={2} />
+                  </Button>
+                </Stack>
+              </form>
             </Box>
-          </Box>
-        </Box>
+
+            {/* Contact Information */}
+            <Stack spacing={8} align="start">
+              <Stack spacing={6} align="start">
+                <Heading size="lg" color="gray.800">
+                  Contact Information
+                </Heading>
+                <Text color="gray.600">
+                  Choose the best way to reach us. We're here to help you succeed.
+                </Text>
+              </Stack>
+
+              <Stack spacing={6} align="start" w="full">
+                {contactInfo.map((item, index) => (
+                  <HStack key={index} spacing={4} align="start">
+                    <Icon as={item.icon} boxSize={5} color="brand.500" mt={1} />
+                    <Stack spacing={1} align="start">
+                      <Text fontWeight="medium" color="gray.800">
+                        {item.title}
+                      </Text>
+                      <Text color="gray.800">
+                        {item.info}
+                      </Text>
+                      <Text fontSize="sm" color="gray.600">
+                        {item.description}
+                      </Text>
+                    </Stack>
+                  </HStack>
+                ))}
+              </Stack>
+
+              {/* Additional Info */}
+              <Box
+                bg="brand.50"
+                borderRadius="xl"
+                p={6}
+                border="1px"
+                borderColor="brand.100"
+                w="full"
+              >
+                <Text fontWeight="semibold" color="gray.800" mb={2}>
+                  Need immediate assistance?
+                </Text>
+                <Text fontSize="sm" color="gray.600" mb={4}>
+                  For urgent technical issues or emergencies, contact our 24/7 support line.
+                </Text>
+                <Button variant="outline" size="sm" colorScheme="brand">
+                  Emergency Support
+                </Button>
+              </Box>
+            </Stack>
+          </SimpleGrid>
+        </Stack>
       </Box>
-    </Flex>
+    </Box>
   );
-}
+};
 
 export default contactUs;

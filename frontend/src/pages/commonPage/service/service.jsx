@@ -1,143 +1,171 @@
-import React from "react";
-import "./service.scss";
-import { Box, Flex } from "@chakra-ui/react";
-import { FaUserGear } from "react-icons/fa6";
-import { BiSolidReport } from "react-icons/bi";
-import { GiSatelliteCommunication } from "react-icons/gi";
-import { MdOutlineSecurity } from "react-icons/md";
-import { BsBuildingFillGear } from "react-icons/bs";
-import { HiAcademicCap } from "react-icons/hi2";
-import ServiceCard from "./ServiceCard.jsx";
-
 import {
-  Stack,
-  Input,
+  Box,
   Heading,
-  Center,
   Text,
+  SimpleGrid,
+  VStack,
+  HStack,
   Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  Link as ChakraLink,
+  Icon,
+  List,
+  ListItem,
+  Flex,
+  Stack,
 } from "@chakra-ui/react";
+import {
+  FiCalendar,
+  FiMapPin,
+  FiTruck,
+  FiBookOpen,
+  FiArrowRight,
+  FiNavigation,
+} from "react-icons/fi";
 
-function service() {
+const service = () => {
+  const services = [
+    {
+      icon: FiCalendar,
+      title: "Facility Booking",
+      description: "Reserve classrooms, labs, and study spaces with real-time availability and instant confirmation.",
+      features: ["Real-time availability", "Instant confirmation", "Recurring bookings"]
+    },
+    {
+      icon: FiNavigation,
+      title: "Real-Time Parking",
+      description: "Find and reserve parking spots across campus with live updates and navigation assistance.",
+      features: ["Live parking status", "Spot reservation", "Navigation integration"]
+    },
+    {
+      icon: FiMapPin,
+      title: "Campus Navigation",
+      description: "Interactive campus maps with turn-by-turn directions and accessibility information.",
+      features: ["Interactive maps", "Accessibility routes", "Building information"]
+    },
+    {
+      icon: FiTruck,
+      title: "Transportation Schedule",
+      description: "Track campus shuttles and public transport with real-time arrival predictions.",
+      features: ["Real-time tracking", "Route planning", "Delay notifications"]
+    },
+    {
+      icon: FiBookOpen,
+      title: "Academic Resources",
+      description: "Access library services, course materials, and academic support tools in one place.",
+      features: ["Digital library", "Course materials", "Academic support"]
+    }
+  ];
+
   return (
-    <Flex w="100%" justify="center" align="center" bgColor={"white"}>
-      <Box
-        w={"90%"}
-        justifyContent={"center"}
-        height={"100%"}
-        flexDirection={"column"}
-        p={"4"}
-      >
-        <Box p={5}>
-          <Heading fontSize={"24px"} fontWeight={"medium"}>
-            Our Services
-          </Heading>
-          <Text
-            paddingTop={"2"}
-            fontSize={"16px"}
-            color={"rgba(0, 0, 0, 0.46)"}
-            sx={{ wordSpacing: "1px" }}
-          >
-            CampusHub provides comprehensive digital solutions to streamline
-            campus operations, enhance academic experiences, and improve
-            facility management for educational institutions.
-          </Text>
-        </Box>
-        {/* MainBox */}
-        <Box
-          width={"100%"}
-          display={"flex"}
-          flexDirection={"column"}
-          gap={10}
-          p={"20px"}
-        >
-          {/* 1stBox */}
-          <Box
-            width={"100%"}
-            display={"flex"}
-            height={"360px"}
-            flexDirection={"row"}
-            gap={"30px"}
-          >
-            <ServiceCard
-              icon={<FaUserGear size="40px" />}
-              title="User Management"
-              description="Comprehensive student and staff management system with role-based access control, profile management, and administrative oversight."
-              buttonText="Learn More"
-              onButtonClick={() => console.log("Clicked Learn More")}
-            />
-
-            {/* 2ndContentBox */}
-            <ServiceCard
-              icon={<BsBuildingFillGear size="40px" />}
-              title="Facility Management"
-              description="Smart booking system for courts, parking lots, gym lockers, and campus transportation with real-time availability tracking."
-              buttonText="Learn More"
-              onButtonClick={() => console.log("Facility Management clicked")}
-            />
-
-            {/* 3rdContentBox */}
-            <ServiceCard
-              icon={<HiAcademicCap size="40px" />}
-              title="Academic Data"
-              description="Complete academic information system including schedules, results, attendance tracking, and examination management."
-              buttonText="Learn More"
-              onButtonClick={() => console.log("Academic Data clicked")}
-            />
-          </Box>
-
-          {/* 2ndMainBox */}
-          <Box
-            height={"100%"}
-            width={"100%"}
-            display={"flex"}
-            flexDirection={"row"}
-            gap={"30px"}
-          >
-            <Box
-              height={"360px"}
-              width={"100%"}
-              display={"flex"}
-              flexDirection={"row"}
-              gap={"30px"}
+    <Box as="section" id="services" px={20}>
+      <Box maxW="container.xl" mx="auto">
+        <Stack spacing={16}>
+          <Stack spacing={4} textAlign="center">
+            <Heading size="xl" color="gray.800">
+              Comprehensive Campus Services
+            </Heading>
+            <Text
+              fontSize="lg"
+              color="gray.600"
+              maxW="2xl"
+              mx="auto"
             >
-              <ServiceCard
-                icon={<BiSolidReport size="40px" />}
-                title="Reports & Analytics"
-                description="Data-driven insights with facility usage statistics, booking patterns, and user engagement reports for informed decision making."
-                buttonText="Learn More"
-                onButtonClick={() => console.log("Reports clicked")}
-              />
+              Everything you need for a seamless campus experience,
+              accessible from anywhere, anytime.
+            </Text>
+          </Stack>
 
-              <ServiceCard
-                icon={<GiSatelliteCommunication size="40px" />}
-                title="Campus Communication"
-                description="Streamlined announcement system and campus-wide communication tools to keep students and staff informed and engaged."
-                buttonText="Learn More"
-                onButtonClick={() => console.log("Communication clicked")}
-              />
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={8} w="full">
+            {services.map((service, index) => (
+              <Box
+                key={index}
+                bg="white"
+                borderRadius="xl"
+                p={6}
+                boxShadow="sm"
+                border="1px"
+                borderColor="gray.200"
+                _hover={{
+                  boxShadow: "md",
+                  transform: "translateY(-2px)"
+                }}
+                transition="all 0.3s"
+                role="group"
+              >
+                <Icon
+                  as={service.icon}
+                  boxSize={8}
+                  color="brand.500"
+                  mb={4}
+                  _groupHover={{ transform: "scale(1.1)" }}
+                  transition="transform 0.3s"
+                />
 
-              <ServiceCard
-                icon={<MdOutlineSecurity size="40px" />}
-                title="Security & Support"
-                description="Robust security features including two-factor authentication, role-based permissions, and comprehensive customer support."
-                buttonText="Learn More"
-                onButtonClick={() => console.log("Security clicked")}
-              />
+                <Heading size="lg" color="gray.800" mb={3}>
+                  {service.title}
+                </Heading>
+
+                <Text color="gray.600" mb={4} lineHeight="relaxed">
+                  {service.description}
+                </Text>
+
+                <Stack spacing={2} mb={6}>
+                  {service.features.map((feature, featureIndex) => (
+                    <HStack key={featureIndex} spacing={2}>
+                      <Box w="1.5" h="1.5" bg="brand.500" borderRadius="full" />
+                      <Text fontSize="sm" color="gray.600">
+                        {feature}
+                      </Text>
+                    </HStack>
+                  ))}
+                </Stack>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  colorScheme="brand"
+                  _hover={{ transform: "translateX(2px)" }}
+                  transition="transform 0.2s"
+                >
+                  Learn More <Box as={FiArrowRight} ml={2} />
+                </Button>
+              </Box>
+            ))}
+          </SimpleGrid>
+
+          {/* Call to action */}
+          <Box w="full">
+            <Box
+              bgGradient="linear(135deg, brand.500, brand.600)"
+              borderRadius="2xl"
+              p={{ base: 8, md: 12 }}
+              color="black"
+              textAlign="center"
+            >
+              <Heading size="lg" mb={4}>
+                Ready to Transform Your Campus Experience?
+              </Heading>
+              <Text fontSize="lg" opacity={0.9} mb={6} maxW="2xl" mx="auto">
+                Join thousands of students and staff who are already enjoying
+                a smarter, more connected campus life.
+              </Text>
+              <Button
+                size="lg"
+                bg="white"
+                color="brand.500"
+                _hover={{
+                  transform: "translateY(-2px)",
+                  boxShadow: "lg"
+                }}
+                transition="all 0.2s"
+              >
+                Get Started Today <Box as={FiArrowRight} ml={2} />
+              </Button>
             </Box>
           </Box>
-        </Box>
+        </Stack>
       </Box>
-    </Flex>
+    </Box>
   );
-}
+};
 
 export default service;

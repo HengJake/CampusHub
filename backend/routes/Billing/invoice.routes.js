@@ -3,6 +3,7 @@ import {
     createInvoice,
     getAllInvoice,
     getInvoiceById,
+    getInvoicesBySchoolId,
     updateInvoice,
     deleteInvoice,
     deleteAllInvoices
@@ -15,6 +16,9 @@ router.post("/", createInvoice);
 
 // Get all invoices
 router.get("/", getAllInvoice);
+
+// Get invoices by school ID
+router.get("/school/:schoolId", getInvoicesBySchoolId);
 
 // Get invoice by ID
 router.get("/:id", getInvoiceById);

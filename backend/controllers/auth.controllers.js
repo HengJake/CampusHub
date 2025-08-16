@@ -20,10 +20,6 @@ export const register = async (req, res) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // validate phone number
-  // validate password
-  // validate email
-
   const newUser = new User({
     name,
     password: hashedPassword,
@@ -36,21 +32,7 @@ export const register = async (req, res) => {
   try {
     await newUser.save();
 
-    let extraInfo = {};
-    if (role === "schoolAdmin") {
-      const school = await School.findOne({ userId: newUser._id });
-      if (school) {
-        extraPayload.schoolId = school._id;
-      }
-    } else if (role === "student") {
-      const student = await Student.findOne({ userId: newUser._id });
-      if (student) {
-        extraPayload.schoolId = student.schoolId;
-        extraPayload.studentId = student._id;
-      }
-    }
-
-    const token = generateToken(newUser, extraPayload);
+    const token = generateToken(newUser);
 
     // add token in cookie
     res.cookie("token", token, {
@@ -326,9 +308,19 @@ export const isAuthenticated = async (req, res) => {
     if (user.role === "schoolAdmin") {
 
       const school = await School.findOne({ userId: user._id });
-      // For schoolAdmin, include schoolId
-      responseData.schoolId = school._id;
-      responseData.school = school._id; // For backward compatibility
+
+      if (school) {
+        // School exists - include schoolId
+        responseData.schoolId = school._id;
+        responseData.school = school._id;
+        responseData.schoolSetupComplete = true;
+      } else {
+        // School doesn't exist - mark setup as incomplete
+        responseData.schoolSetupComplete = false;
+        responseData.schoolId = null;
+        responseData.school = null;
+      }
+
 
     } else if (user.role === "student") {
       // For student, include schoolId and student details

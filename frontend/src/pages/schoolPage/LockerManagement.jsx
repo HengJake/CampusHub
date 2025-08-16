@@ -108,7 +108,7 @@ export function LockerManagement() {
             >
                 <CardBody p={2} textAlign="center">
                     <Text fontSize="xs" fontWeight="bold">
-                        {locker.number}
+                        {locker.resourceId.name}
                     </Text>
                     {locker.status === "Occupied" ? <FiLock /> : <FiUnlock />}
                 </CardBody>

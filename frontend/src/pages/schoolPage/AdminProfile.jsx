@@ -28,6 +28,8 @@ import { FiEdit, FiSave, FiCamera, FiActivity, FiShield, FiUser, FiSettings, FiC
 import { useState, useEffect } from "react"
 import { useBillingStore } from "../../store/billing"
 import { useUserStore } from "../../store/user"
+import { useAuthStore } from "../../store/auth"
+import DataGeneratorModal from "../../components/common/DataGeneratorModal"
 
 const recentActivity = [
   { id: 1, action: "Updated system settings", timestamp: "2024-01-20 14:30", type: "settings" },
@@ -40,10 +42,17 @@ const recentActivity = [
 export function AdminProfile() {
 
   const { getUser } = useUserStore();
+  const { getSchoolId } = useAuthStore();
+  const { getSubscriptionsBySchoolId, getPaymentsBySchoolId, getInvoicesBySchoolId } = useBillingStore();
 
   const toast = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [sessionDuration, setSessionDuration] = useState("Loading...")
+  const [subscriptionData, setSubscriptionData] = useState(null)
+  const [paymentData, setPaymentData] = useState(null)
+  const [invoiceData, setInvoiceData] = useState(null)
+  const [loadingBilling, setLoadingBilling] = useState(false)
+  const [isDataGeneratorOpen, setIsDataGeneratorOpen] = useState(false)
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
@@ -66,13 +75,11 @@ export function AdminProfile() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch('/auth/is-auth', {
-          method: 'POST',
-          credentials: 'include',
-        });
+        // Use auth store method instead of fetch
+        const authResult = await useAuthStore.getState().authorizeUser();
 
-        if (response.ok) {
-          const data = await response.json();
+        if (authResult.success) {
+          const data = authResult.data;
 
           // Update session duration
           if (data.tokenExpiration) {
@@ -84,31 +91,25 @@ export function AdminProfile() {
 
           // Update profile data with real user data
           if (data.id) {
-            // Fetch detailed user information
-            const userResponse = await fetch(`/api/user/${data.id}`, {
-              method: 'GET',
-              credentials: 'include',
-            });
+            // Use user store method instead of fetch
+            const userResult = await getUser(data.id);
 
-            if (userResponse.ok) {
-              const userData = await userResponse.json();
-              if (userData.success && userData.data) {
-                const user = userData.data;
+            if (userResult.success && userResult.data) {
+              const user = userResult.data;
 
-                // Format join date from createdAt
-                const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A";
+              // Format join date from createdAt
+              const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A";
 
-                setProfileData({
-                  name: user.name || "",
-                  email: user.email || "",
-                  phone: user.phoneNumber || "",
-                  department: data.role === "schoolAdmin" ? "Administration" :
-                    data.role === "student" ? "Student Affairs" :
-                      data.role === "lecturer" ? "Academic" : "",
-                  role: data.role || "",
-                  joinDate: joinDate,
-                });
-              }
+              setProfileData({
+                name: user.name || "",
+                email: user.email || "",
+                phone: user.phoneNumber || "",
+                department: data.role === "schoolAdmin" ? "Administration" :
+                  data.role === "student" ? "Student Affairs" :
+                    data.role === "lecturer" ? "Academic" : "",
+                role: data.role || "",
+                joinDate: joinDate,
+              });
             }
           }
         } else {
@@ -128,7 +129,47 @@ export function AdminProfile() {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [getUser]);
+
+  // Fetch billing data
+  useEffect(() => {
+    const fetchBillingData = async () => {
+      try {
+        setLoadingBilling(true);
+        const schoolId = getSchoolId();
+
+        if (schoolId) {
+          const [subscriptionResult, paymentResult, invoiceResult] = await Promise.all([
+            getSubscriptionsBySchoolId(schoolId),
+            getPaymentsBySchoolId(schoolId),
+            getInvoicesBySchoolId(schoolId)
+          ]);
+
+          console.log("🚀 ~ fetchBillingData ~ paymentResult:", paymentResult.data)
+          console.log("🚀 ~ fetchBillingData ~ subscriptionResult:", subscriptionResult.data)
+          console.log("🚀 ~ fetchBillingData ~ invoiceResult:", invoiceResult.data)
+
+          if (subscriptionResult.success) {
+            setSubscriptionData(subscriptionResult.data);
+          }
+
+          if (paymentResult.success) {
+            setPaymentData(paymentResult.data);
+          }
+
+          if (invoiceResult.success) {
+            setInvoiceData(invoiceResult.data);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching billing data:', error);
+      } finally {
+        setLoadingBilling(false);
+      }
+    };
+
+    fetchBillingData();
+  }, [getSchoolId, getSubscriptionsBySchoolId, getPaymentsBySchoolId, getInvoicesBySchoolId]);
 
   const handleSave = async () => {
     try {
@@ -189,6 +230,17 @@ export function AdminProfile() {
     }
   }
 
+  const handleDataGenerated = (data) => {
+    console.log('Generated data:', data);
+    toast({
+      title: 'Data Generated!',
+      description: 'Sample data has been generated successfully. Check the console for details.',
+      status: 'success',
+      duration: 5000,
+      isClosable: true,
+    });
+  };
+
   const getActivityIcon = (type) => {
     switch (type) {
       case "settings":
@@ -207,20 +259,29 @@ export function AdminProfile() {
   }
 
   return (
-    <Box p={6} bg="#F5F5F5" minH="100vh">
+    <Box minH="100vh">
       <VStack spacing={6} align="stretch">
         {/* Header */}
-        <Box>
-          <Text fontSize="2xl" fontWeight="bold" color="#333333">
-            Admin Profile
-          </Text>
-          <Text color="gray.600">Manage your profile and preferences</Text>
-        </Box>
+        <HStack justify={"space-between"}>
+          <Box>
+            <Text fontSize="2xl" fontWeight="bold" color="#333333">
+              Admin Profile
+            </Text>
+            <Text color="gray.600">Manage your profile and preferences</Text>
+          </Box>
+          <Button
+            colorScheme="green"
+            variant="outline"
+            onClick={() => setIsDataGeneratorOpen(true)}
+          >
+            Generate
+          </Button>
+        </HStack>
 
         <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={6}>
           {/* Profile Information */}
           <VStack spacing={6}>
-            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full">
+            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full" flex={1}>
               <CardBody>
                 <HStack justify="space-between" mb={6}>
                   <HStack>
@@ -307,26 +368,6 @@ export function AdminProfile() {
                 </VStack>
               </CardBody>
             </Card>
-
-            {/* Security Settings */}
-            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full">
-              <CardBody>
-                <HStack mb={4}>
-                  <FiShield color="#344E41" />
-                  <Text fontSize="lg" fontWeight="semibold" color="#333333">
-                    Security Settings
-                  </Text>
-                </HStack>
-                <VStack spacing={4} align="stretch">
-                  <HStack justify="center" py={4}>
-                    <FiShield color="gray.500" />
-                    <Text fontSize="sm" color="gray.500">
-                      Security features coming soon
-                    </Text>
-                  </HStack>
-                </VStack>
-              </CardBody>
-            </Card>
           </VStack>
 
           {/* Sidebar */}
@@ -397,21 +438,329 @@ export function AdminProfile() {
           </VStack>
         </Grid>
 
-        {/* Full Activity Log */}
+        {/* Subscription & Payment Information */}
         <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
           <CardBody>
-            <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
-              Activity Log
-            </Text>
-            <HStack justify="center" py={8}>
-              <FiFileText color="gray.500" />
-              <Text fontSize="sm" color="gray.500">
-                Detailed activity logs coming soon
+            <HStack mb={4} justify="space-between" align="center">
+              <Text fontSize="lg" fontWeight="semibold" color="#333333">
+                Subscription & Payment
               </Text>
+              <HStack spacing={2} align="center">
+                <Badge colorScheme={
+                  (() => {
+                    if (!subscriptionData || subscriptionData.length === 0) return 'gray.500';
+
+                    const latestSubscription = subscriptionData.reduce((latest, current) =>
+                      !latest || new Date(current.createdAt) > new Date(latest.createdAt) ? current : latest
+                    );
+
+                    if (!latestSubscription.createdAt || !latestSubscription.billingInterval) return 'gray.500';
+
+                    const startDate = new Date(latestSubscription.createdAt);
+                    const endDate = new Date(startDate);
+
+                    if (latestSubscription.billingInterval === 'Monthly') {
+                      endDate.setMonth(endDate.getMonth() + 1);
+                    } else if (latestSubscription.billingInterval === 'Yearly') {
+                      endDate.setFullYear(endDate.getFullYear() + 1);
+                    }
+
+                    const now = new Date();
+                    const daysUntilPayment = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+
+                    if (daysUntilPayment <= 0) return 'red.500';
+                    if (daysUntilPayment <= 7) return 'red.500';
+                    if (daysUntilPayment <= 30) return 'yellow.500';
+                    return 'green.500';
+                  })()
+                }>
+                  <HStack>
+                    <Text fontSize="sm" color="gray.600">Next Payment:</Text>
+                    <Text fontSize="sm" fontWeight="semibold">
+                      {(() => {
+                        if (!subscriptionData || subscriptionData.length === 0) return 'N/A';
+
+                        const latestSubscription = subscriptionData.reduce((latest, current) =>
+                          !latest || new Date(current.createdAt) > new Date(latest.createdAt) ? current : latest
+                        );
+
+                        if (!latestSubscription.createdAt || !latestSubscription.billingInterval) return 'N/A';
+
+                        const startDate = new Date(latestSubscription.createdAt);
+                        const endDate = new Date(startDate);
+
+                        if (latestSubscription.billingInterval === 'Monthly') {
+                          endDate.setMonth(endDate.getMonth() + 1);
+                        } else if (latestSubscription.billingInterval === 'Yearly') {
+                          endDate.setFullYear(endDate.getFullYear() + 1);
+                        }
+
+                        return endDate.toLocaleDateString();
+                      })()}
+                    </Text>
+                  </HStack>
+                </Badge>
+              </HStack>
             </HStack>
+            {loadingBilling ? (
+              <HStack justify="center" py={8}>
+                <Text fontSize="sm" color="gray.500">Loading billing information...</Text>
+              </HStack>
+            ) : (
+              <VStack spacing={6} align="stretch">
+                {/* Billing Timeline Section */}
+                <Box>
+                  <Text fontSize="md" fontWeight="semibold" mb={3} color="#333333">
+                    Billing Timeline
+                  </Text>
+                  {(() => {
+                    // Combine and sort all billing events by date
+                    const timelineEvents = [];
+
+                    // Add subscription events
+                    if (subscriptionData && subscriptionData.length > 0) {
+                      subscriptionData.forEach((subscription, index) => {
+                        const startDate = subscription.createdAt ? new Date(subscription.createdAt) : null;
+                        const endDate = startDate ? new Date(startDate) : null;
+
+                        if (subscription.billingInterval === 'Monthly' && endDate) {
+                          endDate.setMonth(endDate.getMonth() + 1);
+                        } else if (subscription.billingInterval === 'Yearly' && endDate) {
+                          endDate.setFullYear(endDate.getFullYear() + 1);
+                        }
+
+                        timelineEvents.push({
+                          type: 'subscription',
+                          data: subscription,
+                          date: startDate,
+                          endDate: endDate,
+                          title: `${subscription.planName || 'Standard Plan'} Subscription`,
+                          description: `${subscription.billingInterval || 'Monthly'} billing at RM${subscription.price || '0'}`,
+                          status: 'active'
+                        });
+                      });
+                    }
+
+                    // Add invoice events
+                    if (invoiceData && invoiceData.length > 0) {
+                      invoiceData.forEach((invoice, index) => {
+                        const invoiceDate = invoice.date ? new Date(invoice.date) : null;
+                        timelineEvents.push({
+                          type: 'invoice',
+                          data: invoice,
+                          date: invoiceDate,
+                          title: `Invoice #${invoice._id ? String(invoice._id).slice(-8) : 'N/A'}`,
+                          description: `Amount: RM${invoice.amount || '0'}`,
+                          status: invoice.status || 'unknown'
+                        });
+                      });
+                    }
+
+                    // Sort events by date (most recent first)
+                    timelineEvents.sort((a, b) => {
+                      if (!a.date && !b.date) return 0;
+                      if (!a.date) return 1;
+                      if (!b.date) return -1;
+                      return b.date - a.date;
+                    });
+
+                    if (timelineEvents.length > 0) {
+                      return (
+                        <VStack spacing={0} align="stretch">
+                          {timelineEvents.map((event, index) => (
+                            <Box key={index} position="relative">
+                              {/* Timeline connector */}
+                              {index < timelineEvents.length - 1 && (
+                                <Box
+                                  position="absolute"
+                                  left="20px"
+                                  top="40px"
+                                  bottom="-20px"
+                                  width="2px"
+                                  bg="gray.300"
+                                  zIndex={1}
+                                />
+                              )}
+
+                              {/* Timeline item */}
+                              <HStack spacing={4} align="flex-start" position="relative" zIndex={2}>
+                                {/* Timeline dot */}
+                                <Box
+                                  w="40px"
+                                  h="40px"
+                                  borderRadius="full"
+                                  bg={event.type === 'subscription' ? 'blue.500' : 'green.500'}
+                                  display="flex"
+                                  alignItems="center"
+                                  justifyContent="center"
+                                  flexShrink={0}
+                                  position="relative"
+                                  zIndex={3}
+                                >
+                                  {event.type === 'subscription' ? (
+                                    <FiShield color="white" size={16} />
+                                  ) : (
+                                    <FiFileText color="white" size={16} />
+                                  )}
+                                </Box>
+
+                                {/* Event content */}
+                                <Card
+                                  flex={1}
+                                  bg="gray.50"
+                                  borderColor="gray.200"
+                                  borderWidth="1px"
+                                  shadow="sm"
+                                  mb={3}
+                                >
+                                  <CardBody>
+                                    <VStack spacing={3} align="stretch">
+                                      {/* Header */}
+                                      <HStack justify="space-between" align="flex-start">
+                                        <VStack align="flex-start" spacing={1}>
+                                          <Text fontSize="md" fontWeight="semibold" color="#333333">
+                                            {event.title}
+                                          </Text>
+                                          <Text fontSize="sm" color="gray.600">
+                                            {event.description}
+                                          </Text>
+                                        </VStack>
+                                        <Badge
+                                          colorScheme={
+                                            event.type === 'subscription' ? 'blue' :
+                                              event.status === 'paid' ? 'green' :
+                                                event.status === 'pending' ? 'yellow' :
+                                                  event.status === 'overdue' ? 'red' : 'gray'
+                                          }
+                                        >
+                                          {event.type === 'subscription' ? 'Active' : event.status}
+                                        </Badge>
+                                      </HStack>
+
+                                      {/* Date information */}
+                                      <HStack justify="space-between" fontSize="sm">
+                                        <Text color="gray.600">
+                                          {event.type === 'subscription' ? 'Started:' : 'Issued:'}
+                                        </Text>
+                                        <Text fontWeight="medium">
+                                          {event.date ? event.date.toLocaleDateString() : 'N/A'}
+                                        </Text>
+                                      </HStack>
+
+                                      {/* Additional details based on event type */}
+                                      {event.type === 'subscription' && event.endDate && (
+                                        <HStack justify="space-between" fontSize="sm">
+                                          <Text color="gray.600">Expires:</Text>
+                                          <Text
+                                            fontWeight="semibold"
+                                            color={
+                                              (() => {
+                                                const now = new Date();
+                                                const daysUntilExpiry = Math.ceil((event.endDate - now) / (1000 * 60 * 60 * 24));
+                                                if (daysUntilExpiry <= 0) return 'red.500';
+                                                if (daysUntilExpiry <= 7) return 'orange.500';
+                                                if (daysUntilExpiry <= 30) return 'yellow.500';
+                                                return 'green.500';
+                                              })()
+                                            }
+                                          >
+                                            {event.endDate.toLocaleDateString()}
+                                          </Text>
+                                        </HStack>
+                                      )}
+
+                                      {event.type === 'invoice' && (
+                                        <>
+                                          <HStack justify="space-between" fontSize="sm">
+                                            <Text color="gray.600">Payment ID:</Text>
+                                            <Text fontFamily="mono" color="gray.600">
+                                              {event.data.paymentId ? String(event.data.paymentId._id).slice(-8) : 'N/A'}
+                                            </Text>
+                                          </HStack>
+                                          <HStack justify="space-between" fontSize="sm">
+                                            <Text color="gray.600">Subscription ID:</Text>
+                                            <Text fontFamily="mono" color="gray.600">
+                                              {event.data.subscriptionId ? String(event.data.subscriptionId._id).slice(-8) : 'N/A'}
+                                            </Text>
+                                          </HStack>
+                                        </>
+                                      )}
+                                    </VStack>
+                                  </CardBody>
+                                </Card>
+                              </HStack>
+                            </Box>
+                          ))}
+                        </VStack>
+                      );
+                    } else {
+                      return (
+                        <HStack justify="center" py={4}>
+                          <Text fontSize="sm" color="gray.500">No billing information available</Text>
+                        </HStack>
+                      );
+                    }
+                  })()}
+                </Box>
+
+                {/* Payment Methods Section */}
+                <Box>
+                  <Text fontSize="md" fontWeight="semibold" mb={3} color="#333333">
+                    Payment Methods
+                  </Text>
+                  {paymentData && paymentData.length > 0 ? (
+                    <VStack spacing={3} align="stretch">
+                      {paymentData.map((payment, index) => (
+                        <Card key={index} bg="gray.50" borderColor="gray.200" borderWidth="1px">
+                          <CardBody>
+                            <VStack spacing={3} align="stretch">
+                              <HStack justify="space-between">
+                                <Text fontSize="md" fontWeight="semibold">Card Holder</Text>
+                                <Text fontSize="sm">{payment.cardHolderName}</Text>
+                              </HStack>
+                              <HStack justify="space-between">
+                                <Text fontSize="sm">Payment Method</Text>
+                                <Badge colorScheme="purple">{payment.paymentMethod}</Badge>
+                              </HStack>
+                              <HStack justify="space-between">
+                                <Text fontSize="sm">Card Number</Text>
+                                <Text fontSize="sm">**** **** **** {payment.last4Digit}</Text>
+                              </HStack>
+                              <HStack justify="space-between">
+                                <Text fontSize="sm">Expiry Date</Text>
+                                <Text fontSize="sm">{payment.expiryDate}</Text>
+                              </HStack>
+                              <HStack justify="space-between">
+                                <Text fontSize="sm">Status</Text>
+                                <Badge colorScheme={payment.status === 'success' ? 'green' : payment.status === 'failed' ? 'red' : 'yellow'}>
+                                  {payment.status}
+                                </Badge>
+                              </HStack>
+                            </VStack>
+                          </CardBody>
+                        </Card>
+                      ))}
+                    </VStack>
+                  ) : (
+                    <HStack justify="center" py={4}>
+                      <Text fontSize="sm" color="gray.500">No payment methods available</Text>
+                    </HStack>
+                  )}
+                </Box>
+
+
+              </VStack>
+            )}
           </CardBody>
         </Card>
       </VStack>
+
+      {/* Data Generator Modal */}
+      <DataGeneratorModal
+        isOpen={isDataGeneratorOpen}
+        onClose={() => setIsDataGeneratorOpen(false)}
+        onDataGenerated={handleDataGenerated}
+      />
     </Box>
   )
 }

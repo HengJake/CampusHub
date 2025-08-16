@@ -77,12 +77,12 @@ export const deleteAllModules = controllerWrapper(async (req, res) => {
     return await deleteAllRecords(Module, "modules");
 });
 
-export const getModulesBySchool = controllerWrapper(async (req, res) => {
+export const getModulesBySchoolId = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
     return await getAllRecords(
         Module,
         "modules",
-        ["schoolId", ["courseId"], ["prerequisites"]],
+        ["schoolId", "courseId", "prerequisites"],
         { schoolId }
     );
 });

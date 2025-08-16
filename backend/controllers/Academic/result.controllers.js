@@ -322,7 +322,7 @@ export const deleteAllResults = controllerWrapper(async (req, res) => {
     return await deleteAllRecords(Result, "results");
 });
 
-export const getResultsBySchool = controllerWrapper(async (req, res) => {
+export const getResultsBySchoolId = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
     return await getAllRecords(
         Result,

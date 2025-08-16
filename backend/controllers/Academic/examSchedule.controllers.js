@@ -273,7 +273,7 @@ export const deleteAllExamSchedules = controllerWrapper(async (req, res) => {
     return await deleteAllRecords(ExamSchedule, "examSchedules");
 });
 
-export const getExamSchedulesBySchool = controllerWrapper(async (req, res) => {
+export const getExamSchedulesBySchoolId = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
     return await getAllRecords(
         ExamSchedule,

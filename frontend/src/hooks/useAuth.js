@@ -19,6 +19,7 @@ export const useAuth = () => {
         fetchRoleSpecificData
     } = useAuthStore();
 
+    const [schoolSetupComplete, setSchoolSetupComplete] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
 
     // Initialize auth state on mount
@@ -26,10 +27,11 @@ export const useAuth = () => {
         const initializeAuth = async () => {
             try {
                 const result = await authorizeUser();
-                
-                if (result.success) {
-                 
+
+                if (result.success && result.schoolSetupComplete !== undefined) {
+                    setSchoolSetupComplete(result.schoolSetupComplete);
                 }
+
             } catch (error) {
                 console.log(error.message);
             } finally {
@@ -38,7 +40,16 @@ export const useAuth = () => {
         };
 
         initializeAuth();
-    }, [authorizeUser]);
+    }, []);
+
+    // Add school setup check
+    const isSchoolSetupComplete = () => {
+        if (isSchoolAdmin()) {
+            const user = getCurrentUser();
+            return user.schoolSetupComplete || schoolSetupComplete;
+        }
+        return true; // Non-school admins don't need school setup
+    };
 
     // Role-based helpers
     const isSchoolAdmin = () => {
@@ -84,7 +95,7 @@ export const useAuth = () => {
 
         if (result.success) {
             // Additional role-specific initialization can be added here
-            console.log(`Logged in as ${expectedRole} with schoolId:`, getSchoolId());
+            console.log(`Logged in as ${expectedRole}`);
         }
 
         return result;
@@ -148,6 +159,10 @@ export const useAuth = () => {
             studentId,
             role: currentUser?.role || user?.role,
             isAuthenticated
-        }
+        },
+
+        // School setup
+        schoolSetupComplete,
+        isSchoolSetupComplete: isSchoolSetupComplete(),
     };
 }; 

@@ -1,6 +1,7 @@
 import Payment from "../../models/Billing/payment.model.js";
 import Subscription from "../../models/Billing/subscription.model.js";
 import Invoice from "../../models/Billing/invoice.model.js";
+import School from "../../models/Billing/school.model.js";
 
 import {
     createRecord,
@@ -12,10 +13,9 @@ import {
     validateMultipleReferences,
     controllerWrapper
 } from "../../utils/reusable.js";
-import { get } from "mongoose";
 
 const validateInvoiceData = async (data) => {
-    const { paymentId, subscriptionId } = data;
+    const { paymentId, subscriptionId, schoolId, amount } = data;
 
     // Check required fields
     if (!paymentId) {
@@ -30,11 +30,24 @@ const validateInvoiceData = async (data) => {
             message: "subscriptionId is required"
         };
     }
+    if (!schoolId) {
+        return {
+            isValid: false,
+            message: "schoolId is required"
+        };
+    }
+    if (!amount) {
+        return {
+            isValid: false,
+            message: "amount is required"
+        };
+    }
 
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
         paymentId: { id: paymentId, Model: Payment },
-        subscriptionId: { id: subscriptionId, Model: Subscription }
+        subscriptionId: { id: subscriptionId, Model: Subscription },
+        schoolId: { id: schoolId, Model: School }
     });
 
     if (referenceValidation) {
@@ -57,33 +70,44 @@ export const createInvoice = controllerWrapper(async (req, res) => {
 });
 
 export const getAllInvoice = controllerWrapper(async (req, res) => {
-    return await getAllRecords(Invoice, "invoice", ["paymentID", "subscriptionID"]);
+    return await getAllRecords(Invoice, "invoice", ["paymentId", "subscriptionId", "schoolId"]);
 });
 
 export const getInvoiceById = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    return await getRecordById(Invoice, id, "invoice", ["paymentID", "subscriptionID"]);
+    return await getRecordById(Invoice, id, "invoice", ["paymentId", "subscriptionId", "schoolId"]);
 });
 
 // Get Invoices by Payment ID
 export const getInvoicesByPaymentId = controllerWrapper(async (req, res) => {
-    const { paymentID } = req.params;
+    const { paymentId } = req.params;
     return await getAllRecords(
         Invoice,
         "invoices",
-        ["paymentID", "subscriptionID"],
-        { paymentID }
+        ["paymentId", "subscriptionId", "schoolId"],
+        { paymentId }
     );
 });
 
 // Get Invoices by Subscription ID
 export const getInvoicesBySubscriptionId = controllerWrapper(async (req, res) => {
-    const { subscriptionID } = req.params;
+    const { subscriptionId } = req.params;
     return await getAllRecords(
         Invoice,
         "invoices",
-        ["paymentID", "subscriptionID"],
-        { subscriptionID }
+        ["paymentId", "subscriptionId", "schoolId"],
+        { subscriptionId }
+    );
+});
+
+// Get Invoices by School ID
+export const getInvoicesBySchoolId = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(
+        Invoice,
+        "invoices",
+        ["paymentId", "subscriptionId", "schoolId"],
+        { schoolId }
     );
 });
 

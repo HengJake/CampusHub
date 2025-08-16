@@ -264,7 +264,7 @@ export const deleteAllClassSchedules = controllerWrapper(async (req, res) => {
     return await deleteAllRecords(ClassSchedule, "classSchedules");
 });
 
-export const getClassSchedulesBySchool = controllerWrapper(async (req, res) => {
+export const getClassSchedulesBySchoolId = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
     return await getAllRecords(
         ClassSchedule,

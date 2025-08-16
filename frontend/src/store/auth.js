@@ -18,6 +18,7 @@ export const useAuthStore = create((set, get) => ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify(loginCredential),
+        credentials: 'include', // Include cookies
       });
 
       const data = await res.json();
@@ -37,7 +38,12 @@ export const useAuthStore = create((set, get) => ({
       const enhancedUser = await get().fetchRoleSpecificData(data.data);
       set({ currentUser: enhancedUser });
 
-      return { success: true, data: enhancedUser };
+      return {
+        success: true,
+        data: enhancedUser,
+        token: data.token || null,
+        schoolSetupComplete: enhancedUser.schoolSetupComplete
+      };
     } catch (error) {
       set({ isLoading: false });
       console.error("Login error:", error.message);
@@ -57,11 +63,15 @@ export const useAuthStore = create((set, get) => ({
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: 'include', // Include cookies
         });
         const schoolData = await schoolRes.json();
         if (schoolData.success && schoolData.schoolId) {
           enhancedUser.schoolId = schoolData.schoolId;
+          enhancedUser.schoolSetupComplete = true;
           set({ schoolId: schoolData.schoolId });
+        } else {
+          enhancedUser.schoolSetupComplete = false;
         }
       } else if (user.role === "student") {
         // Fetch student data including schoolId
@@ -70,23 +80,31 @@ export const useAuthStore = create((set, get) => ({
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: 'include', // Include cookies
         });
         const studentData = await studentRes.json();
 
         if (studentData.success) {
           enhancedUser.schoolId = studentData.schoolId;
           enhancedUser.studentId = studentData.student._id;
+          enhancedUser.schoolSetupComplete = true;
           set({
             schoolId: studentData.schoolId,
             studentId: studentData.student._id
           });
+        } else {
+          enhancedUser.schoolSetupComplete = false;
         }
+      } else {
+        // For other roles, assume setup is complete
+        enhancedUser.schoolSetupComplete = true;
       }
 
       return enhancedUser;
     } catch (error) {
       console.error("Error fetching role-specific data:", error);
-      return user; // Return original user if enhancement fails
+      // Return user with default setup status
+      return { ...user, schoolSetupComplete: false };
     }
   },
 
@@ -98,8 +116,35 @@ export const useAuthStore = create((set, get) => ({
       schoolId: state.schoolId,
       studentId: state.studentId,
       isAuthenticated: state.isAuthenticated,
-      role: state.currentUser?.role || state.user?.role
+      role: state.currentUser?.role || state.user?.role,
+      schoolSetupComplete: state.currentUser?.schoolSetupComplete || false
     };
+  },
+
+  getCurrentUserWithAuth: async () => {
+    const state = get();
+
+    if (state.currentUser || state.user) {
+      return get().getCurrentUser();
+    }
+
+    try {
+      const authResult = await get().authorizeUser();
+      if (authResult.success) {
+        return {
+          user: authResult.data,
+          schoolId: authResult.schoolId,
+          studentId: authResult.studentId,
+          isAuthenticated: true,
+          role: authResult.data.role,
+          schoolSetupComplete: authResult.schoolSetupComplete
+        };
+      }
+    } catch (error) {
+      console.error("Failed to re-authenticate from cookies:", error);
+    }
+
+    return get().getCurrentUser();
   },
 
   // Get schoolId for schoolAdmin operations
@@ -128,6 +173,7 @@ export const useAuthStore = create((set, get) => ({
         headers: {
           "Content-type": "application/json",
         },
+        credentials: 'include', // Include cookies
       });
 
       const data = await res.json();
@@ -152,7 +198,8 @@ export const useAuthStore = create((set, get) => ({
         data: enhancedUser,
         role: data.role,
         schoolId: enhancedUser.schoolId,
-        studentId: enhancedUser.studentId
+        studentId: enhancedUser.studentId,
+        schoolSetupComplete: enhancedUser.schoolSetupComplete
       };
     } catch (error) {
       set({ isAuthenticated: false });
@@ -181,6 +228,7 @@ export const useAuthStore = create((set, get) => ({
         headers: {
           "Content-type": "application/json",
         },
+        credentials: 'include', // Include cookies
       });
 
       const data = await res.json();
@@ -206,6 +254,7 @@ export const useAuthStore = create((set, get) => ({
           "Content-type": "application/json",
         },
         body: JSON.stringify(signUpCredential),
+        credentials: 'include', // Include cookies
       });
 
       const data = await res.json();
@@ -230,6 +279,7 @@ export const useAuthStore = create((set, get) => ({
         headers: {
           "Content-type": "application/json",
         },
+        credentials: 'include', // Include cookies
       });
 
       const data = await res.json();
@@ -253,6 +303,7 @@ export const useAuthStore = create((set, get) => ({
           "Content-type": "application/json",
         },
         body: JSON.stringify({ otp }),
+        credentials: 'include', // Include cookies
       });
 
       const data = await res.json();
@@ -264,6 +315,53 @@ export const useAuthStore = create((set, get) => ({
       return { success: true, message: data.message };
     } catch (error) {
       console.error("Login error:", error.message);
+      return { success: false, message: error.message };
+    }
+  },
+
+  // Initialize auth state from cookies on app startup
+  initializeAuth: async () => {
+    try {
+      // Check if user is authenticated via cookies
+      const res = await fetch("/auth/is-auth", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        credentials: 'include', // Include cookies
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // User is authenticated, restore the state
+        const enhancedUser = await get().fetchRoleSpecificData(data);
+
+        set({
+          user: data,
+          currentUser: enhancedUser,
+          isAuthenticated: true,
+          schoolId: enhancedUser.schoolId,
+          studentId: enhancedUser.studentId,
+        });
+
+        return {
+          success: true,
+          message: "Authentication restored from cookies",
+          data: enhancedUser,
+          schoolId: enhancedUser.schoolId,
+          studentId: enhancedUser.studentId,
+          schoolSetupComplete: enhancedUser.schoolSetupComplete
+        };
+      } else {
+        // User is not authenticated, clear any stale state
+        get().clearAuth();
+        return { success: false, message: "No valid authentication found" };
+      }
+    } catch (error) {
+      console.error("Auth initialization error:", error.message);
+      // Clear any stale state on error
+      get().clearAuth();
       return { success: false, message: error.message };
     }
   },

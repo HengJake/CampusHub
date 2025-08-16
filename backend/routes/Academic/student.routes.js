@@ -5,7 +5,7 @@ import {
     getStudentById,
     updateStudent,
     deleteStudent,
-    getStudentsBySchool,
+    getStudentsBySchoolId,
     getStudentsByIntakeCourseId,
     getStudentsByYear,
     deleteAllStudents,
@@ -40,8 +40,8 @@ router.delete("/all", deleteAllStudents);
 router.delete("/:id", deleteStudent);
 
 // Get students by school ID (school admin only, but company admin can also access)
-// router.get("/school/:schoolId", userAuth, authRole(["companyAdmin", "schoolAdmin"]), getStudentsBySchool);
-router.get("/school/:schoolId", getStudentsBySchool);
+// router.get("/school/:schoolId", userAuth, authRole(["companyAdmin", "schoolAdmin"]), getStudentsBySchoolId);
+router.get("/school/:schoolId", getStudentsBySchoolId);
 
 // Get students by intakeCourseId (main filter for course+intake)
 router.get("/intake-course/:intakeCourseId", getStudentsByIntakeCourseId);

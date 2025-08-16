@@ -343,15 +343,6 @@ export function AcademicOverview() {
         return rate;
       })(),
 
-      averageGPA: (() => {
-        if (!results?.length) return 0;
-        const totalPoints = results.reduce((sum, r) => sum + r.creditHours, 0);
-        const avgGPA = safeDivide(totalPoints, results.length).toFixed(2);
-
-        debugLog("Average GPA", { totalResults: results.length, totalPoints, avgGPA });
-        return parseFloat(avgGPA);
-      })(),
-
       atRiskStudents: (() => {
         if (!students?.length || !results?.length) return 0;
 
@@ -384,31 +375,6 @@ export function AcademicOverview() {
         });
 
         return topPerformers;
-      })(),
-
-      // ============================================
-      // LECTURER/SUBJECT OVERVIEW
-      // ============================================
-      totalModules: (() => {
-        if (!modules?.length) return 0;
-        const totalModules = modules.length;
-
-        debugLog("Total Modules", {
-          totalModules: modules.length
-        });
-
-        return totalModules;
-      })(),
-
-      totalLecturers: (() => {
-        if (!lecturers?.length) return 0;
-        const totalLecturers = lecturers.length;
-
-        debugLog("Total Lecturers", {
-          totalLecturers: lecturers.length
-        });
-
-        return totalLecturers;
       })(),
 
       avgWorkingHours: (() => {

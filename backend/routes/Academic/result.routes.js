@@ -13,7 +13,7 @@ import {
     getModuleStatistics,
     getSemesterStatistics,
     deleteAllResults,
-    getResultsBySchool
+    getResultsBySchoolId
 } from "../../controllers/Academic/result.controllers.js";
 
 const router = e.Router();
@@ -57,7 +57,7 @@ router.get("/statistics/:moduleId", getModuleStatistics);
 // Get semester statistics
 router.get("/semester-statistics/:semesterId", getSemesterStatistics);
 
-router.get("/school/:schoolId", getResultsBySchool);
+router.get("/school/:schoolId", getResultsBySchoolId);
 
 
 export default router;

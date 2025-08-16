@@ -48,7 +48,7 @@ const validateIntakeCourseData = async (data) => {
             message: "maxDuration is required"
         };
     }
-    if (!schoolId) {    
+    if (!schoolId) {
         return {
             isValid: false,
             message: "schoolId is required"
@@ -159,7 +159,7 @@ export const deleteIntakeCourse = controllerWrapper(async (req, res) => {
 });
 
 // Get IntakeCourses by School ID
-export const getIntakeCoursesBySchool = controllerWrapper(async (req, res) => {
+export const getIntakeCoursesBySchoolId = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
     return await getAllRecords(
         IntakeCourse,

@@ -1185,10 +1185,210 @@ async function createFullSchoolData({
         },
         {
             schoolId: createdIds.school,
-            name: "Locker Bank A",
+            name: "A100",
             location: "Block D",
             type: "locker",
-            capacity: 50,
+            capacity: 1,
+            status: true,
+            timeslots: [
+                {
+                    dayOfWeek: "Monday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Tuesday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Wednesday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Thursday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Friday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                }
+            ]
+        },
+        {
+            schoolId: createdIds.school,
+            name: "A101",
+            location: "Block D",
+            type: "locker",
+            capacity: 1,
+            status: true,
+            timeslots: [
+                {
+                    dayOfWeek: "Monday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Tuesday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Wednesday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Thursday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Friday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                }
+            ]
+        },
+        {
+            schoolId: createdIds.school,
+            name: "A102",
+            location: "Block D",
+            type: "locker",
+            capacity: 1,
+            status: true,
+            timeslots: [
+                {
+                    dayOfWeek: "Monday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Tuesday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Wednesday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Thursday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Friday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                }
+            ]
+        },
+        {
+            schoolId: createdIds.school,
+            name: "A103",
+            location: "Block D",
+            type: "locker",
+            capacity: 1,
+            status: true,
+            timeslots: [
+                {
+                    dayOfWeek: "Monday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Tuesday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Wednesday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Thursday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Friday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                }
+            ]
+        },
+        {
+            schoolId: createdIds.school,
+            name: "A104",
+            location: "Block D",
+            type: "locker",
+            capacity: 1,
+            status: true,
+            timeslots: [
+                {
+                    dayOfWeek: "Monday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Tuesday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Wednesday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Thursday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                },
+                {
+                    dayOfWeek: "Friday",
+                    slots: [
+                        { start: "08:00", end: "18:00" }
+                    ]
+                }
+            ]
+        },
+        {
+            schoolId: createdIds.school,
+            name: "A105",
+            location: "Block D",
+            type: "locker",
+            capacity: 1,
             status: true,
             timeslots: [
                 {
@@ -1383,127 +1583,116 @@ async function createFullSchoolData({
 
     // Create multiple locker units with variety for dashboard display
     const lockerUnitData = [
-        // Available lockers (current month)
+        // Available lockers (current month) - A100 to A105
         {
-            resourceId: createdIds.resources[5], // Locker Bank A
+            resourceId: createdIds.resources[5], // A100
             schoolId: createdIds.school,
             isAvailable: true,
             createdAt: new Date() // Current month
         },
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[6], // A101
             schoolId: createdIds.school,
             isAvailable: true,
             createdAt: new Date()
         },
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[7], // A102
             schoolId: createdIds.school,
             isAvailable: true,
             createdAt: new Date()
         },
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[8], // A103
             schoolId: createdIds.school,
             isAvailable: true,
             createdAt: new Date()
         },
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[9], // A104
             schoolId: createdIds.school,
             isAvailable: true,
             createdAt: new Date()
         },
         // Used lockers (current month)
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[10], // A105
+            schoolId: createdIds.school,
+            isAvailable: false,
+            createdAt: new Date()
+        },
+        // Additional variety for better statistics
+        {
+            resourceId: createdIds.resources[5], // A100
             schoolId: createdIds.school,
             isAvailable: false,
             createdAt: new Date()
         },
         {
-            resourceId: createdIds.resources[5],
-            schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date()
-        },
-        {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[6], // A101
             schoolId: createdIds.school,
             isAvailable: false,
             createdAt: new Date()
         },
         // Last month lockers (for comparison)
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[7], // A102
             schoolId: createdIds.school,
             isAvailable: false,
             createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 15)
         },
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[8], // A103
             schoolId: createdIds.school,
             isAvailable: true,
             createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 20)
         },
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[9], // A104
             schoolId: createdIds.school,
             isAvailable: false,
             createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 25)
         },
         // Two months ago lockers
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[10], // A105
             schoolId: createdIds.school,
             isAvailable: true,
             createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 10)
         },
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[5], // A100
             schoolId: createdIds.school,
             isAvailable: false,
             createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 15)
         },
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[6], // A101
             schoolId: createdIds.school,
             isAvailable: true,
             createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 20)
         },
         // Additional variety for better statistics
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[7], // A102
             schoolId: createdIds.school,
             isAvailable: false,
             createdAt: new Date()
         },
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[8], // A103
             schoolId: createdIds.school,
             isAvailable: true,
             createdAt: new Date()
         },
         {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[9], // A104
             schoolId: createdIds.school,
             isAvailable: false,
             createdAt: new Date()
         },
         {
-            resourceId: createdIds.resources[5],
-            schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date()
-        },
-        {
-            resourceId: createdIds.resources[5],
-            schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date()
-        },
-        {
-            resourceId: createdIds.resources[5],
+            resourceId: createdIds.resources[10], // A105
             schoolId: createdIds.school,
             isAvailable: true,
             createdAt: new Date()
@@ -1705,18 +1894,141 @@ async function createFullSchoolData({
     const routeRes = await apiCall('POST', '/api/route', routeData);
     createdIds.routes.push(routeRes.data._id);
 
-    console.log(`[${schoolPrefix}] Transportation: Creating BusSchedule...`);
-    const busScheduleData = {
-        routeId: [createdIds.routes[0]],
-        vehicleId: createdIds.vehicles[0], // Bus vehicle (first vehicle)
-        departureTime: new Date().toISOString(),
-        arrivalTime: new Date(Date.now() + 3600000).toISOString(),
-        dayActive: 1,
-        active: true,
-        schoolId: createdIds.school
-    };
-    const busScheduleRes = await apiCall('POST', '/api/bus-schedule', busScheduleData);
-    createdIds.busSchedules.push(busScheduleRes.data._id);
+    console.log(`[${schoolPrefix}] Transportation: Creating BusSchedules...`);
+
+    // Create multiple bus schedules with different time slots and recurring patterns
+    const busSchedulesData = [
+        // Morning route - Monday to Friday
+        {
+            routeTiming: [
+                {
+                    routeId: createdIds.routes[0],
+                    startTime: "07:30",
+                    endTime: "08:00"  // Will be auto-calculated by controller
+                }
+            ],
+            vehicleId: createdIds.vehicles[0], // Bus vehicle
+            dayOfWeek: 1, // Monday
+            startDate: new Date().toISOString(),
+            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
+            active: true,
+            schoolId: createdIds.school
+        },
+        {
+            routeTiming: [
+                {
+                    routeId: createdIds.routes[0],
+                    startTime: "08:00",
+                    endTime: "08:30"  // Will be auto-calculated by controller
+                }
+            ],
+            vehicleId: createdIds.vehicles[0], // Bus vehicle
+            dayOfWeek: 1, // Monday
+            startDate: new Date().toISOString(),
+            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            active: true,
+            schoolId: createdIds.school
+        },
+        // Afternoon route - Monday to Friday
+        {
+            routeTiming: [
+                {
+                    routeId: createdIds.routes[0],
+                    startTime: "12:00",
+                    endTime: "12:30"  // Will be auto-calculated by controller
+                }
+            ],
+            vehicleId: createdIds.vehicles[0], // Bus vehicle
+            dayOfWeek: 1, // Monday
+            startDate: new Date().toISOString(),
+            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            active: true,
+            schoolId: createdIds.school
+        },
+        {
+            routeTiming: [
+                {
+                    routeId: createdIds.routes[0],
+                    startTime: "13:00",
+                    endTime: "13:30"  // Will be auto-calculated by controller
+                }
+            ],
+            vehicleId: createdIds.vehicles[0], // Bus vehicle
+            dayOfWeek: 1, // Monday
+            startDate: new Date().toISOString(),
+            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            active: true,
+            schoolId: createdIds.school
+        },
+        // Evening route - Monday to Friday
+        {
+            routeTiming: [
+                {
+                    routeId: createdIds.routes[0],
+                    startTime: "17:00",
+                    endTime: "17:30"  // Will be auto-calculated by controller
+                }
+            ],
+            vehicleId: createdIds.vehicles[0], // Bus vehicle
+            dayOfWeek: 1, // Monday
+            startDate: new Date().toISOString(),
+            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            active: true,
+            schoolId: createdIds.school
+        },
+        {
+            routeTiming: [
+                {
+                    routeId: createdIds.routes[0],
+                    startTime: "18:00",
+                    endTime: "18:30"  // Will be auto-calculated by controller
+                }
+            ],
+            vehicleId: createdIds.vehicles[0], // Bus vehicle
+            dayOfWeek: 1, // Monday
+            startDate: new Date().toISOString(),
+            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            active: true,
+            schoolId: createdIds.school
+        },
+        // Weekend route - Saturday only
+        {
+            routeTiming: [
+                {
+                    routeId: createdIds.routes[0],
+                    startTime: "09:00",
+                    endTime: "09:30"  // Will be auto-calculated by controller
+                }
+            ],
+            vehicleId: createdIds.vehicles[0], // Bus vehicle
+            dayOfWeek: 6, // Saturday
+            startDate: new Date().toISOString(),
+            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            active: true,
+            schoolId: createdIds.school
+        },
+        {
+            routeTiming: [
+                {
+                    routeId: createdIds.routes[0],
+                    startTime: "14:00",
+                    endTime: "14:30"  // Will be auto-calculated by controller
+                }
+            ],
+            vehicleId: createdIds.vehicles[0], // Bus vehicle
+            dayOfWeek: 6, // Saturday
+            startDate: new Date().toISOString(),
+            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            active: true,
+            schoolId: createdIds.school
+        }
+    ];
+
+    for (let i = 0; i < busSchedulesData.length; i++) {
+        const busScheduleRes = await apiCall('POST', '/api/bus-schedule', busSchedulesData[i]);
+        createdIds.busSchedules.push(busScheduleRes.data._id);
+        console.log(`[${schoolPrefix}] ✅ Bus Schedule created: ${busSchedulesData[i].startTime} - ${busSchedulesData[i].endTime} (${busScheduleRes.data._id})`);
+    }
 
     console.log(`[${schoolPrefix}] Transportation: Creating EHailing...`);
     const eHailingData = {
@@ -1732,15 +2044,97 @@ async function createFullSchoolData({
 
     // 5. Service
     console.log(`[${schoolPrefix}] Service: Creating Feedback...`);
-    const feedbackData = {
-        studentId: createdIds.students[0],
-        schoolId: createdIds.school,
-        feedbackType: "complaint",
-        message: "Air conditioning not working in the library.",
-        status: "open"
-    };
-    const feedbackRes = await apiCall('POST', '/api/feedback', feedbackData);
-    createdIds.feedbacks.push(feedbackRes.data._id);
+
+    // Create multiple varied feedback entries
+    const feedbackEntries = [
+        {
+            studentId: createdIds.students[0],
+            schoolId: createdIds.school,
+            feedbackType: "complaint",
+            priority: "High",
+            message: "Air conditioning not working in the library. It's very hot and difficult to study.",
+            status: "open"
+        },
+        {
+            studentId: createdIds.students[1] || createdIds.students[0],
+            schoolId: createdIds.school,
+            feedbackType: "compliment",
+            priority: "Low",
+            message: "The new study rooms are excellent! Great addition to the campus.",
+            status: "resolved"
+        },
+        {
+            studentId: createdIds.students[2] || createdIds.students[0],
+            schoolId: createdIds.school,
+            feedbackType: "suggestion",
+            priority: "Medium",
+            message: "Would it be possible to extend the library hours during exam periods?",
+            status: "in_progress"
+        },
+        {
+            studentId: createdIds.students[3] || createdIds.students[0],
+            schoolId: createdIds.school,
+            feedbackType: "query",
+            priority: "Low",
+            message: "What are the operating hours for the computer lab during weekends?",
+            status: "sent"
+        },
+        {
+            studentId: createdIds.students[4] || createdIds.students[0],
+            schoolId: createdIds.school,
+            feedbackType: "issue",
+            priority: "Urgent",
+            message: "There's a broken window in Room 201 that needs immediate attention.",
+            status: "open"
+        },
+        {
+            studentId: createdIds.students[5] || createdIds.students[0],
+            schoolId: createdIds.school,
+            feedbackType: "complaint",
+            priority: "Medium",
+            message: "The cafeteria food quality has declined recently. Hoping for improvement.",
+            status: "in_progress"
+        },
+        {
+            studentId: createdIds.students[6] || createdIds.students[0],
+            schoolId: createdIds.school,
+            feedbackType: "suggestion",
+            priority: "Low",
+            message: "Consider adding more water fountains around the campus.",
+            status: "sent"
+        },
+        {
+            studentId: createdIds.students[7] || createdIds.students[0],
+            schoolId: createdIds.school,
+            feedbackType: "compliment",
+            priority: "Medium",
+            message: "The online course registration system is very user-friendly and efficient.",
+            status: "resolved"
+        },
+        {
+            studentId: createdIds.students[8] || createdIds.students[0],
+            schoolId: createdIds.school,
+            feedbackType: "issue",
+            priority: "High",
+            message: "WiFi connection is very slow in the student lounge area.",
+            status: "open"
+        },
+        {
+            studentId: createdIds.students[9] || createdIds.students[0],
+            schoolId: createdIds.school,
+            feedbackType: "query",
+            priority: "Low",
+            message: "When will the new sports facilities be available for student use?",
+            status: "sent"
+        }
+    ];
+
+    // Create all feedback entries
+    for (const feedbackData of feedbackEntries) {
+        const feedbackRes = await apiCall('POST', '/api/feedback', feedbackData);
+        createdIds.feedbacks.push(feedbackRes.data._id);
+        console.log(`[${schoolPrefix}] Created feedback: ${feedbackData.feedbackType} - ${feedbackData.priority} priority`);
+    }
 
     console.log(`[${schoolPrefix}] Service: Creating Respond...`);
     const respondData = {

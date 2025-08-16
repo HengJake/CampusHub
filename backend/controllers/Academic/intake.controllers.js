@@ -153,7 +153,7 @@ export const getIntakeById = controllerWrapper(async (req, res) => {
     return await getRecordById(Intake, id, "intake", ["schoolId"]);
 });
 
-export const getIntakesBySchool = controllerWrapper(async (req, res) => {
+export const getIntakesBySchoolId = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
     return await getAllRecords(
         Intake,

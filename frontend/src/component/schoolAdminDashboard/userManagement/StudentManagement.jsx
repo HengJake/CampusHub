@@ -42,6 +42,7 @@ import { useEffect, useState } from "react"
 import { useAcademicStore } from "../../../store/academic.js";
 import { useShowToast } from "../../../store/utils/toast.js";
 import { useUserStore } from "../../../store/user.js";
+import { useAuthStore } from "../../../store/auth.js";
 import { Spinner } from "@chakra-ui/react";
 import ComfirmationMessage from "../../common/ComfirmationMessage.jsx";
 
@@ -55,16 +56,19 @@ export function StudentManagement({ selectedIntakeCourse, filterBy }) {
         courses,
         intakes,
         intakeCourses,
-        fetchCourses,
-        fetchStudents,
-        fetchIntakes,
-        fetchIntakeCourses,
+        fetchCoursesBySchoolId,
+        fetchStudentsBySchoolId,
+        fetchIntakesBySchoolId,
+        fetchIntakeCoursesBySchoolId,
         createStudent,
         updateStudent,
         deleteStudent,
         loading,
     } = useAcademicStore();
-    
+
+    const { initializeAuth } = useAuthStore();
+
+
     const { isOpen, onOpen, onClose } = useDisclosure();
     const showToast = useShowToast();
     const toast = useToast()
@@ -78,13 +82,22 @@ export function StudentManagement({ selectedIntakeCourse, filterBy }) {
     const [isEdit, setIsEdit] = useState(false);
     const bgColor = useColorModeValue("white", "gray.800")
     const borderColor = useColorModeValue("gray.200", "gray.600")
-    
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
-        fetchIntakeCourses();
-        fetchStudents();
-        fetchCourses();
-        fetchIntakes();
+        const initializeAndFetch = async () => {
+            // First initialize auth from cookies
+            const authResult = await initializeAuth();
+            if (authResult.success) {
+                // Then fetch data
+                fetchIntakeCoursesBySchoolId();
+                fetchStudentsBySchoolId();
+                fetchCoursesBySchoolId();
+                fetchIntakesBySchoolId();
+            }
+        };
+
+        initializeAndFetch();
     }, [])
 
     // Handle initial filtering when navigated from intake courses
@@ -225,7 +238,7 @@ export function StudentManagement({ selectedIntakeCourse, filterBy }) {
         });
         setSelectedStudent(null);
         onClose();
-        await fetchStudents();
+        await fetchStudentsBySchoolId();
     };
 
     const handleEdit = async (student) => {
@@ -304,7 +317,7 @@ export function StudentManagement({ selectedIntakeCourse, filterBy }) {
         });
         setSelectedStudent(null);
         onClose();
-        await fetchStudents();
+        await fetchStudentsBySchoolId();
     };
 
     // to handle delete student
@@ -324,7 +337,7 @@ export function StudentManagement({ selectedIntakeCourse, filterBy }) {
             const res = await deleteStudent(id);
             if (res && res.success) {
                 showToast.success("Student deleted successfully", "", "delete-student");
-                await fetchStudents();
+                await fetchStudentsBySchoolId();
             } else {
                 showToast.error("Error deleting student", res && res.message ? res.message : "", "delete-student");
             }

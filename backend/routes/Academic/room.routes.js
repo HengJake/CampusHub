@@ -8,7 +8,7 @@ import {
     deleteAllRooms,
     checkRoomAvailability
 } from "../../controllers/Academic/room.controllers.js";
-import { getRoomsBySchool } from "../../controllers/Academic/room.controllers.js";
+import { getRoomsBySchoolId } from "../../controllers/Academic/room.controllers.js";
 
 const router = e.Router();
 
@@ -34,6 +34,6 @@ router.delete("/:id", deleteRoom);
 router.post("/check-availability", checkRoomAvailability);
 
 // Get rooms by school
-router.get("/school/:schoolId", getRoomsBySchool);
+router.get("/school/:schoolId", getRoomsBySchoolId);
 
 export default router;

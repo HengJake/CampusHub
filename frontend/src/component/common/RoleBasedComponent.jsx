@@ -4,7 +4,7 @@ import { Box, Spinner, Alert, AlertIcon, AlertTitle, AlertDescription } from '@c
 
 /**
  * RoleBasedComponent - A wrapper component that provides role-based context
- * and automatically handles schoolId for schoolAdmin operations
+ * and automatically handles authentication based on JWT tokens
  * 
  * @param {Object} props
  * @param {string} props.requiredRole - Required role to access this component
@@ -21,6 +21,7 @@ const RoleBasedComponent = ({
     showLoading = true,
     loadingComponent,
     unauthorizedComponent,
+    incompleteSetupComponent,
     onAuthSuccess,
     onAuthError,
     ...props
@@ -30,9 +31,8 @@ const RoleBasedComponent = ({
         isInitialized,
         isLoading,
         userRole,
-        schoolId,
         hasAccess,
-        getSchoolId
+        isSchoolSetupComplete
     } = useAuth();
 
     const [authError, setAuthError] = useState(null);
@@ -41,32 +41,16 @@ const RoleBasedComponent = ({
     useEffect(() => {
         if (isInitialized && !isLoading && !authSuccess) {
             if (isAuthenticated && hasAccess(requiredRole)) {
-                // Validate schoolId for schoolAdmin operations
-                if (requiredRole === 'schoolAdmin' || requiredRole === 'student') {
-                    try {
-                        const currentSchoolId = getSchoolId();
-                        if (currentSchoolId) {
-                            setAuthError(null);
-                            setAuthSuccess(true);
-                            onAuthSuccess?.({ schoolId: currentSchoolId, role: userRole });
-                        } else {
-                            throw new Error('School ID not available');
-                        }
-                    } catch (error) {
-                        setAuthError('School ID not available for current user');
-                        onAuthError?.(error);
-                    }
-                } else {
-                    setAuthSuccess(true);
-                    setAuthError(null);
-                    onAuthSuccess?.({ role: userRole });
-                }
+                // Authentication successful - no need to validate schoolId
+                setAuthSuccess(true);
+                setAuthError(null);
+                onAuthSuccess?.({ role: userRole });
             } else {
                 setAuthError('Access denied. Insufficient permissions.');
                 onAuthError?.({ message: 'Access denied' });
             }
         }
-    }, [isInitialized, isLoading, isAuthenticated, userRole, schoolId, requiredRole, hasAccess, getSchoolId, onAuthSuccess, onAuthError]);
+    }, [isInitialized, isLoading, isAuthenticated, userRole, requiredRole, hasAccess, onAuthSuccess, onAuthError]);
 
     // Show loading state
     if (!isInitialized || isLoading) {
@@ -78,6 +62,18 @@ const RoleBasedComponent = ({
             );
         }
         return null;
+    }
+
+    // Check for incomplete school setup
+    if (requiredRole === "schoolAdmin" && isAuthenticated && hasAccess(requiredRole)) {
+        if (!isSchoolSetupComplete) {
+            if (incompleteSetupComponent) {
+                return incompleteSetupComponent;
+            }
+            // Redirect to school setup page
+            window.location.href = '/school-setup';
+            return null;
+        }
     }
 
     // Show unauthorized state
@@ -109,7 +105,7 @@ const RoleBasedComponent = ({
 
 /**
  * SchoolAdminComponent - Specialized wrapper for schoolAdmin components
- * Automatically handles schoolId validation and injection
+ * Handles authentication and role validation
  */
 export const SchoolAdminComponent = ({ children, ...props }) => {
     return (
@@ -138,7 +134,7 @@ export const CompanyAdminComponent = ({ children, ...props }) => {
 
 /**
  * StudentComponent - Specialized wrapper for student components
- * Automatically handles schoolId validation
+ * Handles authentication and role validation
  */
 export const StudentComponent = ({ children, ...props }) => {
     return (

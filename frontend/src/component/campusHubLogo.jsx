@@ -70,7 +70,7 @@ export const CampusHubLogo = () => {
           <Text
             fontSize="xl"
             fontWeight="bold"
-            bgGradient="linear-gradient(90deg, white, blue.200)"
+            bgGradient="linear-gradient(90deg, blue.500, blue.200)"
             bgClip="text"
             wordBreak="normal"
             whiteSpace="nowrap"

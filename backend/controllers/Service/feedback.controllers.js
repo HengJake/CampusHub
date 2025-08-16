@@ -30,7 +30,7 @@ const validateFeedbackData = async (data) => {
 
     // Validate status enum if provided
     if (status) {
-        const validStatuses = ['open', 'in_progress', 'resolved', 'closed'];
+        const validStatuses = ['sent', 'open', 'in_progress', 'resolved', 'closed'];
         if (!validStatuses.includes(status)) {
             return { isValid: false, message: `status must be one of: ${validStatuses.join(', ')}` };
         }

@@ -1,5 +1,4 @@
 import React from "react";
-import "./login.scss";
 import { useRef, useState, useEffect, useContext } from "react";
 import {
   Box,
@@ -17,9 +16,11 @@ import {
   ModalBody,
   ModalFooter,
   Link as ChakraLink,
-  useToast,
   Link,
+  InputGroup,
+  InputRightElement,
 } from "@chakra-ui/react";
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 
 import { redirect } from "react-router-dom";
 import { color } from "framer-motion";
@@ -31,11 +32,14 @@ import RegisterBox from "../../../component/common/registerBox";
 import LoginBackground from "/LoginBackground.png";
 import { Image } from "@chakra-ui/react";
 import { useAuthStore } from "../../../store/auth";
+import { detectTokenAndRedirect, getRedirectPath } from "../../../utils/authRedirect.js";
+import { useShowToast } from "../../../store/utils/toast.js";
 
 function login() {
   const [isCoolingDown, setIsCoolingDown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const toast = useToast();
+  const [showPassword, setShowPassword] = useState(false);
+  const showToast = useShowToast();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
@@ -43,7 +47,23 @@ function login() {
   });
   const { isOpen, onOpen, onClose } = useDisclosure();
   // fix login user
-  const { loginUser } = useAuthStore();
+  const { logIn } = useAuthStore();
+
+  // Check for existing JWT token and redirect if necessary
+  useEffect(() => {
+    const checkExistingAuth = async () => {
+      const redirected = await detectTokenAndRedirect(navigate);
+      if (redirected) {
+        showToast.success(
+          "Welcome back!",
+          "You are already logged in.",
+          "auto-login"
+        );
+      }
+    };
+
+    checkExistingAuth();
+  }, [navigate, showToast]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -58,53 +78,34 @@ function login() {
 
     //prevent spamming
     if (isLoading || isCoolingDown) {
-      const toastId = "cool-down";
-      if (!toast.isActive(toastId)) {
-        toast({
-          id: toastId,
-          title: "Stop spamming 🚫",
-          description: "Please wait a while to log in again",
-          position: "top",
-          status: "error",
-          isClosable: true,
-        });
-      }
-
+      showToast.error(
+        "Stop spamming",
+        "Please wait a while to log in again",
+        "cool-down"
+      );
       return;
     }
     setIsLoading(true);
 
     try {
-      const { success, message, data, token } = await loginUser(
-        formData,
-        "student"
-      );
+      const { success, message, data, token } = await logIn(formData);
 
-      const toastId = "log-in";
       if (!success) {
-        if (!toast.isActive(toastId)) {
-          toast({
-            id: toastId,
-            title: "Error Logging In",
-            description: message,
-            position: "top",
-            status: "error",
-            isClosable: true,
-          });
-        }
+        showToast.error(
+          "Error Logging In",
+          message,
+          "log-in"
+        );
       } else {
-        toast({
-          id: toastId,
-          title: "Log In successfully",
-          description: message,
-          position: "top",
-          status: "success",
-          isClosable: true,
-        });
+        showToast.success(
+          "Log In successfully",
+          message,
+          "log-in"
+        );
 
-        localStorage.setItem("token", token);
-        localStorage.setItem("role", data.role);
-        navigate("/user-dashboard");
+        // Redirect based on role and setup status
+        const redirectPath = getRedirectPath(data.role, data.schoolSetupComplete);
+        navigate(redirectPath);
       }
 
       setIsCoolingDown(true);
@@ -113,13 +114,10 @@ function login() {
       }, 3000);
     } catch (error) {
       console.error("Unexpected error:", error);
-      toast({
-        title: "Unexpected Error",
-        description: "Something went wrong. Please try again.",
-        status: "error",
-        isClosable: true,
-        position: "top",
-      });
+      showToast.error(
+        "Unexpected Error",
+        "Something went wrong. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -173,7 +171,7 @@ function login() {
       >
         <Text textAlign={"left"}>
           Don't have an account?{" "}
-          <Link color={"blue.400"} textDecor={"underline"} onClick={() => navigate("/signup")}>
+          <Link color={"blue.400"} textDecor={"underline"} ml={3} onClick={() => navigate("/signup")}>
             Sign Up
           </Link>
         </Text>
@@ -202,23 +200,36 @@ function login() {
             }}
           />
 
-          <Input
-            name="password"
-            type="password"
-            p={7}
-            _placeholder={{ color: "rgba(255, 255, 255, 0.37)" }}
-            placeholder="Password"
-            size="lg"
-            color={"white"}
-            required
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handleLogin(e);
-              }
-            }}
-          />
+          <InputGroup>
+            <Input
+              name="password"
+              type={showPassword ? "text" : "password"}
+              p={7}
+              _placeholder={{ color: "rgba(255, 255, 255, 0.37)" }}
+              placeholder="Password"
+              size="lg"
+              color={"white"}
+              required
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleLogin(e);
+                }
+              }}
+            />
+            <InputRightElement p={7}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowPassword(!showPassword)}
+                color="white"
+                _hover={{ bg: "rgba(255, 255, 255, 0.1)" }}
+              >
+                {showPassword ? <ViewOffIcon /> : <ViewIcon />}
+              </Button>
+            </InputRightElement>
+          </InputGroup>
         </Box>
 
         {/* Pop Up */}

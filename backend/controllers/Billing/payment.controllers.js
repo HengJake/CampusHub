@@ -1,7 +1,5 @@
 import Payment from "../../models/Billing/payment.model.js";
-import User from "../../models/Academic/user.model.js";
 import School from "../../models/Billing/school.model.js";
-import Subscription from "../../models/Billing/subscription.model.js";
 import {
     createRecord,
     getAllRecords,
@@ -9,13 +7,12 @@ import {
     updateRecord,
     deleteRecord,
     validateReferenceExists,
-    validateMultipleReferences,
     controllerWrapper
 } from "../../utils/reusable.js";
 
 // Custom validation function for payment data
 const validatePaymentData = async (data) => {
-    const { schoolId, userId, subscriptionId } = data;
+    const { schoolId, cardHolderName, last4Digit, expiryDate, paymentMethod } = data;
 
     // Check required fields
     if (!schoolId) {
@@ -24,14 +21,33 @@ const validatePaymentData = async (data) => {
             message: "schoolId is required"
         };
     }
+    if (!cardHolderName) {
+        return {
+            isValid: false,
+            message: "cardHolderName is required"
+        };
+    }
+    if (!last4Digit) {
+        return {
+            isValid: false,
+            message: "last4Digit is required"
+        };
+    }
+    if (!expiryDate) {
+        return {
+            isValid: false,
+            message: "expiryDate is required"
+        };
+    }
+    if (!paymentMethod) {
+        return {
+            isValid: false,
+            message: "paymentMethod is required"
+        };
+    }
 
-    // Validate references exist
-    const referenceValidation = await validateMultipleReferences({
-        schoolId: { id: schoolId, Model: School },
-        userId: { id: userId, Model: User },
-        subscriptionId: { id: subscriptionId, Model: Subscription }
-    });
-
+    // Validate schoolId reference exists
+    const referenceValidation = await validateReferenceExists(schoolId, School, "schoolId");
     if (referenceValidation) {
         return {
             isValid: false,
@@ -57,7 +73,7 @@ export const getAllPayments = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Payment,
         "payments",
-        ['schoolID']
+        ['schoolId']
     );
 });
 
@@ -68,7 +84,7 @@ export const getPaymentById = controllerWrapper(async (req, res) => {
         Payment,
         id,
         "payment",
-        ['schoolID']
+        ['schoolId']
     );
 });
 
@@ -78,8 +94,8 @@ export const getPaymentsBySchool = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Payment,
         "payments",
-        ['SchoolID', 'UserID', 'SubscriptionID'],
-        { SchoolID: schoolId }
+        ['schoolId'],
+        { schoolId: schoolId }
     );
 });
 
@@ -89,8 +105,8 @@ export const getPaymentsByUser = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Payment,
         "payments",
-        ['SchoolID', 'UserID', 'SubscriptionID'],
-        { UserID: userId }
+        ['schoolId'],
+        { userId: userId }
     );
 });
 
@@ -100,8 +116,8 @@ export const getPaymentsBySubscription = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Payment,
         "payments",
-        ['SchoolID', 'UserID', 'SubscriptionID'],
-        { SubscriptionID: subscriptionId }
+        ['schoolId'],
+        { subscriptionId: subscriptionId }
     );
 });
 
@@ -111,8 +127,8 @@ export const getPaymentsByPaymentMethod = controllerWrapper(async (req, res) => 
     return await getAllRecords(
         Payment,
         "payments",
-        ['SchoolID', 'UserID', 'SubscriptionID'],
-        { PaymentMethod: paymentMethod }
+        ['schoolId'],
+        { paymentMethod: paymentMethod }
     );
 });
 

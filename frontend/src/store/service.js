@@ -86,7 +86,6 @@ export const useServiceStore = create((set, get) => ({
                 url = "/api/feedback";
             }
 
-            console.log("🚀 ~ url:", url)
             const res = await fetch(url, {
                 credentials: 'include'
             });

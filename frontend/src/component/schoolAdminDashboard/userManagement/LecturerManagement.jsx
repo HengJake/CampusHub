@@ -46,19 +46,22 @@ import { useUserStore } from "../../../store/user.js";
 import TitleInputList from "../../common/TitleInputList.jsx";
 import { IoIosRemoveCircle } from "react-icons/io";
 import { useShowToast } from "../../../store/utils/toast.js"
+import { useAuthStore } from "../../../store/auth.js";
 
 export function LecturerManagement() {
     const {
         lecturers,
         departments,
         modules,
-        fetchLecturers,
-        fetchDepartments,
-        fetchModules,
+        fetchLecturersBySchoolId,
+        fetchDepartmentsBySchoolId,
+        fetchModulesBySchoolId,
         createLecturer,
         updateLecturer,
         deleteLecturer
     } = useAcademicStore();
+
+    const { initializeAuth } = useAuthStore();
 
     const { isOpen, onOpen, onClose } = useDisclosure();
     const showToast = useShowToast();
@@ -75,19 +78,26 @@ export function LecturerManagement() {
     const { createUser, modifyUser } = useUserStore();
 
     useEffect(() => {
+        const initializeAndFetch = async () => {
+            // First initialize auth from cookies
+            const authResult = await initializeAuth();
+            if (authResult.success) {
+                // Then fetch data only if not already loaded
+                if (lecturers.length == 0) {
+                    fetchLecturersBySchoolId();
+                }
 
-        if (lecturers.length == 0) {
-            fetchLecturers();
-        }
+                if (departments.length == 0) {
+                    fetchDepartmentsBySchoolId();
+                }
 
-        if (fetchDepartments.length == 0) {
-            fetchDepartments();
-        }
+                if (modules.length == 0) {
+                    fetchModulesBySchoolId();
+                }
+            }
+        };
 
-        if (fetchModules.length == 0) {
-            fetchModules();
-        }
-
+        initializeAndFetch();
     }, []);
 
 
