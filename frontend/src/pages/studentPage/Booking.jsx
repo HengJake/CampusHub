@@ -112,7 +112,7 @@ const StudyRoom = () => {
     loading,
     errors,
     fetchResources,
-    fetchBookings,
+    fetchBookingsByStudentId,
     createBooking,
     updateBooking,
     deleteBooking
@@ -124,8 +124,10 @@ const StudyRoom = () => {
   // Fetch data on component mount
   useEffect(() => {
     fetchResources()
-    fetchBookings()
-  }, [])
+    if (currentUser?.studentId) {
+      fetchBookingsByStudentId(currentUser.studentId)
+    }
+  }, [fetchResources, fetchBookingsByStudentId, currentUser])
 
   // Auto-refresh simulation
   useEffect(() => {
@@ -133,12 +135,14 @@ const StudyRoom = () => {
 
     const interval = setInterval(() => {
       fetchResources()
-      fetchBookings()
+      if (currentUser?.studentId) {
+        fetchBookingsByStudentId(currentUser.studentId)
+      }
       setLastUpdated(new Date())
     }, 30000) // Refresh every 30 seconds
 
     return () => clearInterval(interval)
-  }, [autoRefresh])
+  }, [autoRefresh, fetchResources, fetchBookingsByStudentId, currentUser])
 
   // Get day of week from date
   const getDayOfWeek = (dateString) => {
@@ -395,7 +399,9 @@ const StudyRoom = () => {
 
   const handleRefresh = () => {
     fetchResources()
-    fetchBookings()
+    if (currentUser?.studentId) {
+      fetchBookingsByStudentId(currentUser.studentId)
+    }
     setLastUpdated(new Date())
     toast({
       title: "Data Refreshed",

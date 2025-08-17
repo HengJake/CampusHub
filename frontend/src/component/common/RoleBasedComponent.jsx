@@ -24,6 +24,7 @@ const RoleBasedComponent = ({
     incompleteSetupComponent,
     onAuthSuccess,
     onAuthError,
+    skipAuth = false,
     ...props
 }) => {
     const {
@@ -82,6 +83,11 @@ const RoleBasedComponent = ({
             return unauthorizedComponent;
         }
 
+        // Redirect to landing page after showing alert
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 3000);
+
         return (
             <Alert status="error" variant="subtle" flexDirection="column" alignItems="center" justifyContent="center" textAlign="center" height="200px">
                 <AlertIcon boxSize="40px" mr={0} />
@@ -89,7 +95,7 @@ const RoleBasedComponent = ({
                     Access Denied
                 </AlertTitle>
                 <AlertDescription maxWidth="sm">
-                    {authError || 'You do not have permission to access this resource.'}
+                    {authError || 'You do not have permission to access this resource. Redirecting to home page...'}
                 </AlertDescription>
             </Alert>
         );

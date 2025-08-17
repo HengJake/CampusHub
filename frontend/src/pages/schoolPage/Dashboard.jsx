@@ -13,6 +13,7 @@ import { useTransportationStore } from "../../store/transportation.js";
 import { useEffect } from "react";
 import { StatsCard } from "../../component/common/StatsCard.jsx"
 import { FaBookReader } from "react-icons/fa";
+import { useAuth } from "../../hooks/useAuth.js";
 
 
 export function Dashboard() {
@@ -31,11 +32,48 @@ export function Dashboard() {
     attendance, fetchAttendance,
     results, fetchResults,
     rooms, fetchRooms,
-    schools, fetchSchools
+    schools, fetchSchools,
+    fetchStudentsBySchoolId,
+    fetchCoursesBySchoolId,
+    fetchIntakesBySchoolId,
+    fetchIntakeCoursesBySchoolId,
+    fetchDepartmentsBySchoolId,
+    fetchLecturersBySchoolId,
+    fetchModulesBySchoolId,
+    fetchClassSchedulesBySchoolId,
+    fetchExamSchedulesBySchoolId,
+    fetchAttendanceBySchoolId,
+    fetchResultsBySchoolId,
+    fetchRoomsBySchoolId
   } = useAcademicStore();
-  const { bookings, fetchBookings, resources, fetchResources, lockerUnits, fetchLockerUnits } = useFacilityStore();
-  const { feedback, fetchFeedback, lostItems, fetchLostItems, responds, fetchResponds } = useServiceStore();
-  const { busSchedules, fetchBusSchedules, eHailings, fetchEHailings, routes, fetchRoutes, stops, fetchStops, vehicles, fetchVehicles } = useTransportationStore();
+  const {
+    bookings, fetchBookings,
+    resources, fetchResources,
+    lockerUnits, fetchLockerUnits,
+    fetchBookingsBySchoolId,
+    fetchResourcesBySchoolId,
+    fetchLockerUnitsBySchoolId
+  } = useFacilityStore();
+  const {
+    feedback, fetchFeedback,
+    lostItems, fetchLostItems,
+    responds, fetchResponds,
+    fetchFeedbackBySchoolId,
+    fetchLostItemsBySchoolId,
+    fetchRespondsBySchoolId
+  } = useServiceStore();
+  const {
+    busSchedules, fetchBusSchedules,
+    eHailings, fetchEHailings,
+    routes, fetchRoutes,
+    stops, fetchStops,
+    vehicles, fetchVehicles,
+    fetchBusSchedulesBySchoolId,
+    fetchEHailingsBySchoolId,
+    fetchRoutesBySchoolId,
+    fetchStopsBySchoolId,
+    fetchVehiclesBySchoolId
+  } = useTransportationStore();
 
   const stats = {
     studentChange: 0,
@@ -114,50 +152,51 @@ export function Dashboard() {
   // Display all intakes count
   const currentMonthIntakes = intakes.length;
 
-
+  const { isInitialized } = useAuth();
 
   useEffect(() => {
+    if (!isInitialized) return; 
     // =====================
     // Academic Store Fetches
     // =====================
-    fetchStudents();
-    fetchCourses();
-    fetchIntakes();
-    fetchIntakeCourses();
-    fetchDepartments();
-    fetchLecturers();
-    fetchModules();
-    fetchClassSchedules();
-    fetchExamSchedules();
-    fetchAttendance();
-    fetchResults();
-    fetchRooms();
-    fetchSchools();
+    fetchStudentsBySchoolId();
+    fetchCoursesBySchoolId();
+    fetchIntakesBySchoolId();
+    fetchIntakeCoursesBySchoolId();
+    fetchDepartmentsBySchoolId();
+    fetchLecturersBySchoolId();
+    fetchModulesBySchoolId();
+    fetchClassSchedulesBySchoolId();
+    fetchExamSchedulesBySchoolId();
+    fetchAttendanceBySchoolId();
+    fetchResultsBySchoolId();
+    fetchRoomsBySchoolId();
 
     // =====================
     // Facility Store Fetches
     // =====================
-    fetchBookings();
-    fetchResources();
-    fetchLockerUnits();
+    fetchBookingsBySchoolId();
+    fetchResourcesBySchoolId();
+    fetchLockerUnitsBySchoolId();
 
     // =====================
     // Service Store Fetches
     // =====================
-    fetchFeedback();
-    fetchLostItems();
-    fetchResponds();
+    fetchFeedbackBySchoolId();
+    fetchLostItemsBySchoolId();
+    fetchRespondsBySchoolId();
 
     // =====================
     // Transportation Store Fetches
     // =====================
-    fetchBusSchedules();
-    fetchEHailings();
-    fetchRoutes();
-    fetchStops();
-    fetchVehicles();
+    fetchBusSchedulesBySchoolId();
+    fetchEHailingsBySchoolId();
+    fetchRoutesBySchoolId();
+    fetchStopsBySchoolId();
+    fetchVehiclesBySchoolId();
 
-  }, [])
+  }, [isInitialized])
+
 
   return (
     <Box flex={1}>

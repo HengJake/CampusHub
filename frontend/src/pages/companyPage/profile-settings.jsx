@@ -50,6 +50,9 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { Smartphone, Monitor, Edit, Save, X, Eye, EyeOff } from "lucide-react";
+import ProfilePicture from "../../component/common/ProfilePicture";
+import { useUserStore } from "../../store/user";
+import { useEffect } from "react";
 
 const mockAdminData = {
   id: 1,
@@ -61,6 +64,7 @@ const mockAdminData = {
   joinDate: "2022-03-15",
   lastLogin: "2024-01-30 14:30:00",
   avatar: null,
+  profilePicture: null, // Add profile picture field
   timezone: "America/Chicago",
   language: "English",
   theme: "light",
@@ -131,6 +135,41 @@ export default function ProfileSettings() {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  // Load current user's profile data including profile picture
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const authResponse = await fetch('/auth/is-auth', {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (authResponse.ok) {
+          const authData = await authResponse.json();
+          if (authData.id) {
+            const userResult = await useUserStore.getState().getUser(authData.id);
+            if (userResult.success && userResult.data) {
+              const user = userResult.data;
+              setAdminData(prev => ({
+                ...prev,
+                name: user.name || prev.name,
+                email: user.email || prev.email,
+                phone: user.phoneNumber || prev.phone,
+                profilePicture: user.profilePicture || prev.profilePicture,
+                role: authData.role || prev.role,
+                joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : prev.joinDate,
+              }));
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Could not fetch user profile data:', error);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
+
   const handleSaveProfile = () => {
     // Mock save functionality
     setIsEditing(false);
@@ -194,6 +233,96 @@ export default function ProfileSettings() {
     });
   };
 
+  const handleProfilePictureChange = async (file, formData) => {
+    try {
+      // Get current user ID from auth
+      const authResponse = await fetch('/auth/is-auth', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!authResponse.ok) {
+        throw new Error('Authentication failed');
+      }
+
+      const authData = await authResponse.json();
+
+      if (!authData.id) {
+        throw new Error('User ID not found');
+      }
+
+      if (file === null) {
+        // Remove profile picture using user store (calls API)
+        console.log('Removing profile picture for user:', authData.id);
+        const result = await useUserStore.getState().updateUserProfilePicture(authData.id, null);
+
+        if (result.success) {
+          // Update local state
+          setAdminData(prev => ({ ...prev, profilePicture: null }));
+
+          // Refresh user data from API
+          const userResult = await useUserStore.getState().getUser(authData.id);
+          if (userResult.success && userResult.data) {
+            setAdminData(prev => ({
+              ...prev,
+              profilePicture: userResult.data.profilePicture || ""
+            }));
+          }
+        } else {
+          throw new Error(result.message || 'Failed to remove profile picture from database');
+        }
+      } else {
+        // Upload new profile picture
+        console.log('Uploading new profile picture for user:', authData.id);
+
+        // Convert file to base64 for demo purposes (not recommended for production)
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const base64String = e.target.result;
+
+          // Update using user store (calls API)
+          const result = await useUserStore.getState().updateUserProfilePicture(authData.id, base64String);
+
+          if (result.success) {
+            // Update local state
+            setAdminData(prev => ({ ...prev, profilePicture: base64String }));
+
+            // Refresh user data from API
+            const userResult = await useUserStore.getState().getUser(authData.id);
+            if (userResult.success && userResult.data) {
+              setAdminData(prev => ({
+                ...prev,
+                profilePicture: userResult.data.profilePicture || ""
+              }));
+            }
+          } else {
+            throw new Error(result.message || 'Failed to update profile picture in database');
+          }
+        };
+
+        reader.readAsDataURL(file);
+      }
+
+      toast({
+        title: "Profile Picture Updated",
+        description: "Your profile picture has been successfully saved to the database.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error updating profile picture:', error);
+      toast({
+        title: "Profile Picture Update Failed",
+        description: error.message || "Failed to update profile picture. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      throw error; // Re-throw to let the ProfilePicture component handle the error
+    }
+  };
+
   return (
     <VStack spacing={6} align="stretch" pl={2}>
       {/* Header */}
@@ -231,10 +360,13 @@ export default function ProfileSettings() {
               <Card>
                 <CardBody>
                   <VStack spacing={4}>
-                    <Avatar size="2xl" name={adminData.name} />
-                    <Button size="sm" variant="outline">
-                      Change Photo
-                    </Button>
+                    <ProfilePicture
+                      src={adminData.profilePicture}
+                      name={adminData.name}
+                      size="2xl"
+                      bgColor="#2563eb"
+                      onPhotoChange={handleProfilePictureChange}
+                    />
                     <VStack spacing={2} textAlign="center">
                       <Text fontSize="xl" fontWeight="bold">
                         {adminData.name}

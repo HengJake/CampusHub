@@ -14,6 +14,7 @@ export const useStudentStore = create(
         year: 3,
         semester: "Fall 2024",
         avatar: null,
+        profilePicture: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face", // Sample profile picture
       },
 
       // Facility Management

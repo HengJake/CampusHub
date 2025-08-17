@@ -1,5 +1,3 @@
-"use client"
-
 import {
   Box,
   Card,
@@ -23,13 +21,19 @@ import {
   useColorModeValue,
   Grid,
   Switch,
+  SimpleGrid,
+  Spinner,
+  IconButton,
 } from "@chakra-ui/react"
-import { FiEdit, FiSave, FiCamera, FiActivity, FiShield, FiUser, FiSettings, FiCheckCircle, FiMessageSquare, FiBell, FiUsers, FiFileText } from "react-icons/fi"
+import { FiEdit, FiSave, FiCamera, FiActivity, FiShield, FiUser, FiSettings, FiCheckCircle, FiMessageSquare, FiBell, FiUsers, FiFileText, FiRefreshCw } from "react-icons/fi"
 import { useState, useEffect } from "react"
 import { useBillingStore } from "../../store/billing"
 import { useUserStore } from "../../store/user"
 import { useAuthStore } from "../../store/auth"
-import DataGeneratorModal from "../../components/common/DataGeneratorModal"
+import DataGeneratorModal from "../../component/DataGeneratorModal"
+import ProfilePicture from "../../component/common/ProfilePicture"
+import { clearSchoolData } from "../../utils/academicDataGenerator.js"
+import ComfirmationMessage from "../../component/common/ComfirmationMessage"
 
 const recentActivity = [
   { id: 1, action: "Updated system settings", timestamp: "2024-01-20 14:30", type: "settings" },
@@ -42,8 +46,12 @@ const recentActivity = [
 export function AdminProfile() {
 
   const { getUser } = useUserStore();
-  const { getSchoolId } = useAuthStore();
+  const { getSchoolId, initializeAuth, schoolId } = useAuthStore();
   const { getSubscriptionsBySchoolId, getPaymentsBySchoolId, getInvoicesBySchoolId } = useBillingStore();
+
+  useEffect(() => {
+    initializeAuth();
+  }, [])
 
   const toast = useToast()
   const [isEditing, setIsEditing] = useState(false)
@@ -60,26 +68,76 @@ export function AdminProfile() {
     department: "",
     role: "",
     joinDate: "",
+    profilePicture: "", // Add profile picture field
   })
+  const [imageLoadError, setImageLoadError] = useState(false)
   const [preferences, setPreferences] = useState({
     emailNotifications: true,
     smsNotifications: false,
     darkMode: false,
     autoLogout: true,
   })
+  const [dbStats, setDbStats] = useState(null);
+  const [isClearDataModalOpen, setIsClearDataModalOpen] = useState(false);
+  const [isClearingData, setIsClearingData] = useState(false);
 
   const bgColor = useColorModeValue("white", "gray.800")
+  const textColor = useColorModeValue("gray.800", "white")
   const borderColor = useColorModeValue("gray.200", "gray.600")
+
+  // Fetch database statistics
+  const fetchDatabaseStats = async () => {
+    try {
+      const response = await fetch(`/api/school-data-status/${schoolId}/stats`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          console.log('Database stats received:', data.data);
+          setDbStats(data.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching database stats:', error);
+    }
+  };
+
+  // Fetch stats on component mount
+  useEffect(() => {
+    if (schoolId) {
+      fetchDatabaseStats();
+    }
+  }, [schoolId]);
+
+  // Helper function to fix Google profile picture URLs
+  const fixGoogleProfilePictureUrl = (url) => {
+    if (!url) return url;
+
+    // If it's a Google profile picture URL, ensure it's properly formatted
+    if (url.includes('googleusercontent.com')) {
+      // Try different size parameters to ensure the image loads
+      // Remove existing size parameters and add a larger size
+      const baseUrl = url.replace(/=s\d+-c$/, '');
+      const fixedUrl = `${baseUrl}=s400-c`;
+      return fixedUrl;
+    }
+
+    return url;
+  };
 
   // Fetch user profile data and session duration
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         // Use auth store method instead of fetch
-        const authResult = await useAuthStore.getState().authorizeUser();
+        const data = await useAuthStore.getState().authorizeUser();
 
-        if (authResult.success) {
-          const data = authResult.data;
+        if (data) {
 
           // Update session duration
           if (data.tokenExpiration) {
@@ -90,9 +148,9 @@ export function AdminProfile() {
           }
 
           // Update profile data with real user data
-          if (data.id) {
+          if (data.data._id) {
             // Use user store method instead of fetch
-            const userResult = await getUser(data.id);
+            const userResult = await getUser(data.data._id);
 
             if (userResult.success && userResult.data) {
               const user = userResult.data;
@@ -100,7 +158,8 @@ export function AdminProfile() {
               // Format join date from createdAt
               const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A";
 
-              setProfileData({
+              const fixedProfilePictureUrl = fixGoogleProfilePictureUrl(user.profilePicture);
+              const finalProfileData = {
                 name: user.name || "",
                 email: user.email || "",
                 phone: user.phoneNumber || "",
@@ -109,7 +168,19 @@ export function AdminProfile() {
                     data.role === "lecturer" ? "Academic" : "",
                 role: data.role || "",
                 joinDate: joinDate,
-              });
+                profilePicture: fixedProfilePictureUrl || "", // Add profile picture
+              };
+              setProfileData(finalProfileData);
+              setImageLoadError(false); // Reset image load error when profile data changes
+
+              // Test if the profile picture can be loaded
+              if (fixedProfilePictureUrl) {
+                testImageLoad(fixedProfilePictureUrl).then((canLoad) => {
+                  if (!canLoad) {
+                    setImageLoadError(true);
+                  }
+                });
+              }
             }
           }
         } else {
@@ -145,9 +216,7 @@ export function AdminProfile() {
             getInvoicesBySchoolId(schoolId)
           ]);
 
-          console.log("🚀 ~ fetchBillingData ~ paymentResult:", paymentResult.data)
-          console.log("🚀 ~ fetchBillingData ~ subscriptionResult:", subscriptionResult.data)
-          console.log("🚀 ~ fetchBillingData ~ invoiceResult:", invoiceResult.data)
+
 
           if (subscriptionResult.success) {
             setSubscriptionData(subscriptionResult.data);
@@ -192,8 +261,7 @@ export function AdminProfile() {
             credentials: 'include',
             body: JSON.stringify({
               name: profileData.name,
-              email: profileData.email,
-              phoneNumber: profileData.phone,
+              phoneNumber: profileData.phone || "",
             }),
           });
 
@@ -230,8 +298,125 @@ export function AdminProfile() {
     }
   }
 
+  const handleImageLoadError = () => {
+    setImageLoadError(true);
+  };
+
+  // Test if image can be loaded
+  const testImageLoad = (url) => {
+    if (!url) return Promise.resolve(false);
+
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve(true);
+      };
+      img.onerror = () => {
+        resolve(false);
+      };
+      img.src = url;
+    });
+  };
+
+  const handleProfilePictureChange = async (file, formData) => {
+    try {
+      // Get current user ID from auth
+      const authResponse = await fetch('/auth/is-auth', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!authResponse.ok) {
+        throw new Error('Authentication failed');
+      }
+
+      const authData = await authResponse.json();
+
+      if (!authData.id) {
+        throw new Error('User ID not found');
+      }
+
+      if (file === null) {
+        // Remove profile picture using user store (calls API)
+        console.log('Removing profile picture for user:', authData.id);
+        const result = await useUserStore.getState().updateUserProfilePicture(authData.id, null);
+
+        if (result.success) {
+          // Update local state
+          setProfileData(prev => ({ ...prev, profilePicture: null }));
+
+          // Refresh user data from API
+          const userResult = await getUser(authData.id);
+          if (userResult.success && userResult.data) {
+            setProfileData(prev => ({
+              ...prev,
+              profilePicture: userResult.data.profilePicture || ""
+            }));
+          }
+
+          toast({
+            title: "Profile Picture Removed",
+            description: "Your profile picture has been successfully removed from the database.",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+        } else {
+          throw new Error(result.message || 'Failed to remove profile picture from database');
+        }
+      } else {
+        // Upload new profile picture
+        console.log('Uploading new profile picture for user:', authData.id);
+
+        // Convert file to base64 for demo purposes (not recommended for production)
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const base64String = e.target.result;
+
+          // Update using user store (calls API)
+          const result = await useUserStore.getState().updateUserProfilePicture(authData.id, base64String);
+
+          if (result.success) {
+            // Update local state
+            setProfileData(prev => ({ ...prev, profilePicture: base64String }));
+
+            // Refresh user data from API
+            const userResult = await getUser(authData.id);
+            if (userResult.success && userResult.data) {
+              setProfileData(prev => ({
+                ...prev,
+                profilePicture: userResult.data.profilePicture || ""
+              }));
+            }
+
+            toast({
+              title: "Profile Picture Updated",
+              description: "Your profile picture has been successfully saved to the database.",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            });
+          } else {
+            throw new Error(result.message || 'Failed to update profile picture in database');
+          }
+        };
+
+        reader.readAsDataURL(file);
+      }
+    } catch (error) {
+      console.error('Error updating profile picture:', error);
+      toast({
+        title: "Profile Picture Update Failed",
+        description: error.message || "Failed to update profile picture. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      throw error; // Re-throw to let the ProfilePicture component handle the error
+    }
+  };
+
   const handleDataGenerated = (data) => {
-    console.log('Generated data:', data);
     toast({
       title: 'Data Generated!',
       description: 'Sample data has been generated successfully. Check the console for details.',
@@ -302,14 +487,16 @@ export function AdminProfile() {
                   </Button>
                 </HStack>
 
+
                 <VStack spacing={6}>
                   {/* Avatar Section */}
-                  <VStack>
-                    <Avatar size="xl" name={profileData.name} />
-                    <Button leftIcon={<FiCamera />} size="sm" variant="outline">
-                      Change Photo
-                    </Button>
-                  </VStack>
+                  <ProfilePicture
+                    src={imageLoadError ? "" : profileData.profilePicture}
+                    name={profileData.name}
+                    size="xl"
+                    bgColor="#344E41"
+                    onPhotoChange={handleProfilePictureChange}
+                  />
 
                   {/* Profile Fields */}
                   <Grid templateColumns="1fr 1fr" gap={4} w="full">
@@ -327,9 +514,8 @@ export function AdminProfile() {
                       <FormLabel>Email</FormLabel>
                       <Input
                         value={profileData.email}
-                        onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                        isReadOnly={!isEditing}
-                        bg={isEditing ? "white" : "gray.50"}
+                        isReadOnly
+                        bg="gray.50"
                       />
                     </FormControl>
 
@@ -748,6 +934,208 @@ export function AdminProfile() {
                   )}
                 </Box>
 
+                <Box>
+                  <HStack justify="space-between" mb={3}>
+                    <Text fontSize="md" fontWeight="semibold" color="#333333">
+                      Database Stats
+                    </Text>
+                    <IconButton
+                      size="sm"
+                      icon={<FiRefreshCw />}
+                      onClick={fetchDatabaseStats}
+                      aria-label="Refresh database stats"
+                      colorScheme="blue"
+                      variant="ghost"
+                    />
+                  </HStack>
+                  <Card bg="gray.50" borderColor="gray.200" borderWidth="1px">
+                    <CardBody>
+                      <VStack spacing={3} align="stretch">
+                        {dbStats ? (
+                          <>
+                            {/* Academic Stats */}
+                            <Box>
+                              <Text fontSize="sm" fontWeight="bold" color="blue.600" mb={2}>
+                                Academic ({dbStats.totals?.academic || 0})
+                              </Text>
+                              <SimpleGrid columns={2} spacing={2}>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Students</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.students || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Courses</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.courses || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Modules</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.modules || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Lecturers</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.lecturers || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Departments</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.departments || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Intakes</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.intakes || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Intake Courses</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.intakeCourses || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Class Schedules</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.classSchedules || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Exam Schedules</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.examSchedules || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Attendance</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.attendance || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Results</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.results || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Rooms</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.rooms || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Semesters</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.semesters || 0}</Text>
+                                </HStack>
+                              </SimpleGrid>
+                            </Box>
+
+                            {/* Billing Stats */}
+                            <Box>
+                              <Text fontSize="sm" fontWeight="bold" color="red.600" mb={2}>
+                                Billing ({dbStats.totals?.billing || 0})
+                              </Text>
+                              <SimpleGrid columns={2} spacing={2}>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Invoices</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.invoices || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Payments</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.payments || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Subscriptions</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.subscriptions || 0}</Text>
+                                </HStack>
+                              </SimpleGrid>
+                            </Box>
+
+                            {/* Facility Stats */}
+                            <Box>
+                              <Text fontSize="sm" fontWeight="bold" color="green.600" mb={2}>
+                                Facility ({dbStats.totals?.facility || 0})
+                              </Text>
+                              <SimpleGrid columns={2} spacing={2}>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Bookings</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.bookings || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Locker Units</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.lockerUnits || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Parking Lots</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.parkingLots || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Resources</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.resources || 0}</Text>
+                                </HStack>
+                              </SimpleGrid>
+                            </Box>
+
+                            {/* Service Stats */}
+                            <Box>
+                              <Text fontSize="sm" fontWeight="bold" color="purple.600" mb={2}>
+                                Service ({dbStats.totals?.service || 0})
+                              </Text>
+                              <SimpleGrid columns={2} spacing={2}>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Feedback</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.feedback || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Lost Items</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.lostItems || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Responses</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.responses || 0}</Text>
+                                </HStack>
+                              </SimpleGrid>
+                            </Box>
+
+                            {/* Transportation Stats */}
+                            <Box>
+                              <Text fontSize="sm" fontWeight="bold" color="orange.600" mb={2}>
+                                Transportation ({dbStats.totals?.transportation || 0})
+                              </Text>
+                              <SimpleGrid columns={2} spacing={2}>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Bus Schedules</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.busSchedules || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">E-Hailing</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.eHailing || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Routes</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.routes || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Vehicles</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.vehicles || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Stops</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.stops || 0}</Text>
+                                </HStack>
+                              </SimpleGrid>
+                            </Box>
+
+                            {/* Total */}
+                            <Box pt={2} borderTop="1px" borderColor="gray.200">
+                              <HStack justify="space-between">
+                                <Text fontSize="md" fontWeight="bold" color="gray.700">
+                                  Total Documents
+                                </Text>
+                                <Text fontSize="lg" fontWeight="bold" color="blue.600">
+                                  {dbStats.totals?.total || 0}
+                                </Text>
+                              </HStack>
+                            </Box>
+                          </>
+                        ) : (
+                          <HStack justify="center" py={4}>
+                            <Spinner size="sm" />
+                            <Text fontSize="sm" color="gray.500">Loading database statistics...</Text>
+                          </HStack>
+                        )}
+                      </VStack>
+                    </CardBody>
+                  </Card>
+                </Box>
+
+                <Button onClick={() => setIsClearDataModalOpen(true)} colorScheme="red" variant="outline">
+                  Clear Data
+                </Button>
 
               </VStack>
             )}
@@ -755,11 +1143,47 @@ export function AdminProfile() {
         </Card>
       </VStack>
 
+
       {/* Data Generator Modal */}
       <DataGeneratorModal
         isOpen={isDataGeneratorOpen}
         onClose={() => setIsDataGeneratorOpen(false)}
         onDataGenerated={handleDataGenerated}
+      />
+
+      {/* Clear Data Confirmation Modal */}
+      <ComfirmationMessage
+        title="⚠️ Clear All School Data"
+        description="This will permanently delete ALL academic data for this school including students, courses, modules, lecturers, schedules, attendance records, results, and more. This action cannot be undone. Are you absolutely sure you want to proceed?"
+        isOpen={isClearDataModalOpen}
+        onClose={() => setIsClearDataModalOpen(false)}
+        onConfirm={async () => {
+          try {
+            setIsClearingData(true);
+            await clearSchoolData(schoolId);
+            await fetchDatabaseStats();
+            toast({
+              title: "Data Cleared Successfully",
+              description: "All academic data for this school has been permanently deleted.",
+              status: "success",
+              duration: 5000,
+              isClosable: true,
+            });
+            setIsClearDataModalOpen(false);
+          } catch (error) {
+            toast({
+              title: "Error Clearing Data",
+              description: "Failed to clear data: " + error.message,
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+            });
+            setIsClearDataModalOpen(false);
+          } finally {
+            setIsClearingData(false);
+          }
+        }}
+        isLoading={isClearingData}
       />
     </Box>
   )

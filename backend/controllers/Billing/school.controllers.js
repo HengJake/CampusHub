@@ -108,4 +108,10 @@ export const deleteSchool = controllerWrapper(async (req, res) => {
 
 export const deleteAllSchools = controllerWrapper(async (req, res) => {
     return await deleteAllRecords(School, "schools");
-})
+});
+
+// Get Billing Data by School ID
+export const getBillingDataBySchoolId = controllerWrapper(async (req, res) => {
+    const { schoolId } = req.params;
+    return await getAllRecords(School, "billing data", ["userId"], { _id: schoolId });
+});

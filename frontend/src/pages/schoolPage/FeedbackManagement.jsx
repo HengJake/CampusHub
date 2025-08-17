@@ -31,6 +31,7 @@ import {
   StatHelpText,
   Grid,
   Spinner,
+  useBreakpointValue,
 } from "@chakra-ui/react"
 import { FiMessageSquare, FiClock, FiCheckCircle, FiAlertCircle } from "react-icons/fi"
 import { useState, useEffect } from "react"
@@ -46,6 +47,9 @@ export function FeedbackManagement() {
   const [categoryFilter, setCategoryFilter] = useState("All")
   const [activeTab, setActiveTab] = useState("unresponded") // "unresponded" or "responded"
 
+  // Responsive breakpoint for mobile detection
+  const isMobile = useBreakpointValue({ base: true, lg: false })
+
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
 
@@ -55,15 +59,15 @@ export function FeedbackManagement() {
     responds,
     loading,
     errors,
-    fetchFeedback,
-    fetchResponds,
+    fetchFeedbackBySchoolId,
+    fetchRespondsBySchoolId,
     updateFeedback,
     createRespond
   } = useServiceStore()
 
   // Fetch feedback data from backend
   const loadFeedback = async () => {
-    const result = await fetchFeedback()
+    const result = await fetchFeedbackBySchoolId()
     if (!result.success) {
       toast({
         title: "Error",
@@ -77,7 +81,7 @@ export function FeedbackManagement() {
 
   // Fetch responds data from backend
   const loadResponds = async () => {
-    const result = await fetchResponds()
+    const result = await fetchRespondsBySchoolId()
     if (!result.success) {
       toast({
         title: "Error",
@@ -296,7 +300,7 @@ export function FeedbackManagement() {
   }
 
   return (
-    <Box p={6} minH="100vh" flex={1}>
+    <Box minH="100vh" flex={1} pb={5}>
       <VStack spacing={6} align="stretch">
         {/* Header */}
         <HStack justify="space-between">
@@ -437,64 +441,134 @@ export function FeedbackManagement() {
             <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
               {activeTab === "unresponded" ? "Unresponded" : "Responded"} Feedback List ({filteredFeedback.length})
             </Text>
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Student</Th>
-                  <Th>Category</Th>
-                  <Th>Subject</Th>
-                  <Th>Priority</Th>
-                  <Th>Status</Th>
-                  <Th>Date</Th>
-                  <Th>Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+
+            {/* Desktop Table View */}
+            {!isMobile && (
+              <Table variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>Student</Th>
+                    <Th>Category</Th>
+                    <Th>Subject</Th>
+                    <Th>Priority</Th>
+                    <Th>Status</Th>
+                    <Th>Date</Th>
+                    <Th>Actions</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {filteredFeedback.map((item) => {
+                    const response = getResponseForFeedback(item.id)
+                    return (
+                      <React.Fragment key={item?.id || Math.random()}>
+                        <Tr>
+                          <Td>
+                            <Text fontWeight="medium">{item?.studentName || "-"}</Text>
+                          </Td>
+                          <Td>
+                            <Badge colorScheme="blue">{item?.category || "-"}</Badge>
+                          </Td>
+                          <Td>
+                            <Text fontSize="sm">{item?.subject || "-"}</Text>
+                          </Td>
+                          <Td>
+                            <Badge colorScheme={getPriorityColor(item?.priority)}>{item?.priority || "-"}</Badge>
+                          </Td>
+                          <Td>
+                            <Badge colorScheme={getStatusColor(item?.status)}>{item?.status || "-"}</Badge>
+                          </Td>
+                          <Td>
+                            <Text fontSize="sm">{item?.date || "-"}</Text>
+                          </Td>
+                          <Td>
+                            {activeTab === "unresponded" && item?.status !== "resolved" && item?.status !== "closed" && (
+                              <Button
+                                size="sm"
+                                bg="#344E41"
+                                color="white"
+                                _hover={{ bg: "#2a3d33" }}
+                                onClick={() => handleRespond(item)}
+                              >
+                                Respond
+                              </Button>
+                            )}
+                            {activeTab === "responded" && (
+                              <Badge colorScheme="green" fontSize="xs">
+                                Responded
+                              </Badge>
+                            )}
+                          </Td>
+                        </Tr>
+                        {response && (
+                          <Tr bg="gray.50">
+                            <Td colSpan={7}>
+                              <VStack align="stretch" spacing={2}>
+                                <HStack justify="space-between">
+                                  <Text fontSize="sm" fontWeight="semibold" color="green.600">
+                                    Response:
+                                  </Text>
+                                  <Text fontSize="xs" color="gray.500">
+                                    {new Date(response.createdAt).toLocaleDateString()}
+                                  </Text>
+                                </HStack>
+                                <Text fontSize="sm" p={3} bg="white" borderRadius="md" border="1px solid" borderColor="gray.200">
+                                  {response.message}
+                                </Text>
+                              </VStack>
+                            </Td>
+                          </Tr>
+                        )}
+                      </React.Fragment>
+                    )
+                  })}
+                </Tbody>
+              </Table>
+            )}
+
+            {/* Mobile List View */}
+            {isMobile && (
+              <VStack spacing={4} align="stretch">
                 {filteredFeedback.map((item) => {
                   const response = getResponseForFeedback(item.id)
                   return (
-                    <React.Fragment key={item?.id || Math.random()}>
-                      <Tr>
-                        <Td>
-                          <Text fontWeight="medium">{item?.studentName || "-"}</Text>
-                        </Td>
-                        <Td>
-                          <Badge colorScheme="blue">{item?.category || "-"}</Badge>
-                        </Td>
-                        <Td>
-                          <Text fontSize="sm">{item?.subject || "-"}</Text>
-                        </Td>
-                        <Td>
-                          <Badge colorScheme={getPriorityColor(item?.priority)}>{item?.priority || "-"}</Badge>
-                        </Td>
-                        <Td>
-                          <Badge colorScheme={getStatusColor(item?.status)}>{item?.status || "-"}</Badge>
-                        </Td>
-                        <Td>
-                          <Text fontSize="sm">{item?.date || "-"}</Text>
-                        </Td>
-                        <Td>
-                          {activeTab === "unresponded" && item?.status !== "resolved" && item?.status !== "closed" && (
-                            <Button
-                              size="sm"
-                              bg="#344E41"
-                              color="white"
-                              _hover={{ bg: "#2a3d33" }}
-                              onClick={() => handleRespond(item)}
-                            >
-                              Respond
-                            </Button>
-                          )}
-                          {activeTab === "responded" && (
-                            <Badge colorScheme="green" fontSize="xs">
-                              Responded
-                            </Badge>
-                          )}
-                        </Td>
-                      </Tr>
-                      {response && (
-                        <Tr bg="gray.50">
-                          <Td colSpan={7}>
+                    <Box key={item?.id || Math.random()} p={4} border="1px solid" borderColor="gray.200" borderRadius="md">
+                      <VStack align="stretch" spacing={3}>
+                        <HStack justify="space-between" align="flex-start">
+                          <VStack align="flex-start" spacing={1} flex={1}>
+                            <Text fontWeight="semibold" fontSize="md">{item?.studentName || "-"}</Text>
+                            <Text fontSize="sm" color="gray.600">{item?.subject || "-"}</Text>
+                          </VStack>
+                          <VStack align="flex-end" spacing={1}>
+                            <Badge colorScheme="blue" fontSize="xs">{item?.category || "-"}</Badge>
+                            <Badge colorScheme={getPriorityColor(item?.priority)} fontSize="xs">{item?.priority || "-"}</Badge>
+                          </VStack>
+                        </HStack>
+
+                        <HStack justify="space-between" align="center">
+                          <Badge colorScheme={getStatusColor(item?.status)} fontSize="xs">{item?.status || "-"}</Badge>
+                          <Text fontSize="xs" color="gray.500">{item?.date || "-"}</Text>
+                        </HStack>
+
+                        {activeTab === "unresponded" && item?.status !== "resolved" && item?.status !== "closed" && (
+                          <Button
+                            size="sm"
+                            bg="#344E41"
+                            color="white"
+                            _hover={{ bg: "#2a3d33" }}
+                            onClick={() => handleRespond(item)}
+                            alignSelf="flex-start"
+                          >
+                            Respond
+                          </Button>
+                        )}
+                        {activeTab === "responded" && (
+                          <Badge colorScheme="green" fontSize="xs" alignSelf="flex-start">
+                            Responded
+                          </Badge>
+                        )}
+
+                        {response && (
+                          <Box mt={3} p={3} bg="gray.50" borderRadius="md" border="1px solid" borderColor="gray.200">
                             <VStack align="stretch" spacing={2}>
                               <HStack justify="space-between">
                                 <Text fontSize="sm" fontWeight="semibold" color="green.600">
@@ -508,14 +582,14 @@ export function FeedbackManagement() {
                                 {response.message}
                               </Text>
                             </VStack>
-                          </Td>
-                        </Tr>
-                      )}
-                    </React.Fragment>
+                          </Box>
+                        )}
+                      </VStack>
+                    </Box>
                   )
                 })}
-              </Tbody>
-            </Table>
+              </VStack>
+            )}
           </CardBody>
         </Card>
 

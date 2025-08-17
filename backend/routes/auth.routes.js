@@ -8,6 +8,7 @@ import {
   isAuthenticated,
   sendResetOtp,
   resetPassword,
+  loginWithOAuth,
 } from "../controllers/auth.controllers.js";
 import { userAuth } from "../utils/authMiddleware.js";
 
@@ -16,6 +17,8 @@ const router = e.Router();
 router.post("/register", register);
 
 router.post("/login", loginUser);
+
+router.post("/oauth-login", loginWithOAuth);
 
 router.post("/logout", logout);
 

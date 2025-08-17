@@ -27,7 +27,7 @@ import { SemesterFormModal } from "./intakeCourse/SemesterFormModal";
 // Intake Courses Display Component
 export function IntakeCoursesDisplay() {
     const navigate = useNavigate();
-    const { intakeCourses, fetchIntakeCourses, students, fetchStudents, semesters, fetchSemesters, createSemester, updateSemester } = useAcademicStore();
+    const { intakeCourses, fetchIntakeCoursesBySchoolId, students, fetchStudentsBySchoolId, semesters, fetchSemestersBySchoolId, createSemester, updateSemester } = useAcademicStore();
     const [isLoading, setIsLoading] = useState(false);
     const [studentCounts, setStudentCounts] = useState({});
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,13 +58,13 @@ export function IntakeCoursesDisplay() {
 
     useEffect(() => {
         if (intakeCourses.length === 0) {
-            fetchIntakeCourses();
+            fetchIntakeCoursesBySchoolId();
         }
         if (students.length === 0) {
-            fetchStudents();
+            fetchStudentsBySchoolId();
         }
         if (semesters.length === 0) {
-            fetchSemesters();
+            fetchSemestersBySchoolId();
         }
     }, []);
 
@@ -262,8 +262,8 @@ export function IntakeCoursesDisplay() {
                 isClosable: true,
             });
         } finally {
-            await fetchIntakeCourses();
-            await fetchSemesters();
+            await fetchIntakeCoursesBySchoolId();
+            await fetchSemestersBySchoolId();
             await handleRefreshCurrentSemesters(); // Add this line to refresh current semesters
             setIsAddingLoading(false);
         }
@@ -339,8 +339,8 @@ export function IntakeCoursesDisplay() {
                 isClosable: true,
             });
         } finally {
-            await fetchIntakeCourses();
-            await fetchSemesters();
+            await fetchIntakeCoursesBySchoolId();
+            await fetchSemestersBySchoolId();
             await handleRefreshCurrentSemesters(); // Add this line to refresh current semesters
             setIsAddingLoading(false);
         }
@@ -362,9 +362,9 @@ export function IntakeCoursesDisplay() {
     const handleRefresh = async () => {
         setIsLoading(true);
         await Promise.all([
-            fetchIntakeCourses(),
-            fetchStudents(),
-            fetchSemesters()
+            fetchIntakeCoursesBySchoolId(),
+            fetchStudentsBySchoolId(),
+            fetchSemestersBySchoolId()
         ]);
         setIsLoading(false);
     };
@@ -412,7 +412,7 @@ export function IntakeCoursesDisplay() {
     const handleRefreshCurrentSemesters = async () => {
         if (selectedIntakeCourse) {
             // Refresh semesters data
-            await fetchSemesters();
+            await fetchSemestersBySchoolId();
 
             // Re-filter semesters for the current intake course
             const courseSemesters = semesters.filter(s =>

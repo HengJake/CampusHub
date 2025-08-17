@@ -1286,6 +1286,32 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+    fetchResultsByStudentId: async (studentId) => {
+        set((state) => ({ loading: { ...state.loading, results: true } }));
+        try {
+            const res = await fetch(`/api/result/student/${studentId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch results by studentId");
+            }
+
+            set((state) => ({
+                results: data.data,
+                loading: { ...state.loading, results: false },
+                errors: { ...state.errors, results: null },
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, results: false },
+                errors: { ...state.errors, results: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
     createResult: async (resultData) => {
         try {
             // Automatically add schoolId for schoolAdmin
@@ -1721,7 +1747,7 @@ export const useAcademicStore = create((set, get) => ({
 
         set((state) => ({ loading: { ...state.loading, examSchedules: true } }));
         try {
-            const res = await fetch(`/api/examSchedule/school/${schoolId}`);
+            const res = await fetch(`/api/exam-schedule/school/${schoolId}`);
             const data = await res.json();
 
             if (!data.success)

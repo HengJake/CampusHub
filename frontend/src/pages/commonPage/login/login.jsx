@@ -34,9 +34,10 @@ import { Image } from "@chakra-ui/react";
 import { useAuthStore } from "../../../store/auth";
 import { detectTokenAndRedirect, getRedirectPath } from "../../../utils/authRedirect.js";
 import { useShowToast } from "../../../store/utils/toast.js";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 
 function login() {
-  const [isCoolingDown, setIsCoolingDown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const showToast = useShowToast();
@@ -47,23 +48,34 @@ function login() {
   });
   const { isOpen, onOpen, onClose } = useDisclosure();
   // fix login user
-  const { logIn } = useAuthStore();
+  const { logIn, logout } = useAuthStore();
 
   // Check for existing JWT token and redirect if necessary
   useEffect(() => {
     const checkExistingAuth = async () => {
-      const redirected = await detectTokenAndRedirect(navigate);
-      if (redirected) {
-        showToast.success(
-          "Welcome back!",
-          "You are already logged in.",
-          "auto-login"
-        );
+      const result = await detectTokenAndRedirect(navigate);
+      if (result.redirected) {
+        if (result.isLecturer) {
+          showToast.error(
+            "Lecturer Function Not Implemented",
+            "Lecturer functionality is currently under development. Redirecting to homepage.",
+            "lecturer-not-implemented"
+          );
+
+          await logout();
+
+        } else {
+          showToast.success(
+            "Welcome back!",
+            "You are already logged in.",
+            "auto-login"
+          );
+        }
       }
     };
 
     checkExistingAuth();
-  }, [navigate, showToast]);
+  }, []);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -76,13 +88,7 @@ function login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    //prevent spamming
-    if (isLoading || isCoolingDown) {
-      showToast.error(
-        "Stop spamming",
-        "Please wait a while to log in again",
-        "cool-down"
-      );
+    if (isLoading) {
       return;
     }
     setIsLoading(true);
@@ -105,13 +111,19 @@ function login() {
 
         // Redirect based on role and setup status
         const redirectPath = getRedirectPath(data.role, data.schoolSetupComplete);
+
+        // Show toast for lecturers
+        if (data.role === 'lecturer') {
+          showToast.error(
+            "Lecturer Function Not Implemented",
+            "Lecturer functionality is currently under development. Redirecting to homepage.",
+            "lecturer-not-implemented"
+          );
+        }
+
         navigate(redirectPath);
       }
 
-      setIsCoolingDown(true);
-      setTimeout(() => {
-        setIsCoolingDown(false);
-      }, 3000);
     } catch (error) {
       console.error("Unexpected error:", error);
       showToast.error(
@@ -122,6 +134,8 @@ function login() {
       setIsLoading(false);
     }
   };
+
+  const [isOAuthLoading, setIsOAuthLoading] = useState(false);
 
   return (
     <Box
@@ -169,12 +183,123 @@ function login() {
           </Box>
         }
       >
-        <Text textAlign={"left"}>
-          Don't have an account?{" "}
-          <Link color={"blue.400"} textDecor={"underline"} ml={3} onClick={() => navigate("/signup")}>
-            Sign Up
-          </Link>
-        </Text>
+
+        <GoogleLogin
+          onSuccess={async (credentialResponse) => {
+            try {
+              setIsOAuthLoading(true);
+              const decodedCredential = jwtDecode(credentialResponse.credential);
+
+              // Create OAuth user data
+              const oauthUserData = {
+                email: decodedCredential.email,
+                googleId: decodedCredential.sub,
+                name: decodedCredential.name,
+                profilePicture: decodedCredential.picture,
+                role: "schoolAdmin", // Default role for OAuth login
+                authProvider: "google"
+              };
+
+              // Use OAuth login method
+              const oauthLoginResult = await useAuthStore.getState().logInWithOAuth(oauthUserData);
+
+              if (!oauthLoginResult.success) {
+                throw new Error(oauthLoginResult.message || "Failed to authenticate with Google OAuth");
+              }
+
+              // Show success message
+              showToast.success(
+                "Google OAuth Successful!",
+                "Welcome back! You are now logged in.",
+                "oauth-success"
+              );
+
+              // Redirect based on role and setup status
+              const redirectPath = getRedirectPath(oauthLoginResult.data.role, oauthLoginResult.schoolSetupComplete);
+
+              // Show toast for lecturers
+              if (oauthLoginResult.data.role === 'lecturer') {
+                showToast.error(
+                  "Lecturer Function Not Implemented",
+                  "Lecturer functionality is currently under development. Redirecting to homepage.",
+                  "lecturer-not-implemented"
+                );
+              }
+
+              navigate(redirectPath);
+
+            } catch (error) {
+              console.error("Google OAuth error:", error);
+
+              // Handle specific error cases
+              if (error.message.includes("OAuth user not found")) {
+                showToast.error(
+                  "Account Not Found",
+                  "No account found with this Google account. Please use the regular login form.",
+                  "oauth-no-account"
+                );
+              } else if (error.message.includes("authentication provider mismatch")) {
+                showToast.error(
+                  "Authentication Error",
+                  "This email is associated with a different signup method. Please use your password to login.",
+                  "oauth-provider-mismatch"
+                );
+              } else {
+                showToast.error(
+                  "OAuth Authentication Failed",
+                  error.message || "An unexpected error occurred during Google authentication",
+                  "oauth-error"
+                );
+              }
+            } finally {
+              setIsOAuthLoading(false);
+            }
+          }}
+          onError={() => {
+            console.log('Google OAuth Failed');
+            setIsOAuthLoading(false);
+            showToast.error(
+              "Google OAuth Failed",
+              "Failed to authenticate with Google. Please try again or use the regular login form.",
+              "oauth-error"
+            );
+          }}
+        />
+
+        {/* OAuth Loading Indicator */}
+        {isOAuthLoading && (
+          <Box textAlign="center" mt={2}>
+            <Text color="blue.400" fontSize="sm">
+              Logging in with Google...
+            </Text>
+          </Box>
+        )}
+
+        {/* Divider */}
+        <Box position="relative" my={6}>
+          <Box
+            position="absolute"
+            top="50%"
+            left="0"
+            right="0"
+            height="1px"
+            bg="gray.600"
+          />
+          <Text
+            position="relative"
+            bg="#1A202C"
+            px={4}
+            color="gray.400"
+            fontSize="sm"
+            textAlign="center"
+            display="inline-block"
+            left="50%"
+            transform="translateX(-50%)"
+          >
+            OR
+          </Text>
+        </Box>
+
         <Box
           mt={2}
           display={"flex"}
@@ -271,6 +396,12 @@ function login() {
             </ModalFooter>
           </ModalContent>
         </Modal>
+        <Text textAlign={"left"} mt={3}>
+          Don't have an account?{" "}
+          <Link color={"blue.400"} textDecor={"underline"} ml={3} onClick={() => navigate("/signup")}>
+            Sign Up
+          </Link>
+        </Text>
       </RegisterBox>
     </Box>
   );

@@ -65,7 +65,6 @@ import CampushubSetting from "./pages/companyPage/profile-settings.jsx";
 
 // set different bar for different pages
 import LNavbar from "./component/navBar/landingNavBar";
-import RNavBar from "./component/navBar/registrationNavBar";
 import HeaderNavbar from "./component/navBar/HeaderNavbar";
 
 function App() {
@@ -92,8 +91,10 @@ function App() {
       }
     };
 
-    initAuth();
-  }, [initializeAuth]);
+    if (userRoutes.includes(path) || adminRoutes.includes(path) || companyRoutes.includes(path)) {
+      initAuth();
+    }
+  }, []);
 
   const userRoutes = [
     "/user-dashboard",
@@ -177,7 +178,7 @@ function App() {
 
     switch (role) {
       case "register":
-        setRenderedNavbar(<RNavBar />);
+        setRenderedNavbar("");
         setMargin("0");
         setBgColor("brand.defaultBg");
         setAuthComponent(null);
@@ -215,19 +216,6 @@ function App() {
     }
   }, [path]);
 
-  // Initialize auth from cookies when app starts
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        await initializeAuth();
-      } catch (error) {
-        console.error("Failed to initialize auth:", error);
-      }
-    };
-
-    initAuth();
-  }, []);
-
   // Helper function to wrap component in auth component
   const wrapWithAuth = (component) => {
     if (!authComponent) {
@@ -262,6 +250,7 @@ function App() {
         pl={{ base: 6, lg: 2 }}
         pt={6}
         maxW="100%"
+        mb={5}
       >
         <Routes>
           {/* Common Pages - No auth required */}

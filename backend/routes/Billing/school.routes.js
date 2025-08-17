@@ -7,7 +7,8 @@ import {
     deleteSchool,
     getSchoolByUserId,
     getSchoolsBySchoolId,
-    deleteAllSchools
+    deleteAllSchools,
+    getBillingDataBySchoolId
 } from "../../controllers/Billing/school.controllers.js";
 
 const router = e.Router();
@@ -21,6 +22,9 @@ router.get("/", getAllSchool);
 router.get("/user/:id", getSchoolByUserId);
 
 router.get("/school/:schoolId", getSchoolsBySchoolId);
+
+// Get billing data by school ID
+router.get("/billing/:schoolId", getBillingDataBySchoolId);
 
 // Get school by ID
 router.get("/:id", getSchoolById);

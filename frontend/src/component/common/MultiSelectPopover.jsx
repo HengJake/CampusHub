@@ -44,7 +44,7 @@ export default function MultiSelectPopover({
                 {({ onClose }) => (
                     <>
                         <PopoverTrigger>
-                            <Button w="100%" variant="outline">
+                            <Button w="100%" variant="outline" color="white">
                                 {selectedIds.length > 0
                                     ? `${selectedIds.length} selected`
                                     : `Select ${label}`}
@@ -53,9 +53,9 @@ export default function MultiSelectPopover({
                         <PopoverContent minW="240px">
                             <PopoverArrow />
                             <PopoverCloseButton />
-                            <PopoverHeader>Select {label}</PopoverHeader>
+                            <PopoverHeader color="black">Select {label}</PopoverHeader>
                             <PopoverBody maxH="180px" overflowY="auto">
-                                <VStack align="start">
+                                <VStack align="start" color="black">
                                     {items.map(item => {
                                         const id = getId(item);
                                         return (

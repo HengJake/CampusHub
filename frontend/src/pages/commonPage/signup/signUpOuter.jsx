@@ -32,6 +32,8 @@ import { useShowToast } from "../../../store/utils/toast.js";
 import RegisterBox from "../../../component/common/registerBox.jsx";
 import LoginBackground from "/LoginBackground.png";
 import { detectTokenAndRedirect, getRedirectPath } from "../../../utils/authRedirect.js";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 
 function SignUpOuter() {
   const { authorizeUser, logout, logIn } = useAuthStore();
@@ -44,6 +46,7 @@ function SignUpOuter() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const [touched, setTouched] = useState({});
 
   const [formData, setFormData] = useState({
@@ -61,22 +64,26 @@ function SignUpOuter() {
   // Check for existing JWT token and redirect if necessary
   useEffect(() => {
     const checkExistingAuth = async () => {
-      console.log('🔍 SignUp component: Checking for existing auth...');
-      const redirected = await detectTokenAndRedirect(navigate);
-      if (redirected) {
-        console.log('✅ SignUp component: User redirected automatically');
-        showToast.success(
-          "Welcome back!",
-          "You are already logged in.",
-          "auto-login"
-        );
-      } else {
-        console.log('ℹ️ SignUp component: No existing auth found');
+      const result = await detectTokenAndRedirect(navigate);
+      if (result.redirected) {
+        if (result.isLecturer) {
+          showToast.error(
+            "Lecturer Function Not Implemented",
+            "Lecturer functionality is currently under development. Redirecting to homepage.",
+            "lecturer-not-implemented"
+          );
+        } else {
+          showToast.success(
+            "Welcome back!",
+            "You are already logged in.",
+            "auto-login"
+          );
+        }
       }
     };
 
     checkExistingAuth();
-  }, [navigate, showToast]);
+  }, []);
 
   // Sample data for debugging
   const sampleData = {
@@ -248,11 +255,19 @@ function SignUpOuter() {
 
       // Redirect based on role and setup status
       const redirectPath = getRedirectPath(loginResult.data.role, false); // false for new schoolAdmin
-      console.log(`🚀 Signup successful, redirecting to: ${redirectPath}`);
+
+      // Show toast for lecturers
+      if (loginResult.data.role === 'lecturer') {
+        showToast.error(
+          "Lecturer Function Not Implemented",
+          "Lecturer functionality is currently under development. Redirecting to homepage.",
+          "lecturer-not-implemented"
+        );
+      }
+
       navigate(redirectPath);
 
     } catch (error) {
-      console.error("Signup error:", error);
       showToast.error("Signup failed", error.message || "An unexpected error occurred", "signup-error");
     } finally {
       setIsLoading(false);
@@ -579,6 +594,128 @@ function SignUpOuter() {
           </Text>
         }
       >
+
+        <GoogleLogin
+          onSuccess={async (credentialResponse) => {
+            try {
+              setIsOAuthLoading(true);
+              const decodedCredential = jwtDecode(credentialResponse.credential);
+              console.log(decodedCredential);
+
+              // Create OAuth user data
+              const oauthUserData = {
+                email: decodedCredential.email,
+                googleId: decodedCredential.sub,
+                name: decodedCredential.name,
+                profilePicture: decodedCredential.picture,
+                role: "schoolAdmin", // Default role for OAuth signup
+                authProvider: "google"
+                // phoneNumber is optional for OAuth users
+              };
+
+              // Use OAuth login method which handles both user creation and authentication
+              const oauthLoginResult = await useAuthStore.getState().logInWithOAuth(oauthUserData);
+
+              if (!oauthLoginResult.success) {
+                throw new Error(oauthLoginResult.message || "Failed to authenticate with Google OAuth");
+              }
+
+              // Show success message
+              showToast.success(
+                "Google OAuth Successful!",
+                oauthLoginResult.data.authProvider === 'google' && oauthLoginResult.data.createdAt === oauthLoginResult.data.updatedAt
+                  ? "Welcome! Your account has been created and you are now logged in."
+                  : "Welcome back! You are now logged in.",
+                "oauth-success"
+              );
+
+              // Redirect based on role and setup status
+              const redirectPath = getRedirectPath(oauthLoginResult.data.role, oauthLoginResult.schoolSetupComplete);
+
+              // Show toast for lecturers
+              if (oauthLoginResult.data.role === 'lecturer') {
+                showToast.error(
+                  "Lecturer Function Not Implemented",
+                  "Lecturer functionality is currently under development. Redirecting to homepage.",
+                  "lecturer-not-implemented"
+                );
+              }
+
+              navigate(redirectPath);
+
+            } catch (error) {
+              console.error("Google OAuth error:", error);
+
+              // Handle specific error cases
+              if (error.message.includes("OAuth user not found")) {
+                showToast.error(
+                  "Account Not Found",
+                  "No account found with this Google account. Please use the regular signup form.",
+                  "oauth-no-account"
+                );
+              } else if (error.message.includes("authentication provider mismatch")) {
+                showToast.error(
+                  "Authentication Error",
+                  "This email is associated with a different signup method. Please use your password to login.",
+                  "oauth-provider-mismatch"
+                );
+              } else {
+                showToast.error(
+                  "OAuth Authentication Failed",
+                  error.message || "An unexpected error occurred during Google authentication",
+                  "oauth-error"
+                );
+              }
+            } finally {
+              setIsOAuthLoading(false);
+            }
+          }}
+          onError={() => {
+            console.log('Google OAuth Failed');
+            setIsOAuthLoading(false);
+            showToast.error(
+              "Google OAuth Failed",
+              "Failed to authenticate with Google. Please try again or use the regular signup form.",
+              "oauth-error"
+            );
+          }}
+        >
+        </GoogleLogin>
+
+        {/* OAuth Loading Indicator */}
+        {isOAuthLoading && (
+          <Box textAlign="center" mt={2}>
+            <Text color="blue.400" fontSize="sm">
+              Creating your account with Google...
+            </Text>
+          </Box>
+        )}
+
+        {/* Divider */}
+        <Box position="relative" my={6}>
+          <Box
+            position="absolute"
+            top="50%"
+            left="0"
+            right="0"
+            height="1px"
+            bg="gray.600"
+          />
+          <Text
+            position="relative"
+            bg="#1A202C"
+            px={4}
+            color="gray.400"
+            fontSize="sm"
+            textAlign="center"
+            display="inline-block"
+            left="50%"
+            transform="translateX(-50%)"
+          >
+            OR
+          </Text>
+        </Box>
+
         {renderStepContent()}
 
         {/* Confirmation Modal */}

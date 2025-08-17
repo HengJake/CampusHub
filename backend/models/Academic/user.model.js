@@ -7,56 +7,74 @@ const userSchema = new mongoose.Schema({
         trim: true,
         // Full name of the user (student, lecturer, admin)
     },
-    
+
     password: {
         type: String,
-        required: true,
-        // Encrypted password for authentication
+        required: function () {
+            // Password only required if not using OAuth
+            return !this.authProvider || this.authProvider === 'local';
+        },
+        // Encrypted password for local authentication
     },
-    
+
     phoneNumber: {
         type: Number,
-        required: true,
-        // Contact phone number (unique per user)
     },
-    
+
     email: {
         type: String,
         required: true,
         // Email address for communication and login
     },
-    
+
     role: {
         type: String,
         enum: ["student", "lecturer", "companyAdmin", "schoolAdmin", "researcher", "staff", "guest"],
         required: true,
         // User role determines access permissions and functionality
     },
-    
+
+    // OAuth fields
+    authProvider: {
+        type: String,
+        enum: ['local', 'google', 'facebook', 'github'],
+        default: 'local',
+        // Tracks how user authenticated
+    },
+
+    googleId: {
+        type: String,
+    },
+
+    profilePicture: {
+        type: String,
+        // URL to profile image from OAuth provider
+    },
+
     twoFA_enabled: {
         type: Boolean,
         default: false,
         // Two-factor authentication status
     },
-    
+
     verifyOtp: {
         type: String,
         default: "",
         // One-time password for email verification
     },
-    
+
     verifyOtpExpiresAt: {
         type: Number,
         default: 0,
         // Expiration timestamp for email verification OTP
     },
-    
+
     resetOtp: {
         type: String,
         default: "",
         // One-time password for password reset
     },
-    
+
     resetOtpExpiresAt: {
         type: Number,
         default: 0,
@@ -70,6 +88,9 @@ const userSchema = new mongoose.Schema({
 userSchema.index({ email: 1 });
 userSchema.index({ phoneNumber: 1 });
 userSchema.index({ role: 1 });
+userSchema.index({ googleId: 1 }); // New index for OAuth
+userSchema.index({ authProvider: 1 }); // New index for auth method
+userSchema.index({ email: 1, authProvider: 1 }); // Compound index for OAuth lookups
 
 const User = mongoose.model("User", userSchema);
 export default User;

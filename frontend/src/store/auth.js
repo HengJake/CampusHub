@@ -2,13 +2,17 @@ import { create } from "zustand";
 
 export const useAuthStore = create((set, get) => ({
   user: null,
-  currentUser: null, // Enhanced user object with role-specific data
+  currentUser: null, // Enhanced user object with role-specific data from JWT token
   schoolId: null, // For schoolAdmin users
   studentId: null, // For student users
+  lecturerId: null, // For lecturer users
+  student: null, // Store complete student object
+  lecturer: null, // Store complete lecturer object
+  school: null, // Store complete school object
   isAuthenticated: false,
   isLoading: false,
 
-  // Enhanced login with automatic role-based data fetching
+  // Enhanced login with role-specific data from JWT token
   logIn: async (loginCredential) => {
     set({ isLoading: true });
     try {
@@ -27,23 +31,80 @@ export const useAuthStore = create((set, get) => ({
         throw new Error(data.message || "Login failed");
       }
 
-      // Set basic user data
-      set({
-        user: data.data,
-        isAuthenticated: true,
-        isLoading: false
+      // Get role-specific data from JWT token via isAuthenticated endpoint
+      const authRes = await fetch("/auth/is-auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include',
       });
 
-      // Fetch role-specific data based on user role
-      const enhancedUser = await get().fetchRoleSpecificData(data.data);
-      set({ currentUser: enhancedUser });
+      const authData = await authRes.json();
 
-      return {
-        success: true,
-        data: enhancedUser,
-        token: data.token || null,
-        schoolSetupComplete: enhancedUser.schoolSetupComplete
-      };
+      if (authData.success) {
+        // Extract role-specific data from the authenticated response
+        const enhancedUser = {
+          ...data.data,
+          schoolId: authData.schoolId || null,
+          studentId: authData.studentId || null,
+          lecturerId: authData.lecturerId || null,
+          student: authData.student || null,
+          lecturer: authData.lecturer || null,
+          school: authData.school || null,
+          schoolSetupComplete: authData.schoolSetupComplete || false
+        };
+
+        set({
+          user: data.data,
+          currentUser: enhancedUser,
+          isAuthenticated: true,
+          schoolId: enhancedUser.schoolId,
+          studentId: enhancedUser.studentId || enhancedUser.student?._id || null,
+          lecturerId: enhancedUser.lecturerId || enhancedUser.lecturer?._id || null,
+          student: enhancedUser.student,
+          lecturer: enhancedUser.lecturer,
+          school: enhancedUser.school,
+          isLoading: false
+        });
+
+        return {
+          success: true,
+          data: enhancedUser,
+          schoolSetupComplete: enhancedUser.schoolSetupComplete
+        };
+      } else {
+        // Fallback: if role-specific data is not available, use basic user data
+        const enhancedUser = {
+          ...data.data,
+          schoolId: null,
+          studentId: null,
+          lecturerId: null,
+          student: null,
+          lecturer: null,
+          school: null,
+          schoolSetupComplete: false
+        };
+
+        set({
+          user: data.data,
+          currentUser: enhancedUser,
+          isAuthenticated: true,
+          schoolId: null,
+          studentId: null,
+          lecturerId: null,
+          student: null,
+          lecturer: null,
+          school: null,
+          isLoading: false
+        });
+
+        return {
+          success: true,
+          data: enhancedUser,
+          schoolSetupComplete: false
+        };
+      }
     } catch (error) {
       set({ isLoading: false });
       console.error("Login error:", error.message);
@@ -51,56 +112,151 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  // Fetch role-specific data (schoolId, studentId, etc.)
-  fetchRoleSpecificData: async (user) => {
+  // OAuth login method
+  logInWithOAuth: async (oauthData) => {
+    set({ isLoading: true });
     try {
-      let enhancedUser = { ...user };
+      // Authenticate the user via OAuth
+      const authRes = await fetch("/auth/oauth-login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: oauthData.email,
+          googleId: oauthData.googleId,
+          authProvider: oauthData.authProvider
+        }),
+        credentials: 'include',
+      });
 
-      if (user.role === "schoolAdmin") {
-        // Fetch school data for schoolAdmin
-        const schoolRes = await fetch("/auth/is-auth", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: 'include', // Include cookies
-        });
-        const schoolData = await schoolRes.json();
-        if (schoolData.success && schoolData.schoolId) {
-          enhancedUser.schoolId = schoolData.schoolId;
-          enhancedUser.schoolSetupComplete = true;
-          set({ schoolId: schoolData.schoolId });
-        } else {
-          enhancedUser.schoolSetupComplete = false;
-        }
-      } else if (user.role === "student") {
-        // Fetch student data including schoolId
-        const studentRes = await fetch("/auth/is-auth", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: 'include', // Include cookies
-        });
-        const studentData = await studentRes.json();
+      const authData = await authRes.json();
 
-        if (studentData.success) {
-          enhancedUser.schoolId = studentData.schoolId;
-          enhancedUser.studentId = studentData.student._id;
-          enhancedUser.schoolSetupComplete = true;
-          set({
-            schoolId: studentData.schoolId,
-            studentId: studentData.student._id
-          });
-        } else {
-          enhancedUser.schoolSetupComplete = false;
-        }
-      } else {
-        // For other roles, assume setup is complete
-        enhancedUser.schoolSetupComplete = true;
+      if (!authData.success) {
+        throw new Error(authData.message || "OAuth authentication failed");
       }
 
-      return enhancedUser;
+      // Get role-specific data from JWT token via isAuthenticated endpoint
+      const roleRes = await fetch("/auth/is-auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include',
+      });
+
+      const roleData = await roleRes.json();
+
+      if (roleData.success) {
+        // Extract role-specific data from the authenticated response
+        const enhancedUser = {
+          ...authData.data,
+          schoolId: roleData.schoolId || null,
+          studentId: roleData.studentId || null,
+          lecturerId: roleData.lecturerId || null,
+          student: roleData.student || null,
+          lecturer: roleData.lecturer || null,
+          school: roleData.school || null,
+          schoolSetupComplete: roleData.schoolSetupComplete || false
+        };
+
+        set({
+          user: authData.data,
+          currentUser: enhancedUser,
+          isAuthenticated: true,
+          schoolId: enhancedUser.schoolId,
+          studentId: enhancedUser.studentId || enhancedUser.student?._id || null,
+          lecturerId: enhancedUser.lecturerId || enhancedUser.lecturer?._id || null,
+          student: enhancedUser.student,
+          lecturer: enhancedUser.lecturer,
+          school: enhancedUser.school,
+          isLoading: false
+        });
+
+        return {
+          success: true,
+          data: enhancedUser,
+          schoolSetupComplete: enhancedUser.schoolSetupComplete
+        };
+      } else {
+        // Fallback: if role-specific data is not available, use basic user data
+        const enhancedUser = {
+          ...authData.data,
+          schoolId: null,
+          studentId: null,
+          lecturerId: null,
+          student: null,
+          lecturer: null,
+          school: null,
+          schoolSetupComplete: false
+        };
+
+        set({
+          user: authData.data,
+          currentUser: enhancedUser,
+          isAuthenticated: true,
+          schoolId: null,
+          studentId: null,
+          lecturerId: null,
+          student: null,
+          lecturer: null,
+          school: null,
+          isLoading: false
+        });
+
+        return {
+          success: true,
+          data: enhancedUser,
+          schoolSetupComplete: false
+        };
+      }
+    } catch (error) {
+      set({ isLoading: false });
+      console.error("OAuth login error:", error.message);
+      return { success: false, message: error.message };
+    }
+  },
+
+  // Fetch role-specific data from JWT token (fallback method)
+  fetchRoleSpecificData: async (user) => {
+    try {
+      // Get role-specific data from JWT token via isAuthenticated endpoint
+      const res = await fetch("/auth/is-auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        const enhancedUser = {
+          ...user,
+          schoolId: data.schoolId || null,
+          studentId: data.studentId || null,
+          lecturerId: data.lecturerId || null,
+          student: data.student || null,
+          lecturer: data.lecturer || null,
+          school: data.school || null,
+          schoolSetupComplete: data.schoolSetupComplete || false
+        };
+
+        // Update store state
+        set({
+          schoolId: enhancedUser.schoolId,
+          studentId: enhancedUser.studentId || enhancedUser.student?._id || null,
+          lecturerId: enhancedUser.lecturerId || enhancedUser.lecturer?._id || null,
+          student: enhancedUser.student,
+          lecturer: enhancedUser.lecturer,
+          school: enhancedUser.school
+        });
+
+        return enhancedUser;
+      } else {
+        throw new Error("Failed to get role-specific data");
+      }
     } catch (error) {
       console.error("Error fetching role-specific data:", error);
       // Return user with default setup status
@@ -115,6 +271,8 @@ export const useAuthStore = create((set, get) => ({
       user: state.currentUser || state.user,
       schoolId: state.schoolId,
       studentId: state.studentId,
+      student: state.student,
+      school: state.school,
       isAuthenticated: state.isAuthenticated,
       role: state.currentUser?.role || state.user?.role,
       schoolSetupComplete: state.currentUser?.schoolSetupComplete || false
@@ -135,6 +293,8 @@ export const useAuthStore = create((set, get) => ({
           user: authResult.data,
           schoolId: authResult.schoolId,
           studentId: authResult.studentId,
+          student: authResult.student,
+          school: authResult.school,
           isAuthenticated: true,
           role: authResult.data.role,
           schoolSetupComplete: authResult.schoolSetupComplete
@@ -156,6 +316,18 @@ export const useAuthStore = create((set, get) => ({
     return null;
   },
 
+  // Get complete student object
+  getStudent: () => {
+    const state = get();
+    return state.student;
+  },
+
+  // Get complete school object
+  getSchool: () => {
+    const state = get();
+    return state.school;
+  },
+
   // Role-based data fetching helpers
   fetchSchoolData: async () => {
     const schoolId = get().getSchoolId();
@@ -165,7 +337,7 @@ export const useAuthStore = create((set, get) => ({
     return schoolId;
   },
 
-  // Enhanced authorize user with role-specific data
+  // Enhanced authorize user with role-specific data from JWT token
   authorizeUser: async () => {
     try {
       const res = await fetch(`/auth/is-auth`, {
@@ -182,23 +354,37 @@ export const useAuthStore = create((set, get) => ({
         throw new Error(data.message || "Authorization failed");
       }
 
-      // Fetch role-specific data
-      const enhancedUser = await get().fetchRoleSpecificData(data);
+      // Create enhanced user with role-specific data from JWT token
+      const enhancedUser = {
+        ...data.user,
+        schoolId: data.schoolId || null,
+        student: data.student || null,
+        lecturer: data.lecturer || null,
+        school: data.school || null,
+        schoolSetupComplete: data.schoolSetupComplete || false
+      };
 
       set({
         currentUser: enhancedUser,
         isAuthenticated: true,
         schoolId: enhancedUser.schoolId,
-        studentId: enhancedUser.studentId,
+        studentId: enhancedUser.student?._id || null,
+        student: enhancedUser.student || null,
+        school: enhancedUser.school || null,
       });
 
       return {
         success: true,
         message: data.message,
-        data: enhancedUser,
+        data: {
+          ...enhancedUser,
+        },
+        tokenExpiration: data.tokenExpiration,
         role: data.role,
         schoolId: enhancedUser.schoolId,
         studentId: enhancedUser.studentId,
+        student: enhancedUser.student || null,
+        school: enhancedUser.school || null,
         schoolSetupComplete: enhancedUser.schoolSetupComplete
       };
     } catch (error) {
@@ -215,6 +401,8 @@ export const useAuthStore = create((set, get) => ({
       currentUser: null,
       schoolId: null,
       studentId: null,
+      student: null,
+      school: null,
       isAuthenticated: false,
       isLoading: false
     });
@@ -332,17 +520,27 @@ export const useAuthStore = create((set, get) => ({
       });
 
       const data = await res.json();
+      console.log("🚀 ~ data:", data)
 
       if (data.success) {
-        // User is authenticated, restore the state
-        const enhancedUser = await get().fetchRoleSpecificData(data);
+        // User is authenticated, create enhanced user with role-specific data
+        const enhancedUser = {
+          ...data.user,
+          schoolId: data.schoolId || null,
+          student: data.student || null,
+          lecturer: data.lecturer || null,
+          school: data.school || null,
+          schoolSetupComplete: data.schoolSetupComplete || false
+        };
 
         set({
-          user: data,
+          user: data.user,
           currentUser: enhancedUser,
           isAuthenticated: true,
           schoolId: enhancedUser.schoolId,
-          studentId: enhancedUser.studentId,
+          studentId: enhancedUser.student?._id || null,
+          student: enhancedUser.student || null,
+          school: enhancedUser.school || null,
         });
 
         return {
@@ -351,6 +549,8 @@ export const useAuthStore = create((set, get) => ({
           data: enhancedUser,
           schoolId: enhancedUser.schoolId,
           studentId: enhancedUser.studentId,
+          student: enhancedUser.student || null,
+          school: enhancedUser.school || null,
           schoolSetupComplete: enhancedUser.schoolSetupComplete
         };
       } else {

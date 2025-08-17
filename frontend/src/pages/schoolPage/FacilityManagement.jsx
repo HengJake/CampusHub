@@ -69,6 +69,7 @@ const FacilityManagement = () => {
     loading,
     errors,
     fetchFacilities,
+    fetchFacilitiesBySchoolId,
     createFacility,
     updateFacility,
     deleteFacility,
@@ -109,7 +110,7 @@ const FacilityManagement = () => {
   }, []);
 
   const loadFacilities = async () => {
-    const result = await fetchFacilities();
+    const result = await fetchFacilitiesBySchoolId();
     if (!result.success) {
       toast({
         title: 'Error',

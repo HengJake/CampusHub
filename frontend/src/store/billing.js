@@ -274,6 +274,35 @@ export const useBillingStore = create((set) => ({
             console.error("Error fetching invoices:", error.message);
             return { success: false, message: error.message };
         }
+    },
+
+    // Get billing data by school ID
+    fetchBillingDataBySchoolId: async () => {
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const res = await fetch(`/api/school/billing/${schoolId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch billing data");
+            }
+
+            return { success: true, message: data.message, data: data.data };
+        } catch (error) {
+            console.error("Error fetching billing data:", error.message);
+            return { success: false, message: error.message };
+        }
     }
 
 }))

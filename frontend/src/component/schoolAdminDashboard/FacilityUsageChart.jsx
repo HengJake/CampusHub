@@ -5,14 +5,14 @@ import { useEffect, useState } from "react"
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons"
 
 export function FacilityUsageChart() {
-  const { bookings, fetchBookings } = useFacilityStore()
+  const { bookings, fetchBookingsBySchoolId } = useFacilityStore()
   const [chartData, setChartData] = useState([])
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState('month') // 'month' or 'year'
 
   useEffect(() => {
-    fetchBookings()
-  }, [fetchBookings])
+    fetchBookingsBySchoolId()
+  }, [fetchBookingsBySchoolId])
 
   useEffect(() => {
     if (bookings.length > 0) {

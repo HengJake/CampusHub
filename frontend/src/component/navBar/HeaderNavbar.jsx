@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Flex, Text, Box, IconButton, InputGroup, Input, InputLeftElement, HStack, Avatar, useBreakpointValue, useDisclosure, VStack, useToast, List, ListItem, Button } from "@chakra-ui/react";
+import { Flex, Text, Box, IconButton, InputGroup, Input, InputLeftElement, HStack, useBreakpointValue, useDisclosure, VStack, useToast, List, ListItem, Button, Tooltip } from "@chakra-ui/react";
 import { HamburgerIcon, BellIcon, SearchIcon } from "@chakra-ui/icons";
 import Sidebar from "./Sidebar";
 import navConfig from "../../config/navConfig";
 import { useNavigate } from "react-router-dom";
 import toolTips from "../common/toolTips";
+import { useUserStore } from "../../store/user";
+import { useAuthStore } from "../../store/auth";
+import { CampusHubLogo } from "../campusHubLogo";
+import ProfilePicture from "../common/ProfilePicture";
 
 const headerColors = {
     student: {
@@ -27,8 +31,14 @@ const headerColors = {
 const HeaderNavbar = ({ role }) => {
     const [userName, setUserName] = useState("User");
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState([]);
+    const [searchResults] = useState([]);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [profileData, setProfileData] = useState({
+        name: "",
+        email: "",
+        profilePicture: "",
+    });
+    const [schoolName, setSchoolName] = useState("");
     const getRgba = (rgb, alpha) => `rgba(${rgb}, ${alpha})`;
     const isMobile = useBreakpointValue({ base: true, lg: false });
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -117,31 +127,58 @@ const HeaderNavbar = ({ role }) => {
         });
     };
 
-    // Fetch current user data
+
+
+    const { getUser } = useUserStore();
+
+    const fixGoogleProfilePictureUrl = (url) => {
+        if (!url) return url;
+
+        // If it's a Google profile picture URL, ensure it's properly formatted
+        if (url.includes('googleusercontent.com')) {
+            // Try different size parameters to ensure the image loads
+            // Remove existing size parameters and add a larger size
+            const baseUrl = url.replace(/=s\d+-c$/, '');
+            const fixedUrl = `${baseUrl}=s400-c`;
+            return fixedUrl;
+        }
+
+        return url;
+    };
+
+    // Fetch user profile data
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const response = await fetch('/auth/is-auth', {
-                    method: 'POST',
-                    credentials: 'include',
-                });
 
-                if (response.ok) {
-                    const data = await response.json();
+                await useAuthStore.getState().authorizeUser();
 
-                    if (data.id) {
-                        // Fetch detailed user information
-                        const userResponse = await fetch(`/api/user/${data.id}`, {
-                            method: 'GET',
-                            credentials: 'include',
-                        });
+                // Use auth store method instead of fetch
+                const data = useAuthStore.getState().currentUser;
 
-                        if (userResponse.ok) {
-                            const userData = await userResponse.json();
-                            if (userData.success && userData.data) {
-                                const user = userData.data;
-                                setUserName(user.name || "User");
-                            }
+                if (data) {
+
+                    // Extract school name from auth result
+                    if (data.school && data.school.name) {
+                        setSchoolName(data.school.name);
+                    }
+
+                    // Update profile data with real user data
+                    if (data._id) {
+                        // Use user store method instead of fetch
+                        const userResult = await getUser(data._id);
+
+                        if (userResult.success && userResult.data) {
+                            const user = userResult.data;
+
+                            const fixedProfilePictureUrl = fixGoogleProfilePictureUrl(user.profilePicture);
+                            const finalProfileData = {
+                                name: user.name || "",
+                                email: user.email || "",
+                                profilePicture: fixedProfilePictureUrl || "",
+                            };
+                            setProfileData(finalProfileData);
+                            setUserName(user.name || "User");
                         }
                     }
                 }
@@ -151,7 +188,7 @@ const HeaderNavbar = ({ role }) => {
         };
 
         fetchUserData();
-    }, []);
+    }, [getUser]);
 
     return (
         <>
@@ -192,8 +229,20 @@ const HeaderNavbar = ({ role }) => {
                 </HStack>) : ""}
 
                 <Box color={"gray.800"}>
-                    <Text fontSize={"10px"}>Welcome Back</Text>
-                    <Text fontSize={"20px"} fontWeight={"800"} lineHeight="0.9">{userName}</Text>
+                    <HStack>
+                        <CampusHubLogo />
+                        <Box>
+                            <Text fontSize={"10px"}>Welcome Back</Text>
+                            <Text fontSize={"20px"} fontWeight={"800"} lineHeight="0.9">{profileData.name || userName}</Text>
+                            {schoolName && (role === "schoolAdmin" || role === "student") ? (
+                                <Text fontSize={"10px"} color="gray.600" fontStyle="italic">
+                                    {schoolName}
+                                </Text>
+                            ) : (<Text fontSize={"10px"} color="gray.600" fontStyle="italic">
+                                CampusHub Company
+                            </Text>)}
+                        </Box>
+                    </HStack>
                 </Box>
 
                 <Box position="relative" className="search-container" w={{ base: "60vw", lg: "500px" }} mx={4} display={{ base: "none", lg: "block" }}>
@@ -267,12 +316,29 @@ const HeaderNavbar = ({ role }) => {
                         _hover={{ bg: colors.accent + '33' }}
                         onClick={handleNotificationClick}
                     />
-                    <IconButton
-                        bg={"transparent"}
-                        aria-label="Admin Profile"
-                        icon={<Avatar size="sm" name={userName} />}
-                        onClick={() => navigateTo()}
-                    />
+                    <Tooltip
+                        label={`${profileData.name || userName}${profileData.email ? ` (${profileData.email})` : ''}`}
+                        placement="bottom"
+                        hasArrow
+                    >
+                        <Box
+                            cursor="pointer"
+                            onClick={() => navigateTo()}
+                            _hover={{
+                                transform: 'scale(1.05)'
+                            }}
+                            transition="all 0.2s"
+                        >
+                            <ProfilePicture
+                                src={profileData.profilePicture}
+                                name={profileData.name || userName}
+                                size="sm"
+                                bgColor={colors.primary}
+                                showChangeButton={false}
+                                editable={false}
+                            />
+                        </Box>
+                    </Tooltip>
 
                 </HStack>
             </Flex >

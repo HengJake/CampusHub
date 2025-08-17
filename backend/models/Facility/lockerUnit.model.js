@@ -5,6 +5,7 @@ const LockerUnitSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Resource',
         required: true,
+        unique: true
     },
     schoolId: {
         type: mongoose.Schema.Types.ObjectId,

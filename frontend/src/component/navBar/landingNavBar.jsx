@@ -121,21 +121,24 @@ function LandingNavBar() {
           h={16}
           align={"center"}
           justify={"space-between"}
-          flexDir={{ base: "column", md: "row" }}
         >
-          <CampusHubLogo />
+          <HStack>
+            {isMobile ? (
+              <HStack spacing={3}>
+                <IconButton
+                  icon={<HamburgerIcon />}
+                  aria-label="Open navigation menu"
+                  variant="ghost"
+                  colorScheme="gray"
+                  onClick={onOpen}
+                />
+              </HStack>
+            ) : ""}
 
-          {isMobile ? (
-            <HStack spacing={3}>
-              <IconButton
-                icon={<HamburgerIcon />}
-                aria-label="Open navigation menu"
-                variant="ghost"
-                colorScheme="gray"
-                onClick={onOpen}
-              />
-            </HStack>
-          ) : (
+            <CampusHubLogo />
+          </HStack>
+
+          {isMobile ? "" : (
             <HStack
               spacing={8}
               display={{ base: "none", md: "flex" }}

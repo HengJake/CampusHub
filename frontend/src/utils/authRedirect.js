@@ -1,5 +1,4 @@
 import { useAuthStore } from '../store/auth.js';
-
 /**
  * Utility functions for JWT token detection and role-based redirection
  * Updated to work with HTTP-only cookies instead of localStorage
@@ -76,8 +75,6 @@ export const checkSchoolSetupComplete = async () => {
         console.log("🚀 ~ checkSchoolSetupComplete ~ data:", data)
 
         if (data.success && data.schoolId) {
-            // For now, just check if schoolId exists
-            // You can extend this to check payment details when the endpoint is available
             return true;
         }
 
@@ -103,7 +100,9 @@ export const getRedirectPath = (role, isSchoolSetupComplete = true) => {
         case 'companyAdmin':
             return '/campushub-dashboard';
         case 'lecturer':
-            return '/lecturer-dashboard'; // Adjust based on your routes
+            // Lecturer functionality not implemented - redirect to homepage
+            // Note: Toast message should be handled in the calling component
+            return '/';
         default:
             return '/';
     }
@@ -112,41 +111,47 @@ export const getRedirectPath = (role, isSchoolSetupComplete = true) => {
 /**
  * Main function to detect JWT token and redirect accordingly
  * @param {Function} navigate - React Router navigate function
- * @returns {Promise<boolean>} True if redirection occurred, false otherwise
+ * @returns {Promise<Object>} Object with redirection info: { redirected: boolean, role?: string, isLecturer?: boolean }
  */
 export const detectTokenAndRedirect = async (navigate) => {
     try {
         // Check if user is authenticated
         const isAuthenticated = await hasValidToken();
         if (!isAuthenticated) {
-            return false;
+            return { redirected: false };
         }
 
         // Get user role from auth endpoint
         const role = await getRoleFromAuth();
         if (!role) {
-            console.log('❌ No role found for authenticated user');
-            return false;
+
+            return { redirected: false };
         }
 
-        console.log(`🔍 Detected role: ${role}`);
+
 
         // For schoolAdmin, check if school setup is complete
         let isSchoolSetupComplete = true;
         if (role === 'schoolAdmin') {
             isSchoolSetupComplete = await checkSchoolSetupComplete();
-            console.log(`🏫 School setup complete: ${isSchoolSetupComplete}`);
+
         }
 
         const redirectPath = getRedirectPath(role, isSchoolSetupComplete);
-        console.log(`🚀 Redirecting to: ${redirectPath}`);
+
 
         // Navigate to appropriate page
         navigate(redirectPath);
-        return true;
+
+        // Return info about the redirection, including if it's a lecturer
+        return {
+            redirected: true,
+            role,
+            isLecturer: role === 'lecturer'
+        };
     } catch (error) {
         console.error('❌ Error in detectTokenAndRedirect:', error);
-        return false;
+        return { redirected: false };
     }
 };
 

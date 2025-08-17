@@ -63,7 +63,8 @@ export default function ResultsPreviewTable({
     handleDeleteClick,
     isTemplateModalOpen,
     onTemplateModalOpen,
-    onTemplateModalClose
+    onTemplateModalClose,
+    isMobile
 }) {
     const bgColor = useColorModeValue("white", "gray.800")
     const borderColor = useColorModeValue("gray.200", "gray.600")
@@ -71,7 +72,7 @@ export default function ResultsPreviewTable({
     return (
         <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
             <CardBody>
-                <HStack justify={"space-between"}>
+                <HStack justify={"space-between"} >
                     <VStack align={"start"} flex={1}>
                         {
                             previewResults.length > 0 && (
@@ -79,7 +80,7 @@ export default function ResultsPreviewTable({
                             )
                         }
                         <HStack w={"full"} justify={"space-between"} align={"end"}>
-                            <HStack justify={"start"} align={"end"} flex={1} >
+                            <HStack justify={"start"} align={isMobile ? "start" : "end"} flex={1} flexDir={isMobile ? "column" : "column"}>
                                 <FormControl maxW="200px">
                                     <FormLabel fontSize="sm"><Badge colorScheme="green">Intake</Badge></FormLabel>
                                     <Select

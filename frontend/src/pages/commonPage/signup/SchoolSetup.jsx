@@ -278,7 +278,7 @@ const SchoolSetup = () => {
         try {
             console.log('Starting school setup process...');
             const currentUser = await getCurrentUserWithAuth();
-            console.log('User ID:', currentUser.user.id);
+            console.log('User ID:', currentUser.user._id);
             console.log('Form data:', formData);
 
             // Check if school already exists for this user
@@ -305,7 +305,7 @@ const SchoolSetup = () => {
             } else {
                 // Step 1: Create the school record
                 const schoolData = {
-                    userId: currentUser.user.id,
+                    userId: currentUser.user._id,
                     name: formData.schoolName,
                     address: formData.address,
                     city: formData.city,

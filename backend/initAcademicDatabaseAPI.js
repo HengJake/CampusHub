@@ -851,7 +851,7 @@ async function createFullSchoolData({
     console.log(`[${schoolPrefix}] 13. Creating Students...`);
     const years = [1, 2, 3, 4];
     const semesters = [1, 2, 3];
-    const statuses = ['enrolled', 'active', 'in_progress', 'graduated', 'dropped', 'suspended'];
+    const statuses = ['enrolled', 'in_progress', 'graduated', 'dropped', 'suspended'];
     const standings = ['good', 'warning', 'probation', 'suspended'];
 
     const newStudentUsers = [];
