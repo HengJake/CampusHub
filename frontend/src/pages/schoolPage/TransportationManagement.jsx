@@ -184,7 +184,6 @@ const TransportationManagement = () => {
             {/* Create/Edit Modal */}
             <Modal isOpen={isOpen} onClose={() => { onClose(); resetForms(); }} size="xl">
                 <ModalOverlay />
-                <ModalContent>
                     <ModalHeader>
                         {modalType === 'busSchedule' && (
                             isEditMode ? 'Edit Bus Schedule' :
@@ -327,9 +326,9 @@ const TransportationManagement = () => {
                             </VStack>
                         )}
 
-                                                 {isEditMode || !selectedItem ? (
-                             // Edit Mode or Create Mode - Show forms
-                             <VStack spacing={4}>
+                        {isEditMode || !selectedItem ? (
+                            // Edit Mode or Create Mode - Show forms
+                            <VStack spacing={4}>
                                 {modalType === 'busSchedule' && (
                                     <VStack spacing={4}>
                                         <FormControl isRequired>
@@ -554,8 +553,7 @@ const TransportationManagement = () => {
                             </VStack>
                         ) : null}
                     </ModalBody>
-
-
+            </Modal>
         </Box>
     );
 };
