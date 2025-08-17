@@ -26,7 +26,7 @@ const landing = () => {
         bgGradient="linear(135deg, brand.500, brand.600)"
         opacity={0.05}
       />
-      
+
       <Box maxW="container.xl" mx="auto" px={4}>
         <SimpleGrid columns={{ base: 1, lg: 2 }} gap={12} alignItems="center">
           {/* Text Content */}
@@ -41,16 +41,16 @@ const landing = () => {
                 Simplified
               </Text>
             </Heading>
-            
+
             <Text
               fontSize={{ base: "lg", md: "xl" }}
               color="gray.600"
               lineHeight="relaxed"
             >
-              An integrated platform for students and staff to manage parking, 
+              An integrated platform for students and staff to manage parking,
               bookings, transport, and academic resources all in one place.
             </Text>
-            
+
             <Stack direction={{ base: "column", sm: "row" }} spacing={4} pt={6}>
               <Button
                 size="lg"
@@ -68,7 +68,7 @@ const landing = () => {
                 <Box as={FiPlay} mr={2} /> Learn More
               </Button>
             </Stack>
-            
+
             {/* Stats */}
             <Stack direction={{ base: "column", sm: "row" }} spacing={8} pt={8}>
               <Stack spacing={1} align="center">
@@ -97,7 +97,7 @@ const landing = () => {
               </Stack>
             </Stack>
           </Stack>
-          
+
           {/* Hero Image */}
           <Box position="relative">
             <Box
@@ -114,7 +114,7 @@ const landing = () => {
                 objectFit="cover"
               />
             </Box>
-            
+
             {/* Floating elements */}
             <Box
               position="absolute"
@@ -134,7 +134,7 @@ const landing = () => {
                 Real-time notifications
               </Text>
             </Box>
-            
+
             <Box
               position="absolute"
               bottom={-4}
