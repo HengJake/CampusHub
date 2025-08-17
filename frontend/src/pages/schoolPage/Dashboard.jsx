@@ -13,6 +13,7 @@ import { useTransportationStore } from "../../store/transportation.js";
 import { useEffect } from "react";
 import { StatsCard } from "../../component/common/StatsCard.jsx"
 import { FaBookReader } from "react-icons/fa";
+import { useAuth } from "../../hooks/useAuth.js";
 
 
 export function Dashboard() {
@@ -31,11 +32,48 @@ export function Dashboard() {
     attendance, fetchAttendance,
     results, fetchResults,
     rooms, fetchRooms,
-    schools, fetchSchools
+    schools, fetchSchools,
+    fetchStudentsBySchoolId,
+    fetchCoursesBySchoolId,
+    fetchIntakesBySchoolId,
+    fetchIntakeCoursesBySchoolId,
+    fetchDepartmentsBySchoolId,
+    fetchLecturersBySchoolId,
+    fetchModulesBySchoolId,
+    fetchClassSchedulesBySchoolId,
+    fetchExamSchedulesBySchoolId,
+    fetchAttendanceBySchoolId,
+    fetchResultsBySchoolId,
+    fetchRoomsBySchoolId
   } = useAcademicStore();
-  const { bookings, fetchBookings, resources, fetchResources, lockerUnits, fetchLockerUnits } = useFacilityStore();
-  const { feedback, fetchFeedback, lostItems, fetchLostItems, responds, fetchResponds } = useServiceStore();
-  const { busSchedules, fetchBusSchedules, eHailings, fetchEHailings, routes, fetchRoutes, stops, fetchStops, vehicles, fetchVehicles } = useTransportationStore();
+  const {
+    bookings, fetchBookings,
+    resources, fetchResources,
+    lockerUnits, fetchLockerUnits,
+    fetchBookingsBySchoolId,
+    fetchResourcesBySchoolId,
+    fetchLockerUnitsBySchoolId
+  } = useFacilityStore();
+  const {
+    feedback, fetchFeedback,
+    lostItems, fetchLostItems,
+    responds, fetchResponds,
+    fetchFeedbackBySchoolId,
+    fetchLostItemsBySchoolId,
+    fetchRespondsBySchoolId
+  } = useServiceStore();
+  const {
+    busSchedules, fetchBusSchedules,
+    eHailings, fetchEHailings,
+    routes, fetchRoutes,
+    stops, fetchStops,
+    vehicles, fetchVehicles,
+    fetchBusSchedulesBySchoolId,
+    fetchEHailingsBySchoolId,
+    fetchRoutesBySchoolId,
+    fetchStopsBySchoolId,
+    fetchVehiclesBySchoolId
+  } = useTransportationStore();
 
   const stats = {
     studentChange: 0,
@@ -79,58 +117,86 @@ export function Dashboard() {
     stats.bookingChange = totalBookingsTM > 0 ? 100 : 0; // If no bookings last month but some this month, show 100% increase
   }
 
+  // LOCKER CHANGE - Track locker activity (new lockers or status changes) by month
+  const lockersThisMonth = lockerUnits.filter(locker => {
+    const updatedAt = new Date(locker.updatedAt || locker.createdAt);
+    return updatedAt >= firstDayOfThisMonth;
+  });
+
+  const lockersLastMonth = lockerUnits.filter(locker => {
+    const updatedAt = new Date(locker.updatedAt || locker.createdAt);
+    return updatedAt >= firstDayOfLastMonth && updatedAt <= lastDayOfLastMonth;
+  });
+
+  const totalLockersLM = lockersLastMonth.length;
+  const totalLockersTM = lockersThisMonth.length;
+
   // LOCKER USAGE CALCULATION
   const totalLockers = lockerUnits.length;
   const usedLockers = lockerUnits.filter(locker => !locker.isAvailable).length;
-  const lockerUsage = Math.round((usedLockers / totalLockers) * 100)
+
+  // Calculate locker changes (new lockers or status changes)
+  if (totalLockersLM > 0) {
+    // Calculate percentage increase from last month
+    const percentageIncrease = Math.round(((totalLockersTM - totalLockersLM) / totalLockersLM) * 100);
+    stats.lockerChange = percentageIncrease;
+  } else if (totalLockersTM > 0) {
+    // If last month was 0 but this month has activity, it's a new start
+    stats.lockerChange = 100;
+  } else {
+    // No activity in either month
+    stats.lockerChange = 0;
+  }
+
 
   // Display all intakes count
   const currentMonthIntakes = intakes.length;
 
-
+  const { isInitialized } = useAuth();
 
   useEffect(() => {
+    if (!isInitialized) return; 
     // =====================
     // Academic Store Fetches
     // =====================
-    fetchStudents();
-    fetchCourses();
-    fetchIntakes();
-    fetchIntakeCourses();
-    fetchDepartments();
-    fetchLecturers();
-    fetchModules();
-    fetchClassSchedules();
-    fetchExamSchedules();
-    fetchAttendance();
-    fetchResults();
-    fetchRooms();
-    fetchSchools();
+    fetchStudentsBySchoolId();
+    fetchCoursesBySchoolId();
+    fetchIntakesBySchoolId();
+    fetchIntakeCoursesBySchoolId();
+    fetchDepartmentsBySchoolId();
+    fetchLecturersBySchoolId();
+    fetchModulesBySchoolId();
+    fetchClassSchedulesBySchoolId();
+    fetchExamSchedulesBySchoolId();
+    fetchAttendanceBySchoolId();
+    fetchResultsBySchoolId();
+    fetchRoomsBySchoolId();
 
     // =====================
     // Facility Store Fetches
     // =====================
-    fetchBookings();
-    fetchResources();
-    fetchLockerUnits();
+    fetchBookingsBySchoolId();
+    fetchResourcesBySchoolId();
+    fetchLockerUnitsBySchoolId();
 
     // =====================
     // Service Store Fetches
     // =====================
-    fetchFeedback();
-    fetchLostItems();
-    fetchResponds();
+    fetchFeedbackBySchoolId();
+    fetchLostItemsBySchoolId();
+    fetchRespondsBySchoolId();
 
     // =====================
     // Transportation Store Fetches
     // =====================
-    fetchBusSchedules();
-    fetchEHailings();
-    fetchRoutes();
-    fetchStops();
-    fetchVehicles();
+    fetchBusSchedulesBySchoolId();
+    fetchEHailingsBySchoolId();
+    fetchRoutesBySchoolId();
+    fetchStopsBySchoolId();
+    fetchVehiclesBySchoolId();
 
-  }, [])
+  }, [isInitialized])
+
 
   return (
     <Box flex={1}>
@@ -149,13 +215,13 @@ export function Dashboard() {
           icon={<FiCalendar />}
         />
         <StatsCard
-          title="Locker Usage"
-          value={`${lockerUsage}%`}
+          title="Locker Changes"
+          value={totalLockersTM}
           change={stats.lockerChange}
           icon={<FiLock />}
         />
         <StatsCard
-          title="All Intake"
+          title="Total Number of Intake"
           value={currentMonthIntakes}
           icon={<FaBookReader />}
         />

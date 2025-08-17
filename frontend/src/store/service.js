@@ -67,7 +67,7 @@ export const useServiceStore = create((set, get) => ({
         try {
             let url;
             const authStore = useAuthStore.getState();
-            const userContext = authStore.getCurrentUser();
+            const userContext = authStore.getState().getCurrentUser();
 
             if (userContext.role === "schoolAdmin" || userContext.role === "student") {
                 const schoolId = authStore.getSchoolId();
@@ -86,7 +86,42 @@ export const useServiceStore = create((set, get) => ({
                 url = "/api/feedback";
             }
 
-            console.log("🚀 ~ url:", url)
+            const res = await fetch(url, {
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch feedback");
+            }
+            set((state) => ({
+                feedback: data.data,
+                loading: { ...state.loading, feedback: false },
+                errors: { ...state.errors, feedback: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, feedback: false },
+                errors: { ...state.errors, feedback: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchFeedbackBySchoolId: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, feedback: true } }));
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            let url = `/api/feedback/school/${schoolId}`;
+            if (filters.studentId) {
+                url = `/api/feedback/school/${schoolId}/student/${filters.studentId}`;
+            }
+
             const res = await fetch(url, {
                 credentials: 'include'
             });
@@ -207,6 +242,38 @@ export const useServiceStore = create((set, get) => ({
             return { success: false, message: error.message };
         }
     },
+
+    fetchLostItemsBySchoolId: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, lostItems: true } }));
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = get().buildUrl(`/api/lost-item/school/${schoolId}`, filters);
+            const res = await fetch(url, {
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch lost items");
+            }
+            set((state) => ({
+                lostItems: data.data,
+                loading: { ...state.loading, lostItems: false },
+                errors: { ...state.errors, lostItems: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, lostItems: false },
+                errors: { ...state.errors, lostItems: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
     createLostItem: async (itemData) => {
         try {
             const authStore = useAuthStore.getState();
@@ -279,6 +346,38 @@ export const useServiceStore = create((set, get) => ({
         set((state) => ({ loading: { ...state.loading, responds: true } }));
         try {
             const url = get().buildUrl("/api/respond", filters);
+            const res = await fetch(url, {
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch responds");
+            }
+            set((state) => ({
+                responds: data.data,
+                loading: { ...state.loading, responds: false },
+                errors: { ...state.errors, responds: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, responds: false },
+                errors: { ...state.errors, responds: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchRespondsBySchoolId: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, responds: true } }));
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = get().buildUrl(`/api/respond/school/${schoolId}`, filters);
             const res = await fetch(url, {
                 credentials: 'include'
             });

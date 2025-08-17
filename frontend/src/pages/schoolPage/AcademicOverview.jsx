@@ -6,29 +6,20 @@ import {
   CardBody,
   VStack,
   HStack,
-  Avatar,
-  useColorModeValue,
-  Progress,
   Button,
   useToast,
+  Badge
 } from "@chakra-ui/react"
-import { FaBuilding } from "react-icons/fa";
 import {
-  FiUsers,
   FiUser,
   FiBook,
-  FiBookOpen,
   FiClock,
   FiCheckSquare,
 } from "react-icons/fi"
-import { FaGraduationCap } from "react-icons/fa";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
 import { useAcademicStore } from "../../store/academic.js";
 import { useEffect, useState } from "react";
 import { StatsCard } from "../../component/common/StatsCard.jsx";
-import RefreshData from "../../component/common/RefreshData.jsx";
 import {
-  updateStudentAcademicPerformance,
   updateAllStudentsAcademicPerformance
 } from "../../component/schoolAdminDashboard/dashboard/updateStudent.js";
 import { updateIntakeCourseEnrollments } from "../../component/schoolAdminDashboard/dashboard/updateIntakeCourseEnrollments.js";
@@ -38,17 +29,10 @@ import {
   FiTrendingUp,
   FiAlertTriangle,
   FiStar,
-  FiAlertCircle,
-  FiMessageSquare,
-  FiCalendar,
   FiUserPlus,
   FiRefreshCw,
   FiBarChart,
-  FiDownload,
   FiBarChart2,
-  FiDatabase,
-  FiUpload,
-  FiPieChart,
 } from "react-icons/fi";
 
 export function AcademicOverview() {
@@ -60,33 +44,21 @@ export function AcademicOverview() {
   const {
     students,
     lecturers,
-    courses,
     modules,
     departments,
-    intakes,
     intakeCourses,
-    rooms,
-    examSchedules,
     attendance,
     classSchedules,
     results,
     fetchStudents,
     fetchLecturers,
-    fetchCourses,
     fetchModules,
     fetchDepartments,
-    fetchIntakes,
     fetchIntakeCourses,
-    fetchRooms,
-    fetchExamSchedules,
     fetchAttendance,
     fetchClassSchedules,
     fetchResults,
     updateIntakeCourse,
-    getCourseCompletionRate,
-    getAllCourseCompletionRate,
-    getAverageAttendance,
-    getExamPassRate,
   } = useAcademicStore();
 
   const [isUpdatingPerformance, setIsUpdatingPerformance] = useState(false);
@@ -115,7 +87,7 @@ export function AcademicOverview() {
       const results = await updateAllStudentsAcademicPerformance();
 
       // Refresh data to get updated values
-      await fetchStudents();
+      await fetchStudentsBySchoolId();
 
       toast({
         title: "Update Complete",
@@ -225,18 +197,14 @@ export function AcademicOverview() {
   const fetchAllData = async () => {
     try {
       await Promise.all([
-        fetchStudents(),
-        fetchLecturers?.(),
-        fetchCourses(),
-        fetchModules?.(),
-        fetchDepartments?.(),
-        fetchIntakes?.(),
-        fetchIntakeCourses?.(),
-        fetchRooms?.(),
-        fetchExamSchedules?.(),
-        fetchAttendance?.(),
-        fetchClassSchedules?.(),
-        fetchResults?.()
+        fetchStudentsBySchoolId(),
+        fetchLecturersBySchoolId?.(),
+        fetchModulesBySchoolId?.(),
+        fetchDepartmentsBySchoolId?.(),
+        fetchIntakeCoursesBySchoolId?.(),
+        fetchAttendanceBySchoolId?.(),
+        fetchClassSchedulesBySchoolId?.(),
+        fetchResultsBySchoolId?.()
       ]);
 
       debugLog("Data Fetching", "All data fetched successfully");
@@ -267,21 +235,186 @@ export function AcademicOverview() {
     return Math.round(safeDivide(numerator, denominator, fallback / 100) * 100);
   };
 
-  // Check if date is today
-  const isToday = (dateString) => {
-    if (!dateString) return false;
-    const today = new Date().toISOString().slice(0, 10);
-    return dateString.slice(0, 10) === today;
+
+
+  /**
+   * MONTH-OVER-MONTH COMPARISON UTILITIES
+   * =====================================
+   * Functions to compare data from last month vs this month using createdAt
+   */
+
+  // Get current month and last month date ranges
+  const getMonthRanges = () => {
+    const now = new Date();
+    const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    return {
+      currentMonth: {
+        start: currentMonth,
+        end: now
+      },
+      lastMonth: {
+        start: lastMonth,
+        end: new Date(now.getFullYear(), now.getMonth(), 0)
+      }
+    };
   };
 
-  // Check if intake is currently active
-  const isIntakeActive = (intake) => {
-    if (!intake.startDate || !intake.endDate) return false;
-    const now = new Date();
-    const start = new Date(intake.startDate);
-    const end = new Date(intake.endDate);
-    return now >= start && now <= end;
+  // Filter data by month using createdAt
+  const filterDataByMonth = (data, monthRange) => {
+    if (!data || !Array.isArray(data)) return [];
+
+    return data.filter(item => {
+      if (!item.createdAt) return false;
+
+      const itemDate = new Date(item.createdAt);
+      return itemDate >= monthRange.start && itemDate <= monthRange.end;
+    });
   };
+
+  // Calculate month-over-month change percentage
+  const calculateMonthOverMonthChange = (currentValue, lastValue) => {
+    if (lastValue === 0) return currentValue > 0 ? 100 : 0;
+    return ((currentValue - lastValue) / lastValue) * 100;
+  };
+
+  // Get month-over-month statistics for various metrics
+  const getMonthOverMonthStats = () => {
+    const monthRanges = getMonthRanges();
+
+    // Filter data by month
+    const currentMonthStudents = filterDataByMonth(students, monthRanges.currentMonth);
+    const lastMonthStudents = filterDataByMonth(students, monthRanges.lastMonth);
+
+    const currentMonthResults = filterDataByMonth(results, monthRanges.currentMonth);
+    const lastMonthResults = filterDataByMonth(results, monthRanges.lastMonth);
+
+    const currentMonthAttendance = filterDataByMonth(attendance, monthRanges.currentMonth);
+    const lastMonthAttendance = filterDataByMonth(attendance, monthRanges.lastMonth);
+
+    const currentMonthIntakeCourses = filterDataByMonth(intakeCourses, monthRanges.currentMonth);
+    const lastMonthIntakeCourses = filterDataByMonth(intakeCourses, monthRanges.lastMonth);
+
+    // Calculate metrics for each month
+    const currentMonthStats = {
+
+      passRate: (() => {
+        if (!currentMonthResults.length) return 0;
+        const passed = currentMonthResults.filter(r => r.grade !== 'F' && r.grade !== 'Fail').length;
+        return safePercentage(passed, currentMonthResults.length);
+      })(),
+      averageGPA: (() => {
+        if (!currentMonthResults.length) return 0;
+        const totalGPA = currentMonthResults.reduce((sum, result) => sum + (result.gpa || 0), 0);
+        return safeDivide(totalGPA, currentMonthResults.length);
+      })(),
+      atRiskStudents: (() => {
+        if (!currentMonthStudents.length || !currentMonthResults.length) return 0;
+        return currentMonthStudents.filter(r => r.cgpa < 2.5).length;
+      })(),
+
+      enrollmentRate: (() => {
+        if (!currentMonthIntakeCourses.length) return 0;
+        const totalCapacity = currentMonthIntakeCourses.reduce((sum, ic) => sum + ic.maxStudents, 0);
+        const totalEnrolled = currentMonthIntakeCourses.reduce((sum, ic) => sum + ic.currentEnrollment, 0);
+        return safePercentage(totalEnrolled, totalCapacity);
+      })()
+    };
+
+    const lastMonthStats = {
+
+      passRate: (() => {
+        if (!lastMonthResults.length) return 0;
+        const passed = lastMonthResults.filter(r => r.grade !== 'F' && r.grade !== 'Fail').length;
+        return safePercentage(passed, lastMonthResults.length);
+      })(),
+      averageGPA: (() => {
+        if (!lastMonthResults.length) return 0;
+        const totalGPA = lastMonthResults.reduce((sum, result) => sum + (result.gpa || 0), 0);
+        return safeDivide(totalGPA, lastMonthResults.length);
+      })(),
+      atRiskStudents: (() => {
+        if (!lastMonthStudents.length || !lastMonthResults.length) return 0;
+        return lastMonthStudents.filter(r => r.cgpa < 2.5).length;
+      })(),
+
+      enrollmentRate: (() => {
+        if (!lastMonthIntakeCourses.length) return 0;
+        const totalCapacity = lastMonthIntakeCourses.reduce((sum, ic) => sum + ic.maxStudents, 0);
+        const totalEnrolled = lastMonthIntakeCourses.reduce((sum, ic) => sum + ic.currentEnrollment, 0);
+        return safePercentage(totalEnrolled, totalCapacity);
+      })()
+    };
+
+    // Calculate month-over-month changes
+    return {
+      passRate: {
+        current: currentMonthStats.passRate,
+        last: lastMonthStats.passRate,
+        change: calculateMonthOverMonthChange(currentMonthStats.passRate, lastMonthStats.passRate)
+      },
+      averageGPA: {
+        current: currentMonthStats.averageGPA,
+        last: lastMonthStats.averageGPA,
+        change: calculateMonthOverMonthChange(currentMonthStats.averageGPA, lastMonthStats.averageGPA)
+      },
+      atRiskStudents: {
+        current: currentMonthStats.atRiskStudents,
+        last: lastMonthStats.atRiskStudents,
+        change: calculateMonthOverMonthChange(currentMonthStats.atRiskStudents, lastMonthStats.atRiskStudents)
+      },
+
+      enrollmentRate: {
+        current: currentMonthStats.enrollmentRate,
+        last: lastMonthStats.enrollmentRate,
+        change: calculateMonthOverMonthChange(currentMonthStats.enrollmentRate, lastMonthStats.enrollmentRate)
+      },
+
+    };
+  };
+
+  // Get month-over-month statistics
+  const monthOverMonthStats = getMonthOverMonthStats();
+
+  // Debug information for month-over-month comparison
+  const debugMonthComparison = () => {
+    if (!DEBUG_MODE) return null;
+
+    const monthRanges = getMonthRanges();
+    const currentMonthData = {
+      students: filterDataByMonth(students, monthRanges.currentMonth).length,
+      results: filterDataByMonth(results, monthRanges.currentMonth).length,
+      attendance: filterDataByMonth(attendance, monthRanges.currentMonth).length,
+      intakeCourses: filterDataByMonth(intakeCourses, monthRanges.currentMonth).length
+    };
+
+    const lastMonthData = {
+      students: filterDataByMonth(students, monthRanges.lastMonth).length,
+      results: filterDataByMonth(results, monthRanges.lastMonth).length,
+      attendance: filterDataByMonth(attendance, monthRanges.lastMonth).length,
+      intakeCourses: filterDataByMonth(intakeCourses, monthRanges.lastMonth).length
+    };
+
+    return {
+      monthRanges: {
+        current: {
+          start: monthRanges.currentMonth.start.toLocaleDateString(),
+          end: monthRanges.currentMonth.end.toLocaleDateString()
+        },
+        last: {
+          start: monthRanges.lastMonth.start.toLocaleDateString(),
+          end: monthRanges.lastMonth.end.toLocaleDateString()
+        }
+      },
+      dataCounts: {
+        current: currentMonthData,
+        last: lastMonthData
+      }
+    };
+  };
+
+  const monthComparisonDebug = debugMonthComparison();
 
   /**
    * DASHBOARD STATISTICS CALCULATION
@@ -294,12 +427,9 @@ export function AcademicOverview() {
     debugLog("Data Arrays", {
       students: students?.length || 0,
       lecturers: lecturers?.length || 0,
-      courses: courses?.length || 0,
       modules: modules?.length || 0,
       departments: departments?.length || 0,
-      intakes: intakes?.length || 0,
       intakeCourses: intakeCourses?.length || 0,
-      rooms: rooms?.length || 0,
       attendance: attendance?.length || 0,
       results: results?.length || 0
     });
@@ -310,26 +440,10 @@ export function AcademicOverview() {
       // ============================================
       totalStudents: students?.length || 0,
       totalLecturers: lecturers?.length || 0,
-      totalCourses: courses?.length || 0,
       totalModules: modules?.length || 0,
       totalDepartments: departments?.length || 0,
-      totalIntakes: intakes?.length || 0,
-      upcomingExams: examSchedules?.length || 0,
 
-      // Today's attendance with debugging
-      todayAttendance: (() => {
-        const todayAttendance = attendance?.filter(a => isToday(a.date)) || [];
-        const present = todayAttendance.filter(a => a.status === "present").length;
-        const percentage = safePercentage(present, todayAttendance.length);
 
-        debugLog("Today's Attendance", {
-          total: todayAttendance.length,
-          present,
-          percentage
-        });
-
-        return percentage;
-      })(),
 
       // ============================================
       // STUDENT ACADEMIC PERFORMANCE
@@ -341,15 +455,6 @@ export function AcademicOverview() {
 
         debugLog("Pass Rate", { total: results.length, passed, rate });
         return rate;
-      })(),
-
-      averageGPA: (() => {
-        if (!results?.length) return 0;
-        const totalPoints = results.reduce((sum, r) => sum + r.creditHours, 0);
-        const avgGPA = safeDivide(totalPoints, results.length).toFixed(2);
-
-        debugLog("Average GPA", { totalResults: results.length, totalPoints, avgGPA });
-        return parseFloat(avgGPA);
       })(),
 
       atRiskStudents: (() => {
@@ -384,31 +489,6 @@ export function AcademicOverview() {
         });
 
         return topPerformers;
-      })(),
-
-      // ============================================
-      // LECTURER/SUBJECT OVERVIEW
-      // ============================================
-      totalModules: (() => {
-        if (!modules?.length) return 0;
-        const totalModules = modules.length;
-
-        debugLog("Total Modules", {
-          totalModules: modules.length
-        });
-
-        return totalModules;
-      })(),
-
-      totalLecturers: (() => {
-        if (!lecturers?.length) return 0;
-        const totalLecturers = lecturers.length;
-
-        debugLog("Total Lecturers", {
-          totalLecturers: lecturers.length
-        });
-
-        return totalLecturers;
       })(),
 
       avgWorkingHours: (() => {
@@ -501,46 +581,9 @@ export function AcademicOverview() {
         return parseFloat(averageModules.toFixed(2));
       })(),
 
-      highFailRateSubjects: (() => {
-        if (!modules?.length || !results?.length) return 0;
 
-        const highFailModules = modules.filter(module => {
-          const moduleResults = results.filter(r => r.moduleId === module._id);
-          if (!moduleResults.length) return false;
 
-          const failCount = moduleResults.filter(r => r.grade === 'F').length;
-          const failRate = safeDivide(failCount, moduleResults.length);
 
-          return failRate > 0.3; // 30% fail rate threshold
-        }).length;
-
-        debugLog("High Fail Rate Subjects", {
-          totalModules: modules.length,
-          highFailModules
-        });
-
-        return highFailModules;
-      })(),
-
-      avgFeedbackScore: (() => {
-        // TODO: Replace with real feedback data when available
-        // For now, calculate based on academic performance as proxy
-        const baseScore = 4.0;
-        const performanceBonus = safeDivide(
-          students.filter(s => results.some(r => r.studentId === s._id && r.creditHours >= 3.0)).length,
-          students.length || 1
-        ) * 0.5; // Max 0.5 bonus
-
-        const calculatedScore = Math.min(baseScore + performanceBonus, 5.0);
-
-        debugLog("Feedback Score", {
-          baseScore,
-          performanceBonus,
-          calculatedScore: calculatedScore.toFixed(1)
-        });
-
-        return parseFloat(calculatedScore.toFixed(1));
-      })(),
 
 
 
@@ -561,65 +604,9 @@ export function AcademicOverview() {
         return rate;
       })(),
 
-      lowAttendanceAlerts: (() => {
-        if (!students?.length || !attendance?.length) return 0;
 
-        const lowAttendanceStudents = students.filter(student => {
-          const studentAttendance = attendance.filter(a => a.studentId === student._id);
-          if (!studentAttendance.length) return false;
 
-          const presentCount = studentAttendance.filter(a => a.status === "present").length;
-          const attendanceRate = safeDivide(presentCount, studentAttendance.length);
 
-          return attendanceRate < 0.75; // Below 75% threshold
-        }).length;
-
-        debugLog("Low Attendance Alerts", {
-          totalStudents: students.length,
-          lowAttendanceStudents
-        });
-
-        return lowAttendanceStudents;
-      })(),
-
-      attendancePerformanceCorr: (() => {
-        // Calculate correlation between attendance and academic performance
-        if (!students?.length || !attendance?.length || !results?.length) return 0;
-
-        let correlationSum = 0;
-        let validStudents = 0;
-
-        students.forEach(student => {
-          const studentAttendance = attendance.filter(a => a.studentId === student._id);
-          const studentResults = results.filter(r => r.studentId === student._id);
-
-          if (studentAttendance.length > 0 && studentResults.length > 0) {
-            const attendanceRate = safeDivide(
-              studentAttendance.filter(a => a.status === "present").length,
-              studentAttendance.length
-            );
-
-            const avgGPA = safeDivide(
-              studentResults.reduce((sum, r) => sum + r.creditHours, 0),
-              studentResults.length
-            );
-
-            // Simple correlation: students with >80% attendance tend to have >3.0 GPA
-            if (attendanceRate > 0.8 && avgGPA > 3.0) correlationSum++;
-            validStudents++;
-          }
-        });
-
-        const correlation = safePercentage(correlationSum, validStudents);
-
-        debugLog("Attendance-Performance Correlation", {
-          validStudents,
-          correlationSum,
-          correlation
-        });
-
-        return correlation;
-      })(),
 
       weeklyAbsenceTrend: (() => {
         if (!attendance?.length) return 0;
@@ -633,58 +620,6 @@ export function AcademicOverview() {
         });
 
         return rate;
-      })(),
-
-      // ============================================
-      // ASSESSMENT & EXAM INSIGHTS
-      // ============================================
-      resultSubmissionProgress: (() => {
-        if (!modules?.length) return 0;
-        const modulesWithResults = modules.filter(module =>
-          results?.some(r => r.moduleId === module._id)
-        ).length;
-        const progress = safePercentage(modulesWithResults, modules.length);
-
-        debugLog("Result Submission Progress", {
-          totalModules: modules.length,
-          modulesWithResults,
-          progress
-        });
-
-        return progress;
-      })(),
-
-      assessmentWeightage: (() => {
-        // Calculate based on actual assessment distribution
-        if (!results?.length) return 70; // Default fallback
-
-        // Mock calculation - in real implementation, this would analyze actual assessment types
-        const courseworkWeight = 70;
-        const examWeight = 30;
-
-        debugLog("Assessment Weightage", {
-          courseworkWeight,
-          examWeight,
-          totalResults: results.length
-        });
-
-        return courseworkWeight;
-      })(),
-
-      pendingGradingItems: (() => {
-        if (!modules?.length) return 0;
-        const modulesWithResults = modules.filter(module =>
-          results?.some(r => r.moduleId === module._id)
-        ).length;
-        const pending = modules.length - modulesWithResults;
-
-        debugLog("Pending Grading", {
-          totalModules: modules.length,
-          modulesWithResults,
-          pending
-        });
-
-        return pending;
       })(),
 
       // ============================================
@@ -704,22 +639,7 @@ export function AcademicOverview() {
         return parseFloat(average.toFixed(2));
       })(),
 
-      gradeDistribution: (() => {
-        if (!results?.length) return { A: 0, B: 0, C: 0, D: 0, F: 0 };
 
-        const distribution = results.reduce((acc, result) => {
-          const grade = result.grade?.charAt(0) || 'F';
-          acc[grade] = (acc[grade] || 0) + 1;
-          return acc;
-        }, {});
-
-        debugLog("Grade Distribution", {
-          totalResults: results.length,
-          distribution
-        });
-
-        return distribution;
-      })(),
 
 
 
@@ -804,195 +724,19 @@ export function AcademicOverview() {
         return rate;
       })(),
 
-      courseCompletionRate: (() => {
-        if (!students?.length || !courses?.length) return 0;
 
-        const graduatedStudents = students.filter(s => s.status === 'graduated').length;
-        const rate = safePercentage(graduatedStudents, students.length);
 
-        debugLog("Course Completion Rate", {
-          totalStudents: students.length,
-          graduatedStudents,
-          rate
-        });
 
-        return rate;
-      })(),
-
-      moduleDifficultyIndex: (() => {
-        if (!modules?.length || !results?.length) return 0;
-
-        const moduleDifficulties = modules.map(module => {
-          const moduleResults = results.filter(r => r.moduleId === module._id);
-          if (!moduleResults.length) return 0;
-
-          const avgGPA = safeDivide(
-            moduleResults.reduce((sum, r) => sum + (r.gpa || 0), 0),
-            moduleResults.length
-          );
-
-          // Difficulty index: lower GPA = higher difficulty
-          return 4.0 - avgGPA;
-        }).filter(difficulty => difficulty > 0);
-
-        const avgDifficulty = safeDivide(
-          moduleDifficulties.reduce((sum, d) => sum + d, 0),
-          moduleDifficulties.length
-        );
-
-        debugLog("Module Difficulty Index", {
-          totalModules: modules.length,
-          modulesWithResults: moduleDifficulties.length,
-          avgDifficulty: parseFloat(avgDifficulty.toFixed(2))
-        });
-
-        return parseFloat(avgDifficulty.toFixed(2));
-      })(),
 
       // ============================================
       // LECTURER & DEPARTMENT ANALYTICS
       // ============================================
-      lecturerWorkloadDistribution: (() => {
-        if (!lecturers?.length || !classSchedules?.length) return 0;
 
-        const lecturerWorkloads = lecturers.map(lecturer => {
-          const lecturerSchedules = classSchedules.filter(s => s.lecturerId === lecturer._id);
-          return lecturerSchedules.length;
-        });
-
-        const avgWorkload = safeDivide(
-          lecturerWorkloads.reduce((sum, w) => sum + w, 0),
-          lecturerWorkloads.length
-        );
-
-        debugLog("Lecturer Workload Distribution", {
-          totalLecturers: lecturers.length,
-          avgWorkload: parseFloat(avgWorkload.toFixed(2))
-        });
-
-        return parseFloat(avgWorkload.toFixed(2));
-      })(),
-
-      officeHoursUtilization: (() => {
-        if (!lecturers?.length) return 0;
-
-        const lecturersWithOfficeHours = lecturers.filter(l => l.officeHours?.length > 0).length;
-        const utilization = safePercentage(lecturersWithOfficeHours, lecturers.length);
-
-        debugLog("Office Hours Utilization", {
-          totalLecturers: lecturers.length,
-          lecturersWithOfficeHours,
-          utilization
-        });
-
-        return utilization;
-      })(),
-
-      departmentPerformanceComparison: (() => {
-        if (!departments?.length || !results?.length || !lecturers?.length) return 0;
-
-        const departmentStats = departments.map(dept => {
-          const deptLecturers = lecturers.filter(l => l.departmentId === dept._id);
-          const lecturerIds = deptLecturers.map(l => l._id);
-
-          // Get results for modules taught by department lecturers
-          const deptResults = results.filter(r =>
-            modules.some(m => m._id === r.moduleId &&
-              classSchedules.some(cs => cs.moduleId === m._id && lecturerIds.includes(cs.lecturerId)))
-          );
-
-          if (!deptResults.length) return 0;
-
-          const avgGPA = safeDivide(
-            deptResults.reduce((sum, r) => sum + (r.gpa || 0), 0),
-            deptResults.length
-          );
-
-          return avgGPA;
-        }).filter(gpa => gpa > 0);
-
-        const avgDepartmentGPA = safeDivide(
-          departmentStats.reduce((sum, gpa) => sum + gpa, 0),
-          departmentStats.length
-        );
-
-        debugLog("Department Performance Comparison", {
-          totalDepartments: departments.length,
-          departmentsWithData: departmentStats.length,
-          avgDepartmentGPA: parseFloat(avgDepartmentGPA.toFixed(2))
-        });
-
-        return parseFloat(avgDepartmentGPA.toFixed(2));
-      })(),
 
       // ============================================
       // INFRASTRUCTURE & SCHEDULING ANALYTICS
       // ============================================
-      roomUtilizationRate: (() => {
-        if (!rooms?.length || !classSchedules?.length) return 0;
 
-        const totalRooms = rooms.filter(r => r.isActive).length;
-        const utilizedRooms = new Set(classSchedules.map(cs => cs.roomId)).size;
-        const rate = safePercentage(utilizedRooms, totalRooms);
-
-        debugLog("Room Utilization Rate", {
-          totalRooms,
-          utilizedRooms,
-          rate
-        });
-
-        return rate;
-      })(),
-
-      scheduleConflictAlerts: (() => {
-        if (!classSchedules?.length || !examSchedules?.length) return 0;
-
-        let conflicts = 0;
-        const today = new Date();
-
-        // Check for conflicts between class schedules and exam schedules
-        classSchedules.forEach(cs => {
-          examSchedules.forEach(es => {
-            if (cs.roomId === es.roomId && cs.dayOfWeek === 'Monday') { // Simplified conflict check
-              conflicts++;
-            }
-          });
-        });
-
-        debugLog("Schedule Conflict Alerts", {
-          totalClassSchedules: classSchedules.length,
-          totalExamSchedules: examSchedules.length,
-          conflicts
-        });
-
-        return conflicts;
-      })(),
-
-      capacityEfficiency: (() => {
-        if (!rooms?.length || !classSchedules?.length) return 0;
-
-        const roomEfficiencies = rooms.map(room => {
-          const roomSchedules = classSchedules.filter(cs => cs.roomId === room._id);
-          if (!roomSchedules.length) return 0;
-
-          // Simplified efficiency calculation
-          const avgUtilization = safeDivide(roomSchedules.length, room.capacity);
-          return Math.min(avgUtilization, 1); // Cap at 100%
-        }).filter(efficiency => efficiency > 0);
-
-        const avgEfficiency = safeDivide(
-          roomEfficiencies.reduce((sum, e) => sum + e, 0),
-          roomEfficiencies.length
-        );
-
-        debugLog("Capacity Efficiency", {
-          totalRooms: rooms.length,
-          roomsWithSchedules: roomEfficiencies.length,
-          avgEfficiency: parseFloat(avgEfficiency.toFixed(2))
-        });
-
-        return parseFloat(avgEfficiency.toFixed(2));
-      })(),
     };
   })(); // End of dashboardStats calculation
 
@@ -1009,90 +753,9 @@ export function AcademicOverview() {
    * Process data for visualizations with proper validation and debugging
    */
 
-  // Enrollment trends with responsive data processing
-  const enrollmentData = (() => {
-    if (!students?.length) return [];
 
-    const monthMap = {};
-    let validEnrollments = 0;
 
-    students.forEach(student => {
-      if (student.enrollmentDate) {
-        try {
-          const month = new Date(student.enrollmentDate).toLocaleString('default', { month: 'short' });
-          monthMap[month] = (monthMap[month] || 0) + 1;
-          validEnrollments++;
-        } catch (error) {
-          debugLog("Enrollment Date Error", { studentId: student._id, date: student.enrollmentDate });
-        }
-      }
-    });
 
-    const chartData = Object.entries(monthMap)
-      .map(([month, students]) => ({ month, students }))
-      .sort((a, b) => {
-        const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month);
-      });
-
-    debugLog("Enrollment Data", {
-      totalStudents: students.length,
-      validEnrollments,
-      monthsWithData: chartData.length
-    });
-
-    return chartData;
-  })();
-
-  // Department distribution with validation
-  const departmentData = (() => {
-    if (!departments?.length || !students?.length) return [];
-
-    const deptData = departments.map(department => {
-      const deptStudents = students.filter(s => s.departmentId === department._id).length;
-      return {
-        name: department.name || 'Unknown Department',
-        students: deptStudents
-      };
-    }).filter(dept => dept.students > 0); // Only show departments with students
-
-    debugLog("Department Data", {
-      totalDepartments: departments.length,
-      departmentsWithStudents: deptData.length,
-      data: deptData
-    });
-
-    return deptData;
-  })();
-
-  // Recent activities with enhanced data processing
-  const recentActivities = (() => {
-    if (!students?.length) return [];
-
-    const activities = students
-      .filter(student => student.enrollmentDate && student.name) // Only valid entries
-      .sort((a, b) => new Date(b.enrollmentDate) - new Date(a.enrollmentDate)) // Most recent first
-      .slice(0, 5) // Top 5 most recent
-      .map(student => ({
-        id: student._id,
-        student: student.name,
-        action: "enrolled",
-        time: student.enrollmentDate ? new Date(student.enrollmentDate).toLocaleDateString() : "Unknown",
-        type: "enrollment",
-      }));
-
-    debugLog("Recent Activities", {
-      totalStudents: students.length,
-      studentsWithEnrollmentDate: students.filter(s => s.enrollmentDate).length,
-      activitiesShown: activities.length
-    });
-
-    return activities;
-  })();
-
-  const bgColor = useColorModeValue("white", "gray.800")
-  const borderColor = useColorModeValue("gray.200", "gray.600")
 
   return (
     <Box p={6} minH="100vh" flex={1}>
@@ -1105,6 +768,7 @@ export function AcademicOverview() {
               Academic Overview
             </Text>
             <Text color="gray.600">Welcome to the Academic Management Dashboard</Text>
+
           </Box>
 
           <HStack>
@@ -1129,8 +793,21 @@ export function AcademicOverview() {
               Refresh & Update Enrollments
             </Button>
           </HStack>
-
         </HStack>
+
+        <VStack spacing={2} align="start">
+          <Badge fontSize="sm" color="green.800" variant="subtle">
+            <Text fontSize="sm">
+              Current Month: {monthComparisonDebug.monthRanges.current.start} - {monthComparisonDebug.monthRanges.current.end}
+            </Text>
+          </Badge>
+          <Badge fontSize="sm" color="green.800" variant="subtle">
+            <Text >
+              Last Month: {monthComparisonDebug.monthRanges.last.start} - {monthComparisonDebug.monthRanges.last.end}
+            </Text>
+          </Badge>
+        </VStack>
+
         {/* Academic Performance Stats */}
         <Box>
           <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
@@ -1140,21 +817,21 @@ export function AcademicOverview() {
             <StatsCard
               title="Pass Rate"
               value={`${dashboardStats.passRate}%`}
-              change={2.5}
+              change={monthOverMonthStats.passRate.change}
               icon={<FiCheckCircle />}
               color="green.500"
             />
             <StatsCard
               title="Average GPA"
               value={dashboardStats.averageGPA.toFixed(2)}
-              change={0.1}
+              change={monthOverMonthStats.averageGPA.change}
               icon={<FiTrendingUp />}
               color="blue.500"
             />
             <StatsCard
               title="At-Risk Students"
               value={dashboardStats.atRiskStudents}
-              change={-3}
+              change={monthOverMonthStats.atRiskStudents.change}
               icon={<FiAlertTriangle />}
               color="red.500"
             />
@@ -1172,31 +849,15 @@ export function AcademicOverview() {
           <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
             Enhanced Academic Analytics
           </Text>
-          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
+          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(1, 1fr)" }} gap={6}>
             <StatsCard
               title="Enrollment Rate"
               value={`${dashboardStats.enrollmentRate}%`}
+              change={monthOverMonthStats.enrollmentRate.change}
               icon={<FiUserPlus />}
               color="green.500"
             />
-            <StatsCard
-              title="Course Completion Rate"
-              value={`${dashboardStats.courseCompletionRate}%`}
-              icon={<FaGraduationCap />}
-              color="blue.500"
-            />
-            <StatsCard
-              title="Module Difficulty Index"
-              value={dashboardStats.moduleDifficultyIndex}
-              icon={<FiAlertCircle />}
-              color="orange.500"
-            />
-            <StatsCard
-              title="Department Performance"
-              value={dashboardStats.departmentPerformanceComparison.toFixed(2)}
-              icon={<FiBarChart2 />}
-              color="purple.500"
-            />
+
           </Grid>
         </Box>
 
@@ -1233,6 +894,96 @@ export function AcademicOverview() {
           </Grid>
         </Box>
 
+        {/* Month-over-Month Comparison */}
+        <Box>
+          <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
+            Month-over-Month Comparison
+          </Text>
+          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }} gap={6}>
+            <Card>
+              <CardBody>
+                <VStack align="start" spacing={3}>
+                  <HStack>
+                    <FiTrendingUp color="green" />
+                    <Text fontWeight="bold" fontSize="lg">Pass Rate</Text>
+                  </HStack>
+                  <Text fontSize="2xl" fontWeight="bold" color="green.500">
+                    {monthOverMonthStats.passRate.current}%
+                  </Text>
+                  <HStack spacing={2}>
+                    <Text fontSize="sm" color="gray.600">Last Month:</Text>
+                    <Text fontSize="sm">{monthOverMonthStats.passRate.last}%</Text>
+                  </HStack>
+                  <HStack spacing={2}>
+                    <Text fontSize="sm" color="gray.600">Change:</Text>
+                    <Text
+                      fontSize="sm"
+                      color={monthOverMonthStats.passRate.change >= 0 ? "green.500" : "red.500"}
+                    >
+                      {monthOverMonthStats.passRate.change >= 0 ? "+" : ""}{monthOverMonthStats.passRate.change.toFixed(1)}%
+                    </Text>
+                  </HStack>
+                </VStack>
+              </CardBody>
+            </Card>
+
+            <Card>
+              <CardBody>
+                <VStack align="start" spacing={3}>
+                  <HStack>
+                    <FiBarChart2 color="blue" />
+                    <Text fontWeight="bold" fontSize="lg">Average GPA</Text>
+                  </HStack>
+                  <Text fontSize="2xl" fontWeight="bold" color="blue.500">
+                    {monthOverMonthStats.averageGPA.current.toFixed(2)}
+                  </Text>
+                  <HStack spacing={2}>
+                    <Text fontSize="sm" color="gray.600">Last Month:</Text>
+                    <Text fontSize="sm">{monthOverMonthStats.averageGPA.last.toFixed(2)}</Text>
+                  </HStack>
+                  <HStack spacing={2}>
+                    <Text fontSize="sm" color="gray.600">Change:</Text>
+                    <Text
+                      fontSize="sm"
+                      color={monthOverMonthStats.averageGPA.change >= 0 ? "green.500" : "red.500"}
+                    >
+                      {monthOverMonthStats.averageGPA.change >= 0 ? "+" : ""}{monthOverMonthStats.averageGPA.change.toFixed(1)}%
+                    </Text>
+                  </HStack>
+                </VStack>
+              </CardBody>
+            </Card>
+
+            <Card>
+              <CardBody>
+                <VStack align="start" spacing={3}>
+                  <HStack>
+                    <FiUserPlus color="green" />
+                    <Text fontWeight="bold" fontSize="lg">Enrollment Rate</Text>
+                  </HStack>
+                  <Text fontSize="2xl" fontWeight="bold" color="green.500">
+                    {monthOverMonthStats.enrollmentRate.current}%
+                  </Text>
+                  <HStack spacing={2}>
+                    <Text fontSize="sm" color="gray.600">Last Month:</Text>
+                    <Text fontSize="sm">{monthOverMonthStats.enrollmentRate.last}%</Text>
+                  </HStack>
+                  <HStack spacing={2}>
+                    <Text fontSize="sm" color="gray.600">Change:</Text>
+                    <Text
+                      fontSize="sm"
+                      color={monthOverMonthStats.enrollmentRate.change >= 0 ? "green.500" : "red.500"}
+                    >
+                      {monthOverMonthStats.enrollmentRate.change >= 0 ? "+" : ""}{monthOverMonthStats.enrollmentRate.change.toFixed(1)}%
+                    </Text>
+                  </HStack>
+                </VStack>
+              </CardBody>
+            </Card>
+          </Grid>
+        </Box>
+
+
         {/* Attendance Tracking */}
         <Box>
           <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
@@ -1265,40 +1016,7 @@ export function AcademicOverview() {
             />
           </Grid>
         </Box>
-
-        {/* Assessment & Exam Insights */}
-        <Box>
-          <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
-            Assessment & Exam Insights
-          </Text>
-          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
-            <StatsCard
-              title="Upcoming Exams"
-              value={dashboardStats.upcomingExams}
-              icon={<FiCalendar />}
-              color="red.500"
-            />
-            <StatsCard
-              title="Result Submission"
-              value={`${dashboardStats.resultSubmissionProgress}%`}
-              icon={<FiUpload />}
-              color="green.500"
-            />
-            <StatsCard
-              title="Assessment Weightage"
-              value={`${dashboardStats.assessmentWeightage}%`}
-              icon={<FiPieChart />}
-              color="purple.500"
-            />
-            <StatsCard
-              title="Pending Grading"
-              value={dashboardStats.pendingGradingItems}
-              icon={<FiClock />}
-              color="orange.500"
-            />
-          </Grid>
-        </Box>
       </VStack>
-    </Box>
+    </Box >
   )
 }

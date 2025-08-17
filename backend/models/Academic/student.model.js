@@ -52,7 +52,7 @@ const studentSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ['enrolled', 'active', 'in_progress', 'graduated', 'dropped', 'suspended'],
+        enum: ['enrolled', 'in_progress', 'graduated', 'dropped', 'suspended'],
         default: 'enrolled',
         // Current status of the student (consolidated from completionStatus)
     },

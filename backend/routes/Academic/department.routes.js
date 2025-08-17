@@ -7,7 +7,7 @@ import {
     deleteDepartment,
     deleteAllDepartments
 } from "../../controllers/Academic/department.controllers.js";
-import { getDepartmentsBySchool } from "../../controllers/Academic/department.controllers.js";
+import { getDepartmentsBySchoolId } from "../../controllers/Academic/department.controllers.js";
 
 const router = e.Router();
 
@@ -29,6 +29,6 @@ router.delete("/all", deleteAllDepartments);
 // Delete department by ID
 router.delete("/:id", deleteDepartment);
 
-router.get("/school/:schoolId", getDepartmentsBySchool);
+router.get("/school/:schoolId", getDepartmentsBySchoolId);
 
 export default router;

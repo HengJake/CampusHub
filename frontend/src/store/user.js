@@ -15,6 +15,41 @@ export const useUserStore = create((set) => ({
       error: { ...state.error, users: null },
     }));
     try {
+      const res = await fetch(`/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(user),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to create user");
+      }
+
+      set((state) => ({
+        loading: { ...state.loading, users: false },
+        error: { ...state.error, users: null },
+        users: [...state.users, data.data],
+      }));
+
+      return { success: true, message: data.message, data: data.data };
+    } catch (error) {
+      set((state) => ({
+        loading: { ...state.loading, users: false },
+        error: { ...state.error, users: error.message },
+      }));
+      console.error("Error creating user", error.message);
+      return { success: false, message: error.message };
+    }
+  },
+
+  createUserWithoutJWT: async (user) => {
+    set((state) => ({
+      loading: { ...state.loading, users: true },
+      error: { ...state.error, users: null },
+    }));
+    try {
       const res = await fetch(`/api/user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,6 +75,41 @@ export const useUserStore = create((set) => ({
         error: { ...state.error, users: error.message },
       }));
       console.error("Error creating user", error.message);
+      return { success: false, message: error.message };
+    }
+  },
+
+  createOAuthUser: async (oauthData) => {
+    set((state) => ({
+      loading: { ...state.loading, users: true },
+      error: { ...state.error, users: null },
+    }));
+    try {
+      const res = await fetch(`/api/user/oauth`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(oauthData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to create OAuth user");
+      }
+
+      set((state) => ({
+        loading: { ...state.loading, users: false },
+        error: { ...state.error, users: null },
+        users: [...state.users, data.data],
+      }));
+
+      return { success: true, message: data.message, data: data.data };
+    } catch (error) {
+      set((state) => ({
+        loading: { ...state.loading, users: false },
+        error: { ...state.error, users: error.message },
+      }));
+      console.error("Error creating OAuth user", error.message);
       return { success: false, message: error.message };
     }
   },
@@ -92,6 +162,46 @@ export const useUserStore = create((set) => ({
 
       if (!res.ok || !data.success) {
         throw new Error(data.message || "Failed to fetch all users");
+      }
+
+      set((state) => ({
+        users: data.data,
+        loading: { ...state.loading, users: false },
+        error: { ...state.error, users: null },
+      }));
+
+      return { success: true, data: data.data };
+    } catch (error) {
+      set((state) => ({
+        loading: { ...state.loading, users: false },
+        error: { ...state.error, users: error.message },
+      }));
+      console.error("Error fetching all users:", error.message);
+      return { success: false, message: error.message };
+    }
+  },
+
+  fetchUserDataBySchoolId: async () => {
+    set((state) => ({
+      loading: { ...state.loading, users: true },
+      error: { ...state.error, users: null },
+    }));
+    try {
+      const authStore = useAuthStore.getState();
+      const schoolId = authStore.getSchoolId();
+      if (!schoolId) {
+        throw new Error("School ID not found");
+      }
+
+      const res = await fetch(`/api/user/school/${schoolId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to fetch users by school");
       }
 
       set((state) => ({
@@ -205,5 +315,46 @@ export const useUserStore = create((set) => ({
       console.error("Error deleting user:", error.message);
       return { success: false, message: error.message };
     }
+  },
+
+  updateUser: async (id, updateData) => {
+    set((state) => ({
+      loading: { ...state.loading, users: true },
+      error: { ...state.error, users: null },
+    }));
+    try {
+      const res = await fetch(`/api/user/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to update user");
+      }
+
+      set((state) => ({
+        loading: { ...state.loading, users: false },
+        error: { ...state.error, users: null },
+        users: state.users.map((user) =>
+          user._id === id ? { ...user, ...data.data } : user
+        ),
+      }));
+
+      return { success: true, message: data.message, data: data.data };
+    } catch (error) {
+      set((state) => ({
+        loading: { ...state.loading, users: false },
+        error: { ...state.error, users: error.message },
+      }));
+      console.error("Error updating user", error.message);
+      return { success: false, message: error.message };
+    }
+  },
+
+  updateUserProfilePicture: async (id, profilePicture) => {
+    return await useUserStore.getState().updateUser(id, { profilePicture });
   },
 }));

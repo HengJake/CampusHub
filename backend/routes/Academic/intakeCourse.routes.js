@@ -5,7 +5,7 @@ import {
     getIntakeCourseById,
     updateIntakeCourse,
     deleteIntakeCourse,
-    getIntakeCoursesBySchool,
+    getIntakeCoursesBySchoolId,
     getIntakeCoursesByIntake,
     getIntakeCoursesByCourse,
     getAvailableIntakeCourses,
@@ -40,7 +40,7 @@ router.delete("/:id", deleteIntakeCourse);
 router.patch("/:id/enrollment", updateEnrollmentCount);
 
 // Get intake courses by school ID
-router.get("/school/:schoolId", getIntakeCoursesBySchool);
+router.get("/school/:schoolId", getIntakeCoursesBySchoolId);
 
 // Get intake courses by intake ID
 router.get("/intake/:intakeId", getIntakeCoursesByIntake);

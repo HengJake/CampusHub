@@ -30,11 +30,11 @@ export function IntakeManagement() {
     createIntake,
     updateIntake,
     deleteIntake,
-    fetchIntakes,
+    fetchIntakesBySchoolId,
     courses,
-    fetchCourses,
+    fetchCoursesBySchoolId,
     intakeCourses,
-    fetchIntakeCourses,
+    fetchIntakeCoursesBySchoolId,
     createIntakeCourse,
     updateIntakeCourse,
     deleteIntakeCourse
@@ -93,15 +93,18 @@ export function IntakeManagement() {
 
   useEffect(() => {
     if (intakes.length === 0) {
-      fetchIntakes();
+      fetchIntakesBySchoolId();
     }
     if (courses.length === 0) {
-      fetchCourses();
+      fetchCoursesBySchoolId();
     }
     if (intakeCourses.length === 0) {
-      fetchIntakeCourses();
+      fetchIntakeCoursesBySchoolId();
     }
   }, []);
+
+
+  console.log(intakes)
 
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
@@ -173,7 +176,7 @@ export function IntakeManagement() {
       showToast.success("Success", "Intake added successfully", "intake-add");
     }
 
-    await fetchIntakes();
+    await fetchIntakesBySchoolId();
     resetForm();
     onClose();
   };
@@ -387,7 +390,7 @@ export function IntakeManagement() {
         showToast.success("Success", `Successfully assigned ${assignFormData.courseIds.length} course(s) to intake`, "assignment-success");
       }
 
-      await fetchIntakeCourses();
+      await fetchIntakeCoursesBySchoolId();
       resetAssignForm();
       onAssignClose();
     } catch (error) {
@@ -412,7 +415,7 @@ export function IntakeManagement() {
     }
     await deleteIntake(intakeToDelete);
     showToast.success("Success", "Intake deleted successfully", "intake-delete");
-    fetchIntakes();
+    fetchIntakesBySchoolId();
     closeDeleteDialog();
   };
 
@@ -472,7 +475,7 @@ export function IntakeManagement() {
   };
 
   return (
-    <Box  flex={1}>
+    <Box flex={1}>
       <VStack spacing={6} align="stretch">
         {/* Header */}
         <HStack justify="space-between">

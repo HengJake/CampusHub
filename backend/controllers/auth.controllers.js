@@ -20,10 +20,6 @@ export const register = async (req, res) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // validate phone number
-  // validate password
-  // validate email
-
   const newUser = new User({
     name,
     password: hashedPassword,
@@ -36,21 +32,54 @@ export const register = async (req, res) => {
   try {
     await newUser.save();
 
-    let extraInfo = {};
-    if (role === "schoolAdmin") {
+    let tokenPayload = {};
+
+    // Fetch role-specific data based on user role
+    if (newUser.role === "schoolAdmin") {
       const school = await School.findOne({ userId: newUser._id });
       if (school) {
-        extraPayload.schoolId = school._id;
+        tokenPayload = {
+          schoolId: school._id,
+          school: school,
+          schoolSetupComplete: true,
+          user: newUser
+        };
+      } else {
+        tokenPayload = {
+          schoolId: null,
+          school: null,
+          schoolSetupComplete: false,
+          user: newUser
+        };
       }
-    } else if (role === "student") {
+    } else if (newUser.role === "student") {
       const student = await Student.findOne({ userId: newUser._id });
+      const school = await School.findOne({ _id: student?.schoolId });
       if (student) {
-        extraPayload.schoolId = student.schoolId;
-        extraPayload.studentId = student._id;
+        tokenPayload = {
+          schoolId: student.schoolId,
+          student: student,
+          school: school,
+          user: newUser
+        };
+      }
+    } else if (newUser.role === "lecturer") {
+      const lecturer = await Lecturer.findOne({ userId: newUser._id });
+      if (lecturer) {
+        tokenPayload = {
+          schoolId: lecturer.schoolId,
+          lecturer: {
+            _id: lecturer._id,
+            name: newUser.name,
+            schoolId: lecturer.schoolId,
+            departmentId: lecturer.departmentId
+          },
+          user: newUser
+        };
       }
     }
 
-    const token = generateToken(newUser, extraPayload);
+    const token = generateToken(newUser, tokenPayload);
 
     // add token in cookie
     res.cookie("token", token, {
@@ -116,30 +145,58 @@ export const loginUser = async (req, res) => {
     }
 
     // Now it's safe to compare passwords
-    const matchPassword = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    if (!matchPassword) {
+    if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
     }
 
-    let extraPayload = {};
+
+    let tokenPayload = {};
+
+    // Fetch role-specific data based on user role - only include essential IDs
     if (user.role === "schoolAdmin") {
       const school = await School.findOne({ userId: user._id });
       if (school) {
-        extraPayload.schoolId = school._id;
+        tokenPayload = {
+          schoolId: school._id,
+          school: school._id,
+          user: user._id,
+          schoolSetupComplete: true,
+        };
+      } else {
+        tokenPayload = {
+          schoolId: null,
+          school: null,
+          user: user._id,
+          schoolSetupComplete: false
+        };
       }
     } else if (user.role === "student") {
       const student = await Student.findOne({ userId: user._id });
       if (student) {
-        extraPayload.schoolId = student.schoolId;
-        extraPayload.studentId = student._id;
+        tokenPayload = {
+          schoolId: student.schoolId,
+          student: student._id,
+          school: student.schoolId,
+          user: user._id
+        };
+      }
+    } else if (user.role === "lecturer") {
+      const lecturer = await Lecturer.findOne({ userId: user._id });
+      if (lecturer) {
+        tokenPayload = {
+          schoolId: lecturer.schoolId,
+          lecturerId: lecturer._id,
+          user: user._id
+        };
       }
     }
 
-    const token = generateToken(user, extraPayload);
+    const token = generateToken(user, tokenPayload);
 
     // add token in cookie
     res.cookie("token", token, {
@@ -149,19 +206,121 @@ export const loginUser = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // Login success
     return res.status(200).json({
       success: true,
-      message: "Login successful",
       data: user,
-      token: token,
+      message: "Login successful",
     });
   } catch (error) {
-    console.error("Login error:", error.message);
-    return res.status(500).json({
+    console.error("Error in login user :", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// OAuth login method for Google, Facebook, etc.
+export const loginWithOAuth = async (req, res) => {
+  const { email, googleId, authProvider } = req.body;
+
+  // Basic input check
+  if (!email || !googleId || !authProvider) {
+    return res.status(400).json({
       success: false,
-      message: "Server error",
+      message: "Please provide email, googleId, and authProvider",
     });
+  }
+
+  try {
+    // Find user by email or googleId
+    const user = await User.findOne({
+      $or: [
+        { email: email },
+        { googleId: googleId }
+      ]
+    });
+
+    // Check if user exists
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "OAuth user not found. Please sign up first.",
+      });
+    }
+
+    // Check if user has a different auth provider
+    if (user.authProvider && user.authProvider !== authProvider) {
+      return res.status(401).json({
+        success: false,
+        message: `This email is associated with a ${user.authProvider} account. Please use the appropriate sign-in method.`,
+      });
+    }
+
+    // If user exists but doesn't have an authProvider set, update it
+    if (!user.authProvider) {
+      user.authProvider = authProvider;
+      user.googleId = googleId;
+      await user.save();
+    }
+
+    let tokenPayload = {};
+
+    // Fetch role-specific data based on user role - only include essential IDs
+    if (user.role === "schoolAdmin") {
+      const school = await School.findOne({ userId: user._id });
+      if (school) {
+        tokenPayload = {
+          schoolId: school._id,
+          school: school._id,
+          user: user._id,
+          schoolSetupComplete: true,
+        };
+      } else {
+        tokenPayload = {
+          schoolId: null,
+          school: null,
+          schoolSetupComplete: false,
+          user: user._id
+        };
+      }
+    } else if (user.role === "student") {
+      const student = await Student.findOne({ userId: user._id });
+      const school = await School.findOne({ _id: student?.schoolId });
+      if (student) {
+        tokenPayload = {
+          student: student._id,
+          school: school._id,
+          user: user._id
+        };
+      }
+    } else if (user.role === "lecturer") {
+      const lecturer = await Lecturer.findOne({ userId: user._id });
+      if (lecturer) {
+        tokenPayload = {
+          schoolId: lecturer.schoolId,
+          lecturer: lecturer._id,
+          school: lecturer.schoolId,
+          user: user._id
+        };
+      }
+    }
+
+    const token = generateToken(user, tokenPayload);
+
+    // add token in cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: user,
+      message: "OAuth login successful",
+    });
+  } catch (error) {
+    console.error("Error in OAuth login:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
@@ -304,13 +463,14 @@ export const isAuthenticated = async (req, res) => {
     const hoursLeft = Math.floor(timeLeft / 3600);
     const minutesLeft = Math.floor((timeLeft % 3600) / 60);
 
-    // Enhanced response based on user role
+    // Enhanced response based on user role with data fetched from database
     let responseData = {
       success: true,
       message: "User is authenticated",
       id: user._id,
       role: user.role,
       email: user.email,
+      user: user,
       twoFA_enabled: user.twoFA_enabled,
       tokenExpiration: {
         expiresAt: new Date(tokenExp * 1000),
@@ -322,41 +482,61 @@ export const isAuthenticated = async (req, res) => {
       }
     };
 
-    // Add role-specific data
-    if (user.role === "schoolAdmin") {
+    // Fetch role-specific data from database using IDs from JWT token
+    if (decoded.schoolId !== undefined) {
+      responseData.schoolId = decoded.schoolId;
 
-      const school = await School.findOne({ userId: user._id });
-      // For schoolAdmin, include schoolId
-      responseData.schoolId = school._id;
-      responseData.school = school._id; // For backward compatibility
-
-    } else if (user.role === "student") {
-      // For student, include schoolId and student details
-      const student = await Student.findOne({ userId: user._id });
-
-      if (student) {
-        responseData.schoolId = student.schoolId;
-        responseData.student = {
-          _id: student._id,
-          name: user.name,
-          studentId: student._id,
-          schoolId: student.schoolId,
-          intakeCourseId: student.intakeCourseId,
-          status: student.status
-        };
+      // Fetch school data if schoolId exists
+      if (decoded.schoolId) {
+        const school = await School.findById(decoded.schoolId);
+        if (school) {
+          responseData.school = school;
+        }
       }
-    } else if (user.role === "lecturer") {
-      // For lecturer, include schoolId
-      const lecturer = await Lecturer.findOne({ userId: user._id });
-      if (lecturer) {
-        responseData.schoolId = lecturer.schoolId;
-        responseData.lecturer = {
-          _id: lecturer._id,
-          name: user.name,
-          schoolId: lecturer.schoolId,
-          departmentId: lecturer.departmentId
-        };
+    }
+
+    if (decoded.student !== undefined) {
+      responseData.student = decoded.student;
+
+      // Fetch student data if studentId exists
+      if (decoded.student) {
+        const student = await Student.findById(decoded.student);
+        if (student) {
+          responseData.student = student;
+
+          // Also fetch school data for students if not already fetched
+          if (student.schoolId && !responseData.school) {
+            const school = await School.findById(student.schoolId);
+            if (school) {
+              responseData.school = school;
+            }
+          }
+        }
       }
+    }
+
+    if (decoded.lecturerId !== undefined) {
+      responseData.lecturerId = decoded.lecturerId;
+
+      // Fetch lecturer data if lecturerId exists
+      if (decoded.lecturerId) {
+        const lecturer = await Lecturer.findById(decoded.lecturerId);
+        if (lecturer) {
+          responseData.lecturer = lecturer;
+
+          // Also fetch school data for lecturers if not already fetched
+          if (lecturer.schoolId && !responseData.school) {
+            const school = await School.findById(lecturer.schoolId);
+            if (school) {
+              responseData.school = school;
+            }
+          }
+        }
+      }
+    }
+
+    if (decoded.schoolSetupComplete !== undefined) {
+      responseData.schoolSetupComplete = decoded.schoolSetupComplete;
     }
 
     res.json(responseData);

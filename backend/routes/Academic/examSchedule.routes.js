@@ -7,7 +7,7 @@ import {
     deleteExamSchedule,
     deleteAllExamSchedules
 } from "../../controllers/Academic/examSchedule.controllers.js";
-import { getExamSchedulesBySchool } from "../../controllers/Academic/examSchedule.controllers.js";
+import { getExamSchedulesBySchoolId } from "../../controllers/Academic/examSchedule.controllers.js";
 
 const router = e.Router();
 
@@ -29,6 +29,6 @@ router.delete("/all", deleteAllExamSchedules);
 // Delete examSchedule by ID
 router.delete("/:id", deleteExamSchedule);
 
-router.get("/school/:schoolId", getExamSchedulesBySchool);
+router.get("/school/:schoolId", getExamSchedulesBySchoolId);
 
 export default router;

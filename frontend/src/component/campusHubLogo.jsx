@@ -56,27 +56,17 @@ export const CampusHubLogo = () => {
   }
 
   return (
-    <Box zIndex={100}>
+    <Box zIndex={100} mr={10}>
       <Link to={logoLink}>
         <HStack>
           <Image
             src="/Logo.png"
             alt="CampusHub Logo"
-            w={20}
+            w={"40px"}
             position="absolute"
             zIndex={-1}
             opacity={0.7}
           />
-          <Text
-            fontSize="xl"
-            fontWeight="bold"
-            bgGradient="linear-gradient(90deg, white, blue.200)"
-            bgClip="text"
-            wordBreak="normal"
-            whiteSpace="nowrap"
-          >
-            Campus Hub
-          </Text>
         </HStack>
       </Link>
     </Box>

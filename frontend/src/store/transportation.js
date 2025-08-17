@@ -27,22 +27,60 @@ export const useTransportationStore = create((set, get) => ({
         vehicles: null,
     },
 
+    // Cache timestamps to prevent unnecessary refetches
+    lastFetched: {
+        busSchedules: null,
+        eHailings: null,
+        routes: null,
+        stops: null,
+        vehicles: null,
+    },
+
+    // Cache duration in milliseconds (5 minutes)
+    CACHE_DURATION: 5 * 60 * 1000,
+
+    // Test function to verify store is working
+    testStore: () => {
+        console.log('🚀 Store test function called - store is working');
+        console.log('🚀 Current state:', get());
+        return { success: true, message: 'Store is working' };
+    },
+
     // Helper to get schoolId from auth store
     getSchoolId: () => {
-        const authStore = useAuthStore.getState();
-        return authStore.getSchoolId();
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            return schoolId;
+        } catch (error) {
+            console.error('🚀 Error getting school ID:', error);
+            return null;
+        }
     },
 
     // Helper to get current user context
     getCurrentUser: () => {
-        const authStore = useAuthStore.getState();
-        return authStore.getCurrentUser();
+        try {
+            const authStore = useAuthStore.getState();
+            const userContext = authStore.getCurrentUser();
+            console.log('🚀 Getting current user from auth store:', userContext);
+            return userContext;
+        } catch (error) {
+            console.error('🚀 Error getting current user:', error);
+            return null;
+        }
     },
 
     // Helper to check authentication
     isAuthenticated: () => {
-        const authStore = useAuthStore.getState();
-        return authStore.isAuthenticated;
+        try {
+            const authStore = useAuthStore.getState();
+            const isAuth = authStore.isAuthenticated;
+            return isAuth;
+        } catch (error) {
+            console.error('🚀 Error checking authentication:', error);
+            return false;
+        }
     },
 
     // Helper to build URL with automatic schoolId injection
@@ -50,8 +88,10 @@ export const useTransportationStore = create((set, get) => ({
         const authStore = useAuthStore.getState();
         const userContext = authStore.getCurrentUser();
         let url = endpoint;
+
         if (userContext.role === "schoolAdmin" || userContext.role === "student") {
             const schoolId = authStore.getSchoolId();
+
             if (schoolId) {
                 if (endpoint.includes("/school/")) {
                     url = endpoint;
@@ -60,6 +100,7 @@ export const useTransportationStore = create((set, get) => ({
                 }
             }
         }
+
         const queryParams = new URLSearchParams(filters);
         if (queryParams.toString()) {
             url += `?${queryParams.toString()}`;
@@ -67,27 +108,107 @@ export const useTransportationStore = create((set, get) => ({
         return url;
     },
 
+    // Helper to check if data is still fresh
+    isDataFresh: (dataType) => {
+        const state = get();
+        const lastFetched = state.lastFetched[dataType];
+        if (!lastFetched) return false;
+
+        const now = Date.now();
+        return (now - lastFetched) < state.CACHE_DURATION;
+    },
+
+    // Helper to check if we should fetch data
+    shouldFetchData: (dataType) => {
+        const state = get();
+        return !state.loading[dataType] && !state.isDataFresh(dataType);
+    },
+
     // ===== BUS SCHEDULE OPERATIONS =====
-    fetchBusSchedules: async (filters = {}) => {
-        set((state) => ({ loading: { ...state.loading, busSchedules: true } }));
+    fetchBusSchedules: async (filters = {}, forceRefresh = false) => {
+        const state = get();
+
+        // Check if we should fetch data
+        if (!forceRefresh && !state.shouldFetchData('busSchedules')) {
+            return { success: true, data: state.busSchedules, fromCache: true };
+        }
+
+        // Only set loading if not already loading
+        set((state) => {
+            if (state.loading.busSchedules) return state;
+            return { loading: { ...state.loading, busSchedules: true } };
+        });
+
         try {
-            const url = get().buildUrl("/api/bus-schedule", filters);
+            const url = state.buildUrl("/api/bus-schedule", filters);
+
             const res = await fetch(url);
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to fetch bus schedules");
             }
+
             set((state) => ({
                 busSchedules: data.data,
                 loading: { ...state.loading, busSchedules: false },
                 errors: { ...state.errors, busSchedules: null },
+                lastFetched: { ...state.lastFetched, busSchedules: Date.now() }
             }));
+
             return { success: true, data: data.data };
         } catch (error) {
             set((state) => ({
                 loading: { ...state.loading, busSchedules: false },
-                errors: { ...state.errors, busSchedules: error.message },
+                errors: { ...state.errors, busSchedules: null },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchBusSchedulesBySchoolId: async (filters = {}, forceRefresh = false) => {
+        const state = get();
+
+        // Check if we should fetch data
+        if (!forceRefresh && !state.shouldFetchData('busSchedules')) {
+            return { success: true, data: state.busSchedules, fromCache: true };
+        }
+
+        // Only set loading if not already loading
+        set((state) => {
+            if (state.loading.busSchedules) return state;
+            return { loading: { ...state.loading, busSchedules: true } };
+        });
+
+        try {
+            const authStore = await useAuthStore.getState();
+            const schoolId = await authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = state.buildUrl(`/api/bus-schedule/school/${schoolId}`, filters);
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch bus schedules");
+            }
+
+            set((state) => ({
+                busSchedules: data.data,
+                loading: { ...state.loading, busSchedules: false },
+                errors: { ...state.errors, busSchedules: null },
+                lastFetched: { ...state.lastFetched, busSchedules: Date.now() }
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            console.error('🚀 Error fetching bus schedules:', error);
+            set((state) => ({
+                loading: { ...state.loading, busSchedules: false },
+                errors: { ...state.errors, busSchedules: null },
             }));
             return { success: false, message: error.message };
         }
@@ -157,10 +278,20 @@ export const useTransportationStore = create((set, get) => ({
     },
 
     // ===== E-HAILING OPERATIONS =====
-    fetchEHailings: async (filters = {}) => {
-        set((state) => ({ loading: { ...state.loading, eHailings: true } }));
+    fetchEHailings: async (filters = {}, forceRefresh = false) => {
+        const state = get();
+
+        if (!forceRefresh && !state.shouldFetchData('eHailings')) {
+            return { success: true, data: state.eHailings, fromCache: true };
+        }
+
+        set((state) => {
+            if (state.loading.eHailings) return state;
+            return { loading: { ...state.loading, eHailings: true } };
+        });
+
         try {
-            const url = get().buildUrl("/api/e-hailing", filters);
+            const url = state.buildUrl("/api/e-hailing", filters);
             const res = await fetch(url);
             const data = await res.json();
             if (!data.success) {
@@ -170,6 +301,48 @@ export const useTransportationStore = create((set, get) => ({
                 eHailings: data.data,
                 loading: { ...state.loading, eHailings: false },
                 errors: { ...state.errors, eHailings: null },
+                lastFetched: { ...state.lastFetched, eHailings: Date.now() }
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, eHailings: false },
+                errors: { ...state.errors, eHailings: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchEHailingsBySchoolId: async (filters = {}, forceRefresh = false) => {
+        const state = get();
+
+        if (!forceRefresh && !state.shouldFetchData('eHailings')) {
+            return { success: true, data: state.eHailings, fromCache: true };
+        }
+
+        set((state) => {
+            if (state.loading.eHailings) return state;
+            return { loading: { ...state.loading, eHailings: true } };
+        });
+
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = state.buildUrl(`/api/e-hailing/school/${schoolId}`, filters);
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch eHailings");
+            }
+            set((state) => ({
+                eHailings: data.data,
+                loading: { ...state.loading, eHailings: false },
+                errors: { ...state.errors, eHailings: null },
+                lastFetched: { ...state.lastFetched, eHailings: Date.now() }
             }));
             return { success: true, data: data.data };
         } catch (error) {
@@ -245,10 +418,20 @@ export const useTransportationStore = create((set, get) => ({
     },
 
     // ===== ROUTE OPERATIONS =====
-    fetchRoutes: async (filters = {}) => {
-        set((state) => ({ loading: { ...state.loading, routes: true } }));
+    fetchRoutes: async (filters = {}, forceRefresh = false) => {
+        const state = get();
+
+        if (!forceRefresh && !state.shouldFetchData('routes')) {
+            return { success: true, data: state.routes, fromCache: true };
+        }
+
+        set((state) => {
+            if (state.loading.routes) return state;
+            return { loading: { ...state.loading, routes: true } };
+        });
+
         try {
-            const url = get().buildUrl("/api/route", filters);
+            const url = state.buildUrl("/api/route", filters);
             const res = await fetch(url);
             const data = await res.json();
             if (!data.success) {
@@ -258,6 +441,48 @@ export const useTransportationStore = create((set, get) => ({
                 routes: data.data,
                 loading: { ...state.loading, routes: false },
                 errors: { ...state.errors, routes: null },
+                lastFetched: { ...state.lastFetched, routes: Date.now() }
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, routes: false },
+                errors: { ...state.errors, routes: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchRoutesBySchoolId: async (filters = {}, forceRefresh = false) => {
+        const state = get();
+
+        if (!forceRefresh && !state.shouldFetchData('routes')) {
+            return { success: true, data: state.routes, fromCache: true };
+        }
+
+        set((state) => {
+            if (state.loading.routes) return state;
+            return { loading: { ...state.loading, routes: true } };
+        });
+
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = state.buildUrl(`/api/route/school/${schoolId}`, filters);
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch routes");
+            }
+            set((state) => ({
+                routes: data.data,
+                loading: { ...state.loading, routes: false },
+                errors: { ...state.errors, routes: null },
+                lastFetched: { ...state.lastFetched, routes: Date.now() }
             }));
             return { success: true, data: data.data };
         } catch (error) {
@@ -333,10 +558,20 @@ export const useTransportationStore = create((set, get) => ({
     },
 
     // ===== STOP OPERATIONS =====
-    fetchStops: async (filters = {}) => {
-        set((state) => ({ loading: { ...state.loading, stops: true } }));
+    fetchStops: async (filters = {}, forceRefresh = false) => {
+        const state = get();
+
+        if (!forceRefresh && !state.shouldFetchData('stops')) {
+            return { success: true, data: state.stops, fromCache: true };
+        }
+
+        set((state) => {
+            if (state.loading.stops) return state;
+            return { loading: { ...state.loading, stops: true } };
+        });
+
         try {
-            const url = get().buildUrl("/api/stop", filters);
+            const url = state.buildUrl("/api/stop", filters);
             const res = await fetch(url);
             const data = await res.json();
             if (!data.success) {
@@ -346,6 +581,48 @@ export const useTransportationStore = create((set, get) => ({
                 stops: data.data,
                 loading: { ...state.loading, stops: false },
                 errors: { ...state.errors, stops: null },
+                lastFetched: { ...state.lastFetched, stops: Date.now() }
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, stops: false },
+                errors: { ...state.errors, stops: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchStopsBySchoolId: async (filters = {}, forceRefresh = false) => {
+        const state = get();
+
+        if (!forceRefresh && !state.shouldFetchData('stops')) {
+            return { success: true, data: state.stops, fromCache: true };
+        }
+
+        set((state) => {
+            if (state.loading.stops) return state;
+            return { loading: { ...state.loading, stops: true } };
+        });
+
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = state.buildUrl(`/api/stop/school/${schoolId}`, filters);
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch stops");
+            }
+            set((state) => ({
+                stops: data.data,
+                loading: { ...state.loading, stops: false },
+                errors: { ...state.errors, stops: null },
+                lastFetched: { ...state.lastFetched, stops: Date.now() }
             }));
             return { success: true, data: data.data };
         } catch (error) {
@@ -421,10 +698,20 @@ export const useTransportationStore = create((set, get) => ({
     },
 
     // ===== VEHICLE OPERATIONS =====
-    fetchVehicles: async (filters = {}) => {
-        set((state) => ({ loading: { ...state.loading, vehicles: true } }));
+    fetchVehicles: async (filters = {}, forceRefresh = false) => {
+        const state = get();
+
+        if (!forceRefresh && !state.shouldFetchData('vehicles')) {
+            return { success: true, data: state.vehicles, fromCache: true };
+        }
+
+        set((state) => {
+            if (state.loading.vehicles) return state;
+            return { loading: { ...state.loading, vehicles: true } };
+        });
+
         try {
-            const url = get().buildUrl("/api/vehicle", filters);
+            const url = state.buildUrl("/api/vehicle", filters);
             const res = await fetch(url);
             const data = await res.json();
             if (!data.success) {
@@ -434,6 +721,48 @@ export const useTransportationStore = create((set, get) => ({
                 vehicles: data.data,
                 loading: { ...state.loading, vehicles: false },
                 errors: { ...state.errors, vehicles: null },
+                lastFetched: { ...state.lastFetched, vehicles: Date.now() }
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, vehicles: false },
+                errors: { ...state.errors, vehicles: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchVehiclesBySchoolId: async (filters = {}, forceRefresh = false) => {
+        const state = get();
+
+        if (!forceRefresh && !state.shouldFetchData('vehicles')) {
+            return { success: true, data: state.vehicles, fromCache: true };
+        }
+
+        set((state) => {
+            if (state.loading.vehicles) return state;
+            return { loading: { ...state.loading, vehicles: true } };
+        });
+
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = state.buildUrl(`/api/vehicle/school/${schoolId}`, filters);
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch vehicles");
+            }
+            set((state) => ({
+                vehicles: data.data,
+                loading: { ...state.loading, vehicles: false },
+                errors: { ...state.errors, vehicles: null },
+                lastFetched: { ...state.lastFetched, vehicles: Date.now() }
             }));
             return { success: true, data: data.data };
         } catch (error) {
@@ -530,6 +859,23 @@ export const useTransportationStore = create((set, get) => ({
             routes: [],
             stops: [],
             vehicles: [],
+            lastFetched: {
+                busSchedules: null,
+                eHailings: null,
+                routes: null,
+                stops: null,
+                vehicles: null,
+            }
         });
+    },
+    // Force refresh all data
+    refreshAllData: async () => {
+        const promises = [
+            get().fetchBusSchedules({}, true),
+            get().fetchVehicles({}, true),
+            get().fetchStops({}, true),
+            get().fetchRoutes({}, true)
+        ];
+        return Promise.all(promises);
     },
 }));

@@ -98,7 +98,7 @@ export const deleteStudent = controllerWrapper(async (req, res) => {
 });
 
 // Get Students by School ID
-export const getStudentsBySchool = controllerWrapper(async (req, res) => {
+export const getStudentsBySchoolId = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
 
     return await getAllRecords(

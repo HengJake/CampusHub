@@ -1150,6 +1150,42 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+    fetchClassSchedulesBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, classSchedules: false },
+                errors: { ...state.errors, classSchedules: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
+        set((state) => ({ loading: { ...state.loading, classSchedules: true } }));
+        try {
+            const res = await fetch(`/api/class-schedule/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch class schedules by schoolId");
+            }
+
+            set((state) => ({
+                classSchedules: data.data,
+                loading: { ...state.loading, classSchedules: false },
+                errors: { ...state.errors, classSchedules: null },
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, classSchedules: false },
+                errors: { ...state.errors, classSchedules: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
     createClassSchedule: async (scheduleData) => {
         try {
             // Automatically add schoolId for schoolAdmin
@@ -1232,6 +1268,32 @@ export const useAcademicStore = create((set, get) => ({
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to fetch results");
+            }
+
+            set((state) => ({
+                results: data.data,
+                loading: { ...state.loading, results: false },
+                errors: { ...state.errors, results: null },
+            }));
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, results: false },
+                errors: { ...state.errors, results: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchResultsByStudentId: async (studentId) => {
+        set((state) => ({ loading: { ...state.loading, results: true } }));
+        try {
+            const res = await fetch(`/api/result/student/${studentId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch results by studentId");
             }
 
             set((state) => ({
@@ -1421,7 +1483,17 @@ export const useAcademicStore = create((set, get) => ({
     // ===GET BY SCHOOL ID====
     // ===== GET BY SCHOOL ID METHODS =====
 
-    fetchStudentsBySchoolId: async (schoolId) => {
+    fetchStudentsBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, students: false },
+                errors: { ...state.errors, students: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
         set((state) => ({ loading: { ...state.loading, students: true } }));
         try {
             const res = await fetch(`/api/student/school/${schoolId}`);
@@ -1446,7 +1518,17 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    fetchCoursesBySchoolId: async (schoolId) => {
+    fetchCoursesBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, courses: false },
+                errors: { ...state.errors, courses: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
         set((state) => ({ loading: { ...state.loading, courses: true } }));
         try {
             const res = await fetch(`/api/course/school/${schoolId}`);
@@ -1471,7 +1553,17 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    fetchIntakesBySchoolId: async (schoolId) => {
+    fetchIntakesBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, intakes: false },
+                errors: { ...state.errors, intakes: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
         set((state) => ({ loading: { ...state.loading, intakes: true } }));
         try {
             const res = await fetch(`/api/intake/school/${schoolId}`);
@@ -1496,7 +1588,17 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    fetchIntakeCoursesBySchoolId: async (schoolId) => {
+    fetchIntakeCoursesBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, intakeCourses: false },
+                errors: { ...state.errors, intakeCourses: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
         set((state) => ({ loading: { ...state.loading, intakeCourses: true } }));
         try {
             const res = await fetch(`/api/intake-course/school/${schoolId}`);
@@ -1523,7 +1625,17 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    fetchDepartmentsBySchoolId: async (schoolId) => {
+    fetchDepartmentsBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, departments: false },
+                errors: { ...state.errors, departments: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
         set((state) => ({ loading: { ...state.loading, departments: true } }));
         try {
             const res = await fetch(`/api/department/school/${schoolId}`);
@@ -1550,7 +1662,17 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    fetchLecturersBySchoolId: async (schoolId) => {
+    fetchLecturersBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, lecturers: false },
+                errors: { ...state.errors, lecturers: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
         set((state) => ({ loading: { ...state.loading, lecturers: true } }));
         try {
             const res = await fetch(`/api/lecturer/school/${schoolId}`);
@@ -1577,7 +1699,17 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    fetchModulesBySchoolId: async (schoolId) => {
+    fetchModulesBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, modules: false },
+                errors: { ...state.errors, modules: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
         set((state) => ({ loading: { ...state.loading, modules: true } }));
         try {
             const res = await fetch(`/api/module/school/${schoolId}`);
@@ -1602,10 +1734,20 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    fetchExamSchedulesBySchoolId: async (schoolId) => {
+    fetchExamSchedulesBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, examSchedules: false },
+                errors: { ...state.errors, examSchedules: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
         set((state) => ({ loading: { ...state.loading, examSchedules: true } }));
         try {
-            const res = await fetch(`/api/examSchedule/school/${schoolId}`);
+            const res = await fetch(`/api/exam-schedule/school/${schoolId}`);
             const data = await res.json();
 
             if (!data.success)
@@ -1629,7 +1771,17 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    fetchResultsBySchoolId: async (schoolId) => {
+    fetchResultsBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, results: false },
+                errors: { ...state.errors, results: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
         set((state) => ({ loading: { ...state.loading, results: true } }));
         try {
             const res = await fetch(`/api/result/school/${schoolId}`);
@@ -1654,7 +1806,17 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    fetchAttendanceBySchoolId: async (schoolId) => {
+    fetchAttendanceBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, attendance: false },
+                errors: { ...state.errors, attendance: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
         set((state) => ({ loading: { ...state.loading, attendance: true } }));
         try {
             const res = await fetch(`/api/attendance/school/${schoolId}`);
@@ -1708,7 +1870,17 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    fetchRoomsBySchoolId: async (schoolId) => {
+    fetchRoomsBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, rooms: false },
+                errors: { ...state.errors, rooms: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
         set((state) => ({ loading: { ...state.loading, rooms: true } }));
         try {
             const res = await fetch(`/api/room/school/${schoolId}`);
@@ -2043,7 +2215,17 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    fetchSemestersBySchoolId: async (schoolId) => {
+    fetchSemestersBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, semesters: false },
+                errors: { ...state.errors, semesters: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
         set((state) => ({ loading: { ...state.loading, semesters: true } }));
         try {
             const res = await fetch(`/api/semester/school/${schoolId}`);

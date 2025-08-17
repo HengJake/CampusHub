@@ -68,8 +68,8 @@ export function ModuleManagement() {
     createModule,
     updateModule,
     deleteModule,
-    fetchModules,
-    fetchCourses
+    fetchModulesBySchoolId,
+    fetchCoursesBySchoolId
   } = useAcademicStore()
 
 
@@ -110,10 +110,10 @@ export function ModuleManagement() {
 
   useEffect(() => {
     if (modules.length === 0) {
-      fetchModules();
+      fetchModulesBySchoolId();
     }
     if (courses.length === 0) {
-      fetchCourses();
+      fetchCoursesBySchoolId();
     }
   }, [])
   // console.log("🚀 ~ useEffect ~ modules:", modules)
@@ -180,8 +180,8 @@ export function ModuleManagement() {
       showToast.success("Success", res.message, "module-add");
     }
 
-    fetchCourses();
-    fetchModules();
+    fetchCoursesBySchoolId();
+    fetchModulesBySchoolId();
     resetForm();
     onClose();
   }
@@ -248,7 +248,7 @@ export function ModuleManagement() {
     }
     await deleteModule(moduleToDelete);
     showToast.success("Success", "Module deleted successfully", "module-delete");
-    fetchModules();
+    fetchModulesBySchoolId();
     closeDeleteDialog();
   };
 

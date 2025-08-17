@@ -83,7 +83,7 @@ export const deleteAllCourses = controllerWrapper(async (req, res) => {
     return await deleteAllRecords(Course, "courses");
 });
 
-export const getCoursesBySchool = controllerWrapper(async (req, res) => {
+export const getCoursesBySchoolId = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
     return await getAllRecords(
         Course,

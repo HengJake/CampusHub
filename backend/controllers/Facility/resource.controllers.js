@@ -165,6 +165,17 @@ export const getResourcesBySchoolId = controllerWrapper(async (req, res) => {
   );
 });
 
+// Get Facilities by School ID
+export const getFacilitiesBySchoolId = controllerWrapper(async (req, res) => {
+  const { schoolId } = req.params;
+  return await getAllRecords(
+    Resource,
+    "facilities",
+    [],
+    { schoolId: schoolId }
+  );
+});
+
 // Controller to update an existing resource
 export const updateResource = controllerWrapper(async (req, res) => {
   return await updateRecord(

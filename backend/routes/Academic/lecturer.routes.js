@@ -7,7 +7,7 @@ import {
     deleteLecturer,
     deleteAllLecturers
 } from "../../controllers/Academic/lecturer.controllers.js";
-import { getLecturersBySchool } from "../../controllers/Academic/lecturer.controllers.js";
+import { getLecturersBySchoolId } from "../../controllers/Academic/lecturer.controllers.js";
 
 
 const router = e.Router();
@@ -30,6 +30,6 @@ router.delete("/all", deleteAllLecturers);
 // Delete lecturer by ID
 router.delete("/:id", deleteLecturer);
 
-router.get("/school/:schoolId", getLecturersBySchool);
+router.get("/school/:schoolId", getLecturersBySchoolId);
 
 export default router;

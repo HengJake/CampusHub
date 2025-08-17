@@ -125,6 +125,26 @@ export function LockerManagement() {
         }
     }
 
+
+    const LockerCard = ({ locker }) => (
+        <Tooltip label={`${locker.number} - ${locker.status}${locker.assignedTo ? ` (${locker.assignedTo})` : ""}`}>
+            <Card
+                bg={getLockerColor(locker.status)}
+                color="white"
+                cursor="pointer"
+                _hover={{ transform: "scale(1.05)" }}
+                transition="all 0.2s"
+                size="sm"
+            >
+                <CardBody p={2} textAlign="center">
+                    <Text fontSize="xs" fontWeight="bold">
+                        {locker.resourceId.name}
+                    </Text>
+                    {locker.status === "Occupied" ? <FiLock /> : <FiUnlock />}
+                </CardBody>
+            </Card>
+        </Tooltip>
+    )
     // Generate default locker name
     const generateDefaultName = (resourceName, existingNames = []) => {
         const acronym = resourceName
@@ -169,6 +189,7 @@ export function LockerManagement() {
         setSelectedLocker(locker);
         onOpen();
     };
+
 
     // Handle form submit for creating/updating locker units
     const handleSubmit = async () => {

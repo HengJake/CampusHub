@@ -47,6 +47,28 @@ export const useBillingStore = create((set) => ({
             return { success: false, message: error.message };
         }
     },
+    createSubscription: async (subscriptionDetails) => {
+        try {
+            const res = await fetch("/api/subscription", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(subscriptionDetails)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to create subscription");
+            }
+
+            return { success: true, message: data.message, id: data.data._id };
+        } catch (error) {
+            console.error("Error creating subscription:", error.message);
+            return { success: false, message: error.message };
+        }
+    },
     // school
     createSchool: async (schoolDetails) => {
         try {
@@ -94,7 +116,7 @@ export const useBillingStore = create((set) => ({
     },
     // payment
     createPayment: async (paymentDetails) => {
-        
+
         try {
             const res = await fetch(`/api/payment`, {
                 method: "POST",
@@ -147,17 +169,138 @@ export const useBillingStore = create((set) => ({
                 },
                 body: JSON.stringify(invoice),
             });
-    
+
             const data = await res.json();
-    
+
             if (!res.ok || !data.success) {
                 throw new Error(data.message || "Failed to create invoice");
             }
-    
+
             return { success: true, message: data.message, data: data.data, id: data.data._id };
-    
+
         } catch (error) {
             console.error("Error creating invoice:", error.message);
+            return { success: false, message: error.message };
+        }
+    },
+
+    // Get available subscription plans for signup (without schoolId requirement)
+    getAvailablePlans: async () => {
+        try {
+            const res = await fetch(`/api/subscription`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch available plans");
+            }
+
+            return { success: true, message: data.message, data: data.data };
+        } catch (error) {
+            console.error("Error fetching available plans:", error.message);
+            return { success: false, message: error.message };
+        }
+    },
+
+    // Get subscriptions by school ID
+    getSubscriptionsBySchoolId: async (schoolId) => {
+        try {
+            const res = await fetch(`/api/subscription/school/${schoolId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch subscriptions");
+            }
+
+            return { success: true, message: data.message, data: data.data };
+        } catch (error) {
+            console.error("Error fetching subscriptions:", error.message);
+            return { success: false, message: error.message };
+        }
+    },
+
+    // Get payments by school ID
+    getPaymentsBySchoolId: async (schoolId) => {
+        try {
+            const res = await fetch(`/api/payment/school/${schoolId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch payments");
+            }
+
+            return { success: true, message: data.message, data: data.data };
+        } catch (error) {
+            console.error("Error fetching payments:", error.message);
+            return { success: false, message: error.message };
+        }
+    },
+
+    // Get invoices by school ID
+    getInvoicesBySchoolId: async (schoolId) => {
+        try {
+            const res = await fetch(`/api/invoice/school/${schoolId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch invoices");
+            }
+
+            return { success: true, message: data.message, data: data.data };
+        } catch (error) {
+            console.error("Error fetching invoices:", error.message);
+            return { success: false, message: error.message };
+        }
+    },
+
+    // Get billing data by school ID
+    fetchBillingDataBySchoolId: async () => {
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const res = await fetch(`/api/school/billing/${schoolId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch billing data");
+            }
+
+            return { success: true, message: data.message, data: data.data };
+        } catch (error) {
+            console.error("Error fetching billing data:", error.message);
             return { success: false, message: error.message };
         }
     }

@@ -91,6 +91,59 @@ export const useFacilityStore = create((set, get) => ({
             return { success: false, message: error.message };
         }
     },
+
+    fetchBookingsBySchoolId: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, bookings: true } }));
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = get().buildUrl(`/api/booking/school/${schoolId}`, filters);
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch bookings");
+            }
+            set((state) => ({
+                bookings: data.data,
+                loading: { ...state.loading, bookings: false },
+                errors: { ...state.errors, bookings: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, bookings: false },
+                errors: { ...state.errors, bookings: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchBookingsByStudentId: async (studentId) => {
+        set((state) => ({ loading: { ...state.loading, bookings: true } }));
+        try {
+            const res = await fetch(`/api/booking/student/${studentId}`);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch bookings by studentId");
+            }
+            set((state) => ({
+                bookings: data.data,
+                loading: { ...state.loading, bookings: false },
+                errors: { ...state.errors, bookings: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, bookings: false },
+                errors: { ...state.errors, bookings: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
     createBooking: async (bookingData) => {
         try {
             const authStore = useAuthStore.getState();
@@ -160,6 +213,36 @@ export const useFacilityStore = create((set, get) => ({
         set((state) => ({ loading: { ...state.loading, resources: true } }));
         try {
             const url = get().buildUrl("/api/resource", filters);
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch resources");
+            }
+            set((state) => ({
+                resources: data.data,
+                loading: { ...state.loading, resources: false },
+                errors: { ...state.errors, resources: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, resources: false },
+                errors: { ...state.errors, resources: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchResourcesBySchoolId: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, resources: true } }));
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = get().buildUrl(`/api/resource/school/${schoolId}`, filters);
             const res = await fetch(url);
             const data = await res.json();
             if (!data.success) {
@@ -371,6 +454,36 @@ export const useFacilityStore = create((set, get) => ({
             return { success: false, message: error.message };
         }
     },
+
+    fetchParkingLotsBySchoolId: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, parkingLots: true } }));
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = get().buildUrl(`/api/parkingLot/school/${schoolId}`, filters);
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch parking lots");
+            }
+            set((state) => ({
+                parkingLots: data.data,
+                loading: { ...state.loading, parkingLots: false },
+                errors: { ...state.errors, parkingLots: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, parkingLots: false },
+                errors: { ...state.errors, parkingLots: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
     createParkingLot: async (parkingLotData) => {
         try {
             const authStore = useAuthStore.getState();
@@ -440,6 +553,36 @@ export const useFacilityStore = create((set, get) => ({
         set((state) => ({ loading: { ...state.loading, lockerUnits: true } }));
         try {
             const url = get().buildUrl("/api/locker-unit", filters);
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch locker units");
+            }
+            set((state) => ({
+                lockerUnits: data.data,
+                loading: { ...state.loading, lockerUnits: false },
+                errors: { ...state.errors, lockerUnits: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, lockerUnits: false },
+                errors: { ...state.errors, lockerUnits: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchLockerUnitsBySchoolId: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, lockerUnits: true } }));
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = get().buildUrl(`/api/locker-unit/school/${schoolId}`, filters);
             const res = await fetch(url);
             const data = await res.json();
             if (!data.success) {
@@ -555,6 +698,43 @@ export const useFacilityStore = create((set, get) => ({
         set((state) => ({ loading: { ...state.loading, resources: true } }));
         try {
             const url = get().buildUrl("/api/resource", filters);
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch facilities");
+            }
+
+            // Resources now contain timeslots directly
+            const resourcesWithTimeslots = data.data.map(resource => ({
+                ...resource,
+                timeslots: resource.timeslots || []
+            }));
+
+            set((state) => ({
+                resources: resourcesWithTimeslots,
+                loading: { ...state.loading, resources: false },
+                errors: { ...state.errors, resources: null },
+            }));
+            return { success: true, data: resourcesWithTimeslots };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, resources: false },
+                errors: { ...state.errors, resources: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchFacilitiesBySchoolId: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, resources: true } }));
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = get().buildUrl(`/api/resource/facilities/school/${schoolId}`, filters);
             const res = await fetch(url);
             const data = await res.json();
             if (!data.success) {

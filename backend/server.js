@@ -24,6 +24,7 @@ import attendanceRoutes from "./routes/Academic/attendance.routes.js";
 import resultRoutes from "./routes/Academic/result.routes.js";
 import roomRoutes from "./routes/Academic/room.routes.js";
 import semesterRoutes from "./routes/Academic/semester.routes.js";
+import schoolDataStatusRoutes from "./routes/schoolDataStatus.routes.js";
 
 // 2 Billing
 import subscriptionRoutes from "./routes/Billing/subscription.routes.js";
@@ -151,6 +152,7 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/result", resultRoutes);
 app.use("/api/room", roomRoutes);
 app.use("/api/semester", semesterRoutes);
+app.use("/api/school-data-status", schoolDataStatusRoutes);
 
 // 2 Billing
 app.use("/api/subscription", subscriptionRoutes);

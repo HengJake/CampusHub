@@ -65,7 +65,7 @@ export const deleteAllRooms = controllerWrapper(async (req, res) => {
     return await deleteAllRecords(Room, "rooms");
 });
 
-export const getRoomsBySchool = controllerWrapper(async (req, res) => {
+export const getRoomsBySchoolId = controllerWrapper(async (req, res) => {
     const { schoolId } = req.params;
     return await getAllRecords(
         Room,

@@ -5,16 +5,22 @@ import {
   updateRecord,
   deleteRecord,
   validateReferenceExists,
-  validateMultipleReferences,
   controllerWrapper
 } from "../../utils/reusable.js";
 
 import Subscription from "../../models/Billing/subscription.model.js";
+import School from "../../models/Billing/school.model.js";
 
 const validateSubscriptionData = async (data) => {
-  const { plan, price, billingInterval } = data;
+  const { schoolId, plan, price, billingInterval } = data;
 
   // Check required fields
+  if (!schoolId) {
+    return {
+      isValid: false,
+      message: "schoolId is required"
+    };
+  }
   if (!plan) {
     return {
       isValid: false,
@@ -60,6 +66,15 @@ const validateSubscriptionData = async (data) => {
     };
   }
 
+  // Validate schoolId reference exists
+  const referenceValidation = await validateReferenceExists(schoolId, School, "schoolId");
+  if (referenceValidation) {
+    return {
+      isValid: false,
+      message: referenceValidation.message
+    };
+  }
+
   return { isValid: true };
 };
 
@@ -91,12 +106,16 @@ export const deleteSubscription = controllerWrapper(async (req, res) => {
   return await deleteRecord(Subscription, id, "subscription");
 });
 
-export const deleteAllSubscriptions = controllerWrapper(async (req, res) => {
-  const result = await Subscription.deleteMany({});
-  return {
-    success: true,
-    data: { deletedCount: result.deletedCount },
-    message: `${result.deletedCount} subscriptions deleted successfully`,
-    statusCode: 200
-  };
+export const deleteAllSubscriptions = async (req, res) => {
+  try {
+    await Subscription.deleteMany({});
+    res.status(200).json({ message: 'All subscriptions deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting all subscriptions', error: error.message });
+  }
+};
+
+export const getSubscriptionBySchool = controllerWrapper(async (req, res) => {
+  const { schoolId } = req.params;
+  return await getAllRecords(Subscription, "subscription", [], { schoolId });
 });

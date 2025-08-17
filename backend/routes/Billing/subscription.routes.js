@@ -4,7 +4,8 @@ import {
     getAllSubscription,
     getSubscriptionById,
     updateSubscription,
-    deleteSubscription
+    deleteSubscription,
+    getSubscriptionBySchool
 } from "../../controllers/Billing/subscription.controllers.js";
 import { deleteAllSubscriptions } from '../../controllers/Billing/subscription.controllers.js';
 
@@ -19,6 +20,9 @@ router.get("/", getAllSubscription);
 
 // Get subscription by ID
 router.get("/:id", getSubscriptionById);
+
+// Get subscriptions by school ID
+router.get("/school/:schoolId", getSubscriptionBySchool);
 
 // Update subscription by ID
 router.put("/:id", updateSubscription);

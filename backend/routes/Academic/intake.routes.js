@@ -7,7 +7,7 @@ import {
     deleteIntake,
     deleteAllIntakes
 } from "../../controllers/Academic/intake.controllers.js";
-import { getIntakesBySchool } from "../../controllers/Academic/intake.controllers.js";
+import { getIntakesBySchoolId } from "../../controllers/Academic/intake.controllers.js";
 
 const router = e.Router();
 
@@ -29,6 +29,6 @@ router.delete("/all", deleteAllIntakes);
 // Delete intake by ID
 router.delete("/:id", deleteIntake);
 
-router.get("/school/:schoolId", getIntakesBySchool);
+router.get("/school/:schoolId", getIntakesBySchoolId);
 
 export default router;

@@ -64,12 +64,12 @@ export default function StudentDashboard() {
     examSchedule,
   } = useStudentStore()
 
-  const { getCurrentUser } = useAuthStore()
+  const { getCurrentUser, initializeAuth } = useAuthStore()
   const currentUser = getCurrentUser()
 
   // Use real data from stores
   const { feedback, responds, fetchFeedback, fetchResponds } = useServiceStore()
-  const { bookings, fetchBookings } = useFacilityStore()
+  const { bookings, fetchBookingsByStudentId } = useFacilityStore()
   const { busSchedules, fetchBusSchedules } = useTransportationStore()
   const { classSchedules, fetchClassSchedules, examSchedules, fetchExamSchedules, fetchIntakeCourses, intakeCourses } = useAcademicStore()
 
@@ -91,15 +91,20 @@ export default function StudentDashboard() {
     attendanceTrend: 'stable'
   })
 
+  useEffect(() => {
+    initializeAuth()
+  }, [])
+
   // Load data on component mount
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true)
       try {
+        const user = getCurrentUser()
         await Promise.all([
           fetchFeedback(),
           fetchResponds(),
-          fetchBookings(),
+          user?.studentId ? fetchBookingsByStudentId(user.studentId) : Promise.resolve(),
           fetchBusSchedules(),
           fetchClassSchedules(),
           fetchExamSchedules(),
@@ -112,7 +117,7 @@ export default function StudentDashboard() {
       }
     }
     loadData()
-  }, [])
+  }, [fetchFeedback, fetchResponds, fetchBookingsByStudentId, fetchBusSchedules, fetchClassSchedules, fetchExamSchedules, fetchIntakeCourses, getCurrentUser])
 
   // Calculate stats when data changes
   useEffect(() => {
@@ -240,7 +245,7 @@ export default function StudentDashboard() {
     }
   }
 
-  const currentIC = intakeCourses.find(ic => ic._id == currentUser.user.student.intakeCourseId);
+  const currentIC = intakeCourses.find(ic => ic._id == currentUser.user.student?.intakeCourseId || null);
 
   // Show loading spinner while waiting for currentIC to be set
   if (!currentIC) {
@@ -291,7 +296,7 @@ export default function StudentDashboard() {
         {/* Header */}
         <Box>
           <Text fontSize="2xl" fontWeight="bold" color="gray.800" mb={2}>
-            Welcome back, {currentUser?.student?.name || 'Student'}!
+            Welcome back, {currentUser?.user?.name || 'Student'}!
           </Text>
           <Text color="gray.600">
             Student • {currentUser?.student?.status || 'enrolled'} • {currentIC.intakeId.intakeName} • {currentIC.courseId.courseName}

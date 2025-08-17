@@ -17,7 +17,8 @@ import {
     Tr,
     Th,
     Td,
-    Input
+    Input,
+    useBreakpointValue
 } from "@chakra-ui/react"
 import { FiUpload } from "react-icons/fi"
 import { useMemo, useState, useEffect } from "react"
@@ -35,22 +36,23 @@ import {
 // CSV columns: Student ID, Student Name, Subject Code, Subject Name, Semester, Academic Year, Credit Hours, Grade, GPA, Marks, Total Marks, Status
 
 export default function ResultsBulkUpload() {
-    const { fetchSemesters, semesters, createResult, fetchStudents, students, fetchIntakeCourses, intakeCourses, results, fetchResults, modules, fetchModules, updateResult, deleteResult } = useAcademicStore();
+    const { fetchStudentsBySchoolId, fetchSemestersBySchoolId, semesters, createResult, fetchStudents, students, fetchIntakeCoursesBySchoolId, intakeCourses, results, fetchResultsBySchoolId, modules, fetchModulesBySchoolId, updateResult, deleteResult } = useAcademicStore();
     const { exportTemplate } = useGeneralStore();
     const showToast = useShowToast();
 
     useEffect(() => {
-        fetchIntakeCourses();
-        fetchResults();
-        fetchModules();
-        fetchStudents();
-        fetchSemesters();
+        fetchIntakeCoursesBySchoolId();
+        fetchResultsBySchoolId();
+        fetchModulesBySchoolId();
+        fetchStudentsBySchoolId();
+        fetchSemestersBySchoolId();
     }, [])
 
     // console.log("🚀 ~ ResultsBulkUpload ~ semesters:", semesters)
     // console.log("🚀 ~ ResultsBulkUpload ~ results:", results)
     // console.log("🚀 ~ ResultsBulkUpload ~ intakeCourses:", intakeCourses)
     // console.log("🚀 ~ ResultsBulkUpload ~ modules:", modules)
+
 
 
     const [csvData, setCsvData] = useState([])
@@ -93,6 +95,9 @@ export default function ResultsBulkUpload() {
     // Filter options
     const [moduleFilter, setModuleFilter] = useState("all");
     const [searchUserName, setSearchUserName] = useState("");
+
+    // Responsive breakpoint for mobile detection
+    const isMobile = useBreakpointValue({ base: true, lg: false });
 
     useEffect(() => {
         let filteredResults = results;
@@ -225,7 +230,7 @@ export default function ResultsBulkUpload() {
             }
 
             // If no errors, proceed with success flow
-            await fetchResults();
+            await fetchResultsBySchoolId();
             setIsSubmitting(false);
             setCsvData([]);
             setSelectedModule("");
@@ -563,6 +568,7 @@ export default function ResultsBulkUpload() {
 
                 {/* Preview Table with Selection */}
                 <ResultsPreviewTable
+                    isMobile={isMobile}
                     selectedIntake={selectedIntake}
                     setSelectedIntake={setSelectedIntake}
                     selectedCourse={selectedCourse}

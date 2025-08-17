@@ -18,7 +18,6 @@ const NavItem = ({ item, isCollapsed, level = 0, accentColor, primaryColor, togg
     const textColor = primary;
 
     const handleClick = () => {
-        console.log("🚀 ~ handleClick ~ isOpen:", isOpen)
 
         if (hasChildren) {
 

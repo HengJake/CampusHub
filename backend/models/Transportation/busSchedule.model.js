@@ -1,11 +1,26 @@
 import mongoose from "mongoose";
 
+const routeTimingSchema = new mongoose.Schema({
+  routeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Route",
+    required: true,
+  },
+  startTime: {
+    type: String, // Format: "HH:MM"
+    required: true,
+  },
+  endTime: {
+    type: String, // Format: "HH:MM"
+    required: true,
+  }
+});
+
 const busScheduleSchema = new mongoose.Schema(
   {
-    routeId: [
+    routeTiming: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Route",
+        type: routeTimingSchema,
         required: true,
       },
     ],
@@ -14,17 +29,17 @@ const busScheduleSchema = new mongoose.Schema(
       ref: "Vehicle",
       required: true,
     },
-    departureTime: {
-      type: Date,
-      required: true,
-    },
-    arrivalTime: {
-      type: Date,
-      required: true,
-    },
-    dayActive: {
+    dayOfWeek: {
       type: Number,
-      enum: [1, 2, 3, 4, 5, 6, 7],
+      enum: [1, 2, 3, 4, 5, 6, 7], // Monday=1, Sunday=7
+      required: true,
+    },
+    startDate: {
+      type: Date,
+      required: true,
+    },
+    endDate: {
+      type: Date,
       required: true,
     },
     active: {
