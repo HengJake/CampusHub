@@ -150,12 +150,13 @@ export const deletePayment = controllerWrapper(async (req, res) => {
     return await deleteRecord(Payment, id, "payment");
 });
 
-export const deleteAllPayments = async (req, res) => {
-    try {
-        await Payment.deleteMany({});
-        res.status(200).json({ message: 'All payments deleted' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error deleting all payments', error: error.message });
-    }
-};
+export const deleteAllPayments = controllerWrapper(async (req, res) => {
+    const result = await Payment.deleteMany({});
+    return {
+        success: true,
+        data: { deletedCount: result.deletedCount },
+        message: `${result.deletedCount} payments deleted successfully`,
+        statusCode: 200
+    };
+});
 

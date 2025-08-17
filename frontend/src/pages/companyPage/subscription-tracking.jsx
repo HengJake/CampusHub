@@ -51,57 +51,111 @@ import {
   Eye,
 } from "lucide-react";
 import { useAcademicStore } from "../../store/academic";
+import { useBillingStore } from "../../store/billing";
 import { useEffect } from "react";
-
-
-// Get user counts for each school
-export const getUserCountsPerSchool = async (req, res) => {
-  try {
-    // Count students per school
-    const studentCounts = await Student.aggregate([
-      { $group: { _id: "$schoolId", studentCount: { $sum: 1 } } }
-    ]);
-
-    // Count lecturers per school
-    const lecturerCounts = await Lecturer.aggregate([
-      { $group: { _id: "$schoolId", lecturerCount: { $sum: 1 } } }
-    ]);
-
-    // Merge counts by schoolId
-    const countsMap = {};
-
-    studentCounts.forEach(({ _id, studentCount }) => {
-      countsMap[_id.toString()] = { studentCount, lecturerCount: 0 };
-    });
-
-    lecturerCounts.forEach(({ _id, lecturerCount }) => {
-      if (!countsMap[_id.toString()]) {
-        countsMap[_id.toString()] = { studentCount: 0, lecturerCount };
-      } else {
-        countsMap[_id.toString()].lecturerCount = lecturerCount;
-      }
-    });
-
-    // Convert to array for response
-    const result = Object.entries(countsMap).map(([schoolId, counts]) => ({
-      schoolId,
-      ...counts,
-      totalUsers: counts.studentCount + counts.lecturerCount,
-    }));
-
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
 
 export default function SubscriptionTracking() {
   // All hooks at the top!
   const { schools, loading, errors, fetchSchools } = useAcademicStore();
+  const { getAllSubscription, createPayment, createInvoice } = useBillingStore();
+
+  // State for subscriptions and payments
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [userCounts, setUserCounts] = useState({});
+  const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
+  const [loadingPayments, setLoadingPayments] = useState(false);
 
   useEffect(() => {
     fetchSchools();
   }, [fetchSchools]);
+
+  // Fetch subscriptions and payments after schools are loaded
+  useEffect(() => {
+    if (schools.length > 0) {
+      fetchSubscriptions();
+      fetchPayments();
+      fetchUserCounts();
+    }
+  }, [schools]);
+
+  const fetchSubscriptions = async () => {
+    setLoadingSubscriptions(true);
+    try {
+      const result = await getAllSubscription();
+      if (result.success) {
+        setSubscriptions(result.data);
+      }
+    } catch (error) {
+      console.error("Error fetching subscriptions:", error);
+    } finally {
+      setLoadingSubscriptions(false);
+    }
+  };
+
+  const fetchPayments = async () => {
+    setLoadingPayments(true);
+    try {
+      // Fetch payments for all schools
+      const paymentPromises = schools.map(school => 
+        fetch(`/api/payment/school/${school._id}`)
+          .then(res => res.json())
+          .catch(error => {
+            console.error(`Error fetching payments for school ${school._id}:`, error);
+            return { data: [] };
+          })
+      );
+      const paymentResults = await Promise.all(paymentPromises);
+      const allPayments = paymentResults.flatMap(result => result.data || []);
+      setPayments(allPayments);
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+      setPayments([]);
+    } finally {
+      setLoadingPayments(false);
+    }
+  };
+
+  const fetchUserCounts = async () => {
+    try {
+      // Fetch user counts for each school
+      const userCountPromises = schools.map(school => 
+        fetch(`/api/student/school/${school._id}`)
+          .then(res => res.json())
+          .catch(error => {
+            console.error(`Error fetching students for school ${school._id}:`, error);
+            return { data: [] };
+          })
+          .then(studentResult => {
+            const studentCount = studentResult.data?.length || 0;
+            return fetch(`/api/lecturer/school/${school._id}`)
+              .then(res => res.json())
+              .catch(error => {
+                console.error(`Error fetching lecturers for school ${school._id}:`, error);
+                return { data: [] };
+              })
+              .then(lecturerResult => {
+                const lecturerCount = lecturerResult.data?.length || 0;
+                return {
+                  schoolId: school._id,
+                  studentCount,
+                  lecturerCount,
+                  totalUsers: studentCount + lecturerCount
+                };
+              });
+          })
+      );
+      const userCountResults = await Promise.all(userCountPromises);
+      const userCountsMap = {};
+      userCountResults.forEach(count => {
+        userCountsMap[count.schoolId] = count;
+      });
+      setUserCounts(userCountsMap);
+    } catch (error) {
+      console.error("Error fetching user counts:", error);
+      setUserCounts({});
+    }
+  };
 
   const [selectedSchool, setSelectedSchool] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -110,25 +164,37 @@ export default function SubscriptionTracking() {
   const [sortOrder, setSortOrder] = useState("az"); // 'az' for A-Z, 'za' for Z-A
 
   // Only after all hooks, do your conditional returns:
-  if (loading.schools) {
-    return <Text>Loading schools...</Text>;
+  if (loading.schools || loadingSubscriptions || loadingPayments) {
+    return <Text>Loading subscription data...</Text>;
   }
   if (errors.schools) {
     return <Alert status="error">{errors.schools}</Alert>;
   }
 
-  const subscriptionData = schools.map((school) => ({
-    id: school._id,
-    schoolName: school.name,
-    plan: school.subscription?.plan || "N/A",
-    status: school.subscription?.status || "N/A",
-    renewalDate: school.subscription?.renewalDate || "N/A",
-    monthlyFee: school.subscription?.monthlyFee || 0,
-    users: school.userCount || 0,
-    daysUntilRenewal: school.subscription?.daysUntilRenewal ?? null,
-    paymentMethod: school.subscription?.paymentMethod || "N/A",
-    lastPayment: school.subscription?.lastPayment || "N/A",
-  }));
+  // Create subscription data by combining schools, subscriptions, and user counts
+  const subscriptionData = schools.map((school) => {
+    const subscription = subscriptions.find(sub => sub.schoolId === school._id);
+    const userCount = userCounts[school._id]?.totalUsers || 0;
+    
+    // Calculate days until renewal and renewal date (mock data for now)
+    const daysUntilRenewal = subscription ? Math.floor(Math.random() * 365) : null;
+    const renewalDate = subscription && daysUntilRenewal !== null 
+      ? new Date(Date.now() + daysUntilRenewal * 24 * 60 * 60 * 1000) 
+      : null;
+    
+    return {
+      id: school._id,
+      schoolName: school.name,
+      plan: subscription?.plan || "Basic",
+      status: subscription ? "Active" : "Inactive",
+      renewalDate: renewalDate ? renewalDate.toLocaleDateString() : "N/A",
+      monthlyFee: subscription?.price || 0,
+      users: userCount,
+      daysUntilRenewal: daysUntilRenewal,
+      paymentMethod: "Credit Card", // Mock data
+      lastPayment: "2024-01-15", // Mock data
+    };
+  });
 
   const filteredSubscriptions = subscriptionData.filter((sub) => {
     const schoolMatch =
@@ -183,7 +249,7 @@ export default function SubscriptionTracking() {
         return "purple";
       case "standard":
         return "blue";
-      case "free":
+      case "basic":
         return "gray";
       default:
         return "gray";
@@ -543,14 +609,49 @@ export default function SubscriptionTracking() {
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {/* Replace with real payment data from backend/store when available */}
-                      <Tr>
-                        <Td colSpan={5}>
-                          <Text color="gray.500" align="center">
-                            No payment history data available.
-                          </Text>
-                        </Td>
-                      </Tr>
+                      {payments.length > 0 ? (
+                        payments.map((payment) => (
+                          <Tr key={payment._id}>
+                            <Td>
+                              <Text fontWeight="medium">
+                                {schools.find(s => s._id === payment.schoolId)?.name || "Unknown School"}
+                              </Text>
+                            </Td>
+                            <Td>
+                              <Text fontSize="sm">
+                                {payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : "N/A"}
+                              </Text>
+                            </Td>
+                            <Td>
+                              <Text fontWeight="semibold">
+                                ${payment.amount || 0}
+                              </Text>
+                            </Td>
+                            <Td>
+                              <Badge colorScheme="blue">
+                                {payment.paymentMethod || "N/A"}
+                              </Badge>
+                            </Td>
+                            <Td>
+                              <Badge
+                                colorScheme={
+                                  payment.status === "success" ? "green" : "red"
+                                }
+                              >
+                                {payment.status || "pending"}
+                              </Badge>
+                            </Td>
+                          </Tr>
+                        ))
+                      ) : (
+                        <Tr>
+                          <Td colSpan={5}>
+                            <Text color="gray.500" align="center">
+                              No payment history data available.
+                            </Text>
+                          </Td>
+                        </Tr>
+                      )}
                     </Tbody>
                   </Table>
                 </TableContainer>

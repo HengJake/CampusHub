@@ -225,11 +225,12 @@ export const deleteBusSchedule = controllerWrapper(async (req, res) => {
   return await deleteRecord(BusSchedule, id, "busSchedule");
 });
 
-export const deleteAllBusSchedules = async (req, res) => {
-  try {
-    await BusSchedule.deleteMany({});
-    res.status(200).json({ message: 'All bus schedules deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting all bus schedules', error: error.message });
-  }
-};
+export const deleteAllBusSchedules = controllerWrapper(async (req, res) => {
+  const result = await BusSchedule.deleteMany({});
+  return {
+    success: true,
+    data: { deletedCount: result.deletedCount },
+    message: `${result.deletedCount} bus schedules deleted successfully`,
+    statusCode: 200
+  };
+});

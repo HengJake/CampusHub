@@ -25,11 +25,24 @@ import {
     ModalFooter,
     ModalBody,
     ModalCloseButton,
+    Icon,
+    FormControl,
+    FormLabel,
+    Switch,
+    useToast,
+    IconButton,
+    Menu,
+    MenuButton,
+    MenuList,
+    MenuItem,
+    Checkbox,
+    CheckboxGroup,
 } from "@chakra-ui/react"
-import { FiPlus, FiSearch, FiLock, FiUnlock, FiTool } from "react-icons/fi"
+import { FiPlus, FiSearch, FiLock, FiUnlock, FiTool, FiEdit, FiTrash2, FiMoreVertical } from "react-icons/fi"
 import { useState, useEffect } from "react"
 import { useFacilityStore } from "../../store/facility.js";
 import { useDisclosure } from "@chakra-ui/react";
+import ComfirmationMessage from "../../component/common/ComfirmationMessage.jsx";
 
 export function LockerManagement() {
     const {
@@ -38,21 +51,33 @@ export function LockerManagement() {
         createLockerUnit,
         updateLockerUnit,
         deleteLockerUnit,
+        resources,
+        fetchResources,
     } = useFacilityStore();
 
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [isEdit, setIsEdit] = useState(false);
+    const [selectedLocker, setSelectedLocker] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [lockerToDelete, setLockerToDelete] = useState(null);
+    const [selectedLockers, setSelectedLockers] = useState([]);
+    const [isBulkActionOpen, setIsBulkActionOpen] = useState(false);
+    const [bulkAction, setBulkAction] = useState('');
+    const toast = useToast();
+
     const [formData, setFormData] = useState({
+        name: "",
         resourceId: "",
         schoolId: "",
+        status: "Available",
         isAvailable: true,
     });
 
     useEffect(() => {
         fetchLockerUnits();
-    }, [fetchLockerUnits]);
-    console.log("🚀 ~ LockerManagement ~ lockerUnits:", lockerUnits)
-
+        fetchResources();
+    }, [fetchLockerUnits, fetchResources]);
 
     const [selectedFloor, setSelectedFloor] = useState("All")
     const [selectedSection, setSelectedSection] = useState("All")
@@ -64,23 +89,27 @@ export function LockerManagement() {
     const filteredLockers = lockerUnits.filter((locker) => {
         const matchesFloor =
             selectedFloor === "All" ||
-            (locker.floor !== undefined && locker.floor !== null && locker.floor.toString() === selectedFloor);
+            (locker.floor !== undefined &&
+                locker.floor !== null &&
+                locker.floor.toString() === selectedFloor);
 
         const matchesSection =
             selectedSection === "All" ||
             (typeof locker.section === "string" && locker.section === selectedSection);
 
-        const numberStr = typeof locker.number === "string" ? locker.number : String(locker.number ?? "");
-        const assignedToStr = typeof locker.assignedTo === "string" ? locker.assignedTo : String(locker.assignedTo ?? "");
-
         const matchesSearch =
-            locker.resourceId.name.toLowerCase().includes(searchTerm.toLowerCase());
+            searchTerm === "" || 
+            locker.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            locker._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            locker.resourceId?.name?.toLowerCase().includes(searchTerm.toLowerCase());
 
         return matchesFloor && matchesSection && matchesSearch;
-    })
+    });
 
+    // Fixed counter logic - use status field instead of isAvailable
     const occupiedCount = lockerUnits.filter((l) => l.status === "Occupied").length
     const availableCount = lockerUnits.filter((l) => l.status === "Available").length
+    const maintenanceCount = lockerUnits.filter((l) => l.status === "Maintenance").length
     const occupancyRate = Math.round((occupiedCount / lockerUnits.length) * 100)
 
     const getLockerColor = (status) => {
@@ -95,6 +124,7 @@ export function LockerManagement() {
                 return "#A4C3A2"
         }
     }
+
 
     const LockerCard = ({ locker }) => (
         <Tooltip label={`${locker.number} - ${locker.status}${locker.assignedTo ? ` (${locker.assignedTo})` : ""}`}>
@@ -115,43 +145,285 @@ export function LockerManagement() {
             </Card>
         </Tooltip>
     )
+    // Generate default locker name
+    const generateDefaultName = (resourceName, existingNames = []) => {
+        const acronym = resourceName
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase())
+            .join('');
+        let counter = 1;
+        let newName = `${acronym}${counter}`;
+        
+        while (existingNames.includes(newName)) {
+            counter++;
+            newName = `${acronym}${counter}`;
+        }
+        
+        return newName;
+    };
+
+    // Open Add Modal
+    const openAddModal = () => {
+        setFormData({
+            name: "",
+            resourceId: "",
+            schoolId: "",
+            status: "Available",
+            isAvailable: true,
+        });
+        setIsEdit(false);
+        setSelectedLocker(null);
+        onOpen();
+    };
+
+    // Open Edit Modal
+    const openEditModal = (locker) => {
+        setFormData({
+            name: locker.name || "",
+            resourceId: locker.resourceId?._id || locker.resourceId || "",
+            schoolId: locker.schoolId || "",
+            status: locker.status || "Available",
+            isAvailable: locker.isAvailable !== undefined ? locker.isAvailable : true,
+        });
+        setIsEdit(true);
+        setSelectedLocker(locker);
+        onOpen();
+    };
+
 
     // Handle form submit for creating/updating locker units
     const handleSubmit = async () => {
-        if (isEdit) {
-            await updateLockerUnit(formData._id, formData);
-        } else {
-            await createLockerUnit(formData);
+        setIsSubmitting(true);
+        try {
+            let res;
+            let submitData = { ...formData };
+            
+            if (isEdit && selectedLocker) {
+                // For edit, send all required fields
+                submitData = {
+                    name: formData.name,
+                    schoolId: formData.schoolId,
+                    resourceId: formData.resourceId,
+                    status: formData.status,
+                    isAvailable: formData.status === "Available"
+                };
+                res = await updateLockerUnit(selectedLocker._id, submitData);
+            } else {
+                // For new locker, auto-generate name if not provided
+                if (!submitData.name && submitData.resourceId) {
+                    const selectedResource = resources.find(r => r._id === submitData.resourceId);
+                    if (selectedResource) {
+                        const existingNames = lockerUnits
+                            .filter(l => l.resourceId === submitData.resourceId)
+                            .map(l => l.name)
+                            .filter(Boolean);
+                        submitData.name = generateDefaultName(selectedResource.name, existingNames);
+                    }
+                }
+                submitData.isAvailable = submitData.status === "Available";
+                res = await createLockerUnit(submitData);
+            }
+            
+            if (res.success) {
+                toast({ 
+                    title: isEdit ? "Locker unit updated!" : "Locker unit added!", 
+                    status: "success", 
+                    duration: 2000, 
+                    isClosable: true 
+                });
+                fetchLockerUnits();
+                onClose();
+                resetForm();
+            } else {
+                toast({ 
+                    title: "Error", 
+                    description: res.message, 
+                    status: "error", 
+                    duration: 3000, 
+                    isClosable: true 
+                });
+            }
+        } catch (err) {
+            toast({ 
+                title: "Error", 
+                description: err.message, 
+                status: "error", 
+                duration: 3000, 
+                isClosable: true 
+            });
+        } finally {
+            setIsSubmitting(false);
         }
-        fetchLockerUnits();
-        resetForm();
     };
 
     // Reset form data
     const resetForm = () => {
         setFormData({
+            name: "",
             resourceId: "",
             schoolId: "",
+            status: "Available",
             isAvailable: true,
         });
         setIsEdit(false);
+        setSelectedLocker(null);
     };
 
-    // Handle edit for a specific locker
-    const handleEdit = (locker) => {
-        setFormData({ ...locker });
-        setIsEdit(true);
+    // Open Delete Dialog
+    const openDeleteDialog = (locker) => {
+        setLockerToDelete(locker);
+        setIsDeleteOpen(true);
     };
 
-    const handleDelete = async (lockerId) => {
-        await deleteLockerUnit(lockerId);
-        fetchLockerUnits();
+    // Close Delete Dialog
+    const closeDeleteDialog = () => {
+        setIsDeleteOpen(false);
+        setLockerToDelete(null);
+    };
+
+    // Handle Delete
+    const handleDelete = async () => {
+        if (!lockerToDelete) return;
+        const res = await deleteLockerUnit(lockerToDelete._id);
+        if (res.success) {
+            toast({ 
+                title: "Locker unit deleted!", 
+                status: "success", 
+                duration: 2000, 
+                isClosable: true 
+            });
+            fetchLockerUnits();
+        } else {
+            toast({ 
+                title: "Error", 
+                description: res.message, 
+                status: "error", 
+                duration: 3000, 
+                isClosable: true 
+            });
+        }
+        closeDeleteDialog();
+    };
+
+    // Handle bulk selection
+    const handleLockerSelection = (lockerId, isSelected) => {
+        if (isSelected) {
+            setSelectedLockers(prev => [...prev, lockerId]);
+        } else {
+            setSelectedLockers(prev => prev.filter(id => id !== lockerId));
+        }
     };
 
     // Handle bulk actions
-    const handleBulkAssignment = (action) => {
-        // Logic for bulk actions like assigning, releasing, marking for maintenance
+    const handleBulkAction = async () => {
+        if (selectedLockers.length === 0) {
+            toast({
+                title: "No lockers selected",
+                description: "Please select at least one locker to perform bulk action",
+                status: "warning",
+                duration: 3000,
+                isClosable: true
+            });
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const updates = {
+                status: bulkAction,
+                isAvailable: bulkAction === "Available"
+            };
+
+            const promises = selectedLockers.map(lockerId => 
+                updateLockerUnit(lockerId, updates)
+            );
+
+            const results = await Promise.all(promises);
+            const successCount = results.filter(res => res.success).length;
+
+            if (successCount > 0) {
+                toast({
+                    title: "Bulk action completed!",
+                    description: `Successfully updated ${successCount} out of ${selectedLockers.length} lockers`,
+                    status: "success",
+                    duration: 3000,
+                    isClosable: true
+                });
+                fetchLockerUnits();
+                setSelectedLockers([]);
+                setIsBulkActionOpen(false);
+            } else {
+                toast({
+                    title: "Bulk action failed",
+                    description: "Failed to update any lockers",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true
+                });
+            }
+        } catch (err) {
+            toast({
+                title: "Error",
+                description: err.message,
+                status: "error",
+                duration: 3000,
+                isClosable: true
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
+
+    // Locker Card component to display each locker unit
+    const LockerCard = ({ locker }) => (
+        <Tooltip label={`${locker.name || locker._id.slice(-4)} - ${locker.status}`}>
+            <Card
+                bg={getLockerColor(locker.status)}
+                color="white"
+                cursor="pointer"
+                _hover={{ transform: "scale(1.05)" }}
+                transition="all 0.2s"
+                size="sm"
+                border={selectedLockers.includes(locker._id) ? "2px solid #3182CE" : "1px solid transparent"}
+            >
+                <CardBody p={2} textAlign="center">
+                    <Checkbox
+                        isChecked={selectedLockers.includes(locker._id)}
+                        onChange={(e) => handleLockerSelection(locker._id, e.target.checked)}
+                        colorScheme="blue"
+                        size="sm"
+                        mb={1}
+                    />
+                    <Text fontSize="xs" fontWeight="bold">
+                        {locker.name || locker._id.slice(-4)}
+                    </Text>
+                    {locker.status === "Occupied" ? <FiLock /> : locker.status === "Maintenance" ? <FiTool /> : <FiUnlock />}
+                </CardBody>
+                <HStack justify="center" spacing={2} pb={2}>
+                    <IconButton 
+                        icon={<FiEdit />} 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openEditModal(locker);
+                        }} 
+                        size="xs" 
+                        colorScheme="yellow"
+                        variant="solid"
+                    />
+                    <IconButton 
+                        icon={<FiTrash2 />} 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openDeleteDialog(locker);
+                        }} 
+                        size="xs" 
+                        colorScheme="red"
+                        variant="solid"
+                    />
+                </HStack>
+            </Card>
+        </Tooltip>
+    );
 
     return (
         <Box minH="100vh" flex={1}>
@@ -164,10 +436,165 @@ export function LockerManagement() {
                         </Text>
                         <Text color="gray.600">Manage locker assignments and availability</Text>
                     </Box>
-                    <Button leftIcon={<FiPlus />} bg="#344E41" color="white" _hover={{ bg: "#2a332a" }} onClick={onOpen}>
-                        Bulk Assignment
-                    </Button>
+                    <HStack spacing={4}>
+                        <Button leftIcon={<FiPlus />} bg="#344E41" color="white" _hover={{ bg: "#2a332a" }} onClick={openAddModal}>
+                            Add Locker Unit
+                        </Button>
+                        <Button 
+                            leftIcon={<FiTool />} 
+                            bg="#A4C3A2" 
+                            color="white" 
+                            _hover={{ bg: "#8db08f" }}
+                            onClick={() => setIsBulkActionOpen(true)}
+                            isDisabled={selectedLockers.length === 0}
+                        >
+                            Bulk Actions ({selectedLockers.length})
+                        </Button>
+                    </HStack>
                 </HStack>
+
+                {/* Add/Edit Locker Unit Modal */}
+                <Modal isOpen={isOpen} onClose={onClose}>
+                    <ModalOverlay />
+                    <ModalContent>
+                        <ModalHeader>{isEdit ? "Edit Locker Unit" : "Add New Locker Unit"}</ModalHeader>
+                        <ModalCloseButton />
+                        <ModalBody>
+                            {isEdit ? (
+                                // Edit mode - allow changing name and status
+                                <>
+                                    <FormControl isRequired mb={3}>
+                                        <FormLabel>Locker Name</FormLabel>
+                                        <Input 
+                                            value={formData.name} 
+                                            onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
+                                            placeholder="Enter locker name (e.g., LR1, SR2)" 
+                                        />
+                                    </FormControl>
+                                    <FormControl mb={3}>
+                                        <FormLabel>Resource</FormLabel>
+                                        <Input 
+                                            value={resources.find(r => r._id === formData.resourceId)?.name || 'N/A'}
+                                            isReadOnly
+                                            bg="gray.100"
+                                        />
+                                    </FormControl>
+                                    <FormControl mb={3}>
+                                        <FormLabel>School ID</FormLabel>
+                                        <Input 
+                                            value={formData.schoolId}
+                                            isReadOnly
+                                            bg="gray.100"
+                                        />
+                                    </FormControl>
+                                    <FormControl mb={3}>
+                                        <FormLabel>Status</FormLabel>
+                                        <Select 
+                                            value={formData.status} 
+                                            onChange={(e) => setFormData(f => ({ ...f, status: e.target.value }))}
+                                        >
+                                            <option value="Available">Available</option>
+                                            <option value="Occupied">Occupied</option>
+                                            <option value="Maintenance">Maintenance</option>
+                                        </Select>
+                                    </FormControl>
+                                </>
+                            ) : (
+                                // Add mode - allow setting all fields
+                                <>
+                                    <FormControl mb={3}>
+                                        <FormLabel>Locker Name (Optional)</FormLabel>
+                                        <Input 
+                                            value={formData.name} 
+                                            onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
+                                            placeholder="Leave empty for auto-generated name" 
+                                        />
+                                    </FormControl>
+                                    <FormControl isRequired mb={3}>
+                                        <FormLabel>Resource</FormLabel>
+                                        <Select 
+                                            value={formData.resourceId} 
+                                            onChange={(e) => setFormData(f => ({ ...f, resourceId: e.target.value }))}
+                                            placeholder="Select a resource"
+                                        >
+                                            {resources
+                                                .filter(resource => resource.type === 'locker')
+                                                .map(resource => (
+                                                    <option key={resource._id} value={resource._id}>
+                                                        {resource.name} - {resource.location}
+                                                    </option>
+                                                ))
+                                            }
+                                        </Select>
+                                    </FormControl>
+                                    <FormControl isRequired mb={3}>
+                                        <FormLabel>School ID</FormLabel>
+                                        <Input 
+                                            value={formData.schoolId} 
+                                            onChange={(e) => setFormData(f => ({ ...f, schoolId: e.target.value }))} 
+                                            placeholder="School ID" 
+                                        />
+                                    </FormControl>
+                                    <FormControl mb={3}>
+                                        <FormLabel>Status</FormLabel>
+                                        <Select 
+                                            value={formData.status} 
+                                            onChange={(e) => setFormData(f => ({ ...f, status: e.target.value }))}
+                                        >
+                                            <option value="Available">Available</option>
+                                            <option value="Occupied">Occupied</option>
+                                            <option value="Maintenance">Maintenance</option>
+                                        </Select>
+                                    </FormControl>
+                                </>
+                            )}
+                        </ModalBody>
+                        <ModalFooter>
+                            <Button variant="ghost" mr={3} onClick={onClose}>
+                                Cancel
+                            </Button>
+                            <Button colorScheme="green" onClick={handleSubmit} isLoading={isSubmitting}>
+                                {isEdit ? "Update Locker Unit" : "Add Locker Unit"}
+                            </Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </Modal>
+
+                {/* Bulk Action Modal */}
+                <Modal isOpen={isBulkActionOpen} onClose={() => setIsBulkActionOpen(false)}>
+                    <ModalOverlay />
+                    <ModalContent>
+                        <ModalHeader>Bulk Action on {selectedLockers.length} Lockers</ModalHeader>
+                        <ModalCloseButton />
+                        <ModalBody>
+                            <FormControl mb={3}>
+                                <FormLabel>Select Action</FormLabel>
+                                <Select 
+                                    value={bulkAction} 
+                                    onChange={(e) => setBulkAction(e.target.value)}
+                                    placeholder="Choose an action"
+                                >
+                                    <option value="Available">Mark as Available</option>
+                                    <option value="Occupied">Mark as Occupied</option>
+                                    <option value="Maintenance">Mark for Maintenance</option>
+                                </Select>
+                            </FormControl>
+                        </ModalBody>
+                        <ModalFooter>
+                            <Button variant="ghost" mr={3} onClick={() => setIsBulkActionOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button 
+                                colorScheme="blue" 
+                                onClick={handleBulkAction} 
+                                isLoading={isSubmitting}
+                                isDisabled={!bulkAction}
+                            >
+                                Apply to {selectedLockers.length} Lockers
+                            </Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </Modal>
 
                 {/* Stats Cards */}
                 <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={6}>
@@ -205,7 +632,7 @@ export function LockerManagement() {
                         <CardBody>
                             <Stat>
                                 <StatLabel color="gray.600">Maintenance</StatLabel>
-                                <StatNumber color="#ED8936">{lockerUnits.filter((l) => l.status === "Maintenance").length}</StatNumber>
+                                <StatNumber color="#ED8936">{maintenanceCount}</StatNumber>
                                 <StatHelpText>Need attention</StatHelpText>
                             </Stat>
                         </CardBody>
@@ -222,7 +649,7 @@ export function LockerManagement() {
                                         <FiSearch color="gray.400" />
                                     </InputLeftElement>
                                     <Input
-                                        placeholder="Search by locker number or student name..."
+                                        placeholder="Search by locker name, ID or resource name..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
@@ -270,12 +697,19 @@ export function LockerManagement() {
                 {/* Locker Grid */}
                 <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                     <CardBody>
-                        <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
-                            Locker Layout ({filteredLockers.length} lockers)
-                        </Text>
+                        <HStack justify="space-between" mb={4}>
+                            <Text fontSize="lg" fontWeight="semibold" color="#333333">
+                                Locker Layout ({filteredLockers.length} lockers)
+                            </Text>
+                            {selectedLockers.length > 0 && (
+                                <Text fontSize="sm" color="blue.500">
+                                    {selectedLockers.length} selected
+                                </Text>
+                            )}
+                        </HStack>
                         <SimpleGrid columns={{ base: 8, md: 12, lg: 16 }} spacing={2}>
                             {filteredLockers.map((locker) => (
-                                <LockerCard key={locker.id} locker={locker} />
+                                <LockerCard key={locker._id} locker={locker} />
                             ))}
                         </SimpleGrid>
                     </CardBody>
@@ -288,38 +722,55 @@ export function LockerManagement() {
                             Quick Actions
                         </Text>
                         <HStack spacing={4}>
-                            <Button leftIcon={<FiLock />} colorScheme="green" variant="outline">
-                                Assign Selected
+                            <Button 
+                                leftIcon={<FiLock />} 
+                                colorScheme="green" 
+                                variant="outline"
+                                onClick={() => {
+                                    setBulkAction("Occupied");
+                                    setIsBulkActionOpen(true);
+                                }}
+                                isDisabled={selectedLockers.length === 0}
+                            >
+                                Assign Selected ({selectedLockers.length})
                             </Button>
-                            <Button leftIcon={<FiUnlock />} colorScheme="blue" variant="outline">
-                                Release Selected
+                            <Button 
+                                leftIcon={<FiUnlock />} 
+                                colorScheme="blue" 
+                                variant="outline"
+                                onClick={() => {
+                                    setBulkAction("Available");
+                                    setIsBulkActionOpen(true);
+                                }}
+                                isDisabled={selectedLockers.length === 0}
+                            >
+                                Release Selected ({selectedLockers.length})
                             </Button>
-                            <Button leftIcon={<FiTool />} colorScheme="orange" variant="outline">
-                                Mark for Maintenance
+                            <Button 
+                                leftIcon={<FiTool />} 
+                                colorScheme="orange" 
+                                variant="outline"
+                                onClick={() => {
+                                    setBulkAction("Maintenance");
+                                    setIsBulkActionOpen(true);
+                                }}
+                                isDisabled={selectedLockers.length === 0}
+                            >
+                                Mark for Maintenance ({selectedLockers.length})
                             </Button>
                         </HStack>
                     </CardBody>
                 </Card>
+
+                {/* Delete Confirmation Modal */}
+                <ComfirmationMessage
+                    title="Confirm delete locker unit?"
+                    description="This locker unit will be permanently deleted and cannot be restored."
+                    isOpen={isDeleteOpen}
+                    onClose={closeDeleteDialog}
+                    onConfirm={handleDelete}
+                />
             </VStack>
-
-
-            <Modal isOpen={isOpen} onClose={onClose}>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Modal Title</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <Text>hello</Text>
-                    </ModalBody>
-
-                    <ModalFooter>
-                        <Button variant='ghost' mr={3} onClick={onClose}>
-                            Close
-                        </Button>
-                        <Button colorScheme='green' onClick={handleBulkAssignment}>Add</Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
         </Box>
     )
 }

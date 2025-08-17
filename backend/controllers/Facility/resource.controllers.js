@@ -192,76 +192,70 @@ export const deleteResource = controllerWrapper(async (req, res) => {
   return await deleteRecord(Resource, req.params.id);
 });
 
-export const deleteAllResources = async (req, res) => {
-  try {
-    await Resource.deleteMany({});
-    res.status(200).json({ message: 'All resources deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting all resources', error: error.message });
-  }
-};
+export const deleteAllResources = controllerWrapper(async (req, res) => {
+  const result = await Resource.deleteMany({});
+  return {
+    success: true,
+    data: { deletedCount: result.deletedCount },
+    message: `${result.deletedCount} resources deleted successfully`,
+    statusCode: 200
+  };
+});
 
 // Get available timeslots for a resource on a specific day
 export const getAvailableTimeslots = controllerWrapper(async (req, res) => {
   const { resourceId, dayOfWeek } = req.params;
 
-  try {
-    // Validate resource exists
-    const resource = await Resource.findById(resourceId);
-    if (!resource) {
-      return res.status(404).json({
-        success: false,
-        message: "Resource not found"
-      });
-    }
+  // Validate resource exists
+  const resource = await Resource.findById(resourceId);
+  if (!resource) {
+    return {
+      success: false,
+      message: "Resource not found",
+      statusCode: 404
+    };
+  }
 
-    // Get existing timeslots for the resource on the specified day
-    const existingTimeslots = resource.timeslots.find(ts => ts.dayOfWeek === dayOfWeek);
-    const occupiedSlots = existingTimeslots ? existingTimeslots.slots : [];
+  // Get existing timeslots for the resource on the specified day
+  const existingTimeslots = resource.timeslots.find(ts => ts.dayOfWeek === dayOfWeek);
+  const occupiedSlots = existingTimeslots ? existingTimeslots.slots : [];
 
-    // Generate all possible time slots (24 hours in 30-minute intervals)
-    const allTimeSlots = [];
-    for (let hour = 0; hour < 24; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const startTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        const endTime = minute === 30 ?
-          `${hour.toString().padStart(2, '0')}:00` :
-          `${(hour + 1).toString().padStart(2, '0')}:00`;
+  // Generate all possible time slots (24 hours in 30-minute intervals)
+  const allTimeSlots = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      const startTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      const endTime = minute === 30 ?
+        `${hour.toString().padStart(2, '0')}:00` :
+        `${(hour + 1).toString().padStart(2, '0')}:00`;
 
-        if (hour < 23 || minute === 0) {
-          allTimeSlots.push({
-            start: startTime,
-            end: endTime
-          });
-        }
+      if (hour < 23 || minute === 0) {
+        allTimeSlots.push({
+          start: startTime,
+          end: endTime
+        });
       }
     }
-
-    // Find available slots (slots that don't overlap with occupied slots)
-    const availableSlots = allTimeSlots.filter(slot => {
-      return !occupiedSlots.some(occupied =>
-        doTimeRangesOverlap(slot.start, slot.end, occupied.start, occupied.end)
-      );
-    });
-
-    return res.status(200).json({
-      success: true,
-      data: {
-        resourceId,
-        dayOfWeek,
-        availableSlots,
-        occupiedSlots
-      },
-      message: "Available timeslots retrieved successfully"
-    });
-
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Error retrieving available timeslots",
-      error: error.message
-    });
   }
+
+  // Find available slots (slots that don't overlap with occupied slots)
+  const availableSlots = allTimeSlots.filter(slot => {
+    return !occupiedSlots.some(occupied =>
+      doTimeRangesOverlap(slot.start, slot.end, occupied.start, occupied.end)
+    );
+  });
+
+  return {
+    success: true,
+    data: {
+      resourceId,
+      dayOfWeek,
+      availableSlots,
+      occupiedSlots
+    },
+    message: "Available timeslots retrieved successfully",
+    statusCode: 200
+  };
 });
 
 

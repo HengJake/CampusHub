@@ -73,12 +73,13 @@ export const deleteRoute = controllerWrapper(async (req, res) => {
   return await deleteRecord(Route, id, "route");
 });
 
-export const deleteAllRoutes = async (req, res) => {
-  try {
-    await Route.deleteMany({});
-    res.status(200).json({ message: 'All routes deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting all routes', error: error.message });
-  }
-};
+export const deleteAllRoutes = controllerWrapper(async (req, res) => {
+  const result = await Route.deleteMany({});
+  return {
+    success: true,
+    data: { deletedCount: result.deletedCount },
+    message: `${result.deletedCount} routes deleted successfully`,
+    statusCode: 200
+  };
+});
 

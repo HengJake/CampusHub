@@ -51,11 +51,12 @@ export const deleteRespond = controllerWrapper(async (req, res) => {
     return await deleteRecord(Respond, id, "respond");
 });
 
-export const deleteAllResponds = async (req, res) => {
-    try {
-        await Respond.deleteMany({});
-        res.status(200).json({ message: 'All responds deleted' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error deleting all responds', error: error.message });
-    }
-};
+export const deleteAllResponds = controllerWrapper(async (req, res) => {
+    const result = await Respond.deleteMany({});
+    return {
+        success: true,
+        data: { deletedCount: result.deletedCount },
+        message: `${result.deletedCount} responds deleted successfully`,
+        statusCode: 200
+    };
+});
