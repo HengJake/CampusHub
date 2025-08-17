@@ -12,7 +12,7 @@ import {
   Stack,
 } from "@chakra-ui/react";
 import { FiArrowRight, FiPlay } from "react-icons/fi";
-import heroImage from "../../../../dist/Campus.jpg";
+import heroImage from "./Campus.jpg";
 
 const landing = () => {
   const isMobile = useBreakpointValue({ base: true, lg: false });
