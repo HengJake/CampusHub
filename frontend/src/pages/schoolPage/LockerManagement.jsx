@@ -98,7 +98,7 @@ export function LockerManagement() {
             (typeof locker.section === "string" && locker.section === selectedSection);
 
         const matchesSearch =
-            searchTerm === "" || 
+            searchTerm === "" ||
             locker.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             locker._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
             locker.resourceId?.name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -126,25 +126,8 @@ export function LockerManagement() {
     }
 
 
-    const LockerCard = ({ locker }) => (
-        <Tooltip label={`${locker.number} - ${locker.status}${locker.assignedTo ? ` (${locker.assignedTo})` : ""}`}>
-            <Card
-                bg={getLockerColor(locker.status)}
-                color="white"
-                cursor="pointer"
-                _hover={{ transform: "scale(1.05)" }}
-                transition="all 0.2s"
-                size="sm"
-            >
-                <CardBody p={2} textAlign="center">
-                    <Text fontSize="xs" fontWeight="bold">
-                        {locker.resourceId.name}
-                    </Text>
-                    {locker.status === "Occupied" ? <FiLock /> : <FiUnlock />}
-                </CardBody>
-            </Card>
-        </Tooltip>
-    )
+
+
     // Generate default locker name
     const generateDefaultName = (resourceName, existingNames = []) => {
         const acronym = resourceName
@@ -153,12 +136,12 @@ export function LockerManagement() {
             .join('');
         let counter = 1;
         let newName = `${acronym}${counter}`;
-        
+
         while (existingNames.includes(newName)) {
             counter++;
             newName = `${acronym}${counter}`;
         }
-        
+
         return newName;
     };
 
@@ -197,7 +180,7 @@ export function LockerManagement() {
         try {
             let res;
             let submitData = { ...formData };
-            
+
             if (isEdit && selectedLocker) {
                 // For edit, send all required fields
                 submitData = {
@@ -223,33 +206,33 @@ export function LockerManagement() {
                 submitData.isAvailable = submitData.status === "Available";
                 res = await createLockerUnit(submitData);
             }
-            
+
             if (res.success) {
-                toast({ 
-                    title: isEdit ? "Locker unit updated!" : "Locker unit added!", 
-                    status: "success", 
-                    duration: 2000, 
-                    isClosable: true 
+                toast({
+                    title: isEdit ? "Locker unit updated!" : "Locker unit added!",
+                    status: "success",
+                    duration: 2000,
+                    isClosable: true
                 });
                 fetchLockerUnits();
                 onClose();
                 resetForm();
             } else {
-                toast({ 
-                    title: "Error", 
-                    description: res.message, 
-                    status: "error", 
-                    duration: 3000, 
-                    isClosable: true 
+                toast({
+                    title: "Error",
+                    description: res.message,
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true
                 });
             }
         } catch (err) {
-            toast({ 
-                title: "Error", 
-                description: err.message, 
-                status: "error", 
-                duration: 3000, 
-                isClosable: true 
+            toast({
+                title: "Error",
+                description: err.message,
+                status: "error",
+                duration: 3000,
+                isClosable: true
             });
         } finally {
             setIsSubmitting(false);
@@ -286,20 +269,20 @@ export function LockerManagement() {
         if (!lockerToDelete) return;
         const res = await deleteLockerUnit(lockerToDelete._id);
         if (res.success) {
-            toast({ 
-                title: "Locker unit deleted!", 
-                status: "success", 
-                duration: 2000, 
-                isClosable: true 
+            toast({
+                title: "Locker unit deleted!",
+                status: "success",
+                duration: 2000,
+                isClosable: true
             });
             fetchLockerUnits();
         } else {
-            toast({ 
-                title: "Error", 
-                description: res.message, 
-                status: "error", 
-                duration: 3000, 
-                isClosable: true 
+            toast({
+                title: "Error",
+                description: res.message,
+                status: "error",
+                duration: 3000,
+                isClosable: true
             });
         }
         closeDeleteDialog();
@@ -334,7 +317,7 @@ export function LockerManagement() {
                 isAvailable: bulkAction === "Available"
             };
 
-            const promises = selectedLockers.map(lockerId => 
+            const promises = selectedLockers.map(lockerId =>
                 updateLockerUnit(lockerId, updates)
             );
 
@@ -400,23 +383,23 @@ export function LockerManagement() {
                     {locker.status === "Occupied" ? <FiLock /> : locker.status === "Maintenance" ? <FiTool /> : <FiUnlock />}
                 </CardBody>
                 <HStack justify="center" spacing={2} pb={2}>
-                    <IconButton 
-                        icon={<FiEdit />} 
+                    <IconButton
+                        icon={<FiEdit />}
                         onClick={(e) => {
                             e.stopPropagation();
                             openEditModal(locker);
-                        }} 
-                        size="xs" 
+                        }}
+                        size="xs"
                         colorScheme="yellow"
                         variant="solid"
                     />
-                    <IconButton 
-                        icon={<FiTrash2 />} 
+                    <IconButton
+                        icon={<FiTrash2 />}
                         onClick={(e) => {
                             e.stopPropagation();
                             openDeleteDialog(locker);
-                        }} 
-                        size="xs" 
+                        }}
+                        size="xs"
                         colorScheme="red"
                         variant="solid"
                     />
@@ -440,10 +423,10 @@ export function LockerManagement() {
                         <Button leftIcon={<FiPlus />} bg="#344E41" color="white" _hover={{ bg: "#2a332a" }} onClick={openAddModal}>
                             Add Locker Unit
                         </Button>
-                        <Button 
-                            leftIcon={<FiTool />} 
-                            bg="#A4C3A2" 
-                            color="white" 
+                        <Button
+                            leftIcon={<FiTool />}
+                            bg="#A4C3A2"
+                            color="white"
                             _hover={{ bg: "#8db08f" }}
                             onClick={() => setIsBulkActionOpen(true)}
                             isDisabled={selectedLockers.length === 0}
@@ -465,15 +448,15 @@ export function LockerManagement() {
                                 <>
                                     <FormControl isRequired mb={3}>
                                         <FormLabel>Locker Name</FormLabel>
-                                        <Input 
-                                            value={formData.name} 
+                                        <Input
+                                            value={formData.name}
                                             onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
-                                            placeholder="Enter locker name (e.g., LR1, SR2)" 
+                                            placeholder="Enter locker name (e.g., LR1, SR2)"
                                         />
                                     </FormControl>
                                     <FormControl mb={3}>
                                         <FormLabel>Resource</FormLabel>
-                                        <Input 
+                                        <Input
                                             value={resources.find(r => r._id === formData.resourceId)?.name || 'N/A'}
                                             isReadOnly
                                             bg="gray.100"
@@ -481,7 +464,7 @@ export function LockerManagement() {
                                     </FormControl>
                                     <FormControl mb={3}>
                                         <FormLabel>School ID</FormLabel>
-                                        <Input 
+                                        <Input
                                             value={formData.schoolId}
                                             isReadOnly
                                             bg="gray.100"
@@ -489,8 +472,8 @@ export function LockerManagement() {
                                     </FormControl>
                                     <FormControl mb={3}>
                                         <FormLabel>Status</FormLabel>
-                                        <Select 
-                                            value={formData.status} 
+                                        <Select
+                                            value={formData.status}
                                             onChange={(e) => setFormData(f => ({ ...f, status: e.target.value }))}
                                         >
                                             <option value="Available">Available</option>
@@ -504,16 +487,16 @@ export function LockerManagement() {
                                 <>
                                     <FormControl mb={3}>
                                         <FormLabel>Locker Name (Optional)</FormLabel>
-                                        <Input 
-                                            value={formData.name} 
+                                        <Input
+                                            value={formData.name}
                                             onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
-                                            placeholder="Leave empty for auto-generated name" 
+                                            placeholder="Leave empty for auto-generated name"
                                         />
                                     </FormControl>
                                     <FormControl isRequired mb={3}>
                                         <FormLabel>Resource</FormLabel>
-                                        <Select 
-                                            value={formData.resourceId} 
+                                        <Select
+                                            value={formData.resourceId}
                                             onChange={(e) => setFormData(f => ({ ...f, resourceId: e.target.value }))}
                                             placeholder="Select a resource"
                                         >
@@ -529,16 +512,16 @@ export function LockerManagement() {
                                     </FormControl>
                                     <FormControl isRequired mb={3}>
                                         <FormLabel>School ID</FormLabel>
-                                        <Input 
-                                            value={formData.schoolId} 
-                                            onChange={(e) => setFormData(f => ({ ...f, schoolId: e.target.value }))} 
-                                            placeholder="School ID" 
+                                        <Input
+                                            value={formData.schoolId}
+                                            onChange={(e) => setFormData(f => ({ ...f, schoolId: e.target.value }))}
+                                            placeholder="School ID"
                                         />
                                     </FormControl>
                                     <FormControl mb={3}>
                                         <FormLabel>Status</FormLabel>
-                                        <Select 
-                                            value={formData.status} 
+                                        <Select
+                                            value={formData.status}
                                             onChange={(e) => setFormData(f => ({ ...f, status: e.target.value }))}
                                         >
                                             <option value="Available">Available</option>
@@ -569,8 +552,8 @@ export function LockerManagement() {
                         <ModalBody>
                             <FormControl mb={3}>
                                 <FormLabel>Select Action</FormLabel>
-                                <Select 
-                                    value={bulkAction} 
+                                <Select
+                                    value={bulkAction}
                                     onChange={(e) => setBulkAction(e.target.value)}
                                     placeholder="Choose an action"
                                 >
@@ -584,9 +567,9 @@ export function LockerManagement() {
                             <Button variant="ghost" mr={3} onClick={() => setIsBulkActionOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button 
-                                colorScheme="blue" 
-                                onClick={handleBulkAction} 
+                            <Button
+                                colorScheme="blue"
+                                onClick={handleBulkAction}
                                 isLoading={isSubmitting}
                                 isDisabled={!bulkAction}
                             >
@@ -722,9 +705,9 @@ export function LockerManagement() {
                             Quick Actions
                         </Text>
                         <HStack spacing={4}>
-                            <Button 
-                                leftIcon={<FiLock />} 
-                                colorScheme="green" 
+                            <Button
+                                leftIcon={<FiLock />}
+                                colorScheme="green"
                                 variant="outline"
                                 onClick={() => {
                                     setBulkAction("Occupied");
@@ -734,9 +717,9 @@ export function LockerManagement() {
                             >
                                 Assign Selected ({selectedLockers.length})
                             </Button>
-                            <Button 
-                                leftIcon={<FiUnlock />} 
-                                colorScheme="blue" 
+                            <Button
+                                leftIcon={<FiUnlock />}
+                                colorScheme="blue"
                                 variant="outline"
                                 onClick={() => {
                                     setBulkAction("Available");
@@ -746,9 +729,9 @@ export function LockerManagement() {
                             >
                                 Release Selected ({selectedLockers.length})
                             </Button>
-                            <Button 
-                                leftIcon={<FiTool />} 
-                                colorScheme="orange" 
+                            <Button
+                                leftIcon={<FiTool />}
+                                colorScheme="orange"
                                 variant="outline"
                                 onClick={() => {
                                     setBulkAction("Maintenance");
