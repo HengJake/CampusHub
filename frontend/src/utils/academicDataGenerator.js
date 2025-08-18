@@ -1132,7 +1132,6 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
 
         for (const lockerResource of lockerResources) {
             const lockerUnitData = {
-                name: lockerResource.name,
                 resourceId: lockerResource._id,
                 schoolId: schoolId,
                 status: lockerResource.status ? 'Available' : 'Maintenance',

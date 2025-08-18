@@ -102,7 +102,6 @@ const BusScheduleTab = React.memo(({ loading, error, onCreate, onView, onEdit })
 
     // Memoize the table rows for a specific vehicle
     const getTableRowsForVehicle = useCallback((schedules) => {
-        console.log("🚀 ~ schedules:", schedules)
         return schedules.map((schedule) => (
             <Tr key={schedule._id}>
                 <Td>{getRouteNames(schedule)}</Td>

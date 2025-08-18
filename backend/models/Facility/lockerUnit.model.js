@@ -1,10 +1,6 @@
 import mongoose from "mongoose";
 
 const LockerUnitSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-    },
     resourceId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Resource',

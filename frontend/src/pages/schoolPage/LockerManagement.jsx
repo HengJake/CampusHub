@@ -99,7 +99,6 @@ export function LockerManagement() {
 
         const matchesSearch =
             searchTerm === "" ||
-            locker.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             locker._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
             locker.resourceId?.name?.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -128,7 +127,7 @@ export function LockerManagement() {
 
 
 
-    // Generate default locker name
+    // Generate default locker name from resource
     const generateDefaultName = (resourceName, existingNames = []) => {
         const acronym = resourceName
             .split(' ')
@@ -148,7 +147,6 @@ export function LockerManagement() {
     // Open Add Modal
     const openAddModal = () => {
         setFormData({
-            name: "",
             resourceId: "",
             schoolId: "",
             status: "Available",
@@ -162,7 +160,6 @@ export function LockerManagement() {
     // Open Edit Modal
     const openEditModal = (locker) => {
         setFormData({
-            name: locker.name || "",
             resourceId: locker.resourceId?._id || locker.resourceId || "",
             schoolId: locker.schoolId || "",
             status: locker.status || "Available",
@@ -184,7 +181,6 @@ export function LockerManagement() {
             if (isEdit && selectedLocker) {
                 // For edit, send all required fields
                 submitData = {
-                    name: formData.name,
                     schoolId: formData.schoolId,
                     resourceId: formData.resourceId,
                     status: formData.status,
@@ -378,7 +374,7 @@ export function LockerManagement() {
                         mb={1}
                     />
                     <Text fontSize="xs" fontWeight="bold">
-                        {locker.name || locker._id.slice(-4)}
+                        {locker.resourceId?.name || locker._id.slice(-4)}
                     </Text>
                     {locker.status === "Occupied" ? <FiLock /> : locker.status === "Maintenance" ? <FiTool /> : <FiUnlock />}
                 </CardBody>
@@ -444,16 +440,8 @@ export function LockerManagement() {
                         <ModalCloseButton />
                         <ModalBody>
                             {isEdit ? (
-                                // Edit mode - allow changing name and status
+                                // Edit mode - allow changing status
                                 <>
-                                    <FormControl isRequired mb={3}>
-                                        <FormLabel>Locker Name</FormLabel>
-                                        <Input
-                                            value={formData.name}
-                                            onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
-                                            placeholder="Enter locker name (e.g., LR1, SR2)"
-                                        />
-                                    </FormControl>
                                     <FormControl mb={3}>
                                         <FormLabel>Resource</FormLabel>
                                         <Input
@@ -485,14 +473,6 @@ export function LockerManagement() {
                             ) : (
                                 // Add mode - allow setting all fields
                                 <>
-                                    <FormControl mb={3}>
-                                        <FormLabel>Locker Name (Optional)</FormLabel>
-                                        <Input
-                                            value={formData.name}
-                                            onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
-                                            placeholder="Leave empty for auto-generated name"
-                                        />
-                                    </FormControl>
                                     <FormControl isRequired mb={3}>
                                         <FormLabel>Resource</FormLabel>
                                         <Select
@@ -632,7 +612,7 @@ export function LockerManagement() {
                                         <FiSearch color="gray.400" />
                                     </InputLeftElement>
                                     <Input
-                                        placeholder="Search by locker name, ID or resource name..."
+                                        placeholder="Search by locker ID or resource name..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />

@@ -1587,115 +1587,113 @@ async function createFullSchoolData({
         {
             resourceId: createdIds.resources[5], // A100
             schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date() // Current month
+            status: "Available",
+            isAvailable: true
         },
         {
             resourceId: createdIds.resources[6], // A101
             schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date()
+            status: "Available",
+            isAvailable: true
         },
         {
             resourceId: createdIds.resources[7], // A102
             schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date()
+            status: "Available",
+            isAvailable: true
         },
         {
             resourceId: createdIds.resources[8], // A103
             schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date()
+            status: "Available",
+            isAvailable: true
         },
         {
             resourceId: createdIds.resources[9], // A104
             schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date()
+            status: "Available",
+            isAvailable: true
         },
         // Used lockers (current month)
         {
             resourceId: createdIds.resources[10], // A105
             schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date()
+            status: "Occupied",
+            isAvailable: false
         },
         // Additional variety for better statistics
         {
             resourceId: createdIds.resources[5], // A100
             schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date()
+            status: "Occupied",
+            isAvailable: false
         },
         {
             resourceId: createdIds.resources[6], // A101
             schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date()
-        },
-        // Last month lockers (for comparison)
-        {
-            resourceId: createdIds.resources[7], // A102
-            schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 15)
-        },
-        {
-            resourceId: createdIds.resources[8], // A103
-            schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 20)
-        },
-        {
-            resourceId: createdIds.resources[9], // A104
-            schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 25)
-        },
-        // Two months ago lockers
-        {
-            resourceId: createdIds.resources[10], // A105
-            schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 10)
-        },
-        {
-            resourceId: createdIds.resources[5], // A100
-            schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 15)
-        },
-        {
-            resourceId: createdIds.resources[6], // A101
-            schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 20)
+            status: "Maintenance",
+            isAvailable: false
         },
         // Additional variety for better statistics
         {
             resourceId: createdIds.resources[7], // A102
             schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date()
+            status: "Occupied",
+            isAvailable: false
         },
         {
             resourceId: createdIds.resources[8], // A103
             schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date()
+            status: "Available",
+            isAvailable: true
         },
         {
             resourceId: createdIds.resources[9], // A104
             schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date()
+            status: "Occupied",
+            isAvailable: false
         },
         {
             resourceId: createdIds.resources[10], // A105
             schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date()
+            status: "Available",
+            isAvailable: true
+        },
+        {
+            resourceId: createdIds.resources[5], // A100
+            schoolId: createdIds.school,
+            status: "Maintenance",
+            isAvailable: false
+        },
+        {
+            resourceId: createdIds.resources[6], // A101
+            schoolId: createdIds.school,
+            status: "Available",
+            isAvailable: true
+        },
+        {
+            resourceId: createdIds.resources[7], // A102
+            schoolId: createdIds.school,
+            status: "Occupied",
+            isAvailable: false
+        },
+        {
+            resourceId: createdIds.resources[8], // A103
+            schoolId: createdIds.school,
+            status: "Available",
+            isAvailable: true
+        },
+        {
+            resourceId: createdIds.resources[9], // A104
+            schoolId: createdIds.school,
+            status: "Occupied",
+            isAvailable: false
+        },
+        {
+            resourceId: createdIds.resources[10], // A105
+            schoolId: createdIds.school,
+            status: "Available",
+            isAvailable: true
         }
     ];
 

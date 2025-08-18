@@ -181,8 +181,8 @@ export const useTransportationStore = create((set, get) => ({
         });
 
         try {
-            const authStore = await useAuthStore.getState();
-            const schoolId = await authStore.getSchoolId();
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
             if (!schoolId) {
                 throw new Error("School ID not found");
             }

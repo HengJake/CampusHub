@@ -33,6 +33,7 @@ import VehicleTab from '../../component/schoolAdminDashboard/transport/VehicleTa
 import StopTab from '../../component/schoolAdminDashboard/transport/StopTab';
 import RouteTab from '../../component/schoolAdminDashboard/transport/RouteTab';
 import TransportModal from '../../component/schoolAdminDashboard/transport/TransportModal';
+import { useAuthStore } from '../../store/auth.js';
 
 // Loading fallback component
 const TabLoadingFallback = () => (
@@ -52,11 +53,13 @@ const TransportationManagement = () => {
         vehicles,
         stops,
         routes,
-        fetchBusSchedules,
-        fetchVehicles,
-        fetchStops,
-        fetchRoutes
+        fetchBusSchedulesBySchoolId,
+        fetchVehiclesBySchoolId,
+        fetchStopsBySchoolId,
+        fetchRoutesBySchoolId
     } = useTransportationStore();
+
+    const { isAuthenticated, schoolId } = useAuthStore();
 
     const [activeTab, setActiveTab] = useState(0);
     const [selectedItem, setSelectedItem] = useState(null);
@@ -72,11 +75,16 @@ const TransportationManagement = () => {
 
     // Load data based on active tab
     const loadTabData = async (tabIndex) => {
+        // Check if user is authenticated first
+        if (!isAuthenticated || !schoolId) {
+            return;
+        }
+
         const tabDataMap = {
-            0: { key: 'busSchedules', fetchFn: fetchBusSchedules },
-            1: { key: 'vehicles', fetchFn: fetchVehicles },
-            2: { key: 'stops', fetchFn: fetchStops },
-            3: { key: 'routes', fetchFn: fetchRoutes }
+            0: { key: 'busSchedules', fetchFn: fetchBusSchedulesBySchoolId },
+            1: { key: 'vehicles', fetchFn: fetchVehiclesBySchoolId },
+            2: { key: 'stops', fetchFn: fetchStopsBySchoolId },
+            3: { key: 'routes', fetchFn: fetchRoutesBySchoolId }
         };
 
         const tabData = tabDataMap[tabIndex];
@@ -98,6 +106,13 @@ const TransportationManagement = () => {
     useEffect(() => {
         loadTabData(0);
     }, []);
+
+    // Load data when authentication state changes
+    useEffect(() => {
+        if (isAuthenticated && schoolId) {
+            loadTabData(activeTab);
+        }
+    }, [isAuthenticated, schoolId, activeTab]);
 
     // Load data when tab changes
     useEffect(() => {
