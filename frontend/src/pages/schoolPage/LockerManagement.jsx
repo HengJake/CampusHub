@@ -131,7 +131,6 @@ export function LockerManagement() {
 
         const matchesSearch =
             searchTerm === "" ||
-            locker.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             locker._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
             locker.resourceId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             locker.resourceId?.location?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -171,6 +170,12 @@ export function LockerManagement() {
 
 
 
+    // Generate default locker name from resource
+    const generateDefaultName = (resourceName, existingNames = []) => {
+        const acronym = resourceName
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase())
+            .join('');
     // Generate default locker name based on location
     const generateDefaultName = (resourceName, resourceLocation, existingNames = []) => {
         // Extract location-based acronym
@@ -225,7 +230,6 @@ export function LockerManagement() {
     // Open Add Modal
     const openAddModal = () => {
         setFormData({
-            name: "",
             resourceId: "",
             schoolId: "",
             status: "Available",
@@ -239,7 +243,6 @@ export function LockerManagement() {
     // Open Edit Modal
     const openEditModal = (locker) => {
         setFormData({
-            name: locker.name || "",
             resourceId: locker.resourceId?._id || locker.resourceId || "",
             schoolId: locker.schoolId || "",
             status: locker.status || "Available",
@@ -284,6 +287,8 @@ export function LockerManagement() {
             if (isEdit && selectedLocker) {
                 // For edit, send all required fields
                 submitData = {
+                    schoolId: formData.schoolId,
+                    resourceId: formData.resourceId,
                     name: formData.name.trim() || selectedLocker.name,
                     schoolId: formData.schoolId || selectedLocker.schoolId,
                     resourceId: formData.resourceId || selectedLocker.resourceId,
@@ -465,6 +470,55 @@ export function LockerManagement() {
     };
 
     // Locker Card component to display each locker unit
+    const LockerCard = ({ locker }) => (
+        <Tooltip label={`${locker.name || locker._id.slice(-4)} - ${locker.status}`}>
+            <Card
+                bg={getLockerColor(locker.status)}
+                color="white"
+                cursor="pointer"
+                _hover={{ transform: "scale(1.05)" }}
+                transition="all 0.2s"
+                size="sm"
+                border={selectedLockers.includes(locker._id) ? "2px solid #3182CE" : "1px solid transparent"}
+            >
+                <CardBody p={2} textAlign="center">
+                    <Checkbox
+                        isChecked={selectedLockers.includes(locker._id)}
+                        onChange={(e) => handleLockerSelection(locker._id, e.target.checked)}
+                        colorScheme="blue"
+                        size="sm"
+                        mb={1}
+                    />
+                    <Text fontSize="xs" fontWeight="bold">
+                        {locker.resourceId?.name || locker._id.slice(-4)}
+                    </Text>
+                    {locker.status === "Occupied" ? <FiLock /> : locker.status === "Maintenance" ? <FiTool /> : <FiUnlock />}
+                </CardBody>
+                <HStack justify="center" spacing={2} pb={2}>
+                    <IconButton
+                        icon={<FiEdit />}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openEditModal(locker);
+                        }}
+                        size="xs"
+                        colorScheme="yellow"
+                        variant="solid"
+                    />
+                    <IconButton
+                        icon={<FiTrash2 />}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openDeleteDialog(locker);
+                        }}
+                        size="xs"
+                        colorScheme="red"
+                        variant="solid"
+                    />
+                </HStack>
+            </Card>
+        </Tooltip>
+    );
     const LockerCard = ({ locker }) => {
         const resourceName = locker.resourceId?.name || "Unknown Resource";
         const resourceLocation = locker.resourceId?.location || "Unknown Location";
@@ -586,16 +640,8 @@ export function LockerManagement() {
                         <ModalCloseButton />
                         <ModalBody>
                             {isEdit ? (
-                                // Edit mode - allow changing name and status
+                                // Edit mode - allow changing status
                                 <>
-                                    <FormControl isRequired mb={3}>
-                                        <FormLabel>Locker Name</FormLabel>
-                                        <Input
-                                            value={formData.name}
-                                            onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
-                                            placeholder="Enter locker name (e.g., LR1, SR2)"
-                                        />
-                                    </FormControl>
                                     <FormControl mb={3}>
                                         <FormLabel>Resource</FormLabel>
                                         <VStack align="start" spacing={1}>
@@ -632,14 +678,6 @@ export function LockerManagement() {
                             ) : (
                                 // Add mode - allow setting all fields
                                 <>
-                                    <FormControl mb={3}>
-                                        <FormLabel>Locker Name (Optional)</FormLabel>
-                                        <Input
-                                            value={formData.name}
-                                            onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
-                                            placeholder="Leave empty for auto-generated name"
-                                        />
-                                    </FormControl>
                                     <FormControl isRequired mb={3}>
                                         <FormLabel>Resource</FormLabel>
                                         <Select
@@ -816,6 +854,35 @@ export function LockerManagement() {
                 {/* Filters */}
                 <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                     <CardBody>
+                        <HStack spacing={4}>
+                            <Box flex="1">
+                                <InputGroup>
+                                    <InputLeftElement pointerEvents="none">
+                                        <FiSearch color="gray.400" />
+                                    </InputLeftElement>
+                                    <Input
+                                        placeholder="Search by locker ID or resource name..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </InputGroup>
+                            </Box>
+                            <Select w="150px" value={selectedFloor} onChange={(e) => setSelectedFloor(e.target.value)}>
+                                <option value="All">All Floors</option>
+                                <option value="1">Floor 1</option>
+                                <option value="2">Floor 2</option>
+                                <option value="3">Floor 3</option>
+                                <option value="4">Floor 4</option>
+                            </Select>
+                            <Select w="150px" value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)}>
+                                <option value="All">All Sections</option>
+                                <option value="A">Section A</option>
+                                <option value="B">Section B</option>
+                                <option value="C">Section C</option>
+                                <option value="D">Section D</option>
+                                <option value="E">Section E</option>
+                            </Select>
+                        </HStack>
                         <VStack spacing={4} align="stretch">
                             <HStack spacing={4}>
                                 <Box flex="1">

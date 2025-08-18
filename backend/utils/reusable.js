@@ -164,7 +164,7 @@ export const getAllRecords = async (Model, entityName = "records", populateField
                     query = query.populate(field);
                 }
             });
-        } 
+        }
 
         const records = await query;
 
@@ -229,7 +229,7 @@ export const getRecordById = async (Model, id, entityName = "record", populateFi
 };
 
 
-export const updateRecord = async (Model, id, updates, entityName = "record", validationFn = null) => {
+export const updateRecord = async (Model, id, updates, entityName = "record", validationFn = null, isPartialUpdate = false) => {
     // Validate ObjectId
     const validationError = validateObjectId(id, entityName);
     if (validationError) {
@@ -239,7 +239,7 @@ export const updateRecord = async (Model, id, updates, entityName = "record", va
     try {
         // Custom validation if provided
         if (validationFn) {
-            const validationResult = await validationFn(updates);
+            const validationResult = await validationFn(updates, isPartialUpdate);
             if (validationResult && !validationResult.isValid) {
                 return {
                     success: false,

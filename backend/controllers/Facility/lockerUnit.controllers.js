@@ -15,20 +15,13 @@ import LockerUnit from "../../models/Facility/lockerUnit.model.js";
 
 // Custom validation function for locker unit data
 const validateLockerUnitData = async (data) => {
-    const { schoolId, name, resourceId } = data;
+    const { schoolId, resourceId } = data;
 
     // Check required fields
     if (!schoolId) {
         return {
             isValid: false,
             message: "schoolId is required"
-        };
-    }
-
-    if (!name) {
-        return {
-            isValid: false,
-            message: "name is required"
         };
     }
 
@@ -64,8 +57,9 @@ export const createLockerUnit = controllerWrapper(async (req, res) => {
     )
 })
 export const getAllLockerUnit = controllerWrapper(async (req, res) => {
-    const lockerUnits = await LockerUnit.find({ schoolId: req.params.schoolId })
-        .populate('resourceId', 'name'); 
+    const lockerUnits = await LockerUnit.find({})
+        .populate('resourceId', 'name')
+        .populate('schoolId', 'name');
     return {
         success: true,
         data: lockerUnits,

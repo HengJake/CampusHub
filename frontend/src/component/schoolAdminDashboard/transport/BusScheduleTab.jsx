@@ -102,7 +102,6 @@ const BusScheduleTab = React.memo(({ loading, error, onCreate, onView, onEdit })
 
     // Memoize the table rows for a specific vehicle
     const getTableRowsForVehicle = useCallback((schedules) => {
-        console.log("🚀 ~ schedules:", schedules)
         return schedules.map((schedule) => (
             <Tr key={schedule._id}>
                 <Td>{getRouteNames(schedule)}</Td>
@@ -127,12 +126,14 @@ const BusScheduleTab = React.memo(({ loading, error, onCreate, onView, onEdit })
                             icon={<ViewIcon />}
                             onClick={() => onView('busSchedule', schedule)}
                             aria-label="View schedule"
+                            colorScheme="blue"
                         />
                         <IconButton
                             size="sm"
                             icon={<EditIcon />}
                             onClick={() => onEdit('busSchedule', schedule)}
                             aria-label="Edit schedule"
+                            colorScheme="orange"
                         />
                         <IconButton
                             size="sm"
@@ -189,6 +190,7 @@ const BusScheduleTab = React.memo(({ loading, error, onCreate, onView, onEdit })
                             onClick={() => onView('busSchedule', schedule)}
                             variant="outline"
                             flex={1}
+                            colorScheme="blue"
                         >
                             View
                         </Button>
@@ -198,6 +200,7 @@ const BusScheduleTab = React.memo(({ loading, error, onCreate, onView, onEdit })
                             onClick={() => onEdit('busSchedule', schedule)}
                             variant="outline"
                             flex={1}
+                            colorScheme="orange"
                         >
                             Edit
                         </Button>

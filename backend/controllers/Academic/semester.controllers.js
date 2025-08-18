@@ -45,7 +45,6 @@ const validateSemesterData = async (data, excludeId = null) => {
     // Validate course duration if courseId is provided
     if (courseId) {
         const maxDuration = await getMaxDuration(courseId);
-        console.log("🚀 ~ validateSemesterData ~ maxDuration:", maxDuration);
 
         if (maxDuration) {
             // Get all existing semesters for this course to calculate total duration
@@ -77,7 +76,6 @@ const validateSemesterData = async (data, excludeId = null) => {
                 totalDurationMonths += newDurationInMonths;
             }
 
-            console.log("🚀 ~ validateSemesterData ~ totalDurationMonths:", totalDurationMonths);
 
             if (totalDurationMonths > maxDuration) {
                 return {

@@ -98,7 +98,6 @@ export function AdminProfile() {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          console.log('Database stats received:', data.data);
           setDbStats(data.data);
         }
       }
