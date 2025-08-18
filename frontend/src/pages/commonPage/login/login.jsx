@@ -200,9 +200,33 @@ function login() {
                 authProvider: "google"
               };
 
-              // Use OAuth login method
-              const oauthLoginResult = await useAuthStore.getState().logInWithOAuth(oauthUserData);
+              // First try to login with OAuth (in case user already exists)
+              let oauthLoginResult = await useAuthStore.getState().logInWithOAuth(oauthUserData);
 
+              // If login fails due to account not existing, try to register
+              if (!oauthLoginResult.success &&
+                (oauthLoginResult.message?.includes("OAuth user not found") ||
+                  oauthLoginResult.message?.includes("Account not found") ||
+                  oauthLoginResult.message?.includes("Please sign up first"))) {
+
+                // Try to register the account using OAuth signup
+                const signUpResult = await useAuthStore.getState().signUpWithOAuth(oauthUserData);
+
+                if (signUpResult.success) {
+
+                  // After successful registration, try to login again
+                  oauthLoginResult = await useAuthStore.getState().logInWithOAuth(oauthUserData);
+
+                  if (oauthLoginResult.success) {
+                  } else {
+                    throw new Error("Registration successful but login failed. Please try logging in manually.");
+                  }
+                } else {
+                  throw new Error(signUpResult.message || "Registration failed");
+                }
+              }
+
+              // Check if we have a successful login result
               if (!oauthLoginResult.success) {
                 throw new Error(oauthLoginResult.message || "Failed to authenticate with Google OAuth");
               }
@@ -210,7 +234,9 @@ function login() {
               // Show success message
               showToast.success(
                 "Google OAuth Successful!",
-                "Welcome back! You are now logged in.",
+                oauthLoginResult.data.authProvider === 'google' && oauthLoginResult.data.createdAt === oauthLoginResult.data.updatedAt
+                  ? "Welcome! Your account has been created and you are now logged in."
+                  : "Welcome back! You are now logged in.",
                 "oauth-success"
               );
 
@@ -232,10 +258,12 @@ function login() {
               console.error("Google OAuth error:", error);
 
               // Handle specific error cases
-              if (error.message.includes("OAuth user not found")) {
+              if (error.message.includes("OAuth user not found") ||
+                error.message.includes("Account not found") ||
+                error.message.includes("Please sign up first")) {
                 showToast.error(
                   "Account Not Found",
-                  "No account found with this Google account. Please use the regular login form.",
+                  "No account found with this Google account. Please use the regular signup form.",
                   "oauth-no-account"
                 );
               } else if (error.message.includes("authentication provider mismatch")) {
@@ -243,6 +271,36 @@ function login() {
                   "Authentication Error",
                   "This email is associated with a different signup method. Please use your password to login.",
                   "oauth-provider-mismatch"
+                );
+              } else if (error.message.includes("User with this email already exists")) {
+                showToast.error(
+                  "Account Already Exists",
+                  "An account with this email already exists. Please login instead.",
+                  "oauth-account-exists"
+                );
+              } else if (error.message.includes("User with this Google account already exists")) {
+                showToast.error(
+                  "Google Account Already Linked",
+                  "This Google account is already linked to another account. Please use a different Google account or login with your existing account.",
+                  "oauth-google-exists"
+                );
+              } else if (error.message.includes("Registration successful but login failed")) {
+                showToast.success(
+                  "Account Created Successfully",
+                  "Your account was created successfully, but login failed. Please try logging in manually.",
+                  "oauth-registration-success"
+                );
+              } else if (error.message.includes("Registration failed")) {
+                showToast.error(
+                  "Registration Failed",
+                  "Failed to create your account. Please try again or use the regular signup form.",
+                  "oauth-registration-failed"
+                );
+              } else if (error.message.includes("OAuth registration failed")) {
+                showToast.error(
+                  "OAuth Registration Failed",
+                  "Failed to create your account via Google. Please try again or use the regular signup form.",
+                  "oauth-registration-failed"
                 );
               } else {
                 showToast.error(
@@ -270,7 +328,7 @@ function login() {
         {isOAuthLoading && (
           <Box textAlign="center" mt={2}>
             <Text color="blue.400" fontSize="sm">
-              Logging in with Google...
+              Processing Google authentication...
             </Text>
           </Box>
         )}

@@ -31,11 +31,13 @@ import {
   Button,
   FormControl,
   FormLabel,
+  Tooltip,
   useDisclosure,
 } from "@chakra-ui/react"
-import { FiCheck, FiX, FiCalendar, FiClock, FiEdit, FiTrash2 } from "react-icons/fi"
+import { FiCheck, FiX, FiCalendar, FiClock, FiEdit, FiTrash2, FiDownload } from "react-icons/fi"
 import { useState, useMemo, useEffect } from "react"
 import { useFacilityStore } from "../../store/facility"
+import { exportBookingsToPDF, exportBookingStatsToPDF } from "../../utils/exportUtils"
 
 // Constants
 const STATUS_OPTIONS = [
@@ -110,31 +112,52 @@ const StatsCard = ({ label, value, helpText, icon: Icon, color }) => (
 )
 
 // Filter Component
-const FilterSection = ({ statusFilter, setStatusFilter, facilityFilter, setFacilityFilter, dateFilter, setDateFilter }) => (
+const FilterSection = ({ statusFilter, setStatusFilter, facilityFilter, setFacilityFilter, dateFilter, setDateFilter, handleExport, isExporting, handleExportStats, isExportingStats }) => (
   <Card bg="white">
     <CardBody>
-      <HStack spacing={4}>
-        <Select w="200px" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          {STATUS_OPTIONS.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
-        <Select w="200px" value={facilityFilter} onChange={(e) => setFacilityFilter(e.target.value)}>
-          {FACILITY_OPTIONS.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
-        <Input
-          type="date"
-          w="200px"
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-          placeholder="Filter by date"
-        />
+      <HStack spacing={4} justify="space-between">
+        <HStack>
+          <Select w="200px" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            {STATUS_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+          <Select w="200px" value={facilityFilter} onChange={(e) => setFacilityFilter(e.target.value)}>
+            {FACILITY_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+          <Input
+            type="date"
+            w="200px"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            placeholder="Filter by date"
+          />
+        </HStack>
+
+        <Tooltip
+          label="Export booking statistics as pie chart PDF"
+          placement="top"
+          hasArrow
+        >
+          <Button
+            variant="solid"
+            leftIcon={<FiDownload />}
+            onClick={handleExportStats}
+            isLoading={isExportingStats}
+            loadingText="Generating Chart..."
+            disabled={isExportingStats}
+            colorScheme="teal"
+          >
+            Export Booking
+          </Button>
+        </Tooltip>
+
       </HStack>
     </CardBody>
   </Card>
@@ -293,13 +316,14 @@ export function BookingManagement() {
   const [facilityFilter, setFacilityFilter] = useState("All")
   const [dateFilter, setDateFilter] = useState("")
   const [selectedBooking, setSelectedBooking] = useState(null)
+  const [isExporting, setIsExporting] = useState(false)
+  const [isExportingStats, setIsExportingStats] = useState(false)
 
   const { bookings, fetchBookings, updateBooking, deleteBooking } = useFacilityStore()
 
   useEffect(() => {
     fetchBookings();
   }, [])
-  console.log("🚀 ~ BookingManagement ~ bookings:", bookings)
 
   // Memoized computed values
   const safeBookings = useMemo(() => {
@@ -394,6 +418,96 @@ export function BookingManagement() {
 
   const handleApprove = (id, booking) => handleBookingAction(id, "Confirmed", "confirmed", booking)
   const handleReject = (id, booking) => handleBookingAction(id, "Cancelled", "cancelled", booking)
+
+  const handleExport = async () => {
+    setIsExporting(true)
+    try {
+      const result = await exportBookingsToPDF(
+        filteredBookings,
+        {
+          fileName: 'booking_management_report',
+          onSuccess: (fileName) => {
+            toast({
+              title: "Report Exported",
+              description: "Booking management report has been exported as PDF",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            })
+          },
+          onError: (error) => {
+            toast({
+              title: "Export Failed",
+              description: "Failed to export booking report as PDF",
+              status: "error",
+              duration: 3000,
+              isClosable: true,
+            })
+          }
+        }
+      )
+
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+      toast({
+        title: "Export Failed",
+        description: "Failed to export booking report as PDF",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleExportStats = async () => {
+    setIsExportingStats(true)
+    try {
+      const result = await exportBookingStatsToPDF(
+        filteredBookings,
+        {
+          fileName: 'booking_statistics_chart',
+          onSuccess: (fileName) => {
+            toast({
+              title: "Statistics Chart Exported",
+              description: "Booking statistics chart has been exported as PDF",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            })
+          },
+          onError: (error) => {
+            toast({
+              title: "Export Failed",
+              description: "Failed to export statistics chart as PDF",
+              status: "error",
+              duration: 3000,
+              isClosable: true,
+            })
+          }
+        }
+      )
+
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      console.error('Error exporting statistics PDF:', error)
+      toast({
+        title: "Export Failed",
+        description: "Failed to export statistics chart as PDF",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    } finally {
+      setIsExportingStats(false)
+    }
+  }
 
   const handleEdit = (booking) => {
     setSelectedBooking(booking)
@@ -524,6 +638,10 @@ export function BookingManagement() {
           setFacilityFilter={setFacilityFilter}
           dateFilter={dateFilter}
           setDateFilter={setDateFilter}
+          handleExport={handleExport}
+          isExporting={isExporting}
+          handleExportStats={handleExportStats}
+          isExportingStats={isExportingStats}
         />
 
         {/* Bookings Table */}

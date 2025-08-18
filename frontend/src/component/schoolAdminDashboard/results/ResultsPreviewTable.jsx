@@ -80,7 +80,7 @@ export default function ResultsPreviewTable({
                             )
                         }
                         <HStack w={"full"} justify={"space-between"} align={"end"}>
-                            <HStack justify={"start"} align={isMobile ? "start" : "end"} flex={1} flexDir={isMobile ? "column" : "column"}>
+                            <HStack justify={"start"} align={isMobile ? "start" : "end"} flex={1} flexDir={isMobile ? "column" : "row"}>
                                 <FormControl maxW="200px">
                                     <FormLabel fontSize="sm"><Badge colorScheme="green">Intake</Badge></FormLabel>
                                     <Select

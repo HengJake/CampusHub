@@ -9,16 +9,19 @@ import {
   Box,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
-import { getCookie } from "./cookieUtils";
 import { useLocation } from "react-router-dom";
+import { useAuthStore } from "../store/auth";
 
 export const CampusHubLogo = () => {
   const path = useLocation().pathname;
   let logoLink;
 
-  const role = getCookie("role");
+  const { getCurrentUser } = useAuthStore();
+  const currentUser = getCurrentUser();
+  const role = currentUser?.role;
+
   if (
-    role === "user" ||
+    role === "student" ||
     path.startsWith("/user-") ||
     path.startsWith("/book") ||
     [
@@ -34,7 +37,7 @@ export const CampusHubLogo = () => {
   ) {
     logoLink = "/user-dashboard";
   } else if (
-    role === "admin" ||
+    role === "schoolAdmin" ||
     path.startsWith("/admin-") ||
     path.includes("-management") ||
     path === "/announcement-management"

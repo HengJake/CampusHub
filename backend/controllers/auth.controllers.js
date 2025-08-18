@@ -324,6 +324,101 @@ export const loginWithOAuth = async (req, res) => {
   }
 };
 
+// OAuth signup method for Google, Facebook, etc.
+export const signupWithOAuth = async (req, res) => {
+  const { email, googleId, authProvider, name, role = "schoolAdmin" } = req.body;
+
+  // Basic input check
+  if (!email || !googleId || !authProvider || !name) {
+    return res.status(400).json({
+      success: false,
+      message: "Please provide email, googleId, authProvider, and name",
+    });
+  }
+
+  try {
+    // Check if user already exists with this email
+    const existingUserByEmail = await User.findOne({ email: email });
+    if (existingUserByEmail) {
+      return res.status(409).json({
+        success: false,
+        message: "User with this email already exists",
+      });
+    }
+
+    // Check if user already exists with this googleId
+    const existingUserByGoogleId = await User.findOne({ googleId: googleId });
+    if (existingUserByGoogleId) {
+      return res.status(409).json({
+        success: false,
+        message: "User with this Google account already exists",
+      });
+    }
+
+    // Create new OAuth user
+    const newUser = new User({
+      email,
+      googleId,
+      authProvider,
+      name,
+      role,
+      // OAuth users are automatically verified (no password needed)
+      // Detect OAuth user by presence of googleId and authProvider
+      profilePicture: req.body.profilePicture || "",
+      phoneNumber: req.body.phoneNumber || "",
+      twoFA_enabled: false,
+      // No password field for OAuth users
+    });
+
+    await newUser.save();
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: newUser._id, email: newUser.email, role: newUser.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Set cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // Return success response
+    return res.status(201).json({
+      success: true,
+      message: "OAuth user registered successfully",
+      data: {
+        _id: newUser._id,
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role,
+        authProvider: newUser.authProvider,
+        googleId: newUser.googleId,
+        profilePicture: newUser.profilePicture,
+        phoneNumber: newUser.phoneNumber,
+        twoFA_enabled: newUser.twoFA_enabled,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt,
+        // Detect if user is OAuth-based by checking for googleId and authProvider
+        isOAuthUser: !!(newUser.googleId && newUser.authProvider),
+        // OAuth users are considered verified since they come from trusted providers
+        isVerified: !!(newUser.googleId && newUser.authProvider)
+      },
+      token,
+    });
+  } catch (error) {
+    console.error("OAuth signup error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error during OAuth signup",
+    });
+  }
+};
+
 export const logout = async (req, res) => {
   try {
     res.clearCookie("token", {

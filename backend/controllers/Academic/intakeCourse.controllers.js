@@ -14,49 +14,52 @@ import {
 } from "../../utils/reusable.js";
 
 // Custom validation for intakeCourse data
-const validateIntakeCourseData = async (data) => {
+const validateIntakeCourseData = async (data, isPartialUpdate = false) => {
     const { intakeId, courseId, maxStudents, currentEnrollment, feeStructure, maxDuration, requirements, isActive, status, schoolId } = data;
 
-    // Check required fields
-    if (!intakeId) {
-        return {
-            isValid: false,
-            message: "intakeId is required"
-        };
-    }
-    if (!courseId) {
-        return {
-            isValid: false,
-            message: "courseId is required"
-        };
-    }
-    if (!maxStudents) {
-        return {
-            isValid: false,
-            message: "maxStudents is required"
-        };
-    }
-    if (!feeStructure) {
-        return {
-            isValid: false,
-            message: "feeStructure is required"
-        };
-    }
-    if (!maxDuration) {
-        return {
-            isValid: false,
-            message: "maxDuration is required"
-        };
-    }
-    if (!schoolId) {
-        return {
-            isValid: false,
-            message: "schoolId is required"
-        };
+    // For partial updates, only validate fields that are provided
+    if (!isPartialUpdate) {
+        // Check required fields only for full updates
+        if (!intakeId) {
+            return {
+                isValid: false,
+                message: "intakeId is required"
+            };
+        }
+        if (!courseId) {
+            return {
+                isValid: false,
+                message: "courseId is required"
+            };
+        }
+        if (!maxStudents) {
+            return {
+                isValid: false,
+                message: "maxStudents is required"
+            };
+        }
+        if (!feeStructure) {
+            return {
+                isValid: false,
+                message: "feeStructure is required"
+            };
+        }
+        if (!maxDuration) {
+            return {
+                isValid: false,
+                message: "maxDuration is required"
+            };
+        }
+        if (!schoolId) {
+            return {
+                isValid: false,
+                message: "schoolId is required"
+            };
+        }
     }
 
-    // Validate maxStudents
-    if (maxStudents < 1) {
+    // Validate maxStudents if provided
+    if (maxStudents !== undefined && maxStudents < 1) {
         return {
             isValid: false,
             message: "maxStudents must be at least 1"
@@ -71,18 +74,20 @@ const validateIntakeCourseData = async (data) => {
         };
     }
 
-    // Validate feeStructure
-    if (!feeStructure.localStudent || !feeStructure.internationalStudent) {
-        return {
-            isValid: false,
-            message: "feeStructure must have both localStudent and internationalStudent fees"
-        };
-    }
-    if (feeStructure.localStudent < 0 || feeStructure.internationalStudent < 0) {
-        return {
-            isValid: false,
-            message: "Fees must be non-negative"
-        };
+    // Validate feeStructure if provided
+    if (feeStructure) {
+        if (!feeStructure.localStudent || !feeStructure.internationalStudent) {
+            return {
+                isValid: false,
+                message: "feeStructure must have both localStudent and internationalStudent fees"
+            };
+        }
+        if (feeStructure.localStudent < 0 || feeStructure.internationalStudent < 0) {
+            return {
+                isValid: false,
+                message: "Fees must be non-negative"
+            };
+        }
     }
 
     // Validate status enum values if provided
@@ -96,18 +101,22 @@ const validateIntakeCourseData = async (data) => {
         }
     }
 
-    // Validate references exist
-    const referenceValidation = await validateMultipleReferences({
-        intakeId: { id: intakeId, Model: Intake },
-        courseId: { id: courseId, Model: Course },
-        schoolId: { id: schoolId, Model: School }
-    });
+    // Validate references exist only if they are provided
+    if (intakeId || courseId || schoolId) {
+        const referencesToValidate = {};
+        if (intakeId) referencesToValidate.intakeId = { id: intakeId, Model: Intake };
+        if (courseId) referencesToValidate.courseId = { id: courseId, Model: Course };
+        if (schoolId) referencesToValidate.schoolId = { id: schoolId, Model: School };
 
-    if (referenceValidation) {
-        return {
-            isValid: false,
-            message: referenceValidation.message
-        };
+        if (Object.keys(referencesToValidate).length > 0) {
+            const referenceValidation = await validateMultipleReferences(referencesToValidate);
+            if (referenceValidation) {
+                return {
+                    isValid: false,
+                    message: referenceValidation.message
+                };
+            }
+        }
     }
 
     return { isValid: true };
@@ -149,7 +158,14 @@ export const getIntakeCourseById = controllerWrapper(async (req, res) => {
 // Update IntakeCourse
 export const updateIntakeCourse = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    return await updateRecord(IntakeCourse, id, req.body, "intake course", validateIntakeCourseData);
+    const updates = req.body;
+
+    // Check if this is a partial update (e.g., only updating currentEnrollment and/or status)
+    const isPartialUpdate = (Object.keys(updates).length === 1 && updates.currentEnrollment !== undefined) ||
+        (Object.keys(updates).length === 2 && updates.currentEnrollment !== undefined && updates.status !== undefined) ||
+        (Object.keys(updates).length === 1 && updates.status !== undefined);
+
+    return await updateRecord(IntakeCourse, id, updates, "intake course", validateIntakeCourseData, isPartialUpdate);
 });
 
 // Delete IntakeCourse

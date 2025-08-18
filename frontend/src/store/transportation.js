@@ -643,6 +643,7 @@ export const useTransportationStore = create((set, get) => ({
                     stopData.schoolId = schoolId;
                 }
             }
+
             const res = await fetch("/api/stop", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

@@ -9,10 +9,16 @@ import {
 import Stop from "../../models/Transportation/stop.model.js";
 
 const validateStopData = async (data) => {
-  const { name, type } = data;
+  const { name, type, image } = data;
   if (!name) return { isValid: false, message: "name is required" };
   if (!type) return { isValid: false, message: "type is required" };
   if (!["dorm", "campus", "bus_station"].includes(type)) return { isValid: false, message: "type must be either 'dorm', 'campus', or 'bus_station'" };
+
+  // Image is optional, but if provided, it should be a string (base64 or URL)
+  if (image && typeof image !== 'string') {
+    return { isValid: false, message: "image must be a valid string" };
+  }
+
   return { isValid: true };
 };
 

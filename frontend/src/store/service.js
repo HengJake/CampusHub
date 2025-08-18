@@ -145,18 +145,14 @@ export const useServiceStore = create((set, get) => ({
     },
     createFeedback: async (feedbackData) => {
         try {
-            console.log("createFeedback called with:", feedbackData);
             const authStore = useAuthStore.getState();
             const userContext = authStore.getCurrentUser();
-            console.log("User context:", userContext);
             if (userContext.role === "schoolAdmin" || userContext.role === "student") {
                 const schoolId = authStore.getSchoolId();
-                console.log("School ID:", schoolId);
                 if (schoolId) {
                     feedbackData.schoolId = schoolId;
                 }
             }
-            console.log("Final feedback data to send:", feedbackData);
             const res = await fetch("/api/feedback", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -164,7 +160,6 @@ export const useServiceStore = create((set, get) => ({
                 body: JSON.stringify(feedbackData),
             });
             const data = await res.json();
-            console.log("Backend response:", data);
             if (!data.success) {
                 throw new Error(data.message || "Failed to create feedback");
             }

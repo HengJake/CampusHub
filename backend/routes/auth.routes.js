@@ -9,12 +9,15 @@ import {
   sendResetOtp,
   resetPassword,
   loginWithOAuth,
+  signupWithOAuth,
 } from "../controllers/auth.controllers.js";
 import { userAuth } from "../utils/authMiddleware.js";
 
 const router = e.Router();
 
 router.post("/register", register);
+
+router.post("/register-oauth", signupWithOAuth);
 
 router.post("/login", loginUser);
 

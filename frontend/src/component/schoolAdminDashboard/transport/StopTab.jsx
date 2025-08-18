@@ -9,23 +9,15 @@ import {
     AlertIcon,
     AlertTitle,
     AlertDescription,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    TableContainer,
     IconButton,
     Badge,
     VStack,
     HStack,
-    Accordion,
-    AccordionItem,
-    AccordionButton,
-    AccordionPanel,
-    AccordionIcon,
-    Text
+    Text,
+    Card,
+    CardBody,
+    Image,
+    SimpleGrid
 } from '@chakra-ui/react';
 import {
     AddIcon,
@@ -70,7 +62,7 @@ const StopTab = ({ loading, error, onCreate, onView, onEdit }) => {
 
     return (
         <Box>
-            <Flex justify="space-between" align="center" mb={4}>
+            <Flex justify="space-between" align="center" mb={6}>
                 <Heading size="md">Stops</Heading>
                 <Button
                     leftIcon={<AddIcon />}
@@ -81,126 +73,124 @@ const StopTab = ({ loading, error, onCreate, onView, onEdit }) => {
                 </Button>
             </Flex>
 
-            <>
-                {/* Desktop Table View */}
-                <Box display={{ base: "none", lg: "block" }}>
-                    <TableContainer>
-                        <Table variant="simple">
-                            <Thead>
-                                <Tr>
-                                    <Th>Name</Th>
-                                    <Th>Type</Th>
-                                    <Th>Actions</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
-                                {stops.map((stop) => (
-                                    <Tr key={stop._id}>
-                                        <Td>{stop.name}</Td>
-                                        <Td>
-                                            <Badge colorScheme="blue">
-                                                {getStopTypeLabel(stop.type)}
-                                            </Badge>
-                                        </Td>
-                                        <Td>
-                                            <HStack spacing={2}>
-                                                <IconButton
-                                                    size="sm"
-                                                    icon={<ViewIcon />}
-                                                    aria-label="View"
-                                                    colorScheme="blue"
-                                                    variant="ghost"
-                                                    onClick={() => onView('stop', stop)}
-                                                />
-                                                <IconButton
-                                                    size="sm"
-                                                    icon={<EditIcon />}
-                                                    aria-label="Edit"
-                                                    colorScheme="orange"
-                                                    variant="ghost"
-                                                    onClick={() => onEdit('stop', stop)}
-                                                />
-                                                <IconButton
-                                                    size="sm"
-                                                    icon={<DeleteIcon />}
-                                                    aria-label="Delete"
-                                                    colorScheme="red"
-                                                    variant="ghost"
-                                                    onClick={() => handleDelete(stop._id)}
-                                                />
-                                            </HStack>
-                                        </Td>
-                                    </Tr>
-                                ))}
-                            </Tbody>
-                        </Table>
-                    </TableContainer>
-                </Box>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
+                {stops.map((stop) => (
+                    <Card key={stop._id} shadow="md" _hover={{ shadow: "lg" }} transition="all 0.2s">
 
-                {/* Mobile Accordion View */}
-                <Box display={{ base: "block", lg: "none" }}>
-                    <Accordion allowMultiple>
-                        {stops.map((stop) => (
-                            <AccordionItem key={stop._id}>
-                                <h2>
-                                    <AccordionButton>
-                                        <Box as="span" flex="1" textAlign="left">
-                                            <Text fontWeight="medium">{stop.name}</Text>
-                                            <Badge colorScheme="blue">
-                                                {getStopTypeLabel(stop.type)}
-                                            </Badge>
+                        {/* Type */}
+                        <Box position="absolute" top={2} right={2} zIndex={1000}>
+                            <Badge colorScheme="blue" fontSize="sm" px={3} py={1}>
+                                {getStopTypeLabel(stop.type)}
+                            </Badge>
+                        </Box>
+
+
+                        <CardBody>
+                            <VStack spacing={4} align="stretch">
+                                {/* Image Section */}
+                                <Box position="relative">
+
+                                    <Text
+                                        bg={"rgba(255, 255, 255, 0.3)"}
+                                        backdropFilter={"blur(10px)"}
+                                        fontWeight="bold"
+                                        fontSize="lg"
+                                        color="gray.800"
+                                        position="absolute"
+                                        bottom={2}
+                                        left={2}
+                                        zIndex={1000}
+                                        px={3}
+                                        py={2}
+                                        borderRadius="md"
+                                        border="1px solid rgba(255, 255, 255, 0.2)"
+                                        boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
+                                    >
+                                        {stop.name}
+                                    </Text>
+
+                                    {stop.image ? (
+                                        <Image
+                                            src={stop.image}
+                                            alt={`${stop.name} stop`}
+                                            borderRadius="lg"
+                                            objectFit="cover"
+                                            height="200px"
+                                            width="100%"
+                                            fallback={
+                                                <Box
+                                                    height="200px"
+                                                    width="100%"
+                                                    bg="gray.100"
+                                                    borderRadius="lg"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    justifyContent="center"
+                                                >
+                                                    <Text color="gray.500" fontSize="sm">
+                                                        Image not available
+                                                    </Text>
+                                                </Box>
+                                            }
+                                        />
+                                    ) : (
+                                        <Box
+                                            height="200px"
+                                            width="100%"
+                                            bg="gray.100"
+                                            borderRadius="lg"
+                                            display="flex"
+                                            alignItems="center"
+                                            justifyContent="center"
+                                        >
+                                            <Text color="gray.500" fontSize="sm">
+                                                No image
+                                            </Text>
                                         </Box>
-                                        <AccordionIcon />
-                                    </AccordionButton>
-                                </h2>
-                                <AccordionPanel pb={4}>
-                                    <VStack spacing={3} align="stretch">
-                                        <Box>
-                                            <Text fontWeight="semibold">Name:</Text>
-                                            <Text>{stop.name}</Text>
-                                        </Box>
-                                        <Box>
-                                            <Text fontWeight="semibold">Type:</Text>
-                                            <Badge colorScheme="blue">
-                                                {getStopTypeLabel(stop.type)}
-                                            </Badge>
-                                        </Box>
-                                        <Box>
-                                            <Text fontWeight="semibold">Actions:</Text>
-                                            <HStack spacing={2}>
-                                                <IconButton
-                                                    size="sm"
-                                                    icon={<ViewIcon />}
-                                                    aria-label="View"
-                                                    colorScheme="blue"
-                                                    variant="ghost"
-                                                    onClick={() => onView('stop', stop)}
-                                                />
-                                                <IconButton
-                                                    size="sm"
-                                                    icon={<EditIcon />}
-                                                    aria-label="Edit"
-                                                    colorScheme="orange"
-                                                    variant="ghost"
-                                                    onClick={() => onEdit('stop', stop)}
-                                                />
-                                                <IconButton
-                                                    size="sm"
-                                                    icon={<DeleteIcon />}
-                                                    aria-label="Delete"
-                                                    colorScheme="red"
-                                                    variant="ghost"
-                                                    onClick={() => handleDelete(stop._id)}
-                                                />
-                                            </HStack>
-                                        </Box>
-                                    </VStack>
-                                </AccordionPanel>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
+                                    )}
+                                </Box>
+
+                                {/* Content Section */}
+                                <VStack spacing={3} align="stretch">
+
+                                    {/* Actions */}
+                                    <HStack spacing={2} justify="center" pt={2}>
+                                        <IconButton
+                                            size="sm"
+                                            icon={<ViewIcon />}
+                                            aria-label="View"
+                                            colorScheme="blue"
+                                            onClick={() => onView('stop', stop)}
+                                        />
+                                        <IconButton
+                                            size="sm"
+                                            icon={<EditIcon />}
+                                            aria-label="Edit"
+                                            colorScheme="orange"
+                                            onClick={() => onEdit('stop', stop)}
+                                        />
+                                        <IconButton
+                                            size="sm"
+                                            icon={<DeleteIcon />}
+                                            aria-label="Delete"
+                                            colorScheme="red"
+                                            onClick={() => handleDelete(stop._id)}
+                                        />
+                                    </HStack>
+                                </VStack>
+                            </VStack>
+                        </CardBody>
+                    </Card>
+                ))}
+            </SimpleGrid>
+
+            {stops.length === 0 && (
+                <Box textAlign="center" py={12}>
+                    <Text color="gray.500" fontSize="lg">
+                        No stops found. Create your first stop to get started.
+                    </Text>
                 </Box>
-            </>
+            )}
         </Box>
     );
 };

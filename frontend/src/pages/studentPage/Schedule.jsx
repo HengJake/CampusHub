@@ -36,8 +36,6 @@ import {
     Spinner,
     Center,
 } from "@chakra-ui/react"
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import {
     FiBook,
     FiCalendar,
@@ -50,6 +48,7 @@ import {
     FiGrid,
     FiList,
 } from "react-icons/fi"
+import { exportScheduleToPDF } from "../../utils/exportUtils"
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useAcademicStore } from "../../store/academic"
 import { useAuthStore } from "../../store/auth"
@@ -103,7 +102,6 @@ const transformClassScheduleData = (classSchedules, rooms, modules, lecturers, i
             // console.log("🚀 ~ transformClassScheduleData ~ schedule:", schedule.intakeCourseId.courseId.courseName)
             // console.log("🚀 ~ transformClassScheduleData ~ schedule:", schedule.intakeCourseId.intakeId.intakeName)
             const filterModule = module && userModules.some(userModule => userModule._id === module._id) && schedule.intakeCourseId._id === intakeCourse._id;
-            console.log(filterModule)
             return filterModule;
         })
         .map(schedule => {
@@ -151,7 +149,7 @@ export default function Schedule() {
 
     // Get store functions and state
     const {
-        fetchClassSchedules,
+        fetchClassSchedulesByStudentId,
         fetchRooms,
         fetchModules,
         fetchLecturers,
@@ -165,38 +163,58 @@ export default function Schedule() {
         errors
     } = useAcademicStore()
 
-    const { getCurrentUser } = useAuthStore()
-    const currentUser = getCurrentUser()
+    const { initializeAuth, getCurrentUser } = useAuthStore()
+    const [currentUser, setCurrentUser] = useState(null)
+    const [isInitializing, setIsInitializing] = useState(true)
 
-    // Fetch data on component mount (only once)
+    // Initialize auth and fetch data on component mount
     useEffect(() => {
-        if (hasFetchedRef.current) return;
-
-        const fetchData = async () => {
+        const initializeAndFetch = async () => {
             try {
-                hasFetchedRef.current = true;
-                // Fetch all required data
-                await Promise.all([
-                    fetchClassSchedules(),
-                    fetchRooms(),
-                    fetchModules(),
-                    fetchLecturers(),
-                    fetchIntakeCourses()
-                ]);
+                // Initialize authentication first
+                const authResult = await initializeAuth();
+                if (authResult.success) {
+                    setCurrentUser(authResult.data);
+
+                    // Only fetch data if user is authenticated
+                    if (authResult.data && !hasFetchedRef.current) {
+                        hasFetchedRef.current = true;
+
+                        // Fetch all required data
+                        await Promise.all([
+                            fetchClassSchedulesByStudentId(authResult.data.student._id),
+                            fetchRooms(),
+                            fetchModules(),
+                            fetchLecturers(),
+                            fetchIntakeCourses()
+                        ]);
+                    }
+                } else {
+                    console.error("Authentication failed:", authResult.message);
+                    toast({
+                        title: "Authentication Error",
+                        description: "Please log in to view your schedule",
+                        status: "error",
+                        duration: 3000,
+                        isClosable: true,
+                    });
+                }
             } catch (error) {
-                console.error("Error fetching schedule data:", error);
+                console.error("Error initializing auth:", error);
                 toast({
                     title: "Error",
-                    description: "Failed to load schedule data",
+                    description: "Failed to initialize authentication",
                     status: "error",
                     duration: 3000,
                     isClosable: true,
                 });
+            } finally {
+                setIsInitializing(false);
             }
         };
 
-        fetchData();
-    }, []); // Empty dependency array - only run once
+        initializeAndFetch();
+    }, [initializeAuth, fetchClassSchedulesByStudentId, fetchRooms, fetchModules, fetchLecturers, fetchIntakeCourses, toast]);
 
     // Use useMemo to transform data when raw data changes
     const scheduleData = useMemo(() => {
@@ -229,7 +247,7 @@ export default function Schedule() {
             };
         }
 
-        const userIntakeCourseId = currentUser?.user?.student?.intakeCourseId;
+        const userIntakeCourseId = currentUser?.student?.intakeCourseId;
         const userIntakeCourse = intakeCourses.find(ic => ic._id === userIntakeCourseId);
 
         // Transform the data
@@ -245,9 +263,8 @@ export default function Schedule() {
             classSchedules: transformedClassSchedules,
             studentProfile: {
                 name: currentUser?.name || "Student",
-                studentId: currentUser?.user?.student?.studentId || "N/A",
+                studentId: currentUser?.student?._id || "N/A",
                 intakeCourse: userIntakeCourse ? `${userIntakeCourse.intakeId?.intakeName || 'N/A'} - ${userIntakeCourse.courseId?.courseName || 'N/A'}` : "N/A",
-                // TODO:find the current semester
                 semester: "Current Semester",
                 advisor: "Academic Advisor",
             }
@@ -256,8 +273,19 @@ export default function Schedule() {
 
     const handleRefresh = async () => {
         try {
+            if (!currentUser?.studentId) {
+                toast({
+                    title: "Refresh Failed",
+                    description: "No student ID available",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
+                return;
+            }
+
             await Promise.all([
-                fetchClassSchedules(),
+                fetchClassSchedulesByStudentId(currentUser.studentId),
                 fetchRooms(),
                 fetchModules(),
                 fetchLecturers(),
@@ -283,164 +311,38 @@ export default function Schedule() {
         }
     }
 
-    const handleExport = () => {
+    const handleExport = async () => {
         try {
-            // Create new PDF document in portrait orientation for first page
-            const doc = new jsPDF()
-
-            // Add title
-            doc.setFontSize(20)
-            doc.setFont('helvetica', 'bold')
-            doc.text('Class Schedule', 20, 20)
-
-            // Add student information
-            doc.setFontSize(12)
-            doc.setFont('helvetica', 'normal')
-            doc.text(`Student: ${scheduleData.studentProfile.name}`, 20, 35)
-            doc.text(`Student ID: ${scheduleData.studentProfile.studentId}`, 20, 45)
-            doc.text(`Program: ${scheduleData.studentProfile.intakeCourse}`, 20, 55)
-            doc.text(`Semester: ${scheduleData.studentProfile.semester}`, 20, 65)
-            doc.text(`Academic Advisor: ${scheduleData.studentProfile.advisor}`, 20, 75)
-
-            // Add statistics
-            doc.setFontSize(14)
-            doc.setFont('helvetica', 'bold')
-            doc.text('Summary', 20, 95)
-            doc.setFontSize(10)
-            doc.setFont('helvetica', 'normal')
-            doc.text(`Total Credits: ${totalCredits}`, 20, 105)
-            doc.text(`Enrolled Courses: ${scheduleData.classSchedules.length}`, 20, 115)
-            doc.text(`Lectures: ${lectureCount}`, 20, 125)
-            doc.text(`Lab Sessions: ${labCount}`, 20, 135)
-
-            // Add course details section
-            if (filteredSchedule.length > 0) {
-                let currentY = 155
-
-                doc.setFontSize(14)
-                doc.setFont('helvetica', 'bold')
-                doc.text('Course Details', 20, currentY)
-                currentY += 10
-
-                filteredSchedule.forEach((course, index) => {
-                    if (currentY > 250) {
-                        doc.addPage()
-                        currentY = 20
+            const result = await exportScheduleToPDF(
+                scheduleData,
+                scheduleData.studentProfile,
+                filteredSchedule,
+                {
+                    fileName: 'class_schedule',
+                    onSuccess: (fileName) => {
+                        toast({
+                            title: "Schedule & Course Info Exported",
+                            description: "Your class schedule and course information have been exported as PDF",
+                            status: "success",
+                            duration: 3000,
+                            isClosable: true,
+                        })
+                    },
+                    onError: (error) => {
+                        toast({
+                            title: "Export Failed",
+                            description: "Failed to export schedule as PDF",
+                            status: "error",
+                            duration: 3000,
+                            isClosable: true,
+                        })
                     }
+                }
+            )
 
-                    doc.setFontSize(12)
-                    doc.setFont('helvetica', 'bold')
-                    doc.text(`${course.courseCode} - ${course.courseName}`, 20, currentY)
-                    currentY += 8
-
-                    doc.setFontSize(10)
-                    doc.setFont('helvetica', 'normal')
-                    doc.text(`Description: ${course.description}`, 20, currentY)
-                    currentY += 6
-                    doc.text(`Prerequisites: ${course.prerequisites}`, 20, currentY)
-                    currentY += 6
-                    doc.text(`Textbook: ${course.textbook}`, 20, currentY)
-                    currentY += 6
-                    doc.text(`Schedule: ${course.day} ${course.time}`, 20, currentY)
-                    currentY += 6
-                    doc.text(`Location: ${course.room} (${course.building})`, 20, currentY)
-                    currentY += 6
-                    doc.text(`Instructor: ${course.instructor}`, 20, currentY)
-                    currentY += 10
-                })
+            if (!result.success) {
+                throw new Error(result.error)
             }
-
-            // Add footer to first page
-            doc.setFontSize(8)
-            doc.setFont('helvetica', 'normal')
-            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, doc.internal.pageSize.height - 20)
-
-            // Create a new landscape page for the schedule table
-            if (filteredSchedule.length > 0) {
-                doc.addPage([], 'landscape')
-
-                // Add title for the table page
-                doc.setFontSize(16)
-                doc.setFont('helvetica', 'bold')
-                doc.text('Class Schedule Table', 20, 20)
-
-                // Prepare table data
-                const tableData = filteredSchedule.map(schedule => [
-                    schedule.courseCode,
-                    schedule.courseName,
-                    schedule.day,
-                    schedule.time,
-                    schedule.room,
-                    schedule.instructor,
-                    `${schedule.credits} Credits`,
-                    schedule.type
-                ])
-
-                // Add table with better spacing for landscape
-                autoTable(doc, {
-                    startY: 35,
-                    head: [['Course Code', 'Course Name', 'Day', 'Time', 'Room', 'Instructor', 'Credits', 'Type']],
-                    body: tableData,
-                    theme: 'grid',
-                    headStyles: {
-                        fillColor: [66, 139, 202],
-                        textColor: 255,
-                        fontSize: 9
-                    },
-                    bodyStyles: {
-                        fontSize: 8,
-                        cellPadding: 3
-                    },
-                    columnStyles: {
-                        0: { cellWidth: 25 }, // Course Code
-                        1: { cellWidth: 45 }, // Course Name
-                        2: { cellWidth: 20 }, // Day
-                        3: { cellWidth: 30 }, // Time
-                        4: { cellWidth: 25 }, // Room
-                        5: { cellWidth: 35 }, // Instructor
-                        6: { cellWidth: 20 }, // Credits
-                        7: { cellWidth: 15 }  // Type
-                    },
-                    margin: { top: 20, left: 10, right: 10 },
-                    tableWidth: 'auto',
-                    styles: {
-                        overflow: 'linebreak',
-                        cellWidth: 'auto'
-                    },
-                    didParseCell: function (data) {
-                        // Truncate long text to prevent overflow
-                        if (data.cell.text && data.cell.text.length > 25) {
-                            data.cell.text = data.cell.text.substring(0, 22) + '...';
-                        }
-                    }
-                })
-
-                // Add footer to table page
-                doc.setFontSize(8)
-                doc.setFont('helvetica', 'normal')
-                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, doc.internal.pageSize.height - 20)
-            }
-
-            // Add page numbers to all pages
-            const pageCount = doc.internal.getNumberOfPages()
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i)
-                doc.setFontSize(8)
-                doc.setFont('helvetica', 'normal')
-                doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 20)
-            }
-
-            // Save the PDF
-            const fileName = `class_schedule_${scheduleData.studentProfile.studentId}_${new Date().toISOString().split('T')[0]}.pdf`
-            doc.save(fileName)
-
-            toast({
-                title: "Schedule Exported",
-                description: "Your class schedule has been exported as PDF",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            })
         } catch (error) {
             console.error('Error exporting PDF:', error)
             toast({
@@ -452,6 +354,8 @@ export default function Schedule() {
             })
         }
     }
+
+
 
     // Filter schedule based on search and filters
     const filteredSchedule = scheduleData.classSchedules.filter((item) => {
@@ -475,13 +379,13 @@ export default function Schedule() {
     const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
     // Show loading state
-    if (loading.classSchedules || loading.rooms) {
+    if (isInitializing || loading.classSchedules || loading.rooms) {
         return (
             <Box p={6} minH="100vh">
                 <Center h="50vh">
                     <VStack spacing={4}>
                         <Spinner size="xl" color="blue.500" />
-                        <Text>Loading schedule data...</Text>
+                        <Text>{isInitializing ? "Initializing..." : "Loading schedule data..."}</Text>
                     </VStack>
                 </Center>
             </Box>
@@ -499,7 +403,24 @@ export default function Schedule() {
                         <AlertDescription>
                             {errors.classSchedules || errors.rooms}
                         </AlertDescription>
-                    </Box>F
+                    </Box>
+                </Alert>
+            </Box>
+        );
+    }
+
+    // Show authentication error
+    if (!currentUser) {
+        return (
+            <Box p={6} minH="100vh">
+                <Alert status="warning" borderRadius="md">
+                    <AlertIcon />
+                    <Box>
+                        <AlertTitle>Authentication Required</AlertTitle>
+                        <AlertDescription>
+                            Please log in to view your schedule
+                        </AlertDescription>
+                    </Box>
                 </Alert>
             </Box>
         );
@@ -649,7 +570,7 @@ export default function Schedule() {
                                     </HStack>
 
                                     <Button leftIcon={<FiDownload />} size="sm" variant="outline" onClick={handleExport}>
-                                        Export
+                                        Export Schedule & Course Info
                                     </Button>
                                 </HStack>
                             </Flex>
