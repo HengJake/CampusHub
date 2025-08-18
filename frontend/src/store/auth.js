@@ -460,6 +460,46 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  // OAuth-specific registration method
+  signUpWithOAuth: async (oauthUserData) => {
+    try {
+      // Format OAuth data for registration
+      const registrationData = {
+        email: oauthUserData.email,
+        name: oauthUserData.name,
+        role: oauthUserData.role || "schoolAdmin",
+        authProvider: oauthUserData.authProvider || "google",
+        googleId: oauthUserData.googleId,
+        profilePicture: oauthUserData.profilePicture,
+        phoneNumber: oauthUserData.phoneNumber || ""
+      };
+
+      // Use the dedicated OAuth signup endpoint
+      const res = await fetch("/auth/register-oauth", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify(registrationData),
+        credentials: 'include', // Include cookies
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.message || "OAuth registration failed");
+      }
+
+      // Update store with the new user data
+      set({ user: [data.data] });
+
+      return { success: true, message: data.message, data: data.data };
+    } catch (error) {
+      console.error("OAuth registration error:", error.message);
+      return { success: false, message: error.message };
+    }
+  },
+
   sendVerifyOtp: async () => {
     try {
       const res = await fetch("/auth/send-verify-otp", {
@@ -520,7 +560,6 @@ export const useAuthStore = create((set, get) => ({
       });
 
       const data = await res.json();
-      console.log("🚀 ~ data:", data)
 
       if (data.success) {
         // User is authenticated, create enhanced user with role-specific data

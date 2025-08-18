@@ -13,53 +13,65 @@ export const updateIntakeCourseEnrollments = async (
     fetchIntakeCourses
 ) => {
     try {
-        console.log("Starting enrollment update process...");
-        console.log("Total intake courses:", intakeCourses.length);
-        console.log("Total students:", students.length);
+
 
         const updatePromises = intakeCourses.map(async (intakeCourse) => {
-            // Filter students for this specific intake course
-            const enrolledStudents = students.filter(
-                (student) =>
-                    student.intakeCourseId._id === intakeCourse._id
+            // Filter students for this specific intake course with valid enrollment status
+            const allStudentsForCourse = students.filter(
+                (student) => student.intakeCourseId._id === intakeCourse._id
+            );
+
+            const enrolledStudents = allStudentsForCourse.filter(
+                (student) => (student.status === 'enrolled' || student.status === 'in_progress')
             );
 
             const currentEnrollment = enrolledStudents.length;
 
-            console.log(
-                `Intake Course ${intakeCourse.intakeId.intakeName}-${intakeCourse.courseId.courseName} : ${currentEnrollment} enrolled students`
-            );
+            // Log detailed breakdown for debugging
+            const statusBreakdown = allStudentsForCourse.reduce((acc, student) => {
+                acc[student.status] = (acc[student.status] || 0) + 1;
+                return acc;
+            }, {});
+
+
 
             // Only update if the enrollment count has changed
             if (intakeCourse.currentEnrollment !== currentEnrollment) {
-                console.log(
-                    `Updating ${intakeCourse.name} enrollment from ${intakeCourse.currentEnrollment} to ${currentEnrollment}`
-                );
 
-                const updatedIntakeCourse = {
+
+                // Only update the currentEnrollment field - backend will handle status automatically
+                const updateData = {
                     ...intakeCourse,
                     currentEnrollment: currentEnrollment,
-                    courseId: intakeCourse.courseId._id,
                     intakeId: intakeCourse.intakeId._id,
+                    courseId: intakeCourse.courseId._id,
                     schoolId: intakeCourse.schoolId._id,
-                }
+                };
 
-                const updateResult = await updateIntakeCourse(intakeCourse._id, updatedIntakeCourse);
+                const updateResult = await updateIntakeCourse(intakeCourse._id, updateData);
 
                 if (!updateResult.success) {
                     console.error(
-                        `Failed to update ${intakeCourse.name}:`,
+                        `Failed to update ${intakeCourse.name || `${intakeCourse.intakeId.intakeName}-${intakeCourse.courseId.courseName}`}:`,
                         updateResult.message
                     );
-                    return { success: false, course: intakeCourse.name, error: updateResult.message };
+                    return { success: false, course: intakeCourse.name || `${intakeCourse.intakeId.intakeName}-${intakeCourse.courseId.courseName}`, error: updateResult.message };
                 }
 
-                return { success: true, course: intakeCourse.name, newEnrollment: currentEnrollment };
+                console.log(
+                    `  - SUCCESS: Updated enrollment to ${currentEnrollment}`
+                );
+
+                return {
+                    success: true,
+                    course: intakeCourse.name || `${intakeCourse.intakeId.intakeName}-${intakeCourse.courseId.courseName}`,
+                    newEnrollment: currentEnrollment
+                };
             } else {
                 console.log(
-                    `No update needed for ${intakeCourse.name} (enrollment: ${currentEnrollment})`
+                    `  - NO CHANGE: enrollment remains at ${currentEnrollment}`
                 );
-                return { success: true, course: intakeCourse.name, noChange: true };
+                return { success: true, course: intakeCourse.name || `${intakeCourse.intakeId.intakeName}-${intakeCourse.courseId.courseName}`, noChange: true };
             }
         });
 

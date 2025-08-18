@@ -12,6 +12,10 @@ const stopSchema = new mongoose.Schema(
       enum: ["dorm", "campus", "bus_station"],
       required: true,
     },
+    image: {
+      type: String,
+      // URL to stop image
+    },
     schoolId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "School",

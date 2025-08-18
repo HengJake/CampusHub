@@ -354,7 +354,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 moduleName: "Database Systems",
                 code: "CS301",
                 totalCreditHours: 3,
-                courseId: courses[0]._id,
+                courseId: [courses[0]._id, courses[1]._id], // Shared between CS and IT
                 prerequisites: [],
                 moduleDescription: "Introduction to database design and management",
                 learningOutcomes: [
@@ -370,7 +370,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 moduleName: "Web Development",
                 code: "CS302",
                 totalCreditHours: 3,
-                courseId: courses[0]._id,
+                courseId: [courses[0]._id], // CS only
                 prerequisites: [],
                 moduleDescription: "Learn to build modern web applications",
                 learningOutcomes: [
@@ -386,7 +386,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 moduleName: "Software Engineering",
                 code: "CS303",
                 totalCreditHours: 3,
-                courseId: courses[0]._id,
+                courseId: [courses[0]._id], // CS only
                 prerequisites: [],
                 moduleDescription: "Principles of software engineering",
                 learningOutcomes: [
@@ -402,7 +402,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 moduleName: "Computer Networks",
                 code: "CS304",
                 totalCreditHours: 3,
-                courseId: courses[0]._id,
+                courseId: [courses[0]._id, courses[1]._id], // Shared between CS and IT
                 prerequisites: [],
                 moduleDescription: "Fundamentals of computer networking",
                 learningOutcomes: [
@@ -418,7 +418,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 moduleName: "IT Infrastructure",
                 code: "IT301",
                 totalCreditHours: 3,
-                courseId: courses[1]._id,
+                courseId: [courses[1]._id], // IT only
                 prerequisites: [],
                 moduleDescription: "IT infrastructure and system administration",
                 learningOutcomes: [
@@ -434,7 +434,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 moduleName: "Cybersecurity",
                 code: "IT302",
                 totalCreditHours: 3,
-                courseId: courses[1]._id,
+                courseId: [courses[1]._id], // IT only
                 prerequisites: [],
                 moduleDescription: "Cybersecurity principles and practices",
                 learningOutcomes: [
@@ -450,13 +450,45 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 moduleName: "Business Management",
                 code: "BA301",
                 totalCreditHours: 3,
-                courseId: courses[2]._id,
+                courseId: [courses[2]._id], // Business only
                 prerequisites: [],
                 moduleDescription: "Principles of business management",
                 learningOutcomes: [
                     "Understand business concepts",
                     "Apply management principles",
                     "Analyze business cases"
+                ],
+                assessmentMethods: ["exam", "assignment"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Mathematics for Computing",
+                code: "MATH101",
+                totalCreditHours: 3,
+                courseId: [courses[0]._id, courses[1]._id], // Shared between CS and IT
+                prerequisites: [],
+                moduleDescription: "Foundation mathematics for computing students",
+                learningOutcomes: [
+                    "Solve mathematical problems",
+                    "Apply mathematical concepts to computing",
+                    "Develop logical thinking"
+                ],
+                assessmentMethods: ["exam", "assignment"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Business Statistics",
+                code: "STAT101",
+                totalCreditHours: 3,
+                courseId: [courses[2]._id], // Business only
+                prerequisites: [],
+                moduleDescription: "Statistical methods for business analysis",
+                learningOutcomes: [
+                    "Understand statistical concepts",
+                    "Analyze business data",
+                    "Make data-driven decisions"
                 ],
                 assessmentMethods: ["exam", "assignment"],
                 isActive: true,
@@ -631,6 +663,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
         const studentUsers = []; // Array to store user documents for students
 
         for (let i = 0; i < studentCount; i++) {
+            // Ensure each student gets assigned to a valid intake course with matching courseId
             const intakeCourseIndex = i % intakeCourses.length;
             const currentYear = (i % 4) + 1;
             const currentSemester = (i % 3) + 1;
@@ -651,7 +684,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
             try {
                 // Create user first
                 const createdUser = await userStore.createUserWithoutJWT(studentUserData);
-            
+
                 studentUsers.push(createdUser.data);
 
                 // Create student with the user ID
@@ -670,6 +703,9 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
 
                 const createdStudent = await academicStore.createStudent(studentData);
                 students.push(createdStudent.data);
+
+                // Debug: Log the relationship for verification
+                // console.log(`🔗 Student ${i + 1} assigned to intake course ${intakeCourseIndex + 1} with courseId: ${intakeCourses[intakeCourseIndex].courseId}`);
             } catch (error) {
                 console.error('Failed to create student:', error);
                 throw error;
@@ -782,25 +818,53 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
         const results = [];
 
         // Generate results for each student based on their enrolled modules
+        // Count total students that should have modules
+        let totalStudentsWithModules = 0;
+        let totalStudentsWithoutModules = 0;
+
         for (let studentIndex = 0; studentIndex < students.length; studentIndex++) {
             const student = students[studentIndex];
 
             // Find the student's intake course
             const studentIntakeCourse = intakeCourses.find(ic => ic._id === student.intakeCourseId);
-            if (!studentIntakeCourse) continue;
+            if (!studentIntakeCourse) {
+                totalStudentsWithoutModules++;
+                continue;
+            }
 
             // Find modules for the student's course
-            const studentModules = modules.filter(module =>
-                module.courseId === studentIntakeCourse.courseId
-            );
+            const studentModules = modules.filter(module => {
+                // Handle courseId as array since modules can belong to multiple courses
+                if (Array.isArray(module.courseId)) {
+                    return module.courseId.includes(studentIntakeCourse.courseId);
+                } else {
+                    // Fallback for single courseId (if model was changed)
+                    return module.courseId === studentIntakeCourse.courseId;
+                }
+            });
 
             // Find semesters for the student's course
             const studentSemesters = semesters.filter(semester =>
                 semester.courseId === studentIntakeCourse.courseId
             );
 
+            if (studentModules.length === 0) {
+                totalStudentsWithoutModules++;
+                continue;
+            }
+
+            if (studentSemesters.length === 0) {
+                totalStudentsWithoutModules++;
+                continue;
+            }
+
+            // Student has modules and semesters, increment counter
+            totalStudentsWithModules++;
+
             // Generate results for each module the student should have taken
-            for (let moduleIndex = 0; moduleIndex < Math.min(studentModules.length, 4); moduleIndex++) {
+            const maxModules = Math.min(studentModules.length, 4);
+
+            for (let moduleIndex = 0; moduleIndex < maxModules; moduleIndex++) {
                 const module = studentModules[moduleIndex];
                 const semester = studentSemesters[moduleIndex % studentSemesters.length];
 
@@ -859,7 +923,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                     const createdResult = await academicStore.createResult(resultData);
                     results.push(createdResult.data);
                 } catch (error) {
-                    console.error('Failed to create result:', error);
+                    console.error(`Failed to create result for ${module.moduleName}:`, error);
                     throw error;
                 }
             }
@@ -1062,7 +1126,28 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
             }
         }
 
-        // 14.5. Generate Parking Lots
+        // 14.5. Generate Locker Units from locker resources
+        const lockerUnits = [];
+        const lockerResources = resources.filter(resource => resource.type === 'locker');
+
+        for (const lockerResource of lockerResources) {
+            const lockerUnitData = {
+                resourceId: lockerResource._id,
+                schoolId: schoolId,
+                status: lockerResource.status ? 'Available' : 'Maintenance',
+                isAvailable: lockerResource.status
+            };
+
+            try {
+                const createdLockerUnit = await facilityStore.createLockerUnit(lockerUnitData);
+                lockerUnits.push(createdLockerUnit.data);
+            } catch (error) {
+                console.error('Failed to create locker unit:', error);
+                throw error;
+            }
+        }
+
+        // 14.6. Generate Parking Lots
         const parkingLots = [];
         const parkingData = [
             {
@@ -1519,7 +1604,9 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
             vehicles,
             routes,
             busSchedules,
-            eHailings
+            eHailings,
+            // Facility data
+            lockerUnits
         };
     } catch (error) {
         console.error('Error generating academic data:', error);
@@ -1554,6 +1641,8 @@ export const generateAcademicSummary = (academicData) => {
         totalVehicles: academicData.vehicles?.length || 0,
         totalRoutes: academicData.routes?.length || 0,
         totalBusSchedules: academicData.busSchedules?.length || 0,
-        totalEHailings: academicData.eHailings?.length || 0
+        totalEHailings: academicData.eHailings?.length || 0,
+        // Facility statistics
+        totalLockerUnits: academicData.lockerUnits?.length || 0
     };
 };
