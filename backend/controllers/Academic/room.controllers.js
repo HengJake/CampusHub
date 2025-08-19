@@ -77,7 +77,7 @@ export const getRoomsBySchoolId = controllerWrapper(async (req, res) => {
 
 // Function to check time conflicts
 const checkTimeConflict = (start1, end1, start2, end2) => {
-    // Convert time strings to minutes for easier comparison
+
     const timeToMinutes = (timeStr) => {
         const [hours, minutes] = timeStr.split(':').map(Number);
         return hours * 60 + minutes;
@@ -88,7 +88,6 @@ const checkTimeConflict = (start1, end1, start2, end2) => {
     const start2Minutes = timeToMinutes(start2);
     const end2Minutes = timeToMinutes(end2);
 
-    // Check if times overlap
     return (start1Minutes < end2Minutes && end1Minutes > start2Minutes);
 };
 

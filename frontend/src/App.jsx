@@ -7,6 +7,7 @@ import React from "react";
 import "./general.scss";
 import "./component/generalComponent.scss";
 import { useAuthStore } from "./store/auth.js";
+import BugReportButton from "./component/common/BugReportButton.jsx";
 
 // middle ware to control auth
 import { SchoolAdminComponent, LecturerComponent, StudentComponent, CompanyAdminComponent } from "./component/common/RoleBasedComponent.jsx";
@@ -61,6 +62,7 @@ import AnalyticalReport from "./pages/companyPage/analytics.jsx";
 import ClientManagement from "./pages/companyPage/client-management.jsx";
 import UserOversight from "./pages/companyPage/user-oversight.jsx";
 import CampushubSetting from "./pages/companyPage/profile-settings.jsx";
+import BugManagement from "./pages/companyPage/bug-management.jsx";
 
 
 // set different bar for different pages
@@ -73,10 +75,10 @@ function App() {
   const [margin, setMargin] = useState("0");
   const [bgColor, setBgColor] = useState("brand.defaultBg");
   const [authComponent, setAuthComponent] = useState(null);
-  const [userRole, setUserRole] = useState(Cookies.get("role") || null);
+  const [userRole, setUserRole] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const { initializeAuth, isAuthenticated, isLoading } = useAuthStore();
+  const { initializeAuth, isAuthenticated, isLoading, getCurrentUser } = useAuthStore();
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize auth store on app startup
@@ -95,6 +97,16 @@ function App() {
       initAuth();
     }
   }, []);
+
+  // Update userRole when auth store changes
+  useEffect(() => {
+    if (isInitialized) {
+      const currentUser = getCurrentUser();
+      if (currentUser?.role) {
+        setUserRole(currentUser.role);
+      }
+    }
+  }, [isInitialized, getCurrentUser]);
 
   const userRoutes = [
     "/user-dashboard",
@@ -140,7 +152,8 @@ function App() {
     "/campushub-profile",
     "/company/info",
     "/company/offers",
-    "/company/bookings"
+    "/company/bookings",
+    "/bug-management"
   ];
 
   const detectRoleFromPath = (path) => {
@@ -306,9 +319,29 @@ function App() {
           <Route path="/client-management" element={wrapWithAuth(<ClientManagement />)} />
           <Route path="/user-oversight" element={wrapWithAuth(<UserOversight />)} />
           <Route path="/campushub-setting" element={wrapWithAuth(<CampushubSetting />)} />
+          <Route path="/bug-management" element={wrapWithAuth(<BugManagement />)} />
 
         </Routes>
       </Box>
+
+      {/* Bug Report Button - Fixed on bottom right for student and school admin */}
+      {(userRole === "student" || userRole === "schoolAdmin") && (
+        <Box
+          position="fixed"
+          bottom="20px"
+          right="20px"
+          zIndex="1000"
+        >
+          <BugReportButton
+            buttonText="Report Bug"
+            buttonClass="bug-report-btn"
+            currentPath={path}
+            onSuccess={(data) => {
+              console.log('Bug report submitted:', data);
+            }}
+          />
+        </Box>
+      )}
     </Box>
   );
 }

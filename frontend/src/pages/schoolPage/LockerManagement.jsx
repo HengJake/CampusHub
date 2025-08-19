@@ -290,8 +290,6 @@ export function LockerManagement() {
                         schoolId: formData.schoolId,
                         resourceId: formData.resourceId,
                         name: formData.name.trim() || selectedLocker.name,
-                        schoolId: formData.schoolId || selectedLocker.schoolId,
-                        resourceId: formData.resourceId || selectedLocker.resourceId,
                         status: formData.status,
                         isAvailable: formData.status === "Available"
                     };

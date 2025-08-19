@@ -37,14 +37,28 @@ const userSchema = new mongoose.Schema({
     // OAuth fields
     authProvider: {
         type: String,
-        enum: ['local', 'google', 'facebook', 'github'],
+        enum: ['local', 'google', 'facebook', 'github', 'hybrid'], // Add 'hybrid' for linked accounts
         default: 'local',
         // Tracks how user authenticated
     },
 
     googleId: {
         type: String,
+        sparse: true, // Allow multiple users without googleId
     },
+
+    // Add linked accounts tracking
+    linkedAccounts: [{
+        provider: {
+            type: String,
+            enum: ['google', 'facebook', 'github']
+        },
+        providerId: String,
+        linkedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
 
     profilePicture: {
         type: String,
@@ -84,11 +98,44 @@ const userSchema = new mongoose.Schema({
     timestamps: true // Adds createdAt and updatedAt fields
 });
 
+// Add method to link OAuth account
+userSchema.methods.linkOAuthAccount = function (provider, providerId) {
+    // Check if account is already linked
+    const existingLink = this.linkedAccounts.find(link =>
+        link.provider === provider && link.providerId === providerId
+    );
+
+    if (!existingLink) {
+        this.linkedAccounts.push({
+            provider,
+            providerId,
+            linkedAt: new Date()
+        });
+
+        // Update auth provider to hybrid if linking multiple methods
+        if (this.authProvider !== 'hybrid') {
+            this.authProvider = this.authProvider === 'local' ? provider : 'hybrid';
+        }
+
+        if (provider === 'google') {
+            this.googleId = providerId;
+        }
+    }
+
+    return this;
+};
+
+// Add method to check if OAuth account is linked
+userSchema.methods.isOAuthLinked = function (provider, providerId) {
+    return this.linkedAccounts.some(link =>
+        link.provider === provider && link.providerId === providerId
+    );
+};
+
 // Indexes for better query performance
 userSchema.index({ email: 1 });
 userSchema.index({ phoneNumber: 1 });
 userSchema.index({ role: 1 });
-userSchema.index({ googleId: 1 }); // New index for OAuth
 userSchema.index({ authProvider: 1 }); // New index for auth method
 userSchema.index({ email: 1, authProvider: 1 }); // Compound index for OAuth lookups
 

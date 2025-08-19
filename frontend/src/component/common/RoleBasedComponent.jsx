@@ -84,9 +84,9 @@ const RoleBasedComponent = ({
         }
 
         // Redirect to landing page after showing alert
-        setTimeout(() => {
-            window.location.href = '/';
-        }, 3000);
+        // setTimeout(() => {
+        //     window.location.href = '/';
+        // }, 3000);
 
         return (
             <Alert status="error" variant="subtle" flexDirection="column" alignItems="center" justifyContent="center" textAlign="center" height="200px">
