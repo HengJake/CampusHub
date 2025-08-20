@@ -93,7 +93,6 @@ export function useStudentManagement() {
                 role: "student"
             }
             const userResult = await createUserWithoutJWT(userData)
-            console.log("🚀 ~ handleSubmit ~ userResult:", userResult)
 
             if (!userResult.success) {
                 showToast.error("Error creating user", userResult.message)
@@ -164,10 +163,13 @@ export function useStudentManagement() {
 
             // Update student
             const studentData = {
+                userId: selectedStudent.userId._id,
+                schoolId: selectedStudent.schoolId._id,
+                intakeCourseId: selectedStudent.intakeCourseId._id,
                 currentYear: formData.currentYear,
                 currentSemester: formData.currentSemester,
             }
-
+  
             const studentResult = await updateStudent(selectedStudent._id, studentData)
 
             if (!studentResult.success) {

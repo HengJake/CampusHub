@@ -37,39 +37,33 @@ const AuthTest = () => {
     // User credentials
     const USERS = {
         companyAdmin: {
-            email: 'company@gmail.com',
-            password: 'Password123',
+            email: 'acampushub@gmail.com',
+            password: 'P@ssw0rd$$',
             name: 'Company Administrator',
             role: 'companyAdmin'
         },
         schoolAdmin: {
-            email: 'admin@apu.edu.my',
-            password: 'password123',
+            email: 'schooltestacc818@gmail.com',
+            password: 'P@ssw0rd$$',
             name: 'School Administrator APU',
             role: 'schoolAdmin'
         },
         schoolAdmin2: {
             email: 'admin@bpu.edu.my',
-            password: 'password123',
+            password: 'P@ssw0rd$$',
             name: 'School Administrator BPU',
             role: 'schoolAdmin'
         },
-        lecturer: {
-            email: 'john.smith@bpu.edu.my',
-            password: 'password123',
-            name: 'Jane Lee',
-            role: 'lecturer'
-        },
         student: {
-            email: 'student0@student.apu.edu.my',
-            password: 'password123',
+            email: 'studentcampushub@gmail.com',
+            password: 'P@ssw0rd$$',
             name: 'APU Student User',
             role: 'student'
         },
         student3: {
-            email: 'student10@student.apu.edu.my',
+            email: 'student2@student.apu.edu.my',
             password: 'password123',
-            name: 'APU Student User',
+            name: 'APU Student User 2',
             role: 'student'
         },
         student2: {
@@ -77,6 +71,12 @@ const AuthTest = () => {
             password: 'password123',
             name: 'BPU Student User',
             role: 'student'
+        },
+        lecturer: {
+            email: 'john.smith@bpu.edu.my',
+            password: 'password123',
+            name: 'Jane Lee',
+            role: 'lecturer'
         },
     };
 

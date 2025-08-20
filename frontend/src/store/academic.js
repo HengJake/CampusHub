@@ -331,7 +331,7 @@ export const useAcademicStore = create((set, get) => ({
     updateStudent: async (id, updates) => {
         try {
 
-            const res = await get().buildPUT('/api/student/', id, updates)
+            const res = await get().buildPUT('/api/student', id, updates)
 
             const data = await res.json();
 

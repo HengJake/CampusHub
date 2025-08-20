@@ -858,17 +858,14 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 continue;
             }
 
-            // Student has modules and semesters, increment counter
             totalStudentsWithModules++;
 
-            // Generate results for each module the student should have taken
             const maxModules = Math.min(studentModules.length, 4);
 
             for (let moduleIndex = 0; moduleIndex < maxModules; moduleIndex++) {
                 const module = studentModules[moduleIndex];
                 const semester = studentSemesters[moduleIndex % studentSemesters.length];
 
-                // Generate realistic grades based on student performance
                 const grades = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"];
                 const gradeToGPA = {
                     "A+": 4.0, "A": 4.0, "A-": 3.7,
@@ -880,13 +877,10 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 // Select grade based on student's CGPA and some randomness
                 let selectedGrade;
                 if (student.cgpa >= 3.5) {
-                    // High performing students mostly get A's and B's
                     selectedGrade = grades[Math.floor(Math.random() * 6)]; // A+ to B-
                 } else if (student.cgpa >= 2.5) {
-                    // Average students mostly get B's and C's
                     selectedGrade = grades[Math.floor(Math.random() * 6) + 3]; // B+ to C-
                 } else {
-                    // Lower performing students mostly get C's, D's, and F's
                     selectedGrade = grades[Math.floor(Math.random() * 5) + 6]; // C+ to F
                 }
 
@@ -1224,15 +1218,22 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
             }
         ];
 
-        // Create parking lots and get their IDs
-        for (const parkingDataItem of parkingData) {
-            try {
-                const createdParkingLot = await facilityStore.createParkingLot(parkingDataItem);
-                parkingLots.push(createdParkingLot.data);
-            } catch (error) {
-                console.error('Failed to create parking lot:', error);
-                throw error;
+        // Create parking lots using bulk endpoint for better performance and validation
+        try {
+            const bulkResult = await facilityStore.bulkCreateParkingLots(parkingData);
+            if (bulkResult.success) {
+                parkingLots.push(...bulkResult.data);
+                console.log(`✅ Created ${bulkResult.data.length} parking lots using bulk endpoint`);
+            } else {
+                console.error('Failed to create parking lots in bulk:', bulkResult.message);
+                if (bulkResult.errors) {
+                    console.error('Errors:', bulkResult.errors);
+                }
+                throw new Error(`Failed to create parking lots: ${bulkResult.message}`);
             }
+        } catch (error) {
+            console.error('Failed to create parking lots:', error);
+            throw error;
         }
 
         // 15. Generate Bookings

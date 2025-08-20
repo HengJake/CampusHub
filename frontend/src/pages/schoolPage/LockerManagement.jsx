@@ -280,6 +280,17 @@ export function LockerManagement() {
             return;
         }
 
+        if (!isEdit && !formData.schoolId) {
+            toast({
+                title: "Validation Error",
+                description: "Please provide a school ID",
+                status: "error",
+                duration: 3000,
+                isClosable: true
+            });
+            return;
+        } 
+
         setIsSubmitting(true);
         try {
             let res;
@@ -289,7 +300,6 @@ export function LockerManagement() {
                 // For edit, send all required fields
                 submitData = {
                     name: formData.name.trim() || selectedLocker.name,
-                    resourceId: formData.resourceId || selectedLocker.resourceId,
                     status: formData.status,
                     isAvailable: formData.status === "Available"
                 };

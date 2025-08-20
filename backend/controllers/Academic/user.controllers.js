@@ -165,11 +165,6 @@ export const createUser = controllerWrapper(async (req, res) => {
         userData.password = await bcrypt.hash(userData.password, 10);
     }
 
-    // For OAuth users, generate a secure random password if not provided
-    if (userData.authProvider !== 'local' && !userData.password) {
-        userData.password = crypto.randomBytes(32).toString('hex');
-    }
-
     return await createRecord(
         User,
         userData,

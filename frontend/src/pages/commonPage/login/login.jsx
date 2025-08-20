@@ -49,6 +49,9 @@ function login() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   // fix login user
   const { logIn, logout } = useAuthStore();
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkModalData, setLinkModalData] = useState(null);
+  const [linkPassword, setLinkPassword] = useState("");
 
   // Check for existing JWT token and redirect if necessary
   useEffect(() => {
@@ -137,6 +140,79 @@ function login() {
 
   const [isOAuthLoading, setIsOAuthLoading] = useState(false);
 
+  const handleOAuthLogin = async (credentialResponse) => {
+    try {
+      setIsOAuthLoading(true);
+      const decodedCredential = jwtDecode(credentialResponse.credential);
+
+      const oauthUserData = {
+        email: decodedCredential.email,
+        googleId: decodedCredential.sub,
+        name: decodedCredential.name,
+        profilePicture: decodedCredential.picture,
+        provider: 'google',
+        providerId: decodedCredential.sub
+      };
+
+      // Use unified authentication
+      const authResult = await useAuthStore.getState().unifiedAuth(oauthUserData);
+
+      if (authResult.success) {
+        // Check if this is a new account or existing user
+        if (authResult.message === "new_account_created") {
+          showToast.success("Account created!", "Welcome! Your account has been created and you are now logged in.", "oauth-success");
+        } else {
+          showToast.success("Login successful!", "Welcome back!", "oauth-success");
+        }
+        navigate(getRedirectPath(authResult.data.role, authResult.data.schoolSetupComplete));
+      } else if (authResult.message === "link_oauth_required") {
+        // Account linking required
+        setLinkModalData(authResult.data);
+        setShowLinkModal(true);
+      } else {
+        // Other error
+        showToast.error("Login failed", authResult.message, "oauth-error");
+      }
+    } catch (error) {
+      console.error("OAuth error:", error);
+      showToast.error("Authentication failed", error.message, "oauth-error");
+    } finally {
+      setIsOAuthLoading(false);
+    }
+  };
+
+  const handleLinkAccounts = async () => {
+    if (!linkPassword.trim()) {
+      showToast.error("Password required", "Please enter your password to link accounts", "link-error");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const linkResult = await useAuthStore.getState().linkOAuthAccount(
+        linkModalData.user.email,
+        linkPassword,
+        linkModalData.oauthData
+      );
+
+      if (linkResult.success) {
+        showToast.success("Accounts linked!", "You can now login with either method", "link-success");
+        setShowLinkModal(false);
+        setLinkPassword("");
+
+        // Auto-login after linking
+        navigate(getRedirectPath(linkResult.data.role, linkResult.data.schoolSetupComplete));
+      } else {
+        showToast.error("Linking failed", linkResult.message, "link-error");
+      }
+    } catch (error) {
+      showToast.error("Linking failed", error.message, "link-error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Box
       m={"auto auto"}
@@ -185,134 +261,7 @@ function login() {
       >
 
         <GoogleLogin
-          onSuccess={async (credentialResponse) => {
-            try {
-              setIsOAuthLoading(true);
-              const decodedCredential = jwtDecode(credentialResponse.credential);
-
-              // Create OAuth user data
-              const oauthUserData = {
-                email: decodedCredential.email,
-                googleId: decodedCredential.sub,
-                name: decodedCredential.name,
-                profilePicture: decodedCredential.picture,
-                role: "schoolAdmin", // Default role for OAuth login
-                authProvider: "google"
-              };
-
-              // First try to login with OAuth (in case user already exists)
-              let oauthLoginResult = await useAuthStore.getState().logInWithOAuth(oauthUserData);
-
-              // If login fails due to account not existing, try to register
-              if (!oauthLoginResult.success &&
-                (oauthLoginResult.message?.includes("OAuth user not found") ||
-                  oauthLoginResult.message?.includes("Account not found") ||
-                  oauthLoginResult.message?.includes("Please sign up first"))) {
-
-                // Try to register the account using OAuth signup
-                const signUpResult = await useAuthStore.getState().signUpWithOAuth(oauthUserData);
-
-                if (signUpResult.success) {
-
-                  // After successful registration, try to login again
-                  oauthLoginResult = await useAuthStore.getState().logInWithOAuth(oauthUserData);
-
-                  if (oauthLoginResult.success) {
-                  } else {
-                    throw new Error("Registration successful but login failed. Please try logging in manually.");
-                  }
-                } else {
-                  throw new Error(signUpResult.message || "Registration failed");
-                }
-              }
-
-              // Check if we have a successful login result
-              if (!oauthLoginResult.success) {
-                throw new Error(oauthLoginResult.message || "Failed to authenticate with Google OAuth");
-              }
-
-              // Show success message
-              showToast.success(
-                "Google OAuth Successful!",
-                oauthLoginResult.data.authProvider === 'google' && oauthLoginResult.data.createdAt === oauthLoginResult.data.updatedAt
-                  ? "Welcome! Your account has been created and you are now logged in."
-                  : "Welcome back! You are now logged in.",
-                "oauth-success"
-              );
-
-              // Redirect based on role and setup status
-              const redirectPath = getRedirectPath(oauthLoginResult.data.role, oauthLoginResult.schoolSetupComplete);
-
-              // Show toast for lecturers
-              if (oauthLoginResult.data.role === 'lecturer') {
-                showToast.error(
-                  "Lecturer Function Not Implemented",
-                  "Lecturer functionality is currently under development. Redirecting to homepage.",
-                  "lecturer-not-implemented"
-                );
-              }
-
-              navigate(redirectPath);
-
-            } catch (error) {
-              console.error("Google OAuth error:", error);
-
-              // Handle specific error cases
-              if (error.message.includes("OAuth user not found") ||
-                error.message.includes("Account not found") ||
-                error.message.includes("Please sign up first")) {
-                showToast.error(
-                  "Account Not Found",
-                  "No account found with this Google account. Please use the regular signup form.",
-                  "oauth-no-account"
-                );
-              } else if (error.message.includes("authentication provider mismatch")) {
-                showToast.error(
-                  "Authentication Error",
-                  "This email is associated with a different signup method. Please use your password to login.",
-                  "oauth-provider-mismatch"
-                );
-              } else if (error.message.includes("User with this email already exists")) {
-                showToast.error(
-                  "Account Already Exists",
-                  "An account with this email already exists. Please login instead.",
-                  "oauth-account-exists"
-                );
-              } else if (error.message.includes("User with this Google account already exists")) {
-                showToast.error(
-                  "Google Account Already Linked",
-                  "This Google account is already linked to another account. Please use a different Google account or login with your existing account.",
-                  "oauth-google-exists"
-                );
-              } else if (error.message.includes("Registration successful but login failed")) {
-                showToast.success(
-                  "Account Created Successfully",
-                  "Your account was created successfully, but login failed. Please try logging in manually.",
-                  "oauth-registration-success"
-                );
-              } else if (error.message.includes("Registration failed")) {
-                showToast.error(
-                  "Registration Failed",
-                  "Failed to create your account. Please try again or use the regular signup form.",
-                  "oauth-registration-failed"
-                );
-              } else if (error.message.includes("OAuth registration failed")) {
-                showToast.error(
-                  "OAuth Registration Failed",
-                  "Failed to create your account via Google. Please try again or use the regular signup form.",
-                  "oauth-registration-failed"
-                );
-              } else {
-                showToast.error(
-                  "OAuth Authentication Failed",
-                  error.message || "An unexpected error occurred during Google authentication",
-                  "oauth-error"
-                );
-              }
-            } finally {
-              setIsOAuthLoading(false);
-            }
-          }}
+          onSuccess={handleOAuthLogin}
           onError={() => {
             console.log('Google OAuth Failed');
             setIsOAuthLoading(false);
@@ -450,6 +399,60 @@ function login() {
                 _hover={{ bg: "#FF0000" }}
               >
                 Submit
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* Account Linking Modal */}
+        <Modal isOpen={showLinkModal} onClose={() => setShowLinkModal(false)}>
+          <ModalOverlay />
+          <ModalContent
+            w={"100%"}
+            bg="rgba(0, 0, 0, 0.5)"
+            backdropFilter="blur(10px)"
+            color="white"
+          >
+            <ModalHeader>Link Your Google Account</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Text mb={4}>
+                We found an account with email <strong>{linkModalData?.user?.email}</strong> that was created with a password.
+              </Text>
+              <Text mb={4}>
+                To link your Google account, please enter your password:
+              </Text>
+              <Input
+                type="password"
+                placeholder="Enter your password"
+                value={linkPassword}
+                onChange={(e) => setLinkPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleLinkAccounts();
+                  }
+                }}
+              />
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                variant="ghost"
+                onClick={() => setShowLinkModal(false)}
+                color="white"
+                _hover={{ bg: "rgba(255, 255, 255, 0.1)" }}
+              >
+                Cancel
+              </Button>
+              <Button
+                color={"white"}
+                bg={"#FF5656"}
+                variant="solid"
+                mr={3}
+                onClick={handleLinkAccounts}
+                isLoading={isLoading}
+                _hover={{ bg: "#FF0000" }}
+              >
+                Link Accounts
               </Button>
             </ModalFooter>
           </ModalContent>

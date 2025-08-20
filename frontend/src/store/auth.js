@@ -604,4 +604,103 @@ export const useAuthStore = create((set, get) => ({
       return { success: false, message: error.message };
     }
   },
+
+  unifiedAuth: async (oauthData) => {
+    try {
+      const response = await fetch('/auth/unified', { // Remove /api prefix
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ oauthData })
+      });
+
+      const result = await response.json();
+      console.log('unifiedAuth response:', result);
+
+      // If login is successful, update the store state
+      if (result.success && result.data) {
+        // Create enhanced user object
+        const enhancedUser = {
+          ...result.data,
+          schoolId: result.data.schoolId || null,
+          studentId: result.data.studentId || result.data.student?._id || null,
+          student: result.data.student || null,
+          lecturer: result.data.lecturer || null,
+          school: result.data.school || null,
+          schoolSetupComplete: result.data.schoolSetupComplete || false
+        };
+
+        // Update store state
+        set({
+          user: result.data,
+          currentUser: enhancedUser,
+          isAuthenticated: true,
+          schoolId: enhancedUser.schoolId,
+          studentId: enhancedUser.studentId,
+          lecturerId: enhancedUser.lecturerId || enhancedUser.lecturer?._id || null,
+          student: enhancedUser.student,
+          lecturer: enhancedUser.lecturer,
+          school: enhancedUser.school,
+          isLoading: false
+        });
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message
+      };
+    }
+  },
+
+  linkOAuthAccount: async (email, password, oauthData) => {
+    try {
+      const response = await fetch('/auth/link-oauth', { // Remove /api prefix
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, oauthData })
+      });
+
+      const result = await response.json();
+
+      // If linking is successful, update the store state
+      if (result.success && result.data) {
+        // Create enhanced user object
+        const enhancedUser = {
+          ...result.data,
+          schoolId: result.data.schoolId || null,
+          studentId: result.data.studentId || result.data.student?._id || null,
+          student: result.data.student || null,
+          lecturer: result.data.lecturer || null,
+          school: result.data.school || null,
+          schoolSetupComplete: result.data.schoolSetupComplete || false
+        };
+
+        // Update store state
+        set({
+          user: result.data,
+          currentUser: enhancedUser,
+          isAuthenticated: true,
+          schoolId: enhancedUser.schoolId,
+          studentId: enhancedUser.studentId,
+          lecturerId: enhancedUser.lecturerId || enhancedUser.lecturer?._id || null,
+          student: enhancedUser.student,
+          lecturer: enhancedUser.lecturer,
+          school: enhancedUser.school,
+          isLoading: false
+        });
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message
+      };
+    }
+  },
 }));

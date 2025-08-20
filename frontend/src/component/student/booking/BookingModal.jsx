@@ -93,9 +93,21 @@ const BookingModal = ({ isOpen, onClose, selectedRoom, onSubmit, currentUser }) 
 
         const totalCost = duration * (selectedRoom?.hourlyRate || 0)
 
+        // Check if student data is available
+        if (!currentUser.student?._id && !currentUser.user?.student?._id) {
+            toast({
+                title: "Profile Setup Required",
+                description: "Your student profile needs to be set up before making bookings. Please contact your school administrator.",
+                status: "warning",
+                duration: 5000,
+                isClosable: true,
+            });
+            return;
+        }
+
         const bookingData = {
             resourceId: selectedRoom._id,
-            studentId: currentUser.user.student._id,
+            studentId: currentUser.student?._id || currentUser.user?.student?._id,
             bookingDate: new Date(bookingDate).toISOString(),
             startTime,
             endTime,

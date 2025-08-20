@@ -54,22 +54,22 @@ export const useAuth = () => {
     // Role-based helpers
     const isSchoolAdmin = () => {
         const user = getCurrentUser();
-        return user.role === 'schoolAdmin';
+        return user && user.role === 'schoolAdmin';
     };
 
     const isCompanyAdmin = () => {
         const user = getCurrentUser();
-        return user.role === 'companyAdmin';
+        return user && user.role === 'companyAdmin';
     };
 
     const isStudent = () => {
         const user = getCurrentUser();
-        return user.role === 'student';
+        return user && user.role === 'student';
     };
 
     const isLecturer = () => {
         const user = getCurrentUser();
-        return user.role === 'lecturer';
+        return user && user.role === 'lecturer';
     };
 
     // Get schoolId with validation
@@ -103,8 +103,9 @@ export const useAuth = () => {
 
     // Check if user has access to specific features
     const hasAccess = (requiredRole) => {
+
         const user = getCurrentUser();
-        if (!user.isAuthenticated) return false;
+        if (!user || !user.role) return false;
 
         if (requiredRole === 'schoolAdmin') {
             return isSchoolAdmin() || isCompanyAdmin();
