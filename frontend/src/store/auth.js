@@ -560,7 +560,6 @@ export const useAuthStore = create((set, get) => ({
       });
 
       const data = await res.json();
-      console.log("🚀 ~ data:", data)
 
       if (data.success) {
         // User is authenticated, create enhanced user with role-specific data

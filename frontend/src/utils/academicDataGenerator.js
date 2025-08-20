@@ -1218,15 +1218,22 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
             }
         ];
 
-        // Create parking lots and get their IDs
-        for (const parkingDataItem of parkingData) {
-            try {
-                const createdParkingLot = await facilityStore.createParkingLot(parkingDataItem);
-                parkingLots.push(createdParkingLot.data);
-            } catch (error) {
-                console.error('Failed to create parking lot:', error);
-                throw error;
+        // Create parking lots using bulk endpoint for better performance and validation
+        try {
+            const bulkResult = await facilityStore.bulkCreateParkingLots(parkingData);
+            if (bulkResult.success) {
+                parkingLots.push(...bulkResult.data);
+                console.log(`✅ Created ${bulkResult.data.length} parking lots using bulk endpoint`);
+            } else {
+                console.error('Failed to create parking lots in bulk:', bulkResult.message);
+                if (bulkResult.errors) {
+                    console.error('Errors:', bulkResult.errors);
+                }
+                throw new Error(`Failed to create parking lots: ${bulkResult.message}`);
             }
+        } catch (error) {
+            console.error('Failed to create parking lots:', error);
+            throw error;
         }
 
         // 15. Generate Bookings

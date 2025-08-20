@@ -35,7 +35,7 @@ export function StudentForm({
     const { years, semesters: availableSemesters } = getCourseSemesters()
 
     return (
-        <VStack spacing={4}>
+        <VStack spacing={4} align={"start"}>
             {/* User Information */}
             <FormControl isRequired>
                 <FormLabel>Full Name</FormLabel>

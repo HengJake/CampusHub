@@ -133,8 +133,8 @@ userSchema.methods.isOAuthLinked = function (provider, providerId) {
 };
 
 // Indexes for better query performance
-userSchema.index({ email: 1 });
-userSchema.index({ phoneNumber: 1 });
+userSchema.index({ email: 1 }, {unique: true});
+userSchema.index({ phoneNumber: 1 }, {unique: true});
 userSchema.index({ role: 1 });
 userSchema.index({ authProvider: 1 }); // New index for auth method
 userSchema.index({ email: 1, authProvider: 1 }); // Compound index for OAuth lookups

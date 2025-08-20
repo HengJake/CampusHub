@@ -19,7 +19,8 @@ import {
     AccordionButton,
     AccordionPanel,
     AccordionIcon,
-    VStack
+    VStack,
+    SimpleGrid
 } from "@chakra-ui/react"
 import { FiEdit, FiTrash2 } from "react-icons/fi"
 
@@ -93,16 +94,32 @@ export function StudentTable({
 
                 {/* Mobile Accordion View */}
                 <Box display={{ base: "block", lg: "none" }}>
+                    <HStack mb={3}>
+                    <Badge colorScheme={"green"}>Year</Badge>
+                    <Badge colorScheme={"blue"}>Semester</Badge>
+                        <Badge colorScheme={"purple"} variant={"outline"}>Course Code</Badge>
+                        <Badge colorScheme={"pink"} variant={"outline"}>Course Code</Badge>
+                    </HStack>
                     <Accordion allowMultiple>
-                        {students.map((student) => (
+                        {students.map((student) => {
+                            
+                            return(
                             <AccordionItem key={student._id}>
                                 <h2>
                                     <AccordionButton>
                                         <HStack flex={1} align={"center"}>
-                                            <VStack align={"start"}>
-                                                <Badge colorScheme="gray">Year : {student.currentYear}</Badge>
-                                                <Badge colorScheme="gray" variant={"outline"}>{student.intakeCourseId?.courseId?.courseCode || "N/A"}</Badge>
-                                            </VStack>
+                                            <SimpleGrid
+                                                columns={2}
+                                                rows={2}
+                                                gap={1}
+                                                templateColumns="1fr 1fr"
+                                                templateRows="1fr 1fr"
+                                            >
+                                                <Badge colorScheme="green">{student.currentYear}</Badge>
+                                                <Badge colorScheme="blue">{student.currentSemester}</Badge>
+                                                <Badge colorScheme="purple" variant={"outline"}>{student.intakeCourseId?.courseId?.courseCode || "N/A"}</Badge>
+                                                <Badge colorScheme="pink" variant={"outline"}>{student.intakeCourseId?.intakeId?.intakeMonth || "N/A"}</Badge>
+                                            </SimpleGrid>
 
                                             <Box as="span" textAlign="left">
                                                 <Text fontWeight="medium">{student.userId?.name || "N/A"}</Text>
@@ -149,7 +166,7 @@ export function StudentTable({
                                     </VStack>
                                 </AccordionPanel>
                             </AccordionItem>
-                        ))}
+                        )})}
                     </Accordion>
                 </Box>
             </CardBody>

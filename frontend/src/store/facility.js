@@ -440,11 +440,13 @@ export const useFacilityStore = create((set, get) => ({
             if (!data.success) {
                 throw new Error(data.message || "Failed to fetch parking lots");
             }
-            set((state) => ({
-                parkingLots: data.data,
-                loading: { ...state.loading, parkingLots: false },
-                errors: { ...state.errors, parkingLots: null },
-            }));
+            set((state) => {
+                return ({
+                    parkingLots: data.data,
+                    loading: { ...state.loading, parkingLots: false },
+                    errors: { ...state.errors, parkingLots: null },
+                });
+            });
             return { success: true, data: data.data };
         } catch (error) {
             set((state) => ({
@@ -543,6 +545,141 @@ export const useFacilityStore = create((set, get) => ({
                 parkingLots: state.parkingLots.filter((parkingLot) => parkingLot._id !== id),
             }));
             return { success: true };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    bulkCreateParkingLots: async (parkingLotsData) => {
+        set((state) => ({ loading: { ...state.loading, parkingLots: true } }));
+        try {
+            const authStore = useAuthStore.getState();
+            const userContext = authStore.getCurrentUser();
+            if (userContext.role === "schoolAdmin") {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    parkingLotsData = parkingLotsData.map(lot => ({
+                        ...lot,
+                        schoolId: schoolId
+                    }));
+                }
+            }
+
+            // Use the bulk endpoint for better performance and validation
+            const res = await fetch("/api/parking-lot/bulk", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ parkingLots: parkingLotsData }),
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                // Update the store with new parking lots
+                set((state) => ({
+                    parkingLots: [...state.parkingLots, ...data.data],
+                    loading: { ...state.loading, parkingLots: false }
+                }));
+
+                return {
+                    success: true,
+                    data: data.data,
+                    errors: data.errors || null,
+                    message: data.message
+                };
+            } else {
+                set((state) => ({
+                    loading: { ...state.loading, parkingLots: false }
+                }));
+
+                return {
+                    success: false,
+                    message: data.message,
+                    errors: data.errors || null
+                };
+            }
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, parkingLots: false }
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    getExistingSlotNumbers: async (schoolId, zone) => {
+        try {
+            const url = `/api/parking-lot/existing-slots?schoolId=${schoolId}&zone=${zone}`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.success) {
+                return { success: true, data: data.data };
+            } else {
+                throw new Error(data.message || "Failed to fetch existing slot numbers");
+            }
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    generateUniqueSlotNumbers: async (schoolId, zone, count, startFrom = 1) => {
+        try {
+            // Get existing slot numbers for this school and zone
+            const existingResult = await get().getExistingSlotNumbers(schoolId, zone);
+            if (!existingResult.success) {
+                throw new Error(existingResult.message);
+            }
+
+            const existingSlots = new Set(existingResult.data.slotNumbers);
+            const newSlotNumbers = [];
+            let currentSlot = startFrom;
+
+            while (newSlotNumbers.length < count) {
+                if (!existingSlots.has(currentSlot)) {
+                    newSlotNumbers.push(currentSlot);
+                }
+                currentSlot++;
+            }
+
+            return {
+                success: true,
+                data: newSlotNumbers,
+                message: `Generated ${newSlotNumbers.length} unique slot numbers starting from ${startFrom}`
+            };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    checkForDuplicates: async (schoolId) => {
+        try {
+            const url = `/api/parking-lot/check-duplicates?schoolId=${schoolId}`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.success) {
+                return { success: true, data: data.data };
+            } else {
+                throw new Error(data.message || "Failed to check for duplicates");
+            }
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    cleanupDuplicates: async (schoolId) => {
+        try {
+            const url = `/api/parking-lot/cleanup-duplicates?schoolId=${schoolId}`;
+            const res = await fetch(url, { method: 'DELETE' });
+            const data = await res.json();
+
+            if (data.success) {
+                // Refresh the parking lots list after cleanup
+                await get().fetchParkingLotsBySchoolId();
+                return { success: true, data: data.data };
+            } else {
+                throw new Error(data.message || "Failed to cleanup duplicates");
+            }
         } catch (error) {
             return { success: false, message: error.message };
         }
