@@ -70,7 +70,6 @@ export function LockerManagement() {
     const [formData, setFormData] = useState({
         name: "",
         resourceId: "",
-        schoolId: "",
         status: "Available",
         isAvailable: true,
     });
@@ -123,11 +122,10 @@ export function LockerManagement() {
             selectedSection === "All" ||
             (lockerSection && lockerSection === selectedSection);
 
-
-
         const matchesSearch =
             searchTerm === "" ||
             locker._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            locker.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             locker.resourceId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             locker.resourceId?.location?.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -139,8 +137,6 @@ export function LockerManagement() {
     const availableCount = lockerUnits.filter((l) => l.status === "Available").length
     const maintenanceCount = lockerUnits.filter((l) => l.status === "Maintenance").length
     const occupancyRate = lockerUnits.length > 0 ? Math.round((occupiedCount / lockerUnits.length) * 100) : 0
-
-
 
     const getLockerColor = (status) => {
         switch (status) {
@@ -154,9 +150,6 @@ export function LockerManagement() {
                 return "#A4C3A2"
         }
     }
-
-
-
 
     // Generate default locker name based on resource name from Resource model
     const generateDefaultName = (resourceName, existingNames = []) => {
@@ -250,8 +243,8 @@ export function LockerManagement() {
     // Open Add Modal
     const openAddModal = () => {
         setFormData({
+            name: "",
             resourceId: "",
-            schoolId: "",
             status: "Available",
             isAvailable: true,
         });
@@ -263,8 +256,8 @@ export function LockerManagement() {
     // Open Edit Modal
     const openEditModal = (locker) => {
         setFormData({
+            name: locker.name || "",
             resourceId: locker.resourceId?._id || locker.resourceId || "",
-            schoolId: locker.schoolId || "",
             status: locker.status || "Available",
             isAvailable: locker.isAvailable !== undefined ? locker.isAvailable : true,
         });
@@ -272,7 +265,6 @@ export function LockerManagement() {
         setSelectedLocker(locker);
         onOpen();
     };
-
 
     // Handle form submit for creating/updating locker units
     const handleSubmit = async () => {
@@ -288,17 +280,6 @@ export function LockerManagement() {
             return;
         }
 
-        if (!isEdit && !formData.schoolId) {
-            toast({
-                title: "Validation Error",
-                description: "Please provide a school ID",
-                status: "error",
-                duration: 3000,
-                isClosable: true
-            });
-            return;
-        }
-
         setIsSubmitting(true);
         try {
             let res;
@@ -307,10 +288,7 @@ export function LockerManagement() {
             if (isEdit && selectedLocker) {
                 // For edit, send all required fields
                 submitData = {
-                    schoolId: formData.schoolId,
-                    resourceId: formData.resourceId,
                     name: formData.name.trim() || selectedLocker.name,
-                    schoolId: formData.schoolId || selectedLocker.schoolId,
                     resourceId: formData.resourceId || selectedLocker.resourceId,
                     status: formData.status,
                     isAvailable: formData.status === "Available"
@@ -376,7 +354,6 @@ export function LockerManagement() {
         setFormData({
             name: "",
             resourceId: "",
-            schoolId: "",
             status: "Available",
             isAvailable: true,
         });
@@ -621,8 +598,16 @@ export function LockerManagement() {
                         <ModalCloseButton />
                         <ModalBody>
                             {isEdit ? (
-                                // Edit mode - allow changing status
+                                // Edit mode - allow changing name and status
                                 <>
+                                    <FormControl mb={3}>
+                                        <FormLabel>Locker Name</FormLabel>
+                                        <Input
+                                            value={formData.name}
+                                            onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
+                                            placeholder="Enter locker name"
+                                        />
+                                    </FormControl>
                                     <FormControl mb={3}>
                                         <FormLabel>Resource</FormLabel>
                                         <VStack align="start" spacing={1}>
@@ -635,14 +620,6 @@ export function LockerManagement() {
                                                 Location: {resources.find(r => r._id === formData.resourceId)?.location || selectedLocker?.resourceId?.location || 'N/A'}
                                             </Text>
                                         </VStack>
-                                    </FormControl>
-                                    <FormControl mb={3}>
-                                        <FormLabel>School ID</FormLabel>
-                                        <Input
-                                            value={formData.schoolId}
-                                            isReadOnly
-                                            bg="gray.100"
-                                        />
                                     </FormControl>
                                     <FormControl mb={3}>
                                         <FormLabel>Status</FormLabel>
@@ -659,6 +636,14 @@ export function LockerManagement() {
                             ) : (
                                 // Add mode - allow setting all fields
                                 <>
+                                    <FormControl mb={3}>
+                                        <FormLabel>Locker Name (Optional)</FormLabel>
+                                        <Input
+                                            value={formData.name}
+                                            onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
+                                            placeholder="Leave empty to auto-generate name"
+                                        />
+                                    </FormControl>
                                     <FormControl isRequired mb={3}>
                                         <FormLabel>Resource</FormLabel>
                                         <Select
@@ -675,14 +660,6 @@ export function LockerManagement() {
                                                 ))
                                             }
                                         </Select>
-                                    </FormControl>
-                                    <FormControl isRequired mb={3}>
-                                        <FormLabel>School ID</FormLabel>
-                                        <Input
-                                            value={formData.schoolId}
-                                            onChange={(e) => setFormData(f => ({ ...f, schoolId: e.target.value }))}
-                                            placeholder="School ID"
-                                        />
                                     </FormControl>
                                     <FormControl mb={3}>
                                         <FormLabel>Status</FormLabel>
@@ -745,57 +722,15 @@ export function LockerManagement() {
                     </ModalContent>
                 </Modal>
 
-                {/* Quick School Filter */}
-                {uniqueSchools.length > 1 && (
-                    <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-                        <CardBody>
-                            <HStack justify="space-between" align="center">
-                                <Text fontSize="md" fontWeight="semibold" color="#333333">
-                                    Quick School Filter:
-                                </Text>
-                                <HStack spacing={2} wrap="wrap">
-                                    <Button
-                                        size="sm"
-                                        variant={selectedSchool === "All" ? "solid" : "outline"}
-                                        colorScheme="blue"
-                                        onClick={() => setSelectedSchool("All")}
-                                    >
-                                        All ({lockerUnits.length})
-                                    </Button>
-                                    {uniqueSchools.slice(0, 5).map(school => {
-                                        const schoolLockerCount = lockerUnits.filter(l => l.schoolId === school.id).length;
-                                        return (
-                                            <Button
-                                                key={school.id}
-                                                size="sm"
-                                                variant={selectedSchool === school.id ? "solid" : "outline"}
-                                                colorScheme="blue"
-                                                onClick={() => setSelectedSchool(school.id)}
-                                            >
-                                                {school.displayName} ({schoolLockerCount})
-                                            </Button>
-                                        );
-                                    })}
-                                    {uniqueSchools.length > 5 && (
-                                        <Text fontSize="sm" color="gray.500">
-                                            +{uniqueSchools.length - 5} more schools
-                                        </Text>
-                                    )}
-                                </HStack>
-                            </HStack>
-                        </CardBody>
-                    </Card>
-                )}
-
                 {/* Stats Cards */}
                 <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={6}>
                     <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                         <CardBody>
                             <Stat>
                                 <StatLabel color="gray.600">Total Lockers</StatLabel>
-                                <StatNumber color="#344E41">{statsData.length}</StatNumber>
+                                <StatNumber color="#344E41">{lockerUnits.length}</StatNumber>
                                 <StatHelpText>
-                                    {selectedSchool === "All" ? "Campus wide" : `In selected school`}
+                                    Campus wide
                                 </StatHelpText>
                             </Stat>
                         </CardBody>
@@ -835,35 +770,6 @@ export function LockerManagement() {
                 {/* Filters */}
                 <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                     <CardBody>
-                        <HStack spacing={4}>
-                            <Box flex="1">
-                                <InputGroup>
-                                    <InputLeftElement pointerEvents="none">
-                                        <FiSearch color="gray.400" />
-                                    </InputLeftElement>
-                                    <Input
-                                        placeholder="Search by locker ID or resource name..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </InputGroup>
-                            </Box>
-                            <Select w="150px" value={selectedFloor} onChange={(e) => setSelectedFloor(e.target.value)}>
-                                <option value="All">All Floors</option>
-                                <option value="1">Floor 1</option>
-                                <option value="2">Floor 2</option>
-                                <option value="3">Floor 3</option>
-                                <option value="4">Floor 4</option>
-                            </Select>
-                            <Select w="150px" value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)}>
-                                <option value="All">All Sections</option>
-                                <option value="A">Section A</option>
-                                <option value="B">Section B</option>
-                                <option value="C">Section C</option>
-                                <option value="D">Section D</option>
-                                <option value="E">Section E</option>
-                            </Select>
-                        </HStack>
                         <VStack spacing={4} align="stretch">
                             <HStack spacing={4}>
                                 <Box flex="1">
@@ -878,16 +784,6 @@ export function LockerManagement() {
                                         />
                                     </InputGroup>
                                 </Box>
-                                <Select w="200px" value={selectedSchool} onChange={(e) => setSelectedSchool(e.target.value)}>
-                                    <option value="All">All Schools ({uniqueSchools.length})</option>
-                                    {uniqueSchools.map(school => (
-                                        <option key={school.id} value={school.id}>
-                                            {school.displayName}
-                                        </option>
-                                    ))}
-                                </Select>
-                            </HStack>
-                            <HStack spacing={4}>
                                 <Select w="150px" value={selectedFloor} onChange={(e) => setSelectedFloor(e.target.value)}>
                                     <option value="All">All Floors</option>
                                     <option value="1">Floor 1</option>
@@ -903,12 +799,6 @@ export function LockerManagement() {
                                     <option value="D">Section D</option>
                                     <option value="E">Section E</option>
                                 </Select>
-                                <Box flex="1" />
-                                {selectedSchool !== "All" && (
-                                    <Text fontSize="sm" color="blue.600" fontWeight="medium">
-                                        Filtered by: {uniqueSchools.find(s => s.id === selectedSchool)?.displayName || selectedSchool}
-                                    </Text>
-                                )}
                             </HStack>
                         </VStack>
                     </CardBody>
