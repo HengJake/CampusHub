@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { useAuthStore } from "./auth.js";
+import { useAuthStore } from "../store/auth.js";
 
 export const useServiceStore = create((set, get) => ({
     // State - Store data for each entity
@@ -69,8 +69,9 @@ export const useServiceStore = create((set, get) => ({
         set((state) => ({ loading: { ...state.loading, feedback: true } }));
         try {
             let url;
+
             const authStore = useAuthStore.getState();
-            const userContext = authStore.getState().getCurrentUser();
+            const userContext = authStore.getCurrentUser();
 
             if (userContext.role === "schoolAdmin" || userContext.role === "student") {
                 const schoolId = authStore.getSchoolId();
@@ -131,6 +132,31 @@ export const useServiceStore = create((set, get) => ({
             const data = await res.json();
             if (!data.success) {
                 throw new Error(data.message || "Failed to fetch feedback");
+            }
+            set((state) => ({
+                feedback: data.data,
+                loading: { ...state.loading, feedback: false },
+                errors: { ...state.errors, feedback: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, feedback: false },
+                errors: { ...state.errors, feedback: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchFeedbackByStudentId: async (studentId) => {
+        set((state) => ({ loading: { ...state.loading, feedback: true } }));
+        try {
+            const res = await fetch(`/api/feedback/student/${studentId}`, {
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch feedback by student ID");
             }
             set((state) => ({
                 feedback: data.data,

@@ -74,17 +74,11 @@ export const generateTokenPayload = async (user) => {
 // Consolidated function to handle OAuth account linking
 export const linkOAuthAccountHelper = async (user, oauthData) => {
     try {
-        console.log('linkOAuthAccountHelper - user before linking:', {
-            email: user.email,
-            authProvider: user.authProvider,
-            googleId: user.googleId,
-            linkedAccounts: user.linkedAccounts
-        });
-        console.log('linkOAuthAccountHelper - oauthData:', oauthData);
+
 
         // Allow linking Google to local accounts or updating existing Google accounts
         if (user.authProvider && user.authProvider !== 'local' && user.authProvider !== oauthData.provider) {
-            console.log('Blocking link - user has different auth provider:', user.authProvider);
+
             return {
                 success: false,
                 message: `This account is already linked to ${user.authProvider}`
@@ -99,12 +93,7 @@ export const linkOAuthAccountHelper = async (user, oauthData) => {
             user.name = oauthData.name;
         }
 
-        console.log('linkOAuthAccountHelper - user after linking:', {
-            email: user.email,
-            authProvider: user.authProvider,
-            googleId: user.googleId,
-            linkedAccounts: user.linkedAccounts
-        });
+
 
         await user.save();
 

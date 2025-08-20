@@ -65,7 +65,7 @@ export default function StudentDashboard() {
   console.log('StudentDashboard - currentUser.student:', currentUser?.student);
 
   // Use real data from stores
-  const { feedback, responds, fetchFeedback, fetchResponds } = useServiceStore()
+  const { feedback, responds, fetchFeedbackByStudentId, fetchResponds } = useServiceStore()
   const { bookings, fetchBookingsByStudentId, parkingLots, fetchParkingLotsBySchoolId } = useFacilityStore()
   const { busSchedules, fetchBusSchedules } = useTransportationStore()
   const {
@@ -113,7 +113,7 @@ export default function StudentDashboard() {
       try {
         const user = getCurrentUser()
         await Promise.all([
-          fetchFeedback(),
+          user?.studentId ? fetchFeedbackByStudentId(user.studentId) : Promise.resolve(),
           fetchResponds(),
           user?.studentId ? fetchBookingsByStudentId(user.studentId) : Promise.resolve(),
           user?.studentId ? fetchAttendanceByStudentId(user.studentId) : Promise.resolve(),
@@ -130,7 +130,7 @@ export default function StudentDashboard() {
       }
     }
     loadData()
-  }, [fetchFeedback, fetchResponds, fetchBookingsByStudentId, fetchAttendanceByStudentId, fetchParkingLotsBySchoolId, fetchBusSchedules, fetchClassSchedules, fetchExamSchedules, fetchIntakeCourses, getCurrentUser])
+  }, [fetchFeedbackByStudentId, fetchResponds, fetchBookingsByStudentId, fetchAttendanceByStudentId, fetchParkingLotsBySchoolId, fetchBusSchedules, fetchClassSchedules, fetchExamSchedules, fetchIntakeCourses, getCurrentUser])
 
   // Calculate stats when data changes
   useEffect(() => {

@@ -55,7 +55,7 @@ export function Dashboard() {
     fetchLockerUnitsBySchoolId
   } = useFacilityStore();
   const {
-    feedback, fetchFeedback,
+    feedback,
     lostItems, fetchLostItems,
     responds, fetchResponds,
     fetchFeedbackBySchoolId,
@@ -155,7 +155,7 @@ export function Dashboard() {
   const { isInitialized } = useAuth();
 
   useEffect(() => {
-    if (!isInitialized) return; 
+    if (!isInitialized) return;
     // =====================
     // Academic Store Fetches
     // =====================
