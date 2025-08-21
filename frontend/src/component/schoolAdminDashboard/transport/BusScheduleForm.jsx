@@ -142,67 +142,71 @@ const BusScheduleForm = ({ onSubmit, selectedItem, isEditMode }) => {
                 <FormControl isRequired>
                     <FormLabel>Route Timing</FormLabel>
                     <VStack spacing={3} align="stretch" w="100%">
-                        {formData.routeTiming.map((timing, index) => (
-                            <Box key={index} p={3} border="1px" borderColor="gray.200" borderRadius="md">
-                                <HStack spacing={3} align="flex-start">
-                                    {/* Route Selection */}
-                                    <FormControl isRequired>
-                                        <FormLabel fontSize="sm">Route {index + 1}</FormLabel>
-                                        <Select
-                                            placeholder="Select route"
-                                            value={timing.routeId}
-                                            onChange={(e) => updateRouteTiming(index, 'routeId', e.target.value)}
-                                            size="sm"
-                                        >
-                                            {routes.map((route) => {
-                                                
-                                                return (
-                                                    <option key={route._id} value={route._id}>
-                                                        {route.name} - {route.estimateTimeMinute} min, RM {route.fare}
-                                                    </option>
-                                                )
-                                            })}
-                                        </Select>
-                                    </FormControl>
+                        {formData.routeTiming.map((timing, index) => {
+                            return (
+                                <Box key={index} p={3} border="1px" borderColor="gray.200" borderRadius="md">
+                                    <HStack spacing={3} align="flex-start">
+                                        {/* Route Selection */}
+                                        <FormControl isRequired>
+                                            <FormLabel fontSize="sm">Route {index + 1}</FormLabel>
+                                            <Select
+                                                placeholder="Select route"
+                                                value={timing.routeId}
+                                                onChange={(e) => updateRouteTiming(index, 'routeId', e.target.value)}
+                                                size="sm"
+                                            >
+                                                {routes.map((route) => {
 
-                                    {/* Start Time */}
-                                    <FormControl isRequired>
-                                        <FormLabel fontSize="sm">Start Time</FormLabel>
-                                        <Input
-                                            type="time"
-                                            value={timing.startTime}
-                                            onChange={(e) => updateRouteTiming(index, 'startTime', e.target.value)}
-                                            size="sm"
-                                        />
-                                    </FormControl>
+                                                    console.log("🚀 ~ route:", route)
 
-                                    {/* Calculated End Time Display */}
-                                    {timing.endTime && (
-                                        <FormControl>
-                                            <FormLabel fontSize="sm">End Time</FormLabel>
-                                            <Box p={2} bg="blue.50" borderRadius="md" border="1px" borderColor="blue.200" minW="80px">
-                                                <Text fontSize="sm" textAlign="center" fontWeight="medium">
-                                                    {timing.endTime}
-                                                </Text>
-                                            </Box>
+                                                    return (
+                                                        <option key={route._id} value={route._id}>
+                                                            {route.name} - {route.estimateTimeMinute} min, RM {route.fare}
+                                                        </option>
+                                                    )
+                                                })}
+                                            </Select>
                                         </FormControl>
-                                    )}
 
-                                    {/* Remove Button */}
-                                    {formData.routeTiming.length > 1 && (
-                                        <Button
-                                            size="sm"
-                                            colorScheme="red"
-                                            variant="outline"
-                                            onClick={() => removeRouteTiming(index)}
-                                            mt={6}
-                                        >
-                                            Remove
-                                        </Button>
-                                    )}
-                                </HStack>
-                            </Box>
-                        ))}
+                                        {/* Start Time */}
+                                        <FormControl isRequired>
+                                            <FormLabel fontSize="sm">Start Time</FormLabel>
+                                            <Input
+                                                type="time"
+                                                value={timing.startTime}
+                                                onChange={(e) => updateRouteTiming(index, 'startTime', e.target.value)}
+                                                size="sm"
+                                            />
+                                        </FormControl>
+
+                                        {/* Calculated End Time Display */}
+                                        {timing.endTime && (
+                                            <FormControl>
+                                                <FormLabel fontSize="sm">End Time</FormLabel>
+                                                <Box p={2} bg="blue.50" borderRadius="md" border="1px" borderColor="blue.200" minW="80px">
+                                                    <Text fontSize="sm" textAlign="center" fontWeight="medium">
+                                                        {timing.endTime}
+                                                    </Text>
+                                                </Box>
+                                            </FormControl>
+                                        )}
+
+                                        {/* Remove Button */}
+                                        {formData.routeTiming.length > 1 && (
+                                            <Button
+                                                size="sm"
+                                                colorScheme="red"
+                                                variant="outline"
+                                                onClick={() => removeRouteTiming(index)}
+                                                mt={6}
+                                            >
+                                                Remove
+                                            </Button>
+                                        )}
+                                    </HStack>
+                                </Box>
+                            )
+                        })}
 
                         <Button
                             type="button"

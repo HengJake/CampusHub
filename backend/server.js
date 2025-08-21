@@ -49,6 +49,7 @@ import parkingLotRoutes from "./routes/Facility/parkingLot.routes.js";
 import feedbackRoutes from "./routes/Service/feedback.routes.js";
 import respondRoutes from "./routes/Service/respond.routes.js";
 import lostItemRoutes from "./routes/Service/lostItem.routes.js";
+import bugReportRoutes from "./routes/Service/bugReport.routes.js";
 
 // At the top of your server.js
 console.log('🚀 Server starting...');
@@ -72,7 +73,6 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }));
-
 
 // =-=-=-=-=-=-=-=-=
 
@@ -177,6 +177,7 @@ app.use("/api/parking-lot", parkingLotRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/respond", respondRoutes);
 app.use("/api/lost-item", lostItemRoutes);
+app.use("/api/bug-report", bugReportRoutes);
 
 
 if (process.env.NODE_ENV === "production") {

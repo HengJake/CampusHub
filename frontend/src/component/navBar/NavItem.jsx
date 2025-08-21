@@ -43,7 +43,7 @@ const NavItem = ({ item, isCollapsed, level = 0, accentColor, primaryColor, togg
                 w="full"
                 h={level === 0 ? "12" : "10"}
                 justifyContent={isCollapsed ? "center" : "flex-start"}
-                px={isCollapsed ? 0 : level === 0 ? 4 : 6}
+                px={isCollapsed ? 4 : level === 0 ? 4 : 6}
                 py={2}
                 onClick={handleClick}
                 bg={bgColor}

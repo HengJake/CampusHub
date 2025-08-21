@@ -119,8 +119,8 @@ async function createFullSchoolData({
         // Admins
         {
             name: `${schoolPrefix} Admin User`,
-            email: `admin@${schoolEmailDomain}`,
-            password: "password123",
+            email: schoolPrefix === "APU" ? "schooltestacc818@gmail.com" : `admin@${schoolEmailDomain}`,
+            password: "P@ssw0rd$$",
             phoneNumber: adminPhoneBase + 0,
             role: "schoolAdmin",
             twoFA_enabled: false
@@ -128,7 +128,7 @@ async function createFullSchoolData({
         {
             name: `${schoolPrefix} Second Admin`,
             email: `admin2@${schoolEmailDomain}`,
-            password: "password123",
+            password: "P@ssw0rd$$",
             phoneNumber: adminPhoneBase + 1,
             role: "schoolAdmin",
             twoFA_enabled: false
@@ -136,8 +136,8 @@ async function createFullSchoolData({
         // Company Admin
         {
             name: "Company Admin",
-            email: "company@gmail.com",
-            password: "Password123",
+            email: "acampushub@gmail.com",
+            password: "P@ssw0rd$$",
             phoneNumber: adminPhoneBase + 2,
             role: "companyAdmin",
             twoFA_enabled: false
@@ -174,7 +174,7 @@ async function createFullSchoolData({
         const role = usersData[i].role;
         if (!createdIds.users[role]) createdIds.users[role] = [];
         createdIds.users[role].push(userResponse.data._id);
-        console.log(`[${schoolPrefix}] ✅ ${role} user created: ${usersData[i].name} (${userResponse.data._id})`);
+        console.log(`[${schoolPrefix}] ✅ ${role} user created: ${usersData[i].email} ${usersData[i].password} (${userResponse.data._id})`);
         await new Promise(res => setTimeout(res, 150)); // 150ms delay
     }
 
@@ -879,8 +879,8 @@ async function createFullSchoolData({
             // Create user for this student
             const userData = {
                 name: `${schoolPrefix} Student_${studentUserIndex}`,
-                email: `student${studentUserIndex}@student.${schoolEmailDomain}`,
-                password: "password123",
+                email: (schoolPrefix === "APU" && studentUserIndex === 0) ? "studentcampushub@gmail.com" : `student${studentUserIndex}@student.${schoolEmailDomain}`,
+                password: (schoolPrefix === "APU" && studentUserIndex === 0) ? "P@ssw0rd$$" : "password123",
                 phoneNumber: studentPhoneBase + 100 + studentUserIndex,
                 role: "student",
                 twoFA_enabled: false
@@ -1581,121 +1581,49 @@ async function createFullSchoolData({
 
     console.log(`[${schoolPrefix}] Facility: Creating LockerUnits...`);
 
-    // Create multiple locker units with variety for dashboard display
+    // Create locker units with variety for dashboard display - one per resource ID
     const lockerUnitData = [
-        // Available lockers (current month) - A100 to A105
+        // A100 - Available
         {
             resourceId: createdIds.resources[5], // A100
             schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date() // Current month
+            status: "Available",
+            isAvailable: true
         },
+        // A101 - Occupied
         {
             resourceId: createdIds.resources[6], // A101
             schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date()
+            status: "Occupied",
+            isAvailable: false
         },
+        // A102 - Maintenance
         {
             resourceId: createdIds.resources[7], // A102
             schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date()
+            status: "Maintenance",
+            isAvailable: false
         },
+        // A103 - Available
         {
             resourceId: createdIds.resources[8], // A103
             schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date()
+            status: "Available",
+            isAvailable: true
         },
+        // A104 - Occupied
         {
             resourceId: createdIds.resources[9], // A104
             schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date()
+            status: "Occupied",
+            isAvailable: false
         },
-        // Used lockers (current month)
+        // A105 - Available
         {
             resourceId: createdIds.resources[10], // A105
             schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date()
-        },
-        // Additional variety for better statistics
-        {
-            resourceId: createdIds.resources[5], // A100
-            schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date()
-        },
-        {
-            resourceId: createdIds.resources[6], // A101
-            schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date()
-        },
-        // Last month lockers (for comparison)
-        {
-            resourceId: createdIds.resources[7], // A102
-            schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 15)
-        },
-        {
-            resourceId: createdIds.resources[8], // A103
-            schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 20)
-        },
-        {
-            resourceId: createdIds.resources[9], // A104
-            schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 25)
-        },
-        // Two months ago lockers
-        {
-            resourceId: createdIds.resources[10], // A105
-            schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 10)
-        },
-        {
-            resourceId: createdIds.resources[5], // A100
-            schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 15)
-        },
-        {
-            resourceId: createdIds.resources[6], // A101
-            schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 20)
-        },
-        // Additional variety for better statistics
-        {
-            resourceId: createdIds.resources[7], // A102
-            schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date()
-        },
-        {
-            resourceId: createdIds.resources[8], // A103
-            schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date()
-        },
-        {
-            resourceId: createdIds.resources[9], // A104
-            schoolId: createdIds.school,
-            isAvailable: false,
-            createdAt: new Date()
-        },
-        {
-            resourceId: createdIds.resources[10], // A105
-            schoolId: createdIds.school,
-            isAvailable: true,
-            createdAt: new Date()
+            status: "Available",
+            isAvailable: true
         }
     ];
 

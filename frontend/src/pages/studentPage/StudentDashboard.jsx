@@ -44,7 +44,6 @@ import {
   FiMinus,
 } from "react-icons/fi"
 import { FaBus } from "react-icons/fa";
-import { useStudentStore } from "../../store/TBI/studentStore.js"
 import { useServiceStore } from "../../store/service.js"
 import { useFacilityStore } from "../../store/facility.js"
 import { useTransportationStore } from "../../store/transportation.js"
@@ -52,31 +51,43 @@ import { useAcademicStore } from "../../store/academic.js"
 import { BookingModal } from "../../component/student/BookingModal"
 import { FeedbackModal } from "../../component/student/FeedbackModal"
 import { useAuthStore } from "../../store/auth.js";
+import { useNavigate } from "react-router-dom";
 
 export default function StudentDashboard() {
-  const {
-    studentProfile,
-    parkingSpots,
-    shuttleSchedule,
-    academicSchedule,
-    myBookings,
-    attendanceRecords,
-    examSchedule,
-  } = useStudentStore()
 
   const { getCurrentUser, initializeAuth } = useAuthStore()
   const currentUser = getCurrentUser()
+  const navigate = useNavigate()
+
+  // Debug logging
+  console.log('StudentDashboard - currentUser:', currentUser);
+  console.log('StudentDashboard - currentUser.user:', currentUser?.user);
+  console.log('StudentDashboard - currentUser.student:', currentUser?.student);
 
   // Use real data from stores
-  const { feedback, responds, fetchFeedback, fetchResponds } = useServiceStore()
-  const { bookings, fetchBookingsByStudentId } = useFacilityStore()
+  const { feedback, responds, fetchFeedbackByStudentId, fetchResponds } = useServiceStore()
+  const { bookings, fetchBookingsByStudentId, parkingLots, fetchParkingLotsBySchoolId } = useFacilityStore()
   const { busSchedules, fetchBusSchedules } = useTransportationStore()
-  const { classSchedules, fetchClassSchedules, examSchedules, fetchExamSchedules, fetchIntakeCourses, intakeCourses } = useAcademicStore()
+  const {
+    classSchedules,
+    fetchClassSchedules,
+    examSchedules,
+    fetchExamSchedules,
+    fetchIntakeCourses,
+    intakeCourses,
+    attendance,
+    fetchAttendanceByStudentId
+  } = useAcademicStore();
 
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
   const { isOpen: isBookingOpen, onOpen: onBookingOpen, onClose: onBookingClose } = useDisclosure()
   const { isOpen: isFeedbackOpen, onOpen: onFeedbackOpen, onClose: onFeedbackClose } = useDisclosure()
+
+  // Navigation functions
+  const navigateToFeedback = () => navigate('/feedback')
+  const navigateToTransportation = () => navigate('/transportation')
+  const navigateToClassFinder = () => navigate('/class-finder')
 
   // Loading states
   const [isLoading, setIsLoading] = useState(true)
@@ -102,9 +113,11 @@ export default function StudentDashboard() {
       try {
         const user = getCurrentUser()
         await Promise.all([
-          fetchFeedback(),
+          user?.studentId ? fetchFeedbackByStudentId(user.studentId) : Promise.resolve(),
           fetchResponds(),
           user?.studentId ? fetchBookingsByStudentId(user.studentId) : Promise.resolve(),
+          user?.studentId ? fetchAttendanceByStudentId(user.studentId) : Promise.resolve(),
+          fetchParkingLotsBySchoolId(),
           fetchBusSchedules(),
           fetchClassSchedules(),
           fetchExamSchedules(),
@@ -117,7 +130,7 @@ export default function StudentDashboard() {
       }
     }
     loadData()
-  }, [fetchFeedback, fetchResponds, fetchBookingsByStudentId, fetchBusSchedules, fetchClassSchedules, fetchExamSchedules, fetchIntakeCourses, getCurrentUser])
+  }, [fetchFeedbackByStudentId, fetchResponds, fetchBookingsByStudentId, fetchAttendanceByStudentId, fetchParkingLotsBySchoolId, fetchBusSchedules, fetchClassSchedules, fetchExamSchedules, fetchIntakeCourses, getCurrentUser])
 
   // Calculate stats when data changes
   useEffect(() => {
@@ -128,10 +141,38 @@ export default function StudentDashboard() {
       // Active bookings (excluding cancelled)
       const activeBookings = bookings.filter(b => b.status !== "cancelled").length
 
-      // Average attendance
-      const avgAttendance = attendanceRecords.length > 0
-        ? Math.round(attendanceRecords.reduce((acc, record) => acc + (record.percentage || 0), 0) / attendanceRecords.length)
-        : 0
+      // Average attendance - calculate from grouped module data
+      const avgAttendance = (() => {
+        if (attendance.length === 0) return 0;
+
+        // Group attendance records by module
+        const groupedByModule = attendance.reduce((acc, record) => {
+          const moduleId = record.scheduleId?.moduleId?._id;
+
+          if (!acc[moduleId]) {
+            acc[moduleId] = {
+              totalSessions: 0,
+              attendedSessions: 0
+            };
+          }
+
+          acc[moduleId].totalSessions++;
+
+          if (record.status === 'present' || record.status === 'late') {
+            acc[moduleId].attendedSessions++;
+          }
+
+          return acc;
+        }, {});
+
+        // Calculate percentage for each module
+        const modulePercentages = Object.values(groupedByModule).map(module =>
+          Math.round((module.attendedSessions / module.totalSessions) * 100)
+        );
+
+        // Return average of all module percentages
+        return Math.round(modulePercentages.reduce((acc, percentage) => acc + percentage, 0) / modulePercentages.length);
+      })()
 
       // Upcoming exams (within next 30 days)
       const upcomingExams = examSchedules.filter(exam => {
@@ -140,10 +181,10 @@ export default function StudentDashboard() {
         return examDate >= today && examDate <= thirtyDaysFromNow
       }).length
 
-      // Available parking spots
-      const availableParking = parkingSpots.reduce((acc, spot) => acc + (spot.available || 0), 0)
+      // Available parking spots from facility store (grouped by zone)
+      const availableParking = parkingLots.filter(lot => lot.active).length
 
-      // Today's classes
+      // Today's classes - filter by day of week and check if module is active
       const todayClasses = classSchedules.filter(schedule => {
         const today = new Date()
         const todayDayOfWeek = today.toLocaleDateString('en-US', { weekday: 'long' })
@@ -162,16 +203,23 @@ export default function StudentDashboard() {
       // Pending feedback responses
       const pendingFeedback = feedback.filter(f => f.status === 'pending').length
 
-      // Shuttle status (check if any shuttles are delayed)
+      // Shuttle status (check if any shuttles are active and running today)
+      const todayDayOfWeek = today.getDay() === 0 ? 7 : today.getDay() // Convert Sunday=0 to Sunday=7
+
       const shuttleStatus = busSchedules.length > 0
-        ? busSchedules.some(shuttle => shuttle.status === 'delayed') ? 'delayed' : 'on-time'
+        ? busSchedules.some(schedule =>
+          schedule.active &&
+          schedule.dayOfWeek === todayDayOfWeek &&
+          new Date(schedule.startDate) <= today &&
+          new Date(schedule.endDate) >= today
+        ) ? 'running' : 'scheduled'
         : 'no-data'
 
       // Attendance trend (compare current vs previous period)
-      const attendanceTrend = attendanceRecords.length >= 2
-        ? attendanceRecords[attendanceRecords.length - 1]?.percentage > attendanceRecords[attendanceRecords.length - 2]?.percentage
+      const attendanceTrend = attendance.length >= 2
+        ? attendance[attendance.length - 1]?.percentage > attendance[attendance.length - 2]?.percentage
           ? 'up'
-          : attendanceRecords[attendanceRecords.length - 1]?.percentage < attendanceRecords[attendanceRecords.length - 2]?.percentage
+          : attendance[attendance.length - 1]?.percentage < attendance[attendance.length - 2]?.percentage
             ? 'down'
             : 'stable'
         : 'stable'
@@ -187,7 +235,7 @@ export default function StudentDashboard() {
         attendanceTrend
       })
     }
-  }, [isLoading, bookings, attendanceRecords, examSchedules, parkingSpots, classSchedules, feedback, busSchedules])
+  }, [isLoading, bookings, attendance, examSchedules, parkingLots, classSchedules, feedback, busSchedules])
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -201,6 +249,10 @@ export default function StudentDashboard() {
         return "green"
       case "delayed":
         return "red"
+      case "running":
+        return "green"
+      case "scheduled":
+        return "blue"
       case "good":
         return "green"
       case "warning":
@@ -245,7 +297,73 @@ export default function StudentDashboard() {
     }
   }
 
-  const currentIC = intakeCourses.find(ic => ic._id == currentUser.user.student?.intakeCourseId || null);
+  // Transform time from 24-hour format to 12-hour format
+  const formatTime = (time) => {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  };
+
+  // Color mapping for different course types
+  const getColorForType = (type) => {
+    const colorMap = {
+      'Lecture': 'blue',
+      'Lab': 'purple',
+      'Tutorial': 'green',
+      'Seminar': 'orange',
+      'Workshop': 'teal',
+      'default': 'gray'
+    };
+    return colorMap[type] || colorMap.default;
+  };
+
+  // Check if user data is properly loaded
+  if (!currentUser || !currentUser.user) {
+    return (
+      <Box p={6} minH="100vh" display="flex" justifyContent="center" alignItems="center">
+        <VStack spacing={4}>
+          <Spinner size="xl" color="blue.500" />
+          <Text color="gray.600">Loading user information...</Text>
+        </VStack>
+      </Box>
+    );
+  }
+
+  // Check if student data is available
+  if (!currentUser.student) {
+    return (
+      <Box p={6} minH="100vh" display="flex" justifyContent="center" alignItems="center">
+        <VStack spacing={4}>
+          <Spinner size="xl" color="blue.500" />
+          <Text color="gray.600">Loading student information...</Text>
+        </VStack>
+      </Box>
+    );
+  }
+
+  // Check if student profile setup is required
+  if (currentUser.student.status === 'pending_setup') {
+    return (
+      <Box p={6} minH="100vh" display="flex" justifyContent="center" alignItems="center">
+        <VStack spacing={4}>
+          <Text fontSize="xl" fontWeight="bold" color="gray.800">
+            Profile Setup Required
+          </Text>
+          <Text color="gray.600" textAlign="center">
+            Your student profile needs to be set up. Please contact your school administrator to complete your profile setup.
+          </Text>
+          <Text color="gray.500" fontSize="sm">
+            {currentUser.student.message}
+          </Text>
+        </VStack>
+      </Box>
+    );
+  }
+
+  const currentIC = intakeCourses.find(ic => ic._id == currentUser.student?.intakeCourseId || null);
 
   // Show loading spinner while waiting for currentIC to be set
   if (!currentIC) {
@@ -254,6 +372,22 @@ export default function StudentDashboard() {
         <VStack spacing={4}>
           <Spinner size="xl" color="blue.500" />
           <Text color="gray.600">Loading student information...</Text>
+        </VStack>
+      </Box>
+    );
+  }
+
+  // Check if student has complete profile setup
+  if (!currentUser.student.intakeCourseId) {
+    return (
+      <Box p={6} minH="100vh" display="flex" justifyContent="center" alignItems="center">
+        <VStack spacing={4}>
+          <Text fontSize="xl" fontWeight="bold" color="gray.800">
+            Profile Setup Incomplete
+          </Text>
+          <Text color="gray.600" textAlign="center">
+            Your student profile is missing required information. Please contact your school administrator to complete your profile setup.
+          </Text>
         </VStack>
       </Box>
     );
@@ -296,10 +430,10 @@ export default function StudentDashboard() {
         {/* Header */}
         <Box>
           <Text fontSize="2xl" fontWeight="bold" color="gray.800" mb={2}>
-            Welcome back, {currentUser?.user?.name || 'Student'}!
+            Welcome back, {currentUser?.user?.name || currentUser?.name || 'Student'}!
           </Text>
           <Text color="gray.600">
-            Student • {currentUser?.student?.status || 'enrolled'} • {currentIC.intakeId.intakeName} • {currentIC.courseId.courseName}
+            Student • {currentUser?.student?.status || 'enrolled'} • {currentIC?.intakeId?.intakeName || 'Profile Setup Required'} • {currentIC?.courseId?.courseName || 'Profile Setup Required'}
           </Text>
         </Box>
 
@@ -387,7 +521,7 @@ export default function StudentDashboard() {
                 title="Shuttle Status"
                 value={statsData.shuttleStatus === 'no-data' ? 'N/A' : statsData.shuttleStatus}
                 icon={FaBus}
-                color={statsData.shuttleStatus === 'delayed' ? 'red.500' : 'green.500'}
+                color={getStatusColor(statsData.shuttleStatus)}
                 isLoading={isLoading}
               />
             </Box>
@@ -430,23 +564,86 @@ export default function StudentDashboard() {
                       Real-Time Parking Availability
                     </Text>
                     <VStack spacing={3} align="stretch">
-                      {parkingSpots.map((spot) => {
-                        // console.log("🚀 ~ spot:", spot)
+                      {(() => {
+                        // Group parking lots by zone
+                        const groupedByZone = parkingLots.reduce((acc, lot) => {
+                          if (!acc[lot.zone]) {
+                            acc[lot.zone] = [];
+                          }
+                          acc[lot.zone].push(lot);
+                          return acc;
+                        }, {});
 
-                        return (
-                          <HStack key={spot.id} justify="space-between" p={3} bg="gray.50" borderRadius="md">
-                            <Box>
-                              <Text fontWeight="medium">{spot.zone}</Text>
-                              <Text fontSize="sm" color="gray.600">
-                                {spot.available}/{spot.total} available
-                              </Text>
-                            </Box>
-                            <Badge colorScheme={getStatusColor(spot.status)} variant="subtle">
-                              {spot.status}
-                            </Badge>
-                          </HStack>
-                        )
-                      })}
+                        // Calculate statistics for each zone
+                        const zoneStats = Object.entries(groupedByZone).map(([zone, lots]) => {
+                          const totalSlots = lots.length;
+                          const availableSlots = lots.filter(lot => lot.active).length;
+                          const occupiedSlots = totalSlots - availableSlots;
+                          const occupancyPercentage = Math.round((occupiedSlots / totalSlots) * 100);
+                          const availablePercentage = 100 - occupancyPercentage;
+
+                          // Get available slot numbers
+                          const availableSlotNumbers = lots
+                            .filter(lot => lot.active)
+                            .map(lot => lot.slotNumber)
+                            .sort((a, b) => a - b);
+
+                          return {
+                            zone,
+                            totalSlots,
+                            availableSlots,
+                            occupiedSlots,
+                            occupancyPercentage,
+                            availablePercentage,
+                            availableSlotNumbers
+                          };
+                        });
+
+                        return zoneStats.map((stats) => (
+                          <Box key={stats.zone} p={3} bg="gray.50" borderRadius="md">
+                            <HStack justify="space-between" mb={2}>
+                              <Text fontWeight="medium">Zone {stats.zone}</Text>
+                              <Badge
+                                colorScheme={
+                                  stats.availablePercentage >= 50 ? "green" :
+                                    stats.availablePercentage >= 25 ? "yellow" : "red"
+                                }
+                                variant="subtle"
+                              >
+                                {stats.availablePercentage}% Available
+                              </Badge>
+                            </HStack>
+
+                            <VStack spacing={1} align="stretch">
+                              <HStack justify="space-between">
+                                <Text fontSize="sm" color="gray.600">
+                                  {stats.availableSlots}/{stats.totalSlots} slots available
+                                </Text>
+                                <Text fontSize="sm" color="gray.600">
+                                  {stats.occupancyPercentage}% occupied
+                                </Text>
+                              </HStack>
+
+                              <Progress
+                                value={stats.occupancyPercentage}
+                                colorScheme={
+                                  stats.occupancyPercentage >= 75 ? "red" :
+                                    stats.occupancyPercentage >= 50 ? "yellow" : "green"
+                                }
+                                size="sm"
+                              />
+
+                              <HStack>
+                                {stats.availableSlots > 0 && (
+                                  stats.availableSlotNumbers.map(num => {
+                                    return (<Badge key={num} colorScheme="gray" variant="outline">Slot {num}</Badge>)
+                                  })
+                                )}
+                              </HStack>
+                            </VStack>
+                          </Box>
+                        ));
+                      })()}
                     </VStack>
                   </CardBody>
                 </Card>
@@ -510,24 +707,53 @@ export default function StudentDashboard() {
                       <Thead>
                         <Tr>
                           <Th>Route</Th>
-                          <Th>Next Arrival</Th>
-                          <Th>Frequency</Th>
+                          <Th>Day</Th>
+                          <Th>Start Time</Th>
+                          <Th>End Time</Th>
+                          <Th>Vehicle</Th>
                           <Th>Status</Th>
                         </Tr>
                       </Thead>
                       <Tbody>
-                        {busSchedules.map((shuttle) => (
-                          <Tr key={shuttle._id}>
-                            <Td>{shuttle.routeId?.name || shuttle.routeName}</Td>
-                            <Td fontWeight="medium">{shuttle.departureTime}</Td>
-                            <Td>{shuttle.frequency || "Regular"}</Td>
-                            <Td>
-                              <Badge colorScheme={getStatusColor(shuttle.status || "on-time")} variant="subtle">
-                                {shuttle.status || "on-time"}
-                              </Badge>
-                            </Td>
-                          </Tr>
-                        ))}
+                        {busSchedules.slice(0, 5).map((schedule) => {
+                          // Get route timing info
+                          const routeTiming = schedule.routeTiming?.[0] || {}
+
+                          // Convert day number to day name
+                          const getDayName = (dayNumber) => {
+                            const days = {
+                              1: 'Monday',
+                              2: 'Tuesday',
+                              3: 'Wednesday',
+                              4: 'Thursday',
+                              5: 'Friday',
+                              6: 'Saturday',
+                              7: 'Sunday'
+                            }
+                            return days[dayNumber] || 'Daily'
+                          }
+
+                          // Get next arrival time (simplified - just show start time for now)
+                          const nextArrival = routeTiming.startTime || 'N/A'
+
+                          return (
+                            <Tr key={schedule._id}>
+                              <Td>{schedule.routeTiming?.[0]?.routeId?.name || 'Route N/A'}</Td>
+                              <Td>{getDayName(schedule.dayOfWeek)}</Td>
+                              <Td fontWeight="medium">{routeTiming.startTime || 'N/A'}</Td>
+                              <Td>{routeTiming.endTime || 'N/A'}</Td>
+                              <Td>{schedule.vehicleId?.plateNumber || 'Vehicle N/A'}</Td>
+                              <Td>
+                                <Badge
+                                  colorScheme={schedule.active ? "green" : "gray"}
+                                  variant="subtle"
+                                >
+                                  {schedule.active ? "Active" : "Inactive"}
+                                </Badge>
+                              </Td>
+                            </Tr>
+                          )
+                        })}
                       </Tbody>
                     </Table>
                   </TableContainer>
@@ -562,6 +788,7 @@ export default function StudentDashboard() {
                         const today = new Date()
                         const todayDayOfWeek = today.toLocaleDateString('en-US', { weekday: 'long' })
 
+                        // Filter schedules for today and check if they're active
                         const todaysSchedules = classSchedules.filter(schedule => {
                           // Check if today matches the schedule's day of week
                           const isToday = schedule.dayOfWeek === todayDayOfWeek
@@ -582,17 +809,42 @@ export default function StudentDashboard() {
                           )
                         }
 
-                        return todaysSchedules.map((schedule) => (
-                          <Box key={schedule._id} p={3} bg="gray.50" borderRadius="md">
-                            <Text fontWeight="medium">{schedule.moduleId?.moduleName || schedule.moduleName}</Text>
-                            <Text fontSize="sm" color="gray.600">
-                              {schedule.startTime} - {schedule.endTime} • {schedule.roomId?.block} {schedule.roomId?.roomNumber}
-                            </Text>
-                            <Text fontSize="sm" color="gray.500">
-                              {schedule.lecturerId?.title?.join(', ')} {schedule.lecturerId?.userId?.name || schedule.lecturerName}
-                            </Text>
-                          </Box>
-                        ))
+                        return todaysSchedules.map((schedule) => {
+                          // Determine course type (default to Lecture for now)
+                          const courseType = 'Lecture'
+                          const courseColor = getColorForType(courseType)
+
+                          return (
+                            <Box
+                              key={schedule._id}
+                              p={3}
+                              bg={`${courseColor}.50`}
+                              borderRadius="md"
+                              borderLeft="4px solid"
+                              borderColor={`${courseColor}.500`}
+                            >
+                              <HStack justify="space-between" align="start" mb={2}>
+                                <Text fontWeight="medium" fontSize="sm" flex={1}>
+                                  {schedule.moduleId?.moduleName || 'Module N/A'}
+                                </Text>
+                                <Badge
+                                  colorScheme={courseColor}
+                                  variant="subtle"
+                                  size="sm"
+                                  fontSize="xs"
+                                >
+                                  {courseType}
+                                </Badge>
+                              </HStack>
+                              <Text fontSize="xs" color="gray.600" mb={1}>
+                                {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)} • {schedule.roomId?.block} {schedule.roomId?.roomNumber}
+                              </Text>
+                              <Text fontSize="xs" color="gray.500">
+                                {schedule.lecturerId?.title?.join(', ')} {schedule.lecturerId?.userId?.name || 'Lecturer N/A'}
+                              </Text>
+                            </Box>
+                          )
+                        })
                       })()}
                     </VStack>
                   </CardBody>
@@ -605,26 +857,88 @@ export default function StudentDashboard() {
                       Attendance Overview
                     </Text>
                     <VStack spacing={4} align="stretch">
-                      {attendanceRecords.map((record) => {
+                      {(() => {
+                        // Group attendance records by module
+                        const groupedByModule = attendance.reduce((acc, record) => {
+                          const moduleId = record.scheduleId?.moduleId?._id;
+                          const moduleName = record.scheduleId?.moduleId?.moduleName || 'Unknown Module';
 
-                        return (
-                          <Box key={record.id}>
+                          if (!acc[moduleId]) {
+                            acc[moduleId] = {
+                              moduleName,
+                              records: [],
+                              totalSessions: 0,
+                              attendedSessions: 0,
+                              lateSessions: 0,
+                              absentSessions: 0
+                            };
+                          }
+
+                          acc[moduleId].records.push(record);
+                          acc[moduleId].totalSessions++;
+
+                          switch (record.status) {
+                            case 'present':
+                              acc[moduleId].attendedSessions++;
+                              break;
+                            case 'late':
+                              acc[moduleId].lateSessions++;
+                              acc[moduleId].attendedSessions++; // Late still counts as attended
+                              break;
+                            case 'absent':
+                              acc[moduleId].absentSessions++;
+                              break;
+                          }
+
+                          return acc;
+                        }, {});
+
+                        // Calculate attendance percentage for each module
+                        const moduleStats = Object.values(groupedByModule).map(module => ({
+                          ...module,
+                          attendancePercentage: Math.round((module.attendedSessions / module.totalSessions) * 100)
+                        }));
+
+                        if (moduleStats.length === 0) {
+                          return (
+                            <Box p={3} bg="gray.50" borderRadius="md" textAlign="center">
+                              <Text fontSize="sm" color="gray.600">No attendance records found</Text>
+                            </Box>
+                          );
+                        }
+
+                        return moduleStats.map((module) => (
+                          <Box key={module.moduleName} p={3} bg="gray.50" borderRadius="md">
                             <HStack justify="space-between" mb={2}>
                               <Text fontSize="sm" fontWeight="medium">
-                                {record.moduleId?.name || record.moduleName}
+                                {module.moduleName}
                               </Text>
                               <Text fontSize="sm" color="gray.600">
-                                {record.attendedSessions}/{record.totalSessions} ({record.attendancePercentage}%)
+                                {module.attendedSessions}/{module.totalSessions} ({module.attendancePercentage}%)
                               </Text>
                             </HStack>
+
                             <Progress
-                              value={record.attendancePercentage}
-                              colorScheme={record.attendancePercentage >= 80 ? "green" : "yellow"}
+                              value={module.attendancePercentage}
+                              colorScheme={module.attendancePercentage >= 80 ? "green" : module.attendancePercentage >= 60 ? "yellow" : "red"}
                               size="sm"
+                              mb={2}
                             />
+
+                            <HStack spacing={2} fontSize="xs">
+                              <Badge colorScheme="green" variant="subtle">
+                                Present: {module.attendedSessions - module.lateSessions}
+                              </Badge>
+                              <Badge colorScheme="orange" variant="subtle">
+                                Late: {module.lateSessions}
+                              </Badge>
+                              <Badge colorScheme="red" variant="subtle">
+                                Absent: {module.absentSessions}
+                              </Badge>
+                            </HStack>
                           </Box>
-                        )
-                      })}
+                        ));
+                      })()}
                     </VStack>
                   </CardBody>
                 </Card>
@@ -652,16 +966,16 @@ export default function StudentDashboard() {
                     Quick Actions
                   </Text>
                   <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={4}>
-                    <Button leftIcon={<FiMessageSquare />} colorScheme="blue" onClick={onFeedbackOpen}>
+                    <Button leftIcon={<FiMessageSquare />} colorScheme="blue" onClick={navigateToFeedback}>
                       Submit Feedback
                     </Button>
                     <Button leftIcon={<FiAlertCircle />} variant="outline">
                       Report Lost Item
                     </Button>
-                    <Button leftIcon={<FaBus />} variant="outline">
+                    <Button leftIcon={<FaBus />} variant="outline" onClick={navigateToTransportation}>
                       Request Campus Ride
                     </Button>
-                    <Button leftIcon={<FiMapPin />} variant="outline">
+                    <Button leftIcon={<FiMapPin />} variant="outline" onClick={navigateToClassFinder}>
                       Find Classroom
                     </Button>
                   </Grid>

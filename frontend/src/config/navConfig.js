@@ -9,7 +9,8 @@ import {
     FiBell,            // For announcements
     FiDollarSign,      // For subscription
     FiTrendingUp,       // For analytics
-    FiUserCheck         // For user oversight
+    FiUserCheck,      // For user oversight
+    FiAlertTriangle
 } from "react-icons/fi";
 import { FaCar, FaParking, FaChalkboardTeacher, FaBus } from "react-icons/fa";
 import { MdMeetingRoom, MdClass, MdEventNote } from "react-icons/md";
@@ -75,7 +76,8 @@ const navConfig = {
         { label: "Subscription", path: "/subscription", icon: FiDollarSign },
         { label: "Analytics", path: "/analytical-report", icon: FiTrendingUp },
         { label: "Client Management", path: "/client-management", icon: FiUsers },
-        { label: "User Oversight", path: "/user-oversight", icon: FiUserCheck }
+        { label: "User Oversight", path: "/user-oversight", icon: FiUserCheck },
+        { label: "Bug Management", path: "/bug-management", icon: FiAlertTriangle }
     ],
 };
 

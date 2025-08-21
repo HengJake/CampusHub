@@ -38,7 +38,8 @@ import {
     Divider,
     InputGroup,
     InputLeftElement,
-    InputRightElement
+    InputRightElement,
+    Tooltip
 } from "@chakra-ui/react"
 import { FiPlus, FiSearch, FiMoreVertical, FiEdit, FiTrash2, FiDownload, FiUser, FiMail, FiPhone, FiLock, FiBookOpen, FiAward, FiClock } from "react-icons/fi"
 import { useEffect, useState } from "react"
@@ -50,6 +51,7 @@ import TitleInputList from "../../../common/TitleInputList.jsx";
 import { IoIosRemoveCircle } from "react-icons/io";
 import { useShowToast } from "../../../../store/utils/toast.js"
 import { useAuthStore } from "../../../../store/auth.js";
+import ProfilePicture from "../../../common/ProfilePicture.jsx";
 
 export function LecturerManagement() {
     const {
@@ -71,6 +73,7 @@ export function LecturerManagement() {
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [departmentFilter, setDepartmentFilter] = useState("all");
+    const [profilePictureFilter, setProfilePictureFilter] = useState("all");
     const [selectedLecturer, setSelectedLecturer] = useState(null);
     const [isEdit, setIsEdit] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -83,6 +86,27 @@ export function LecturerManagement() {
     // Form validation states
     const [touched, setTouched] = useState({});
     const [errors, setErrors] = useState({});
+
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        password: "",
+        phoneNumber: "",
+        userId: "",
+        title: [],
+        titleInput: "",
+        departmentId: "",
+        moduleIds: [],
+        specialization: [],
+        specializationInput: "",
+        qualification: "",
+        experience: 0,
+        isActive: true,
+        officeHours: [
+        ],
+        schoolId: "",
+        profilePicture: null
+    });
 
     useEffect(() => {
         const initializeAndFetch = async () => {
@@ -107,32 +131,68 @@ export function LecturerManagement() {
         initializeAndFetch();
     }, []);
 
+    // Cleanup object URLs when component unmounts or profile picture changes
+    useEffect(() => {
+        return () => {
+            // Cleanup any object URLs created for profile pictures
+            if (formData.profilePicture instanceof File) {
+                // Cleanup will happen automatically when component unmounts
+            }
+        };
+    }, [formData.profilePicture]);
+
     // Validation functions
     const validateField = (field, value) => {
+        // Handle null/undefined values before validation
+        if (value === null || value === undefined) {
+            switch (field) {
+                case 'name':
+                    return "Full name is required";
+                case 'email':
+                    return "Email is required";
+                case 'password':
+                    if (!isEdit) return "Password is required";
+                    return "";
+                case 'phoneNumber':
+                    return "Phone number is required";
+                case 'qualification':
+                    return "Qualification is required";
+                case 'departmentId':
+                    return "Department is required";
+                default:
+                    return "";
+            }
+        }
+
         switch (field) {
             case 'name':
-                if (!value.trim()) return "Full name is required";
-                if (value.trim().length < 2) return "Name must be at least 2 characters";
+                const nameStr = String(value || "");
+                if (!nameStr.trim()) return "Full name is required";
+                if (nameStr.trim().length < 2) return "Name must be at least 2 characters";
                 return "";
             case 'email':
-                if (!value.trim()) return "Email is required";
+                const emailStr = String(value || "");
+                if (!emailStr.trim()) return "Email is required";
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(value)) return "Please enter a valid email address";
+                if (!emailRegex.test(emailStr)) return "Please enter a valid email address";
                 return "";
             case 'password':
                 if (!isEdit && !value) return "Password is required";
                 if (!isEdit && value.length < 8) return "Password must be at least 8 characters";
                 return "";
             case 'phoneNumber':
-                if (!value.trim()) return "Phone number is required";
+                // Convert to string and handle null/undefined
+                const phoneStr = String(value || "");
+                if (!phoneStr.trim()) return "Phone number is required";
                 const phoneRegex = /^(\+?60|60|0|01)?[1-9][0-9]{7,8}$/;
-                if (!phoneRegex.test(value.replace(/\s+/g, ''))) return "Please enter a valid Malaysian phone number";
+                if (!phoneRegex.test(phoneStr.replace(/\s+/g, ''))) return "Please enter a valid Malaysian phone number";
                 return "";
             case 'departmentId':
                 if (!value) return "Department is required";
                 return "";
             case 'qualification':
-                if (!value.trim()) return "Qualification is required";
+                const qualStr = String(value || "");
+                if (!qualStr.trim()) return "Qualification is required";
                 return "";
             case 'experience':
                 if (value < 0) return "Experience cannot be negative";
@@ -143,18 +203,34 @@ export function LecturerManagement() {
     };
 
     const handleInputChange = (field, value) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+        // Ensure phone numbers are always stored as strings
+        let processedValue = value;
+        if (field === 'phoneNumber') {
+            processedValue = String(value || "");
+        }
+
+        setFormData(prev => ({ ...prev, [field]: processedValue }));
 
         if (touched[field]) {
-            const error = validateField(field, value);
-            setErrors(prev => ({ ...prev, [field]: error }));
+            try {
+                const error = validateField(field, processedValue);
+                setErrors(prev => ({ ...prev, [field]: error }));
+            } catch (err) {
+                console.error(`Error validating field ${field} on input change:`, err);
+                setErrors(prev => ({ ...prev, [field]: "Invalid field value" }));
+            }
         }
     };
 
     const handleBlur = (field) => {
         setTouched(prev => ({ ...prev, [field]: true }));
-        const error = validateField(field, formData[field]);
-        setErrors(prev => ({ ...prev, [field]: error }));
+        try {
+            const error = validateField(field, formData[field]);
+            setErrors(prev => ({ ...prev, [field]: error }));
+        } catch (err) {
+            console.error(`Error validating field ${field} on blur:`, err);
+            setErrors(prev => ({ ...prev, [field]: "Invalid field value" }));
+        }
     };
 
     const isFormValid = () => {
@@ -162,30 +238,15 @@ export function LecturerManagement() {
         if (!isEdit) requiredFields.push('password');
 
         return requiredFields.every(field => {
-            const error = validateField(field, formData[field]);
-            return !error;
+            try {
+                const error = validateField(field, formData[field]);
+                return !error;
+            } catch (err) {
+                console.error(`Error validating field ${field}:`, err);
+                return false;
+            }
         });
     };
-
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        password: "",
-        phoneNumber: "",
-        userId: "",
-        title: [],
-        titleInput: "",
-        departmentId: "",
-        moduleIds: [],
-        specialization: [],
-        specializationInput: "",
-        qualification: "",
-        experience: 0,
-        isActive: true,
-        officeHours: [
-        ],
-        schoolId: ""
-    });
 
 
     // Filtering
@@ -195,7 +256,10 @@ export function LecturerManagement() {
             (lecturer.userId?.email || "").toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === "all" || (lecturer.isActive === (statusFilter === "active"));
         const matchesDepartment = departmentFilter === "all" || (lecturer.departmentId?._id === departmentFilter);
-        return matchesSearch && matchesStatus && matchesDepartment;
+        const matchesProfilePicture = profilePictureFilter === "all" ||
+            (profilePictureFilter === "with" && lecturer.userId?.profilePicture) ||
+            (profilePictureFilter === "without" && !lecturer.userId?.profilePicture);
+        return matchesSearch && matchesStatus && matchesDepartment && matchesProfilePicture;
     });
 
     // Handlers
@@ -212,6 +276,28 @@ export function LecturerManagement() {
         }
 
         let userId = formData.userId;
+        let profilePictureData = null;
+
+        // Handle profile picture if it's a file
+        if (formData.profilePicture && formData.profilePicture instanceof File) {
+            try {
+                // Convert file to base64
+                const reader = new FileReader();
+                profilePictureData = await new Promise((resolve, reject) => {
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(formData.profilePicture);
+                });
+            } catch (error) {
+                console.error("Error converting profile picture to base64:", error);
+                showToast({ title: "Error", description: "Failed to process profile picture", status: "error" });
+                return;
+            }
+        } else if (formData.profilePicture) {
+            // If it's already a string (URL or base64), use it directly
+            profilePictureData = formData.profilePicture;
+        }
+
         if (isEdit) {
             // Update user
             const userRes = await modifyUser(userId, {
@@ -219,7 +305,8 @@ export function LecturerManagement() {
                 email: formData.email,
                 password: formData.password,
                 phoneNumber: formData.phoneNumber,
-                role: "lecturer"
+                role: "lecturer",
+                profilePicture: profilePictureData
             });
             if (!userRes.success) {
                 showToast({ title: "Error", description: userRes.message, status: "error" });
@@ -232,7 +319,8 @@ export function LecturerManagement() {
                 email: formData.email,
                 password: formData.password,
                 phoneNumber: formData.phoneNumber,
-                role: "lecturer"
+                role: "lecturer",
+                profilePicture: profilePictureData
             });
             if (!userRes.success) {
                 showToast({ title: "Error", description: userRes.message, status: "error" });
@@ -274,7 +362,8 @@ export function LecturerManagement() {
             experience: 0,
             isActive: true,
             officeHours: [],
-            schoolId: ""
+            schoolId: "",
+            profilePicture: null
         });
         setSelectedLecturer(null);
         setIsEdit(false);
@@ -289,7 +378,7 @@ export function LecturerManagement() {
         setFormData({
             name: lecturer.userId?.name || "",
             email: lecturer.userId?.email || "",
-            phoneNumber: lecturer.userId?.phoneNumber || "",
+            phoneNumber: String(lecturer.userId?.phoneNumber || ""),
             userId: lecturer.userId?._id || "",
             title: lecturer.title || [],
             departmentId: lecturer.departmentId?._id || "",
@@ -299,7 +388,8 @@ export function LecturerManagement() {
             experience: lecturer.experience || 0,
             isActive: lecturer.isActive !== undefined ? lecturer.isActive : true,
             officeHours: lecturer.officeHours || [],
-            schoolId: lecturer.schoolId?._id || ""
+            schoolId: lecturer.schoolId?._id || "",
+            profilePicture: lecturer.userId?.profilePicture || null
         });
         setIsEdit(true);
         setTouched({});
@@ -329,8 +419,9 @@ export function LecturerManagement() {
 
     const exportLecturers = () => {
         const csvContent = [
-            ["Name", "Email", "Phone Number", "Titles", "Department", "Specializations", "Qualification", "Experience", "Status"],
+            ["Profile Picture", "Name", "Email", "Phone Number", "Titles", "Department", "Specializations", "Qualification", "Experience", "Status"],
             ...filteredLecturers.map((lecturer) => [
+                lecturer.userId?.profilePicture ? "Yes" : "No",
                 lecturer.userId?.name || "N/A",
                 lecturer.userId?.email || "N/A",
                 lecturer.userId?.phoneNumber || "N/A",
@@ -437,7 +528,8 @@ export function LecturerManagement() {
                                 experience: 0,
                                 isActive: true,
                                 officeHours: [],
-                                schoolId: ""
+                                schoolId: "",
+                                profilePicture: null
                             });
                             setSelectedLecturer(null);
                             setTouched({});
@@ -480,6 +572,15 @@ export function LecturerManagement() {
                                     <option key={dep._id} value={dep._id}>{dep.departmentName}</option>
                                 ))}
                             </Select>
+                            <Select
+                                w={{ base: "full", sm: "200px" }}
+                                value={profilePictureFilter}
+                                onChange={(e) => setProfilePictureFilter(e.target.value)}
+                            >
+                                <option value="all">All Profile Pictures</option>
+                                <option value="with">With Profile Picture</option>
+                                <option value="without">Without Profile Picture</option>
+                            </Select>
                         </HStack>
                     </CardBody>
                 </Card>
@@ -491,12 +592,11 @@ export function LecturerManagement() {
                             <Table variant="simple">
                                 <Thead>
                                     <Tr>
+                                        <Th>Profile Picture</Th>
                                         <Th>Name</Th>
-                                        <Th>Email</Th>
-                                        <Th>Titles</Th>
+
                                         <Th>Department</Th>
                                         <Th>Specializations</Th>
-                                        <Th>Qualification</Th>
                                         <Th>Status</Th>
                                         <Th>Actions</Th>
                                     </Tr>
@@ -504,12 +604,22 @@ export function LecturerManagement() {
                                 <Tbody fontSize={"12px"}>
                                     {filteredLecturers.map((lecturer) => (
                                         <Tr key={lecturer._id}>
+                                            <Td>
+                                                <Tooltip label={lecturer.userId?.profilePicture ? "Profile Picture Available" : "No Profile Picture"}>
+                                                    <Box>
+                                                        <ProfilePicture
+                                                            src={lecturer.userId?.profilePicture}
+                                                            name={lecturer.userId?.name || "N/A"}
+                                                            size="md"
+                                                            showChangeButton={false}
+                                                            editable={false}
+                                                        />
+                                                    </Box>
+                                                </Tooltip>
+                                            </Td>
                                             <Td>{lecturer.userId?.name || "N/A"}</Td>
-                                            <Td>{lecturer.userId?.email || "N/A"}</Td>
-                                            <Td>{(lecturer.title || []).join(", ")}</Td>
                                             <Td>{lecturer.departmentId?.departmentName || "N/A"}</Td>
                                             <Td>{(lecturer.specialization || []).join(", ")}</Td>
-                                            <Td>{lecturer.qualification}</Td>
                                             <Td>
                                                 <Badge colorScheme={lecturer.isActive ? "green" : "red"}>{lecturer.isActive ? "Active" : "Inactive"}</Badge>
                                             </Td>
@@ -530,16 +640,31 @@ export function LecturerManagement() {
                         </Box>
                         {/* Mobile Accordion View */}
                         <Box display={{ base: "block", lg: "none" }}>
+
                             <Accordion allowMultiple>
                                 {filteredLecturers.map((lecturer) => (
                                     <AccordionItem key={lecturer._id}>
                                         <h2>
                                             <AccordionButton>
-                                                <Box as="span" flex="1" textAlign="left">
-                                                    <Text fontWeight="medium">{lecturer.userId?.name || "N/A"}</Text>
-                                                    <Text fontSize="sm" color="gray.600">{lecturer.userId?.email || "N/A"}</Text>
-                                                </Box>
-                                                <AccordionIcon />
+                                                <HStack spacing={2} justify="space-between" align={"center"} w={"full"}>
+                                                    <HStack spacing={4} flex="1" textAlign="left">
+                                                        <ProfilePicture
+                                                            src={lecturer.userId?.profilePicture}
+                                                            name={lecturer.userId?.name || "N/A"}
+                                                            size="md"
+                                                            showChangeButton={false}
+                                                            editable={false}
+                                                        />
+                                                        <Box flex="1">
+                                                            <Text fontWeight="medium" fontSize="md">{lecturer.userId?.name || "N/A"}</Text>
+                                                            <Text fontSize="sm" color="gray.600">{lecturer.userId?.email || "N/A"}</Text>
+                                                            <Text fontSize="xs" color="gray.500">
+                                                                {lecturer.departmentId?.departmentName || "N/A"} • {(lecturer.title || []).join(", ")}
+                                                            </Text>
+                                                        </Box>
+                                                    </HStack>
+                                                    <AccordionIcon />
+                                                </HStack>
                                             </AccordionButton>
                                         </h2>
                                         <AccordionPanel pb={4}>
@@ -568,6 +693,7 @@ export function LecturerManagement() {
                                                     <Text fontWeight="semibold">Status:</Text>
                                                     <Badge colorScheme={lecturer.isActive ? "green" : "red"}>{lecturer.isActive ? "Active" : "Inactive"}</Badge>
                                                 </Box>
+                                                {/* Action buttons moved outside of AccordionButton */}
                                                 <HStack spacing={2} justify="center" pt={2}>
                                                     <Button size="sm" colorScheme="blue" onClick={() => handleEdit(lecturer)}>
                                                         <FiEdit />
@@ -599,6 +725,29 @@ export function LecturerManagement() {
                                         User Information
                                     </Text>
                                     <VStack spacing={4}>
+                                        <FormControl>
+                                            <FormLabel>Profile Picture</FormLabel>
+                                            <Text fontSize="sm" color="rgba(255, 255, 255, 0.7)" mb={2}>
+                                                Upload a profile picture for the lecturer. Supported formats: JPEG, PNG, GIF (max 5MB)
+                                            </Text>
+                                            <ProfilePicture
+                                                src={formData.profilePicture instanceof File ? URL.createObjectURL(formData.profilePicture) : formData.profilePicture}
+                                                name={formData.name || "Lecturer"}
+                                                size="xl"
+                                                showChangeButton={true}
+                                                editable={true}
+                                                onPhotoChange={async (file, formData) => {
+                                                    if (file) {
+                                                        // Store the file for later upload
+                                                        setFormData(prev => ({ ...prev, profilePicture: file }));
+                                                    } else {
+                                                        // Remove profile picture
+                                                        setFormData(prev => ({ ...prev, profilePicture: null }));
+                                                    }
+                                                }}
+                                            />
+                                        </FormControl>
+
                                         <FormControl isRequired>
                                             <FormLabel>Full Name</FormLabel>
                                             <InputGroup>
@@ -746,9 +895,6 @@ export function LecturerManagement() {
                                         <FormControl isRequired>
                                             <FormLabel>Department</FormLabel>
                                             <InputGroup>
-                                                <InputLeftElement>
-                                                    <FiBookOpen color="rgba(255, 255, 255, 0.5)" />
-                                                </InputLeftElement>
                                                 <Select
                                                     value={formData.departmentId}
                                                     onChange={e => handleInputChange("departmentId", e.target.value)}
@@ -759,9 +905,9 @@ export function LecturerManagement() {
                                                     borderColor={!errors.departmentId && formData.departmentId ? "green.400" : "rgba(255, 255, 255, 0.2)"}
                                                     bg="rgba(255, 255, 255, 0.1)"
                                                 >
-                                                    <option value="">Select Department</option>
+                                                    <option value="" style={{ color: "black" }}>Select Department</option>
                                                     {departments.map(dep => (
-                                                        <option key={dep._id} value={dep._id}>{dep.departmentName}</option>
+                                                        <option key={dep._id} value={dep._id} style={{ color: "black" }}>{dep.departmentName}</option>
                                                     ))}
                                                 </Select>
                                             </InputGroup>
@@ -864,8 +1010,8 @@ export function LecturerManagement() {
                                                 bg="rgba(255, 255, 255, 0.1)"
                                                 borderColor="rgba(255, 255, 255, 0.2)"
                                             >
-                                                <option value={true}>Active</option>
-                                                <option value={false}>Inactive</option>
+                                                <option value={true} style={{ color: "black" }}>Active</option>
+                                                <option value={false} style={{ color: "black" }}>Inactive</option>
                                             </Select>
                                         </FormControl>
 

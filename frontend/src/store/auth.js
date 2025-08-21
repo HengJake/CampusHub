@@ -460,6 +460,46 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  // OAuth-specific registration method
+  signUpWithOAuth: async (oauthUserData) => {
+    try {
+      // Format OAuth data for registration
+      const registrationData = {
+        email: oauthUserData.email,
+        name: oauthUserData.name,
+        role: oauthUserData.role || "schoolAdmin",
+        authProvider: oauthUserData.authProvider || "google",
+        googleId: oauthUserData.googleId,
+        profilePicture: oauthUserData.profilePicture,
+        phoneNumber: oauthUserData.phoneNumber || ""
+      };
+
+      // Use the dedicated OAuth signup endpoint
+      const res = await fetch("/auth/register-oauth", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify(registrationData),
+        credentials: 'include', // Include cookies
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.message || "OAuth registration failed");
+      }
+
+      // Update store with the new user data
+      set({ user: [data.data] });
+
+      return { success: true, message: data.message, data: data.data };
+    } catch (error) {
+      console.error("OAuth registration error:", error.message);
+      return { success: false, message: error.message };
+    }
+  },
+
   sendVerifyOtp: async () => {
     try {
       const res = await fetch("/auth/send-verify-otp", {
@@ -520,7 +560,6 @@ export const useAuthStore = create((set, get) => ({
       });
 
       const data = await res.json();
-      console.log("🚀 ~ data:", data)
 
       if (data.success) {
         // User is authenticated, create enhanced user with role-specific data
@@ -563,6 +602,105 @@ export const useAuthStore = create((set, get) => ({
       // Clear any stale state on error
       get().clearAuth();
       return { success: false, message: error.message };
+    }
+  },
+
+  unifiedAuth: async (oauthData) => {
+    try {
+      const response = await fetch('/auth/unified', { // Remove /api prefix
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ oauthData })
+      });
+
+      const result = await response.json();
+      console.log('unifiedAuth response:', result);
+
+      // If login is successful, update the store state
+      if (result.success && result.data) {
+        // Create enhanced user object
+        const enhancedUser = {
+          ...result.data,
+          schoolId: result.data.schoolId || null,
+          studentId: result.data.studentId || result.data.student?._id || null,
+          student: result.data.student || null,
+          lecturer: result.data.lecturer || null,
+          school: result.data.school || null,
+          schoolSetupComplete: result.data.schoolSetupComplete || false
+        };
+
+        // Update store state
+        set({
+          user: result.data,
+          currentUser: enhancedUser,
+          isAuthenticated: true,
+          schoolId: enhancedUser.schoolId,
+          studentId: enhancedUser.studentId,
+          lecturerId: enhancedUser.lecturerId || enhancedUser.lecturer?._id || null,
+          student: enhancedUser.student,
+          lecturer: enhancedUser.lecturer,
+          school: enhancedUser.school,
+          isLoading: false
+        });
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message
+      };
+    }
+  },
+
+  linkOAuthAccount: async (email, password, oauthData) => {
+    try {
+      const response = await fetch('/auth/link-oauth', { // Remove /api prefix
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, oauthData })
+      });
+
+      const result = await response.json();
+
+      // If linking is successful, update the store state
+      if (result.success && result.data) {
+        // Create enhanced user object
+        const enhancedUser = {
+          ...result.data,
+          schoolId: result.data.schoolId || null,
+          studentId: result.data.studentId || result.data.student?._id || null,
+          student: result.data.student || null,
+          lecturer: result.data.lecturer || null,
+          school: result.data.school || null,
+          schoolSetupComplete: result.data.schoolSetupComplete || false
+        };
+
+        // Update store state
+        set({
+          user: result.data,
+          currentUser: enhancedUser,
+          isAuthenticated: true,
+          schoolId: enhancedUser.schoolId,
+          studentId: enhancedUser.studentId,
+          lecturerId: enhancedUser.lecturerId || enhancedUser.lecturer?._id || null,
+          student: enhancedUser.student,
+          lecturer: enhancedUser.lecturer,
+          school: enhancedUser.school,
+          isLoading: false
+        });
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message
+      };
     }
   },
 }));

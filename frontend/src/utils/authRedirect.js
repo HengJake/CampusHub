@@ -17,7 +17,7 @@ export const hasValidToken = async () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-            },
+            }, 
             credentials: 'include', // Include cookies
         });
 
@@ -72,7 +72,6 @@ export const checkSchoolSetupComplete = async () => {
         });
 
         const data = await res.json();
-        console.log("🚀 ~ checkSchoolSetupComplete ~ data:", data)
 
         if (data.success && data.schoolId) {
             return true;

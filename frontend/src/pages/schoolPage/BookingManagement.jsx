@@ -31,11 +31,19 @@ import {
   Button,
   FormControl,
   FormLabel,
+  Tooltip,
   useDisclosure,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  useBreakpointValue,
 } from "@chakra-ui/react"
-import { FiCheck, FiX, FiCalendar, FiClock, FiEdit, FiTrash2 } from "react-icons/fi"
+import { FiCheck, FiX, FiCalendar, FiClock, FiEdit, FiTrash2, FiDownload } from "react-icons/fi"
 import { useState, useMemo, useEffect } from "react"
 import { useFacilityStore } from "../../store/facility"
+import { exportBookingsToPDF, exportBookingStatsToPDF } from "../../utils/exportUtils"
 
 // Constants
 const STATUS_OPTIONS = [
@@ -110,31 +118,52 @@ const StatsCard = ({ label, value, helpText, icon: Icon, color }) => (
 )
 
 // Filter Component
-const FilterSection = ({ statusFilter, setStatusFilter, facilityFilter, setFacilityFilter, dateFilter, setDateFilter }) => (
+const FilterSection = ({ statusFilter, setStatusFilter, facilityFilter, setFacilityFilter, dateFilter, setDateFilter, handleExport, isExporting, handleExportStats, isExportingStats }) => (
   <Card bg="white">
     <CardBody>
-      <HStack spacing={4}>
-        <Select w="200px" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          {STATUS_OPTIONS.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
-        <Select w="200px" value={facilityFilter} onChange={(e) => setFacilityFilter(e.target.value)}>
-          {FACILITY_OPTIONS.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
-        <Input
-          type="date"
-          w="200px"
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-          placeholder="Filter by date"
-        />
+      <HStack spacing={4} justify="space-between" flexWrap="wrap">
+        <HStack>
+          <Select w="200px" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            {STATUS_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+          <Select w="200px" value={facilityFilter} onChange={(e) => setFacilityFilter(e.target.value)}>
+            {FACILITY_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+          <Input
+            type="date"
+            w="200px"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            placeholder="Filter by date"
+          />
+        </HStack>
+
+        <Tooltip
+          label="Export booking statistics as pie chart PDF"
+          placement="top"
+          hasArrow
+        >
+          <Button
+            variant="solid"
+            leftIcon={<FiDownload />}
+            onClick={handleExportStats}
+            isLoading={isExportingStats}
+            loadingText="Generating Chart..."
+            disabled={isExportingStats}
+            colorScheme="teal"
+          >
+            Export Booking
+          </Button>
+        </Tooltip>
+
       </HStack>
     </CardBody>
   </Card>
@@ -286,6 +315,73 @@ const BookingRow = ({ booking, onApprove, onReject, onEdit, onDelete }) => (
   </Tr>
 )
 
+// Accordion Booking Card Component for Mobile
+const AccordionBookingCard = ({ booking, onApprove, onReject, onEdit, onDelete }) => (
+  <AccordionItem key={booking?._id || Math.random()}>
+    <AccordionButton>
+      <Box flex="1" textAlign="left">
+        <VStack align="start" spacing={1}>
+          <Text fontWeight="medium" fontSize="sm">
+            {booking?.studentId?.userId?.name || booking?.studentName || "-"}
+          </Text>
+          <Text fontSize="xs" color="gray.600">
+            {booking?.resourceId?.name || booking?.facility || "-"}
+          </Text>
+          <Badge colorScheme={getStatusColor(booking?.status)} size="sm">
+            {booking?.status || "-"}
+          </Badge>
+        </VStack>
+      </Box>
+      <AccordionIcon />
+    </AccordionButton>
+    <AccordionPanel pb={4}>
+      <VStack align="start" spacing={3}>
+        <Box>
+          <Text fontSize="xs" color="gray.500" fontWeight="medium">Date & Time</Text>
+          <Text fontSize="sm">
+            {formatDate(booking?.bookingDate)} • {formatTime(booking?.startTime)} - {formatTime(booking?.endTime)}
+          </Text>
+        </Box>
+
+        <HStack spacing={2} w="full" justify="center">
+          {booking?.status === "pending" && (
+            <>
+              <IconButton
+                icon={<FiCheck />}
+                colorScheme="green"
+                size="sm"
+                onClick={() => onApprove(booking?._id, booking)}
+                aria-label="Approve booking"
+              />
+              <IconButton
+                icon={<FiX />}
+                colorScheme="red"
+                size="sm"
+                onClick={() => onReject(booking?._id, booking)}
+                aria-label="Reject booking"
+              />
+            </>
+          )}
+          <IconButton
+            icon={<FiEdit />}
+            colorScheme="blue"
+            size="sm"
+            onClick={() => onEdit(booking)}
+            aria-label="Edit booking"
+          />
+          <IconButton
+            icon={<FiTrash2 />}
+            colorScheme="red"
+            size="sm"
+            onClick={() => onDelete(booking?._id)}
+            aria-label="Delete booking"
+          />
+        </HStack>
+      </VStack>
+    </AccordionPanel>
+  </AccordionItem>
+)
+
 export function BookingManagement() {
   const toast = useToast()
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -293,13 +389,17 @@ export function BookingManagement() {
   const [facilityFilter, setFacilityFilter] = useState("All")
   const [dateFilter, setDateFilter] = useState("")
   const [selectedBooking, setSelectedBooking] = useState(null)
+  const [isExporting, setIsExporting] = useState(false)
+  const [isExportingStats, setIsExportingStats] = useState(false)
 
   const { bookings, fetchBookings, updateBooking, deleteBooking } = useFacilityStore()
+
+  // Responsive breakpoint for mobile/desktop views
+  const isMobile = useBreakpointValue({ base: true, lg: false })
 
   useEffect(() => {
     fetchBookings();
   }, [])
-  console.log("🚀 ~ BookingManagement ~ bookings:", bookings)
 
   // Memoized computed values
   const safeBookings = useMemo(() => {
@@ -395,6 +495,96 @@ export function BookingManagement() {
   const handleApprove = (id, booking) => handleBookingAction(id, "Confirmed", "confirmed", booking)
   const handleReject = (id, booking) => handleBookingAction(id, "Cancelled", "cancelled", booking)
 
+  const handleExport = async () => {
+    setIsExporting(true)
+    try {
+      const result = await exportBookingsToPDF(
+        filteredBookings,
+        {
+          fileName: 'booking_management_report',
+          onSuccess: (fileName) => {
+            toast({
+              title: "Report Exported",
+              description: "Booking management report has been exported as PDF",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            })
+          },
+          onError: (error) => {
+            toast({
+              title: "Export Failed",
+              description: "Failed to export booking report as PDF",
+              status: "error",
+              duration: 3000,
+              isClosable: true,
+            })
+          }
+        }
+      )
+
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+      toast({
+        title: "Export Failed",
+        description: "Failed to export booking report as PDF",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleExportStats = async () => {
+    setIsExportingStats(true)
+    try {
+      const result = await exportBookingStatsToPDF(
+        filteredBookings,
+        {
+          fileName: 'booking_statistics_chart',
+          onSuccess: (fileName) => {
+            toast({
+              title: "Statistics Chart Exported",
+              description: "Booking statistics chart has been exported as PDF",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            })
+          },
+          onError: (error) => {
+            toast({
+              title: "Export Failed",
+              description: "Failed to export statistics chart as PDF",
+              status: "error",
+              duration: 3000,
+              isClosable: true,
+            })
+          }
+        }
+      )
+
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      console.error('Error exporting statistics PDF:', error)
+      toast({
+        title: "Export Failed",
+        description: "Failed to export statistics chart as PDF",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    } finally {
+      setIsExportingStats(false)
+    }
+  }
+
   const handleEdit = (booking) => {
     setSelectedBooking(booking)
     onOpen()
@@ -413,7 +603,6 @@ export function BookingManagement() {
     }
 
     try {
-      console.log("🚀 ~ handleUpdate ~ formData:", formData)
       const result = await updateBooking(id, formData)
       if (result.success) {
         toast({
@@ -472,7 +661,7 @@ export function BookingManagement() {
   }
 
   return (
-    <Box p={6} minH="100vh" flex={1}>
+    <Box minH="100vh" flex={1}>
       <VStack spacing={6} align="stretch">
         {/* Header */}
         <HStack justify="space-between">
@@ -524,6 +713,10 @@ export function BookingManagement() {
           setFacilityFilter={setFacilityFilter}
           dateFilter={dateFilter}
           setDateFilter={setDateFilter}
+          handleExport={handleExport}
+          isExporting={isExporting}
+          handleExportStats={handleExportStats}
+          isExportingStats={isExportingStats}
         />
 
         {/* Bookings Table */}
@@ -532,21 +725,14 @@ export function BookingManagement() {
             <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
               Pending Requests ({filteredBookings.filter(b => b.status === "pending").length})
             </Text>
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Student</Th>
-                  <Th>Facility</Th>
-                  <Th>Date & Time</Th>
-                  <Th>Status</Th>
-                  <Th>Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+
+            {isMobile ? (
+              // Mobile Accordion View
+              <Accordion allowToggle>
                 {filteredBookings
                   .filter(booking => booking.status === "pending")
                   .map((booking) => (
-                    <BookingRow
+                    <AccordionBookingCard
                       key={booking?._id || Math.random()}
                       booking={booking}
                       onApprove={handleApprove}
@@ -555,8 +741,35 @@ export function BookingManagement() {
                       onDelete={handleDelete}
                     />
                   ))}
-              </Tbody>
-            </Table>
+              </Accordion>
+            ) : (
+              // Desktop Table View
+              <Table variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>Student</Th>
+                    <Th>Facility</Th>
+                    <Th>Date & Time</Th>
+                    <Th>Status</Th>
+                    <Th>Actions</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {filteredBookings
+                    .filter(booking => booking.status === "pending")
+                    .map((booking) => (
+                      <BookingRow
+                        key={booking?._id || Math.random()}
+                        booking={booking}
+                        onApprove={handleApprove}
+                        onReject={handleReject}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                </Tbody>
+              </Table>
+            )}
           </CardBody>
         </Card>
 
@@ -566,21 +779,14 @@ export function BookingManagement() {
             <Text fontSize="lg" fontWeight="semibold" mb={4} color="#333333">
               Handled Requests ({filteredBookings.filter(b => b.status !== "pending").length})
             </Text>
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Student</Th>
-                  <Th>Facility</Th>
-                  <Th>Date & Time</Th>
-                  <Th>Status</Th>
-                  <Th>Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+
+            {isMobile ? (
+              // Mobile Accordion View
+              <Accordion allowToggle>
                 {filteredBookings
                   .filter(booking => booking.status !== "pending")
                   .map((booking) => (
-                    <BookingRow
+                    <AccordionBookingCard
                       key={booking?._id || Math.random()}
                       booking={booking}
                       onApprove={handleApprove}
@@ -589,8 +795,35 @@ export function BookingManagement() {
                       onDelete={handleDelete}
                     />
                   ))}
-              </Tbody>
-            </Table>
+              </Accordion>
+            ) : (
+              // Desktop Table View
+              <Table variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>Student</Th>
+                    <Th>Facility</Th>
+                    <Th>Date & Time</Th>
+                    <Th>Status</Th>
+                    <Th>Actions</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {filteredBookings
+                    .filter(booking => booking.status !== "pending")
+                    .map((booking) => (
+                      <BookingRow
+                        key={booking?._id || Math.random()}
+                        booking={booking}
+                        onApprove={handleApprove}
+                        onReject={handleReject}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                </Tbody>
+              </Table>
+            )}
           </CardBody>
         </Card>
       </VStack>

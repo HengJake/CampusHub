@@ -6,13 +6,21 @@ import {
   getParkingLotsBySchoolId,
   updateParkingLot,
   deleteParkingLot,
-  deleteAllParkingLots
+  deleteAllParkingLots,
+  bulkCreateParkingLots,
+  getExistingSlotNumbers,
+  checkForDuplicates,
+  cleanupDuplicates
 } from "../../controllers/Facility/parkingLot.controllers.js";
 
 const router = express.Router();
 
 router.post("/", createParkingLot);
+router.post("/bulk", bulkCreateParkingLots);
 router.get("/", getAllParkingLots);
+router.get("/existing-slots", getExistingSlotNumbers);
+router.get("/check-duplicates", checkForDuplicates);
+router.delete("/cleanup-duplicates", cleanupDuplicates);
 router.get("/school/:schoolId", getParkingLotsBySchoolId);
 router.get("/:id", getParkingLotById);
 router.put("/:id", updateParkingLot);

@@ -86,16 +86,16 @@ const RoleBasedComponent = ({
         // Redirect to landing page after showing alert
         setTimeout(() => {
             window.location.href = '/';
-        }, 3000);
+        }, 2500);
 
         return (
-            <Alert status="error" variant="subtle" flexDirection="column" alignItems="center" justifyContent="center" textAlign="center" height="200px">
+            <Alert status="error" variant="subtle" flexDirection="column" alignItems="center" justifyContent="center" textAlign="center" height="100%" pos={"fixed"} zIndex={-1} top={0} left={0}>
                 <AlertIcon boxSize="40px" mr={0} />
                 <AlertTitle mt={4} mb={1} fontSize="lg">
                     Access Denied
                 </AlertTitle>
                 <AlertDescription maxWidth="sm">
-                    {authError || 'You do not have permission to access this resource. Redirecting to home page...'}
+                    {'You do not have permission to access this resource. Redirecting to home page...'}
                 </AlertDescription>
             </Alert>
         );

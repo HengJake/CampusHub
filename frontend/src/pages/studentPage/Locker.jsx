@@ -51,7 +51,6 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
-  Image,
 } from "@chakra-ui/react"
 import {
   FiLock,
@@ -61,7 +60,6 @@ import {
   FiRefreshCw,
   FiCalendar,
   FiAlertCircle,
-  FiDollarSign,
   FiSettings,
 } from "react-icons/fi"
 
@@ -79,210 +77,541 @@ const Locker = () => {
   const [endDate, setEndDate] = useState("")
   const [contactInfo, setContactInfo] = useState("")
   const [notes, setNotes] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const { isOpen: isBookingOpen, onOpen: onBookingOpen, onClose: onBookingClose } = useDisclosure()
   const { isOpen: isDetailsOpen, onOpen: onDetailsOpen, onClose: onDetailsClose } = useDisclosure()
   const toast = useToast()
 
-  // Mock data for gym lockers
+  // Sample real data from your MongoDB (for demonstration)
+  const sampleRealData = [
+    {
+      _id: "68a1f602a56d9e2a32e3b1d9",
+      name: "Library Locker 1",
+      resourceId: "68a1f602a56d9e2a32e3b1ae",
+      schoolId: "68a1c4eb898fac74ed4df1e6",
+      status: "Available",
+      isAvailable: true,
+      createdAt: "2025-08-17T15:32:18.886+00:00",
+      updatedAt: "2025-08-17T15:32:18.886+00:00"
+    },
+    {
+      _id: "68a1f602a56d9e2a32e3b1df",
+      name: "Library Locker 2",
+      resourceId: "68a1f602a56d9e2a32e3b1b3",
+      schoolId: "68a1c4eb898fac74ed4df1e6",
+      status: "Available",
+      isAvailable: true,
+      createdAt: "2025-08-17T15:32:18.926+00:00",
+      updatedAt: "2025-08-17T15:32:18.926+00:00"
+    },
+    {
+      _id: "68a1f602a56d9e2a32e3b1e5",
+      name: "Library Locker 3",
+      resourceId: "68a1f602a56d9e2a32e3b1b8",
+      schoolId: "68a1c4eb898fac74ed4df1e6",
+      status: "Maintenance",
+      isAvailable: false,
+      createdAt: "2025-08-17T15:32:18.968+00:00",
+      updatedAt: "2025-08-17T15:32:18.968+00:00"
+    },
+    {
+      _id: "68a1f603a56d9e2a32e3b1eb",
+      name: "Computer Lab Locker 1",
+      resourceId: "68a1f602a56d9e2a32e3b1bd",
+      schoolId: "68a1c4eb898fac74ed4df1e6",
+      status: "Available",
+      isAvailable: true,
+      createdAt: "2025-08-17T15:32:19.017+00:00",
+      updatedAt: "2025-08-17T15:32:19.017+00:00"
+    },
+    {
+      _id: "68a1f603a56d9e2a32e3b1f1",
+      name: "Computer Lab Locker 2",
+      resourceId: "68a1f602a56d9e2a32e3b1c2",
+      schoolId: "68a1c4eb898fac74ed4df1e6",
+      status: "Available",
+      isAvailable: true,
+      createdAt: "2025-08-17T15:32:19.060+00:00",
+      updatedAt: "2025-08-17T15:32:19.060+00:00"
+    },
+    {
+      _id: "68a1f603a56d9e2a32e3b1f7",
+      name: "Computer Lab Locker 3",
+      resourceId: "68a1f602a56d9e2a32e3b1c7",
+      schoolId: "68a1c4eb898fac74ed4df1e6",
+      status: "Available",
+      isAvailable: true,
+      createdAt: "2025-08-17T15:32:19.101+00:00",
+      updatedAt: "2025-08-17T15:32:19.101+00:00"
+    },
+    {
+      _id: "68a1f603a56d9e2a32e3b1fd",
+      name: "Sports Complex Locker 1",
+      resourceId: "68a1f602a56d9e2a32e3b1cc",
+      schoolId: "68a1c4eb898fac74ed4df1e6",
+      status: "Available",
+      isAvailable: true,
+      createdAt: "2025-08-17T15:32:19.144+00:00",
+      updatedAt: "2025-08-17T15:32:19.144+00:00"
+    },
+    {
+      _id: "68a1f603a56d9e2a32e3b203",
+      name: "Sports Complex Locker 2",
+      resourceId: "68a1f602a56d9e2a32e3b1d1",
+      schoolId: "68a1c4eb898fac74ed4df1e6",
+      status: "Available",
+      isAvailable: true,
+      createdAt: "2025-08-17T15:32:19.186+00:00",
+      updatedAt: "2025-08-17T15:32:19.186+00:00"
+    }
+  ]
+
+  // API function to fetch real locker data
+  const fetchRealLockerData = async () => {
+    try {
+      setLoading(true)
+
+      // For now, return sample data. Replace this with actual API call
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // TODO: Replace with actual API endpoint
+      /*
+      const response = await fetch('/api/lockers', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add authentication headers if needed
+          // 'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch locker data')
+      }
+      
+      const data = await response.json()
+      return data
+      */
+
+      return sampleRealData
+    } catch (error) {
+      console.error('Error fetching locker data:', error)
+      toast({
+        title: "Error Loading Data",
+        description: "Failed to load real locker data. Using mock data instead.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      })
+      return null
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Function to transform real data to match our interface format
+  const transformRealData = (realData) => {
+    return realData.map(locker => ({
+      _id: locker._id,
+      name: locker.name || `Locker ${locker._id.slice(-4)}`,
+      resourceId: {
+        _id: locker.resourceId,
+        name: locker.name || `Resource ${locker.resourceId}`,
+        location: getLocationFromName(locker.name),
+        type: "locker",
+        capacity: 1,
+        status: locker.isAvailable,
+        timeslots: getDefaultTimeslots()
+      },
+      schoolId: locker.schoolId,
+      status: locker.status || (locker.isAvailable ? "Available" : "Occupied"),
+      isAvailable: locker.isAvailable,
+      createdAt: locker.createdAt,
+      updatedAt: locker.updatedAt
+    }))
+  }
+
+  // Helper function to extract location from locker name
+  const getLocationFromName = (name) => {
+    if (!name) return "Unknown Location"
+
+    if (name.includes("Library")) return "Library - Ground Floor"
+    if (name.includes("Computer Lab")) return "Computer Lab - 2nd Floor"
+    if (name.includes("Sports Complex")) return "Sports Complex - Ground Floor"
+    if (name.includes("Gym")) return "Main Gym - Ground Floor"
+
+    return "Campus Facility"
+  }
+
+  // Helper function to provide default timeslots
+  const getDefaultTimeslots = () => [
+    {
+      dayOfWeek: "Monday",
+      slots: [{ start: "08:00", end: "20:00" }]
+    },
+    {
+      dayOfWeek: "Tuesday",
+      slots: [{ start: "08:00", end: "20:00" }]
+    },
+    {
+      dayOfWeek: "Wednesday",
+      slots: [{ start: "08:00", end: "20:00" }]
+    },
+    {
+      dayOfWeek: "Thursday",
+      slots: [{ start: "08:00", end: "20:00" }]
+    },
+    {
+      dayOfWeek: "Friday",
+      slots: [{ start: "08:00", end: "20:00" }]
+    },
+    {
+      dayOfWeek: "Saturday",
+      slots: [{ start: "09:00", end: "17:00" }]
+    },
+    {
+      dayOfWeek: "Sunday",
+      slots: [{ start: "10:00", end: "16:00" }]
+    }
+  ]
+
+  // Combined real and mock data for locker units
   const [lockers, setLockers] = useState([
     {
-      id: "L001",
-      location: "Main Gym - Ground Floor",
-      zone: "Cardio Section",
-      size: "Standard",
-      status: "available",
-      dailyRate: 5,
-      weeklyRate: 30,
-      monthlyRate: 100,
-      features: ["Digital Lock", "Power Outlet", "Ventilation", "LED Light"],
-      lastCleaned: "2024-01-20 08:00",
-      dimensions: "30cm x 40cm x 60cm",
-      lockType: "Digital PIN",
-      condition: "Excellent",
-      image: "/placeholder.svg?height=200&width=300&text=Locker+L001",
+      _id: "674a1b2c3d4e5f6789012345",
+      name: "L001",
+      resourceId: {
+        _id: "674a1b2c3d4e5f6789012301",
+        name: "Cardio Section Locker L001",
+        location: "Main Gym - Ground Floor, Cardio Section",
+        type: "locker",
+        capacity: 1,
+        status: true,
+        timeslots: [
+          {
+            dayOfWeek: "Monday",
+            slots: [{ start: "06:00", end: "23:00" }]
+          },
+          {
+            dayOfWeek: "Tuesday",
+            slots: [{ start: "06:00", end: "23:00" }]
+          },
+          {
+            dayOfWeek: "Wednesday",
+            slots: [{ start: "06:00", end: "23:00" }]
+          },
+          {
+            dayOfWeek: "Thursday",
+            slots: [{ start: "06:00", end: "23:00" }]
+          },
+          {
+            dayOfWeek: "Friday",
+            slots: [{ start: "06:00", end: "23:00" }]
+          },
+          {
+            dayOfWeek: "Saturday",
+            slots: [{ start: "08:00", end: "22:00" }]
+          },
+          {
+            dayOfWeek: "Sunday",
+            slots: [{ start: "08:00", end: "22:00" }]
+          }
+        ]
+      },
+      schoolId: "674a1b2c3d4e5f6789012300",
+      status: "Available",
+      isAvailable: true,
+      createdAt: "2024-01-15T08:00:00.000Z",
+      updatedAt: "2024-01-20T08:00:00.000Z"
     },
     {
-      id: "L002",
-      location: "Main Gym - Ground Floor",
-      zone: "Weight Training",
-      size: "Large",
-      status: "occupied",
-      dailyRate: 8,
-      weeklyRate: 45,
-      monthlyRate: 150,
-      features: ["Digital Lock", "Power Outlet", "Ventilation", "Extra Space", "Mirror"],
-      lastCleaned: "2024-01-20 08:00",
-      dimensions: "40cm x 50cm x 70cm",
-      occupiedUntil: "2024-01-25",
-      lockType: "Digital PIN + RFID",
-      condition: "Excellent",
-      image: "/placeholder.svg?height=200&width=300&text=Locker+L002",
+      _id: "674a1b2c3d4e5f6789012346",
+      name: "L002",
+      resourceId: {
+        _id: "674a1b2c3d4e5f6789012302",
+        name: "Weight Training Locker L002",
+        location: "Main Gym - Ground Floor, Weight Training Area",
+        type: "locker",
+        capacity: 1,
+        status: true,
+        timeslots: [
+          {
+            dayOfWeek: "Monday",
+            slots: [{ start: "06:00", end: "23:00" }]
+          },
+          {
+            dayOfWeek: "Tuesday",
+            slots: [{ start: "06:00", end: "23:00" }]
+          },
+          {
+            dayOfWeek: "Wednesday",
+            slots: [{ start: "06:00", end: "23:00" }]
+          },
+          {
+            dayOfWeek: "Thursday",
+            slots: [{ start: "06:00", end: "23:00" }]
+          },
+          {
+            dayOfWeek: "Friday",
+            slots: [{ start: "06:00", end: "23:00" }]
+          },
+          {
+            dayOfWeek: "Saturday",
+            slots: [{ start: "08:00", end: "22:00" }]
+          },
+          {
+            dayOfWeek: "Sunday",
+            slots: [{ start: "08:00", end: "22:00" }]
+          }
+        ]
+      },
+      schoolId: "674a1b2c3d4e5f6789012300",
+      status: "Occupied",
+      isAvailable: false,
+      createdAt: "2024-01-15T08:00:00.000Z",
+      updatedAt: "2024-01-20T08:00:00.000Z"
     },
     {
-      id: "L003",
-      location: "Sports Complex - 1st Floor",
-      zone: "Swimming Pool Area",
-      size: "Standard",
-      status: "available",
-      dailyRate: 5,
-      weeklyRate: 30,
-      monthlyRate: 100,
-      features: ["Waterproof", "Digital Lock", "Drainage", "Rust Resistant"],
-      lastCleaned: "2024-01-20 09:00",
-      dimensions: "30cm x 40cm x 60cm",
-      lockType: "Waterproof Digital",
-      condition: "Good",
-      image: "/placeholder.svg?height=200&width=300&text=Pool+Locker+L003",
+      _id: "674a1b2c3d4e5f6789012347",
+      name: "L003",
+      resourceId: {
+        _id: "674a1b2c3d4e5f6789012303",
+        name: "Pool Area Locker L003",
+        location: "Sports Complex - 1st Floor, Swimming Pool Area",
+        type: "locker",
+        capacity: 1,
+        status: true,
+        timeslots: [
+          {
+            dayOfWeek: "Monday",
+            slots: [{ start: "06:00", end: "22:00" }]
+          },
+          {
+            dayOfWeek: "Tuesday",
+            slots: [{ start: "06:00", end: "22:00" }]
+          },
+          {
+            dayOfWeek: "Wednesday",
+            slots: [{ start: "06:00", end: "22:00" }]
+          },
+          {
+            dayOfWeek: "Thursday",
+            slots: [{ start: "06:00", end: "22:00" }]
+          },
+          {
+            dayOfWeek: "Friday",
+            slots: [{ start: "06:00", end: "22:00" }]
+          },
+          {
+            dayOfWeek: "Saturday",
+            slots: [{ start: "08:00", end: "21:00" }]
+          },
+          {
+            dayOfWeek: "Sunday",
+            slots: [{ start: "08:00", end: "21:00" }]
+          }
+        ]
+      },
+      schoolId: "674a1b2c3d4e5f6789012300",
+      status: "Available",
+      isAvailable: true,
+      createdAt: "2024-01-15T08:00:00.000Z",
+      updatedAt: "2024-01-20T09:00:00.000Z"
     },
     {
-      id: "L004",
-      location: "Sports Complex - 1st Floor",
-      zone: "Basketball Court",
-      size: "Standard",
-      status: "maintenance",
-      dailyRate: 5,
-      weeklyRate: 30,
-      monthlyRate: 100,
-      features: ["Digital Lock", "Power Outlet", "Ventilation"],
-      lastCleaned: "2024-01-19 16:00",
-      dimensions: "30cm x 40cm x 60cm",
+      _id: "674a1b2c3d4e5f6789012348",
+      name: "L004",
+      resourceId: {
+        _id: "674a1b2c3d4e5f6789012304",
+        name: "Basketball Court Locker L004",
+        location: "Sports Complex - 1st Floor, Basketball Court",
+        type: "locker",
+        capacity: 1,
+        status: false,
+        timeslots: []
+      },
+      schoolId: "674a1b2c3d4e5f6789012300",
+      status: "Maintenance",
+      isAvailable: false,
       maintenanceNote: "Lock repair in progress - ETA: 2 hours",
-      lockType: "Digital PIN",
-      condition: "Under Repair",
-      image: "/placeholder.svg?height=200&width=300&text=Maintenance+L004",
+      createdAt: "2024-01-15T08:00:00.000Z",
+      updatedAt: "2024-01-19T16:00:00.000Z"
     },
     {
-      id: "L005",
-      location: "Main Gym - 1st Floor",
-      zone: "Group Fitness",
-      size: "Small",
-      status: "available",
-      dailyRate: 3,
-      weeklyRate: 20,
-      monthlyRate: 70,
-      features: ["Basic Lock", "Ventilation", "Compact Design"],
-      lastCleaned: "2024-01-20 07:30",
-      dimensions: "25cm x 35cm x 50cm",
-      lockType: "Combination Lock",
-      condition: "Good",
-      image: "/placeholder.svg?height=200&width=300&text=Small+Locker+L005",
+      _id: "674a1b2c3d4e5f6789012349",
+      name: "L005",
+      resourceId: {
+        _id: "674a1b2c3d4e5f6789012305",
+        name: "Group Fitness Locker L005",
+        location: "Main Gym - 1st Floor, Group Fitness Studio",
+        type: "locker",
+        capacity: 1,
+        status: true,
+        timeslots: [
+          {
+            dayOfWeek: "Monday",
+            slots: [{ start: "07:00", end: "21:00" }]
+          },
+          {
+            dayOfWeek: "Tuesday",
+            slots: [{ start: "07:00", end: "21:00" }]
+          },
+          {
+            dayOfWeek: "Wednesday",
+            slots: [{ start: "07:00", end: "21:00" }]
+          },
+          {
+            dayOfWeek: "Thursday",
+            slots: [{ start: "07:00", end: "21:00" }]
+          },
+          {
+            dayOfWeek: "Friday",
+            slots: [{ start: "07:00", end: "21:00" }]
+          },
+          {
+            dayOfWeek: "Saturday",
+            slots: [{ start: "09:00", end: "18:00" }]
+          }
+        ]
+      },
+      schoolId: "674a1b2c3d4e5f6789012300",
+      status: "Available",
+      isAvailable: true,
+      createdAt: "2024-01-15T08:00:00.000Z",
+      updatedAt: "2024-01-20T07:30:00.000Z"
     },
     {
-      id: "L006",
-      location: "Sports Complex - Ground Floor",
-      zone: "Tennis Courts",
-      size: "Large",
-      status: "available",
-      dailyRate: 8,
-      weeklyRate: 45,
-      monthlyRate: 150,
-      features: ["Digital Lock", "Power Outlet", "Ventilation", "Extra Space", "Weather Resistant"],
-      lastCleaned: "2024-01-20 10:00",
-      dimensions: "40cm x 50cm x 70cm",
-      lockType: "Smart Lock (App)",
-      condition: "Excellent",
-      image: "/placeholder.svg?height=200&width=300&text=Tennis+Locker+L006",
-    },
-    {
-      id: "L007",
-      location: "Main Gym - Ground Floor",
-      zone: "Free Weights",
-      size: "Standard",
-      status: "available",
-      dailyRate: 5,
-      weeklyRate: 30,
-      monthlyRate: 100,
-      features: ["Digital Lock", "Power Outlet", "Ventilation", "USB Charging"],
-      lastCleaned: "2024-01-20 11:00",
-      dimensions: "30cm x 40cm x 60cm",
-      lockType: "Digital PIN",
-      condition: "Excellent",
-      image: "/placeholder.svg?height=200&width=300&text=Gym+Locker+L007",
-    },
-    {
-      id: "L008",
-      location: "Sports Complex - 2nd Floor",
-      zone: "Badminton Courts",
-      size: "Standard",
-      status: "occupied",
-      dailyRate: 5,
-      weeklyRate: 30,
-      monthlyRate: 100,
-      features: ["Digital Lock", "Power Outlet", "Ventilation"],
-      lastCleaned: "2024-01-20 08:30",
-      dimensions: "30cm x 40cm x 60cm",
-      occupiedUntil: "2024-01-23",
-      lockType: "Digital PIN",
-      condition: "Good",
-      image: "/placeholder.svg?height=200&width=300&text=Badminton+L008",
-    },
+      _id: "674a1b2c3d4e5f6789012350",
+      name: "L006",
+      resourceId: {
+        _id: "674a1b2c3d4e5f6789012306",
+        name: "Tennis Court Locker L006",
+        location: "Sports Complex - Ground Floor, Tennis Courts",
+        type: "locker",
+        capacity: 1,
+        status: true,
+        timeslots: [
+          {
+            dayOfWeek: "Monday",
+            slots: [{ start: "06:00", end: "22:00" }]
+          },
+          {
+            dayOfWeek: "Tuesday",
+            slots: [{ start: "06:00", end: "22:00" }]
+          },
+          {
+            dayOfWeek: "Wednesday",
+            slots: [{ start: "06:00", end: "22:00" }]
+          },
+          {
+            dayOfWeek: "Thursday",
+            slots: [{ start: "06:00", end: "22:00" }]
+          },
+          {
+            dayOfWeek: "Friday",
+            slots: [{ start: "06:00", end: "22:00" }]
+          },
+          {
+            dayOfWeek: "Saturday",
+            slots: [{ start: "07:00", end: "21:00" }]
+          },
+          {
+            dayOfWeek: "Sunday",
+            slots: [{ start: "07:00", end: "21:00" }]
+          }
+        ]
+      },
+      schoolId: "674a1b2c3d4e5f6789012300",
+      status: "Available",
+      isAvailable: true,
+      createdAt: "2024-01-15T08:00:00.000Z",
+      updatedAt: "2024-01-20T10:00:00.000Z"
+    }
   ])
 
-  // Mock data for user's bookings
+  // Mock data for user's bookings (aligned with backend schema)
   const [myBookings, setMyBookings] = useState([
     {
-      id: "B001",
-      lockerId: "L007",
-      location: "Main Gym - Ground Floor",
-      startDate: "2024-01-15",
-      endDate: "2024-01-22",
-      type: "Weekly",
-      status: "active",
-      totalCost: 30,
-      paymentStatus: "paid",
-      accessCode: "1234",
-      bookingTime: "2024-01-15 09:30",
+      _id: "674a1b2c3d4e5f6789012401",
+      studentId: "674a1b2c3d4e5f6789012201", // Current student ID
+      resourceId: {
+        _id: "674a1b2c3d4e5f6789012301",
+        name: "Cardio Section Locker L001",
+        location: "Main Gym - Ground Floor, Cardio Section",
+        type: "locker"
+      },
+      schoolId: "674a1b2c3d4e5f6789012300",
+      bookingDate: "2024-01-15",
+      startTime: "09:00",
+      endTime: "17:00",
+      status: "confirmed",
+      createdAt: "2024-01-15T09:30:00.000Z",
+      updatedAt: "2024-01-15T09:30:00.000Z"
     },
     {
-      id: "B002",
-      lockerId: "L012",
-      location: "Sports Complex - 1st Floor",
-      startDate: "2024-01-10",
-      endDate: "2024-01-10",
-      type: "Daily",
+      _id: "674a1b2c3d4e5f6789012402",
+      studentId: "674a1b2c3d4e5f6789012201",
+      resourceId: {
+        _id: "674a1b2c3d4e5f6789012303",
+        name: "Pool Area Locker L003",
+        location: "Sports Complex - 1st Floor, Swimming Pool Area",
+        type: "locker"
+      },
+      schoolId: "674a1b2c3d4e5f6789012300",
+      bookingDate: "2024-01-10",
+      startTime: "14:00",
+      endTime: "18:00",
       status: "completed",
-      totalCost: 5,
-      paymentStatus: "paid",
-      accessCode: "5678",
-      bookingTime: "2024-01-10 14:15",
+      createdAt: "2024-01-10T14:15:00.000Z",
+      updatedAt: "2024-01-10T18:00:00.000Z"
     },
     {
-      id: "B003",
-      lockerId: "L003",
-      location: "Sports Complex - 1st Floor",
-      startDate: "2024-01-25",
-      endDate: "2024-02-25",
-      type: "Monthly",
+      _id: "674a1b2c3d4e5f6789012403",
+      studentId: "674a1b2c3d4e5f6789012201",
+      resourceId: {
+        _id: "674a1b2c3d4e5f6789012305",
+        name: "Group Fitness Locker L005",
+        location: "Main Gym - 1st Floor, Group Fitness Studio",
+        type: "locker"
+      },
+      schoolId: "674a1b2c3d4e5f6789012300",
+      bookingDate: "2024-01-25",
+      startTime: "10:00",
+      endTime: "16:00",
       status: "pending",
-      totalCost: 100,
-      paymentStatus: "pending",
-      accessCode: "9876",
-      bookingTime: "2024-01-20 16:45",
-    },
+      createdAt: "2024-01-20T16:45:00.000Z",
+      updatedAt: "2024-01-20T16:45:00.000Z"
+    }
   ])
 
-  // Auto-refresh simulation
+  // Load real data on component mount
+  useEffect(() => {
+    const loadLockerData = async () => {
+      const realData = await fetchRealLockerData()
+      if (realData && realData.length > 0) {
+        const transformedData = transformRealData(realData)
+        setLockers(transformedData)
+        setLastUpdated(new Date())
+      }
+      // If real data fails, keep existing mock data as fallback
+    }
+
+    loadLockerData()
+  }, [])
+
+  // Auto-refresh real data
   useEffect(() => {
     if (!autoRefresh) return
 
-    const interval = setInterval(() => {
-      setLockers((prev) =>
-        prev.map((locker) => {
-          if (Math.random() < 0.08) {
-            // 8% chance of status change
-            const statuses = ["available", "occupied", "maintenance"]
-            const currentIndex = statuses.indexOf(locker.status)
-            const newStatus = statuses[(currentIndex + 1) % statuses.length]
-            return {
-              ...locker,
-              status: newStatus,
-              lastCleaned: newStatus === "available" ? new Date().toISOString().slice(0, 16) : locker.lastCleaned,
-            }
-          }
-          return locker
-        }),
-      )
+    const interval = setInterval(async () => {
+      // Refresh real data
+      const realData = await fetchRealLockerData()
+      if (realData && realData.length > 0) {
+        const transformedData = transformRealData(realData)
+        setLockers(transformedData)
+      }
       setLastUpdated(new Date())
     }, 8000)
 
@@ -291,11 +620,11 @@ const Locker = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "available":
+      case "Available":
         return "green"
-      case "occupied":
+      case "Occupied":
         return "red"
-      case "maintenance":
+      case "Maintenance":
         return "orange"
       default:
         return "gray"
@@ -304,47 +633,35 @@ const Locker = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case "available":
+      case "Available":
         return FiUnlock
-      case "occupied":
+      case "Occupied":
         return FiLock
-      case "maintenance":
+      case "Maintenance":
         return FiAlertCircle
       default:
         return FiLock
     }
   }
 
-  const getSizeColor = (size) => {
-    switch (size) {
-      case "Small":
-        return "blue"
-      case "Standard":
-        return "purple"
-      case "Large":
-        return "orange"
-      default:
-        return "gray"
-    }
-  }
+
 
   const filteredLockers = lockers.filter((locker) => {
     const matchesSearch =
-      locker.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      locker.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      locker.zone.toLowerCase().includes(searchTerm.toLowerCase())
+      locker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      locker.resourceId.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      locker.resourceId.location.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesLocation = !locationFilter || locker.location.includes(locationFilter)
-    const matchesStatus = !statusFilter || locker.status === statusFilter
-    const matchesSize = !sizeFilter || locker.size === sizeFilter
+    const matchesLocation = !locationFilter || locker.resourceId.location.includes(locationFilter)
+    const matchesStatus = !statusFilter || locker.status.toLowerCase() === statusFilter.toLowerCase()
 
-    return matchesSearch && matchesLocation && matchesStatus && matchesSize
+    return matchesSearch && matchesLocation && matchesStatus
   })
 
-  const availableCount = lockers.filter((l) => l.status === "available").length
-  const occupiedCount = lockers.filter((l) => l.status === "occupied").length
-  const maintenanceCount = lockers.filter((l) => l.status === "maintenance").length
-  const totalRevenue = myBookings.reduce((sum, booking) => sum + booking.totalCost, 0)
+  const availableCount = lockers.filter((l) => l.status === "Available").length
+  const occupiedCount = lockers.filter((l) => l.status === "Occupied").length
+  const maintenanceCount = lockers.filter((l) => l.status === "Maintenance").length
+
 
   const handleBookLocker = (locker) => {
     setSelectedLocker(locker)
@@ -357,10 +674,10 @@ const Locker = () => {
   }
 
   const handleSubmitBooking = () => {
-    if (!duration || !startDate || !contactInfo) {
+    if (!startDate || !duration || !endDate || !contactInfo) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields",
+        description: "Please fill in all required fields including date, start time, end time, and contact info",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -369,29 +686,28 @@ const Locker = () => {
     }
 
     const newBooking = {
-      id: `B${Date.now()}`,
-      lockerId: selectedLocker.id,
-      location: selectedLocker.location,
-      startDate,
-      endDate: bookingType === "temporary" ? startDate : endDate,
-      type: bookingType === "temporary" ? "Daily" : duration === "weekly" ? "Weekly" : "Monthly",
+      _id: `674a1b2c3d4e5f67890124${Date.now().toString().slice(-2)}`,
+      studentId: "674a1b2c3d4e5f6789012201", // Current student ID (would come from auth context)
+      resourceId: {
+        _id: selectedLocker.resourceId._id,
+        name: selectedLocker.resourceId.name,
+        location: selectedLocker.resourceId.location,
+        type: selectedLocker.resourceId.type
+      },
+      schoolId: selectedLocker.schoolId,
+      bookingDate: startDate,
+      startTime: "09:00", // Default start time, could be made configurable
+      endTime: "17:00", // Default end time, could be made configurable
       status: "pending",
-      totalCost:
-        bookingType === "temporary"
-          ? selectedLocker.dailyRate
-          : duration === "weekly"
-            ? selectedLocker.weeklyRate
-            : selectedLocker.monthlyRate,
-      paymentStatus: "pending",
-      accessCode: Math.floor(1000 + Math.random() * 9000).toString(),
-      bookingTime: new Date().toISOString().slice(0, 16),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
 
     setMyBookings((prev) => [newBooking, ...prev])
 
     toast({
       title: "Booking Submitted",
-      description: `Your ${bookingType} locker booking has been submitted successfully`,
+      description: `Your locker booking for ${selectedLocker.resourceId.name} has been submitted successfully`,
       status: "success",
       duration: 3000,
       isClosable: true,
@@ -409,7 +725,7 @@ const Locker = () => {
 
   const handleCancelBooking = (bookingId) => {
     setMyBookings((prev) =>
-      prev.map((booking) => (booking.id === bookingId ? { ...booking, status: "cancelled" } : booking)),
+      prev.map((booking) => (booking._id === bookingId ? { ...booking, status: "cancelled" } : booking)),
     )
 
     toast({
@@ -421,15 +737,20 @@ const Locker = () => {
     })
   }
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
+    const realData = await fetchRealLockerData()
+    if (realData && realData.length > 0) {
+      const transformedData = transformRealData(realData)
+      setLockers(transformedData)
+      toast({
+        title: "Data Refreshed",
+        description: "Locker availability has been updated",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      })
+    }
     setLastUpdated(new Date())
-    toast({
-      title: "Data Refreshed",
-      description: "Locker availability has been updated",
-      status: "info",
-      duration: 2000,
-      isClosable: true,
-    })
   }
 
   return (
@@ -448,14 +769,14 @@ const Locker = () => {
               <Switch isChecked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} colorScheme="blue" />
               <Text fontSize="sm">Auto-refresh</Text>
             </HStack>
-            <Button leftIcon={<FiRefreshCw />} onClick={handleRefresh} size="sm">
+            <Button leftIcon={<FiRefreshCw />} onClick={handleRefresh} size="sm" isLoading={loading}>
               Refresh
             </Button>
           </HStack>
         </HStack>
 
         {/* Stats Dashboard */}
-        <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+        <SimpleGrid columns={{ base: 2, md: 3 }} spacing={4}>
           <Card>
             <CardBody>
               <Stat>
@@ -507,22 +828,7 @@ const Locker = () => {
             </CardBody>
           </Card>
 
-          <Card>
-            <CardBody>
-              <Stat>
-                <HStack>
-                  <Icon as={FiDollarSign} color="blue.500" boxSize={8} />
-                  <Box>
-                    <StatNumber color="blue.500" fontSize="2xl">
-                      ${totalRevenue}
-                    </StatNumber>
-                    <StatLabel>Total Spent</StatLabel>
-                    <StatHelpText>All bookings</StatHelpText>
-                  </Box>
-                </HStack>
-              </Stat>
-            </CardBody>
-          </Card>
+
         </SimpleGrid>
 
         <Tabs variant="enclosed" colorScheme="blue">
@@ -540,7 +846,7 @@ const Locker = () => {
                   <Text fontWeight="bold" mb={4}>
                     Search & Filter Options
                   </Text>
-                  <Grid templateColumns={{ base: "1fr", md: "repeat(5, 1fr)" }} gap={4}>
+                  <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={4}>
                     <InputGroup>
                       <InputLeftElement pointerEvents="none">
                         <Icon as={FiSearch} color="gray.400" />
@@ -561,20 +867,14 @@ const Locker = () => {
                       <option value="Sports Complex">Sports Complex</option>
                     </Select>
 
-                    <Select placeholder="All Sizes" value={sizeFilter} onChange={(e) => setSizeFilter(e.target.value)}>
-                      <option value="Small">Small</option>
-                      <option value="Standard">Standard</option>
-                      <option value="Large">Large</option>
-                    </Select>
-
                     <Select
                       placeholder="All Status"
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
                     >
-                      <option value="available">Available</option>
-                      <option value="occupied">Occupied</option>
-                      <option value="maintenance">Maintenance</option>
+                      <option value="Available">Available</option>
+                      <option value="Occupied">Occupied</option>
+                      <option value="Maintenance">Maintenance</option>
                     </Select>
 
                     <VStack align="start" spacing={1}>
@@ -584,6 +884,7 @@ const Locker = () => {
                       <Text fontSize="sm" color="blue.600" fontWeight="medium">
                         {filteredLockers.length} lockers found
                       </Text>
+
                     </VStack>
                   </Grid>
                 </CardBody>
@@ -611,10 +912,10 @@ const Locker = () => {
                             />
                             <VStack align="start" spacing={0}>
                               <Text fontWeight="bold" fontSize="lg">
-                                {locker.id}
+                                {locker.name}
                               </Text>
-                              <Badge colorScheme={getSizeColor(locker.size)} variant="subtle">
-                                {locker.size}
+                              <Badge colorScheme="blue" variant="subtle">
+                                {locker.resourceId.type.toUpperCase()}
                               </Badge>
                             </VStack>
                           </HStack>
@@ -623,101 +924,84 @@ const Locker = () => {
                           </Badge>
                         </HStack>
 
-                        {/* Image */}
-                        <Image
-                          src={locker.image || "/placeholder.svg"}
-                          alt={`Locker ${locker.id}`}
-                          borderRadius="md"
-                          objectFit="cover"
-                          h="120px"
-                          w="full"
-                        />
+
 
                         {/* Location Info */}
                         <VStack align="start" spacing={2}>
                           <HStack>
                             <Icon as={FiMapPin} color="gray.500" size="sm" />
                             <Text fontSize="sm" color="gray.600" fontWeight="medium">
-                              {locker.location}
+                              {locker.resourceId.location}
                             </Text>
                           </HStack>
                           <Text fontSize="sm" color="gray.600">
-                            Zone: {locker.zone}
+                            Resource: {locker.resourceId.name}
                           </Text>
                           <Text fontSize="sm" color="gray.600">
-                            Dimensions: {locker.dimensions}
+                            Capacity: {locker.resourceId.capacity} person
                           </Text>
                           <Text fontSize="sm" color="gray.600">
-                            Lock Type: {locker.lockType}
+                            Available: {locker.isAvailable ? "Yes" : "No"}
                           </Text>
                         </VStack>
 
                         <Divider />
 
-                        {/* Pricing */}
-                        <VStack align="start" spacing={2}>
-                          <Text fontSize="sm" fontWeight="bold" color="gray.700">
-                            Pricing Options:
-                          </Text>
-                          <SimpleGrid columns={3} spacing={2} w="full">
-                            <VStack spacing={1}>
-                              <Text fontSize="xs" color="gray.500">
-                                Daily
-                              </Text>
-                              <Text fontSize="lg" fontWeight="bold" color="green.500">
-                                ${locker.dailyRate}
-                              </Text>
+                        {/* Available Time Slots */}
+                        {locker.resourceId.timeslots && locker.resourceId.timeslots.length > 0 && (
+                          <VStack align="start" spacing={2}>
+                            <Text fontSize="sm" fontWeight="bold" color="gray.700">
+                              Available Hours:
+                            </Text>
+                            <VStack align="start" spacing={1}>
+                              {locker.resourceId.timeslots.slice(0, 3).map((slot, index) => (
+                                <HStack key={index} spacing={2}>
+                                  <Text fontSize="xs" color="gray.600" minW="60px">
+                                    {slot.dayOfWeek.slice(0, 3)}:
+                                  </Text>
+                                  <Text fontSize="xs" color="gray.600">
+                                    {slot.slots.map(s => `${s.start}-${s.end}`).join(", ")}
+                                  </Text>
+                                </HStack>
+                              ))}
+                              {locker.resourceId.timeslots.length > 3 && (
+                                <Text fontSize="xs" color="blue.500">
+                                  +{locker.resourceId.timeslots.length - 3} more days
+                                </Text>
+                              )}
                             </VStack>
-                            <VStack spacing={1}>
-                              <Text fontSize="xs" color="gray.500">
-                                Weekly
-                              </Text>
-                              <Text fontSize="lg" fontWeight="bold" color="blue.500">
-                                ${locker.weeklyRate}
-                              </Text>
-                            </VStack>
-                            <VStack spacing={1}>
-                              <Text fontSize="xs" color="gray.500">
-                                Monthly
-                              </Text>
-                              <Text fontSize="lg" fontWeight="bold" color="purple.500">
-                                ${locker.monthlyRate}
-                              </Text>
-                            </VStack>
-                          </SimpleGrid>
-                        </VStack>
-
-                        {/* Features */}
-                        <VStack align="start" spacing={2}>
-                          <Text fontSize="sm" fontWeight="bold" color="gray.700">
-                            Features:
-                          </Text>
-                          <HStack wrap="wrap" spacing={1}>
-                            {locker.features.map((feature) => (
-                              <Badge key={feature} colorScheme="blue" variant="outline" size="sm">
-                                {feature}
-                              </Badge>
-                            ))}
-                          </HStack>
-                        </VStack>
+                          </VStack>
+                        )}
 
                         {/* Status-specific Information */}
-                        {locker.status === "occupied" && locker.occupiedUntil && (
+                        {locker.status === "Occupied" && (
                           <Alert status="error" size="sm">
                             <AlertIcon />
                             <Box>
-                              <AlertTitle fontSize="sm">Occupied Until</AlertTitle>
-                              <AlertDescription fontSize="xs">Available from: {locker.occupiedUntil}</AlertDescription>
+                              <AlertTitle fontSize="sm">Currently Occupied</AlertTitle>
+                              <AlertDescription fontSize="xs">This locker is currently in use</AlertDescription>
                             </Box>
                           </Alert>
                         )}
 
-                        {locker.status === "maintenance" && locker.maintenanceNote && (
+                        {locker.status === "Maintenance" && (
                           <Alert status="warning" size="sm">
                             <AlertIcon />
                             <Box>
                               <AlertTitle fontSize="sm">Under Maintenance</AlertTitle>
-                              <AlertDescription fontSize="xs">{locker.maintenanceNote}</AlertDescription>
+                              <AlertDescription fontSize="xs">
+                                {locker.maintenanceNote || "Temporarily unavailable for maintenance"}
+                              </AlertDescription>
+                            </Box>
+                          </Alert>
+                        )}
+
+                        {!locker.resourceId.status && (
+                          <Alert status="warning" size="sm">
+                            <AlertIcon />
+                            <Box>
+                              <AlertTitle fontSize="sm">Resource Inactive</AlertTitle>
+                              <AlertDescription fontSize="xs">This resource is currently inactive</AlertDescription>
                             </Box>
                           </Alert>
                         )}
@@ -733,7 +1017,7 @@ const Locker = () => {
                           >
                             Details
                           </Button>
-                          {locker.status === "available" ? (
+                          {locker.status === "Available" && locker.isAvailable && locker.resourceId.status ? (
                             <Button
                               colorScheme="blue"
                               onClick={() => handleBookLocker(locker)}
@@ -750,13 +1034,13 @@ const Locker = () => {
                           )}
                         </HStack>
 
-                        {/* Last Cleaned */}
+                        {/* Last Updated */}
                         <HStack justify="space-between">
                           <Text fontSize="xs" color="gray.500">
-                            Last cleaned:
+                            Last updated:
                           </Text>
                           <Text fontSize="xs" color="gray.600" fontWeight="medium">
-                            {new Date(locker.lastCleaned).toLocaleString()}
+                            {new Date(locker.updatedAt).toLocaleString()}
                           </Text>
                         </HStack>
                       </VStack>
@@ -799,11 +1083,11 @@ const Locker = () => {
                         <Text fontWeight="bold" mb={4}>
                           Booking Summary
                         </Text>
-                        <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+                        <SimpleGrid columns={{ base: 2, md: 3 }} spacing={4}>
                           <Stat>
-                            <StatLabel>Active Bookings</StatLabel>
+                            <StatLabel>Confirmed Bookings</StatLabel>
                             <StatNumber color="green.500">
-                              {myBookings.filter((b) => b.status === "active").length}
+                              {myBookings.filter((b) => b.status === "confirmed").length}
                             </StatNumber>
                           </Stat>
                           <Stat>
@@ -818,10 +1102,6 @@ const Locker = () => {
                               {myBookings.filter((b) => b.status === "completed").length}
                             </StatNumber>
                           </Stat>
-                          <Stat>
-                            <StatLabel>Total Spent</StatLabel>
-                            <StatNumber color="purple.500">${totalRevenue}</StatNumber>
-                          </Stat>
                         </SimpleGrid>
                       </CardBody>
                     </Card>
@@ -831,76 +1111,56 @@ const Locker = () => {
                       <Table variant="simple">
                         <Thead>
                           <Tr>
-                            <Th>Locker ID</Th>
+                            <Th>Resource</Th>
                             <Th>Location</Th>
-                            <Th>Duration</Th>
-                            <Th>Dates</Th>
-                            <Th>Cost</Th>
+                            <Th>Date</Th>
+                            <Th>Time</Th>
                             <Th>Status</Th>
-                            <Th>Payment</Th>
-                            <Th>Access Code</Th>
                             <Th>Actions</Th>
                           </Tr>
                         </Thead>
                         <Tbody>
                           {myBookings.map((booking) => (
-                            <Tr key={booking.id}>
-                              <Td fontWeight="medium">{booking.lockerId}</Td>
-                              <Td>{booking.location}</Td>
-                              <Td>{booking.type}</Td>
+                            <Tr key={booking._id}>
+                              <Td fontWeight="medium">{booking.resourceId.name}</Td>
+                              <Td>{booking.resourceId.location}</Td>
                               <Td>
-                                <VStack align="start" spacing={0}>
-                                  <Text fontSize="sm">{booking.startDate}</Text>
-                                  {booking.endDate !== booking.startDate && (
-                                    <Text fontSize="sm" color="gray.600">
-                                      to {booking.endDate}
-                                    </Text>
-                                  )}
-                                </VStack>
+                                <Text fontSize="sm">
+                                  {new Date(booking.bookingDate).toLocaleDateString()}
+                                </Text>
                               </Td>
-                              <Td fontWeight="bold" color="green.600">
-                                ${booking.totalCost}
+                              <Td>
+                                <Text fontSize="sm">
+                                  {booking.startTime} - {booking.endTime}
+                                </Text>
                               </Td>
                               <Td>
                                 <Badge
                                   colorScheme={
-                                    booking.status === "active"
+                                    booking.status === "confirmed"
                                       ? "green"
                                       : booking.status === "pending"
                                         ? "yellow"
                                         : booking.status === "cancelled"
                                           ? "red"
-                                          : "gray"
+                                          : booking.status === "completed"
+                                            ? "blue"
+                                            : "gray"
                                   }
                                 >
                                   {booking.status.toUpperCase()}
                                 </Badge>
                               </Td>
                               <Td>
-                                <Badge colorScheme={booking.paymentStatus === "paid" ? "green" : "yellow"}>
-                                  {booking.paymentStatus.toUpperCase()}
-                                </Badge>
-                              </Td>
-                              <Td>
-                                <Text fontFamily="mono" fontWeight="bold" color="blue.600">
-                                  {booking.accessCode}
-                                </Text>
-                              </Td>
-                              <Td>
                                 <HStack spacing={2}>
-                                  {booking.status === "active" && (
+                                  {(booking.status === "confirmed" || booking.status === "pending") && (
                                     <Button
                                       size="sm"
                                       colorScheme="red"
                                       variant="outline"
-                                      onClick={() => handleCancelBooking(booking.id)}
+                                      onClick={() => handleCancelBooking(booking._id)}
                                     >
                                       Cancel
-                                    </Button>
-                                  )}
-                                  {booking.status === "pending" && booking.paymentStatus === "pending" && (
-                                    <Button size="sm" colorScheme="green">
-                                      Pay Now
                                     </Button>
                                   )}
                                 </HStack>
@@ -931,46 +1191,49 @@ const Locker = () => {
                 <Box>
                   <AlertTitle>Locker Information</AlertTitle>
                   <AlertDescription>
-                    {selectedLocker?.location} - {selectedLocker?.zone} ({selectedLocker?.size} Size)
+                    {selectedLocker?.resourceId.name} - {selectedLocker?.resourceId.location}
                   </AlertDescription>
                 </Box>
               </Alert>
 
               <FormControl isRequired>
-                <FormLabel>Booking Type</FormLabel>
-                <Select value={bookingType} onChange={(e) => setBookingType(e.target.value)}>
-                  <option value="temporary">Temporary (Daily) - ${selectedLocker?.dailyRate}</option>
-                  <option value="extended">Extended (Weekly/Monthly)</option>
-                </Select>
+                <FormLabel>Booking Date</FormLabel>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                />
               </FormControl>
-
-              {bookingType === "extended" && (
-                <FormControl isRequired>
-                  <FormLabel>Duration</FormLabel>
-                  <Select value={duration} onChange={(e) => setDuration(e.target.value)}>
-                    <option value="weekly">Weekly - ${selectedLocker?.weeklyRate}</option>
-                    <option value="monthly">Monthly - ${selectedLocker?.monthlyRate}</option>
-                  </Select>
-                </FormControl>
-              )}
 
               <HStack spacing={4}>
                 <FormControl isRequired>
-                  <FormLabel>Start Date</FormLabel>
-                  <Input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                  />
+                  <FormLabel>Start Time</FormLabel>
+                  <Select value={duration} onChange={(e) => setDuration(e.target.value)}>
+                    <option value="">Select start time</option>
+                    {selectedLocker?.resourceId.timeslots?.map((daySlot) =>
+                      daySlot.slots.map((slot, index) => (
+                        <option key={`${daySlot.dayOfWeek}-${index}`} value={slot.start}>
+                          {slot.start} ({daySlot.dayOfWeek})
+                        </option>
+                      ))
+                    )}
+                  </Select>
                 </FormControl>
 
-                {bookingType === "extended" && (
-                  <FormControl isRequired>
-                    <FormLabel>End Date</FormLabel>
-                    <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate} />
-                  </FormControl>
-                )}
+                <FormControl isRequired>
+                  <FormLabel>End Time</FormLabel>
+                  <Select value={endDate} onChange={(e) => setEndDate(e.target.value)}>
+                    <option value="">Select end time</option>
+                    {selectedLocker?.resourceId.timeslots?.map((daySlot) =>
+                      daySlot.slots.map((slot, index) => (
+                        <option key={`${daySlot.dayOfWeek}-${index}`} value={slot.end}>
+                          {slot.end} ({daySlot.dayOfWeek})
+                        </option>
+                      ))
+                    )}
+                  </Select>
+                </FormControl>
               </HStack>
 
               <FormControl isRequired>
@@ -992,21 +1255,7 @@ const Locker = () => {
                 />
               </FormControl>
 
-              <Alert status="success">
-                <AlertIcon />
-                <Box>
-                  <AlertTitle>Estimated Cost</AlertTitle>
-                  <AlertDescription>
-                    $
-                    {bookingType === "temporary"
-                      ? selectedLocker?.dailyRate
-                      : duration === "weekly"
-                        ? selectedLocker?.weeklyRate
-                        : selectedLocker?.monthlyRate}{" "}
-                    ({bookingType === "temporary" ? "Daily" : duration})
-                  </AlertDescription>
-                </Box>
-              </Alert>
+
             </VStack>
           </ModalBody>
 
@@ -1029,78 +1278,43 @@ const Locker = () => {
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4} align="stretch">
-              <Image
-                src={selectedLocker?.image || "/placeholder.svg"}
-                alt={`Locker ${selectedLocker?.id}`}
-                borderRadius="md"
-                objectFit="cover"
-                h="200px"
-                w="full"
-              />
-
               <SimpleGrid columns={2} spacing={4}>
                 <VStack align="start" spacing={2}>
-                  <Text fontWeight="bold">Location Information</Text>
-                  <Text fontSize="sm">Building: {selectedLocker?.location}</Text>
-                  <Text fontSize="sm">Zone: {selectedLocker?.zone}</Text>
-                  <Text fontSize="sm">Size: {selectedLocker?.size}</Text>
-                  <Text fontSize="sm">Dimensions: {selectedLocker?.dimensions}</Text>
+                  <Text fontWeight="bold">Resource Information</Text>
+                  <Text fontSize="sm">Name: {selectedLocker?.resourceId.name}</Text>
+                  <Text fontSize="sm">Location: {selectedLocker?.resourceId.location}</Text>
+                  <Text fontSize="sm">Type: {selectedLocker?.resourceId.type}</Text>
+                  <Text fontSize="sm">Capacity: {selectedLocker?.resourceId.capacity} person</Text>
                 </VStack>
 
                 <VStack align="start" spacing={2}>
-                  <Text fontWeight="bold">Technical Details</Text>
-                  <Text fontSize="sm">Lock Type: {selectedLocker?.lockType}</Text>
-                  <Text fontSize="sm">Condition: {selectedLocker?.condition}</Text>
-                  <Text fontSize="sm">Last Cleaned: {selectedLocker?.lastCleaned}</Text>
+                  <Text fontWeight="bold">Locker Details</Text>
+                  <Text fontSize="sm">Unit Name: {selectedLocker?.name}</Text>
+                  <Text fontSize="sm">Status: {selectedLocker?.status}</Text>
+                  <Text fontSize="sm">Available: {selectedLocker?.isAvailable ? "Yes" : "No"}</Text>
+                  <Text fontSize="sm">Last Updated: {new Date(selectedLocker?.updatedAt).toLocaleDateString()}</Text>
                 </VStack>
               </SimpleGrid>
 
-              <VStack align="start" spacing={2}>
-                <Text fontWeight="bold">Available Features</Text>
-                <HStack wrap="wrap" spacing={2}>
-                  {selectedLocker?.features.map((feature) => (
-                    <Badge key={feature} colorScheme="blue" variant="outline">
-                      {feature}
-                    </Badge>
-                  ))}
-                </HStack>
-              </VStack>
+              {selectedLocker?.resourceId.timeslots && selectedLocker.resourceId.timeslots.length > 0 && (
+                <VStack align="start" spacing={2}>
+                  <Text fontWeight="bold">Available Time Slots</Text>
+                  <SimpleGrid columns={2} spacing={2} w="full">
+                    {selectedLocker.resourceId.timeslots.map((daySlot, index) => (
+                      <VStack key={index} align="start" spacing={1}>
+                        <Text fontSize="sm" fontWeight="medium">{daySlot.dayOfWeek}</Text>
+                        {daySlot.slots.map((slot, slotIndex) => (
+                          <Text key={slotIndex} fontSize="sm" color="gray.600">
+                            {slot.start} - {slot.end}
+                          </Text>
+                        ))}
+                      </VStack>
+                    ))}
+                  </SimpleGrid>
+                </VStack>
+              )}
 
-              <VStack align="start" spacing={2}>
-                <Text fontWeight="bold">Pricing Structure</Text>
-                <SimpleGrid columns={3} spacing={4} w="full">
-                  <Card>
-                    <CardBody textAlign="center">
-                      <Text fontSize="2xl" fontWeight="bold" color="green.500">
-                        ${selectedLocker?.dailyRate}
-                      </Text>
-                      <Text fontSize="sm" color="gray.600">
-                        Daily Rate
-                      </Text>
-                    </CardBody>
-                  </Card>
-                  <Card>
-                    <CardBody textAlign="center">
-                      <Text fontSize="2xl" fontWeight="bold" color="blue.500">
-                        ${selectedLocker?.weeklyRate}
-                      </Text>
-                      <Text fontSize="sm" color="gray.600">
-                        Weekly Rate
-                      </Text>
-                    </CardBody>
-                  </Card>
-                  <Card>
-                    <CardBody textAlign="center">
-                      <Text fontSize="2xl" fontWeight="bold" color="purple.500">
-                        ${selectedLocker?.monthlyRate}
-                      </Text>
-                      <Text fontSize="sm" color="gray.600">
-                        Monthly Rate
-                      </Text>
-                    </CardBody>
-                  </Card>
-                </SimpleGrid>
-              </VStack>
+
             </VStack>
           </ModalBody>
 
@@ -1108,7 +1322,7 @@ const Locker = () => {
             <Button variant="ghost" mr={3} onClick={onDetailsClose}>
               Close
             </Button>
-            {selectedLocker?.status === "available" && (
+            {selectedLocker?.status === "Available" && selectedLocker?.isAvailable && selectedLocker?.resourceId.status && (
               <Button
                 colorScheme="blue"
                 onClick={() => {

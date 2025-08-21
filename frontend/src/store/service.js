@@ -1,17 +1,19 @@
 import { create } from "zustand";
-import { useAuthStore } from "./auth.js";
+import { useAuthStore } from "../store/auth.js";
 
 export const useServiceStore = create((set, get) => ({
     // State - Store data for each entity
     feedback: [],
     lostItems: [],
     responds: [],
+    bugReports: [],
 
     // Loading states
     loading: {
         feedback: false,
         lostItems: false,
         responds: false,
+        bugReports: false,
     },
 
     // Error states
@@ -19,6 +21,7 @@ export const useServiceStore = create((set, get) => ({
         feedback: null,
         lostItems: null,
         responds: null,
+        bugReports: null,
     },
 
     // Helper to get schoolId from auth store
@@ -66,8 +69,9 @@ export const useServiceStore = create((set, get) => ({
         set((state) => ({ loading: { ...state.loading, feedback: true } }));
         try {
             let url;
+
             const authStore = useAuthStore.getState();
-            const userContext = authStore.getState().getCurrentUser();
+            const userContext = authStore.getCurrentUser();
 
             if (userContext.role === "schoolAdmin" || userContext.role === "student") {
                 const schoolId = authStore.getSchoolId();
@@ -143,20 +147,41 @@ export const useServiceStore = create((set, get) => ({
             return { success: false, message: error.message };
         }
     },
+
+    fetchFeedbackByStudentId: async (studentId) => {
+        set((state) => ({ loading: { ...state.loading, feedback: true } }));
+        try {
+            const res = await fetch(`/api/feedback/student/${studentId}`, {
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch feedback by student ID");
+            }
+            set((state) => ({
+                feedback: data.data,
+                loading: { ...state.loading, feedback: false },
+                errors: { ...state.errors, feedback: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, feedback: false },
+                errors: { ...state.errors, feedback: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
     createFeedback: async (feedbackData) => {
         try {
-            console.log("createFeedback called with:", feedbackData);
             const authStore = useAuthStore.getState();
             const userContext = authStore.getCurrentUser();
-            console.log("User context:", userContext);
             if (userContext.role === "schoolAdmin" || userContext.role === "student") {
                 const schoolId = authStore.getSchoolId();
-                console.log("School ID:", schoolId);
                 if (schoolId) {
                     feedbackData.schoolId = schoolId;
                 }
             }
-            console.log("Final feedback data to send:", feedbackData);
             const res = await fetch("/api/feedback", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -164,7 +189,6 @@ export const useServiceStore = create((set, get) => ({
                 body: JSON.stringify(feedbackData),
             });
             const data = await res.json();
-            console.log("Backend response:", data);
             if (!data.success) {
                 throw new Error(data.message || "Failed to create feedback");
             }
@@ -466,6 +490,180 @@ export const useServiceStore = create((set, get) => ({
         }
     },
 
+    // ===== BUG REPORT OPERATIONS =====
+    fetchBugReports: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, bugReports: true } }));
+        try {
+            const url = get().buildUrl("/api/bug-report", filters);
+            const res = await fetch(url, {
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch bug reports");
+            }
+            set((state) => ({
+                bugReports: data.data,
+                loading: { ...state.loading, bugReports: false },
+                errors: { ...state.errors, bugReports: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, bugReports: false },
+                errors: { ...state.errors, bugReports: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchBugReportsBySchoolId: async (filters = {}) => {
+        set((state) => ({ loading: { ...state.loading, bugReports: true } }));
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = get().buildUrl(`/api/bug-report/school/${schoolId}`, filters);
+            const res = await fetch(url, {
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch bug reports");
+            }
+            set((state) => ({
+                bugReports: data.data,
+                loading: { ...state.loading, bugReports: false },
+                errors: { ...state.errors, bugReports: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, bugReports: false },
+                errors: { ...state.errors, bugReports: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    getAllBugReports: async (filters = {}) => {
+        try {
+            set((state) => ({ loading: { ...state.loading, bugReports: true } }));
+
+            // For company admins, fetch all bug reports without school restriction
+            const authStore = useAuthStore.getState();
+            const userContext = authStore.getCurrentUser();
+
+            let url = "/api/bug-report";
+
+            // Only add school restriction for school admins and students
+            if (userContext.role === "schoolAdmin" || userContext.role === "student") {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    url = `/api/bug-report/school/${schoolId}`;
+                }
+            }
+
+            // Add query parameters if any
+            const queryParams = new URLSearchParams(filters);
+            if (queryParams.toString()) {
+                url += `?${queryParams.toString()}`;
+            }
+
+            const res = await fetch(url, {
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch bug reports");
+            }
+            set((state) => ({
+                bugReports: data.data,
+                loading: { ...state.loading, bugReports: false },
+                errors: { ...state.errors, bugReports: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, bugReports: false },
+                errors: { ...state.errors, bugReports: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    createBugReport: async (bugReportData) => {
+        try {
+            const authStore = useAuthStore.getState();
+            const userContext = authStore.getCurrentUser();
+            if (userContext.role === "schoolAdmin" || userContext.role === "student") {
+                const schoolId = authStore.getSchoolId();
+                if (schoolId) {
+                    bugReportData.schoolId = schoolId;
+                }
+            }
+            const res = await fetch("/api/bug-report", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: 'include',
+                body: JSON.stringify(bugReportData),
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to create bug report");
+            }
+            set((state) => ({ bugReports: [...state.bugReports, data.data] }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    updateBugReport: async (id, updates) => {
+        try {
+            const res = await fetch(`/api/bug-report/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: 'include',
+                body: JSON.stringify(updates),
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update bug report");
+            }
+            set((state) => ({
+                bugReports: state.bugReports.map((item) =>
+                    item._id === id ? data.data : item
+                ),
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    deleteBugReport: async (id) => {
+        try {
+            const res = await fetch(`/api/bug-report/${id}`, {
+                method: "DELETE",
+                credentials: 'include',
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to delete bug report");
+            }
+            set((state) => ({
+                bugReports: state.bugReports.filter((item) => item._id !== id),
+            }));
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
     // ===== UTILITY FUNCTIONS =====
     clearErrors: () => {
         set({ errors: {} });
@@ -476,6 +674,7 @@ export const useServiceStore = create((set, get) => ({
                 feedback: null,
                 lostItems: null,
                 responds: null,
+                bugReports: null,
             },
         }));
     },
@@ -484,6 +683,7 @@ export const useServiceStore = create((set, get) => ({
             feedback: [],
             lostItems: [],
             responds: [],
+            bugReports: [],
         });
     },
 }));

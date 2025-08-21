@@ -2,10 +2,10 @@ import User from "../models/Academic/user.model.js";
 import bcrypt from "bcrypt";
 import generateToken from "../utils/jwtUtils.js";
 import transporter from "../config/nodemailer.js";
-import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
+import { generateTokenPayload, linkOAuthAccountHelper, checkOAuthLinkingRequired } from "../utils/authHelpers.js";
 import School from "../models/Billing/school.model.js";
 import Student from "../models/Academic/student.model.js";
-import jwt from "jsonwebtoken";
 import Lecturer from "../models/Academic/lecturer.model.js";
 
 export const register = async (req, res) => {
@@ -246,11 +246,16 @@ export const loginWithOAuth = async (req, res) => {
       });
     }
 
-    // Check if user has a different auth provider
-    if (user.authProvider && user.authProvider !== authProvider) {
+    // Check if user has a different auth provider - allow account linking
+    const linkingCheck = checkOAuthLinkingRequired(user, authProvider);
+    if (linkingCheck.requiresLinking) {
+      // Update the providerId in the data
+      linkingCheck.data.oauthData.providerId = googleId;
+
       return res.status(401).json({
         success: false,
-        message: `This email is associated with a ${user.authProvider} account. Please use the appropriate sign-in method.`,
+        message: linkingCheck.message,
+        data: linkingCheck.data
       });
     }
 
@@ -261,47 +266,7 @@ export const loginWithOAuth = async (req, res) => {
       await user.save();
     }
 
-    let tokenPayload = {};
-
-    // Fetch role-specific data based on user role - only include essential IDs
-    if (user.role === "schoolAdmin") {
-      const school = await School.findOne({ userId: user._id });
-      if (school) {
-        tokenPayload = {
-          schoolId: school._id,
-          school: school._id,
-          user: user._id,
-          schoolSetupComplete: true,
-        };
-      } else {
-        tokenPayload = {
-          schoolId: null,
-          school: null,
-          schoolSetupComplete: false,
-          user: user._id
-        };
-      }
-    } else if (user.role === "student") {
-      const student = await Student.findOne({ userId: user._id });
-      const school = await School.findOne({ _id: student?.schoolId });
-      if (student) {
-        tokenPayload = {
-          student: student._id,
-          school: school._id,
-          user: user._id
-        };
-      }
-    } else if (user.role === "lecturer") {
-      const lecturer = await Lecturer.findOne({ userId: user._id });
-      if (lecturer) {
-        tokenPayload = {
-          schoolId: lecturer.schoolId,
-          lecturer: lecturer._id,
-          school: lecturer.schoolId,
-          user: user._id
-        };
-      }
-    }
+    const tokenPayload = await generateTokenPayload(user);
 
     const token = generateToken(user, tokenPayload);
 
@@ -321,6 +286,101 @@ export const loginWithOAuth = async (req, res) => {
   } catch (error) {
     console.error("Error in OAuth login:", error.message);
     res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// OAuth signup method for Google, Facebook, etc.
+export const signupWithOAuth = async (req, res) => {
+  const { email, googleId, authProvider, name, role = "schoolAdmin" } = req.body;
+
+  // Basic input check
+  if (!email || !googleId || !authProvider || !name) {
+    return res.status(400).json({
+      success: false,
+      message: "Please provide email, googleId, authProvider, and name",
+    });
+  }
+
+  try {
+    // Check if user already exists with this email
+    const existingUserByEmail = await User.findOne({ email: email });
+    if (existingUserByEmail) {
+      return res.status(409).json({
+        success: false,
+        message: "User with this email already exists",
+      });
+    }
+
+    // Check if user already exists with this googleId
+    const existingUserByGoogleId = await User.findOne({ googleId: googleId });
+    if (existingUserByGoogleId) {
+      return res.status(409).json({
+        success: false,
+        message: "User with this Google account already exists",
+      });
+    }
+
+    // Create new OAuth user
+    const newUser = new User({
+      email,
+      googleId,
+      authProvider,
+      name,
+      role,
+      // OAuth users are automatically verified (no password needed)
+      // Detect OAuth user by presence of googleId and authProvider
+      profilePicture: req.body.profilePicture || "",
+      phoneNumber: req.body.phoneNumber || "",
+      twoFA_enabled: false,
+      // No password field for OAuth users
+    });
+
+    await newUser.save();
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: newUser._id, email: newUser.email, role: newUser.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Set cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // Return success response
+    return res.status(201).json({
+      success: true,
+      message: "OAuth user registered successfully",
+      data: {
+        _id: newUser._id,
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role,
+        authProvider: newUser.authProvider,
+        googleId: newUser.googleId,
+        profilePicture: newUser.profilePicture,
+        phoneNumber: newUser.phoneNumber,
+        twoFA_enabled: newUser.twoFA_enabled,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt,
+        // Detect if user is OAuth-based by checking for googleId and authProvider
+        isOAuthUser: !!(newUser.googleId && newUser.authProvider),
+        // OAuth users are considered verified since they come from trusted providers
+        isVerified: !!(newUser.googleId && newUser.authProvider)
+      },
+      token,
+    });
+  } catch (error) {
+    console.error("OAuth signup error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error during OAuth signup",
+    });
   }
 };
 
@@ -677,4 +737,6 @@ export const getTokenDuration = async (req, res) => {
     });
   }
 };
+
+
 

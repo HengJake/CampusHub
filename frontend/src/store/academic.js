@@ -98,9 +98,7 @@ export const useAcademicStore = create((set, get) => ({
             const schoolId = authStore.getSchoolId();
             updates = { ...updates, "schoolId": schoolId }
         }
-
-        console.log(`${endpoint}/${id}`)
-
+        
         const res = await fetch(`${endpoint}/${id}`, {
             method: "PUT",
             headers: {
@@ -333,7 +331,7 @@ export const useAcademicStore = create((set, get) => ({
     updateStudent: async (id, updates) => {
         try {
 
-            const res = await get().buildPUT('/api/student/', id, updates)
+            const res = await get().buildPUT('/api/student', id, updates)
 
             const data = await res.json();
 
@@ -945,7 +943,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateIntakeCourse: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/intake-course/', id, updates);
+            const res = await get().buildPUT('/api/intake-course', id, updates);
 
             const data = await res.json();
 

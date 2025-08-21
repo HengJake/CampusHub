@@ -280,23 +280,6 @@ const TransportModal = ({ isOpen, onClose, modalType, selectedItem, isEditMode }
                         renderFormContent()
                     )}
                 </ModalBody>
-
-                <ModalFooter>
-                    <Button variant="ghost" mr={3} onClick={onClose}>
-                        {!isEditMode && selectedItem ? 'Close' : 'Cancel'}
-                    </Button>
-                    {(isEditMode || !selectedItem) && (
-                        <Button
-                            colorScheme="blue"
-                            onClick={() => {
-                                // Form submission will be handled by the individual form components
-                                // This is just a fallback
-                            }}
-                        >
-                            {isEditMode ? 'Update' : 'Create'}
-                        </Button>
-                    )}
-                </ModalFooter>
             </ModalContent>
         </Modal>
     );

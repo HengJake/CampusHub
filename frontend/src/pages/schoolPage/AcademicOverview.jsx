@@ -8,13 +8,22 @@ import {
   HStack,
   Button,
   useToast,
-  Badge
+  Badge,
+  Divider
 } from "@chakra-ui/react"
 import {
-  FiUser,
+  FiCheckCircle,
+  FiTrendingUp,
+  FiAlertTriangle,
+  FiStar,
+  FiRefreshCw,
+  FiBookOpen,
+  FiUsers,
   FiBook,
+  FiUser,
   FiClock,
-  FiCheckSquare,
+  FiBarChart2,
+  FiUserPlus
 } from "react-icons/fi"
 import { useAcademicStore } from "../../store/academic.js";
 import { useEffect, useState } from "react";
@@ -23,17 +32,6 @@ import {
   updateAllStudentsAcademicPerformance
 } from "../../component/schoolAdminDashboard/dashboard/updateStudent.js";
 import { updateIntakeCourseEnrollments } from "../../component/schoolAdminDashboard/dashboard/updateIntakeCourseEnrollments.js";
-
-import {
-  FiCheckCircle,
-  FiTrendingUp,
-  FiAlertTriangle,
-  FiStar,
-  FiUserPlus,
-  FiRefreshCw,
-  FiBarChart,
-  FiBarChart2,
-} from "react-icons/fi";
 
 export function AcademicOverview() {
   /**
@@ -50,19 +48,20 @@ export function AcademicOverview() {
     attendance,
     classSchedules,
     results,
-    fetchStudents,
-    fetchLecturers,
-    fetchModules,
-    fetchDepartments,
-    fetchIntakeCourses,
-    fetchAttendance,
-    fetchClassSchedules,
-    fetchResults,
+    fetchStudentsBySchoolId,
+    fetchLecturersBySchoolId,
+    fetchModulesBySchoolId,
+    fetchDepartmentsBySchoolId,
+    fetchIntakeCoursesBySchoolId,
+    fetchAttendanceBySchoolId,
+    fetchClassSchedulesBySchoolId,
+    fetchResultsBySchoolId,
     updateIntakeCourse,
   } = useAcademicStore();
 
   const [isUpdatingPerformance, setIsUpdatingPerformance] = useState(false);
   const [isUpdatingEnrollments, setIsUpdatingEnrollments] = useState(false);
+  const [lastEnrollmentUpdate, setLastEnrollmentUpdate] = useState(null);
   const toast = useToast();
 
   /**
@@ -112,13 +111,6 @@ export function AcademicOverview() {
   };
 
   /**
-   * UPDATE INTAKE COURSE ENROLLMENT COUNTS
-   * ======================================
-   * Calculates and updates currentEnrollment for all intake courses
-   */
-
-
-  /**
    * HANDLE REFRESH WITH ENROLLMENT UPDATE
    * =====================================
    * Refreshes all data and updates enrollment counts
@@ -137,20 +129,44 @@ export function AcademicOverview() {
         isClosable: true,
       });
 
+      console.log("Starting enrollment update process...");
+      console.log("Current intake courses:", intakeCourses.length);
+      console.log("Current students:", students.length);
+
       // Update enrollment counts first
       const enrollmentResults = await updateIntakeCourseEnrollments(
         intakeCourses,
         students,
         updateIntakeCourse,
-        fetchIntakeCourses
+        fetchIntakeCoursesBySchoolId
       );
+
 
       // Then refresh all data
       await fetchAllData();
 
+      // Update the last enrollment update timestamp
+      if (enrollmentResults.success) {
+        setLastEnrollmentUpdate(new Date());
+      }
+
+      // Create a more detailed success message
+      let successMessage = enrollmentResults.message;
+      if (enrollmentResults.success && enrollmentResults.results) {
+        const successfulUpdates = enrollmentResults.results.filter(r => r.success && !r.noChange);
+        const noChangeCount = enrollmentResults.results.filter(r => r.noChange).length;
+
+        if (successfulUpdates.length > 0) {
+          successMessage = `Successfully updated ${successfulUpdates.length} intake course enrollments`;
+          if (noChangeCount > 0) {
+            successMessage += ` (${noChangeCount} unchanged)`;
+          }
+        }
+      }
+
       toast({
         title: "Refresh Complete",
-        description: enrollmentResults.message,
+        description: successMessage,
         status: enrollmentResults.success ? "success" : "warning",
         duration: 5000,
         isClosable: true,
@@ -171,25 +187,6 @@ export function AcademicOverview() {
   };
 
   /**
-   * DEBUG MODE CONFIGURATION
-   * ========================
-   * Enable detailed logging for development and debugging
-   */
-  const DEBUG_MODE = process.env.NODE_ENV === 'development';
-
-  const debugLog = (section, data) => {
-    if (DEBUG_MODE) {
-      // console.log(`[AcademicOverview] ${section}:`, data);
-    }
-  };
-
-  /**
-   * DATA FETCHING EFFECT
-   * ====================
-   * Fetch all academic data on component mount
-   * Includes debugging for data loading status
-   */
-  /**
    * FETCH ALL DATA FUNCTION
    * ======================
    * Centralized function to fetch all academic data
@@ -198,24 +195,23 @@ export function AcademicOverview() {
     try {
       await Promise.all([
         fetchStudentsBySchoolId(),
-        fetchLecturersBySchoolId?.(),
-        fetchModulesBySchoolId?.(),
-        fetchDepartmentsBySchoolId?.(),
-        fetchIntakeCoursesBySchoolId?.(),
-        fetchAttendanceBySchoolId?.(),
-        fetchClassSchedulesBySchoolId?.(),
-        fetchResultsBySchoolId?.()
+        fetchLecturersBySchoolId(),
+        fetchModulesBySchoolId(),
+        fetchDepartmentsBySchoolId(),
+        fetchIntakeCoursesBySchoolId(),
+        fetchAttendanceBySchoolId(),
+        fetchClassSchedulesBySchoolId(),
+        fetchResultsBySchoolId()
       ]);
-
-      debugLog("Data Fetching", "All data fetched successfully");
     } catch (error) {
-      debugLog("Data Fetching", "Error fetching data:", error);
+      console.error("Error fetching data:", error);
     }
   };
 
   useEffect(() => {
-    debugLog("Data Fetching", "Starting to fetch all academic data...");
     fetchAllData();
+    // Initialize last enrollment update time when component loads
+    setLastEnrollmentUpdate(new Date());
   }, []);
 
   /**
@@ -234,8 +230,6 @@ export function AcademicOverview() {
   const safePercentage = (numerator, denominator, fallback = 0) => {
     return Math.round(safeDivide(numerator, denominator, fallback / 100) * 100);
   };
-
-
 
   /**
    * MONTH-OVER-MONTH COMPARISON UTILITIES
@@ -290,15 +284,11 @@ export function AcademicOverview() {
     const currentMonthResults = filterDataByMonth(results, monthRanges.currentMonth);
     const lastMonthResults = filterDataByMonth(results, monthRanges.lastMonth);
 
-    const currentMonthAttendance = filterDataByMonth(attendance, monthRanges.currentMonth);
-    const lastMonthAttendance = filterDataByMonth(attendance, monthRanges.lastMonth);
-
     const currentMonthIntakeCourses = filterDataByMonth(intakeCourses, monthRanges.currentMonth);
     const lastMonthIntakeCourses = filterDataByMonth(intakeCourses, monthRanges.lastMonth);
 
     // Calculate metrics for each month
     const currentMonthStats = {
-
       passRate: (() => {
         if (!currentMonthResults.length) return 0;
         const passed = currentMonthResults.filter(r => r.grade !== 'F' && r.grade !== 'Fail').length;
@@ -313,7 +303,6 @@ export function AcademicOverview() {
         if (!currentMonthStudents.length || !currentMonthResults.length) return 0;
         return currentMonthStudents.filter(r => r.cgpa < 2.5).length;
       })(),
-
       enrollmentRate: (() => {
         if (!currentMonthIntakeCourses.length) return 0;
         const totalCapacity = currentMonthIntakeCourses.reduce((sum, ic) => sum + ic.maxStudents, 0);
@@ -323,7 +312,6 @@ export function AcademicOverview() {
     };
 
     const lastMonthStats = {
-
       passRate: (() => {
         if (!lastMonthResults.length) return 0;
         const passed = lastMonthResults.filter(r => r.grade !== 'F' && r.grade !== 'Fail').length;
@@ -338,7 +326,6 @@ export function AcademicOverview() {
         if (!lastMonthStudents.length || !lastMonthResults.length) return 0;
         return lastMonthStudents.filter(r => r.cgpa < 2.5).length;
       })(),
-
       enrollmentRate: (() => {
         if (!lastMonthIntakeCourses.length) return 0;
         const totalCapacity = lastMonthIntakeCourses.reduce((sum, ic) => sum + ic.maxStudents, 0);
@@ -364,13 +351,11 @@ export function AcademicOverview() {
         last: lastMonthStats.atRiskStudents,
         change: calculateMonthOverMonthChange(currentMonthStats.atRiskStudents, lastMonthStats.atRiskStudents)
       },
-
       enrollmentRate: {
         current: currentMonthStats.enrollmentRate,
         last: lastMonthStats.enrollmentRate,
         change: calculateMonthOverMonthChange(currentMonthStats.enrollmentRate, lastMonthStats.enrollmentRate)
       },
-
     };
   };
 
@@ -379,8 +364,6 @@ export function AcademicOverview() {
 
   // Debug information for month-over-month comparison
   const debugMonthComparison = () => {
-    if (!DEBUG_MODE) return null;
-
     const monthRanges = getMonthRanges();
     const currentMonthData = {
       students: filterDataByMonth(students, monthRanges.currentMonth).length,
@@ -420,20 +403,8 @@ export function AcademicOverview() {
    * DASHBOARD STATISTICS CALCULATION
    * =================================
    * Real-time computation of all dashboard metrics with data validation
-   * Includes debugging and fallbacks for missing data
    */
-
   const dashboardStats = (() => {
-    debugLog("Data Arrays", {
-      students: students?.length || 0,
-      lecturers: lecturers?.length || 0,
-      modules: modules?.length || 0,
-      departments: departments?.length || 0,
-      intakeCourses: intakeCourses?.length || 0,
-      attendance: attendance?.length || 0,
-      results: results?.length || 0
-    });
-
     return {
       // ============================================
       // BASIC COUNTS - Foundation metrics
@@ -443,52 +414,25 @@ export function AcademicOverview() {
       totalModules: modules?.length || 0,
       totalDepartments: departments?.length || 0,
 
-
-
       // ============================================
       // STUDENT ACADEMIC PERFORMANCE
       // ============================================
       passRate: (() => {
         if (!results?.length) return 0;
         const passed = results.filter(r => r.grade !== 'F' && r.grade !== 'Fail').length;
-        const rate = safePercentage(passed, results.length);
-
-        debugLog("Pass Rate", { total: results.length, passed, rate });
-        return rate;
+        return safePercentage(passed, results.length);
       })(),
 
       atRiskStudents: (() => {
         if (!students?.length || !results?.length) return 0;
-
-        const atRisk = students.filter(r => r.cgpa < 2.5).length;
-
-        debugLog("At-Risk Students Summary", {
-          totalStudents: students.length,
-          studentsWithResults: students.filter(s => results.some(r => r.studentId === s._id)).length,
-          atRisk,
-          criteria: {
-            lowGPA: "GPA < 2.0",
-            multipleFailures: "≥2 failed modules",
-            lowPassRate: "Pass rate < 60%"
-          }
-        });
-
-        return atRisk;
+        return students.filter(r => r.cgpa < 2.5).length;
       })(),
 
       topPerformers: (() => {
         if (!students?.length || !results?.length) return 0;
-
-        const topPerformers = students.filter(student => {
+        return students.filter(student => {
           return student.cgpa > 3.8; // Top performer threshold
         }).length;
-
-        debugLog("Top Performers", {
-          totalStudents: students.length,
-          topPerformers
-        });
-
-        return topPerformers;
       })(),
 
       avgWorkingHours: (() => {
@@ -527,25 +471,11 @@ export function AcademicOverview() {
           }, 0) || 0;
 
           totalHours = teachingHours + officeHours;
-
-          debugLog(`Lecturer ${lecturer._id} Working Hours`, {
-            lecturerId: lecturer._id,
-            teachingHours: parseFloat(teachingHours.toFixed(2)),
-            officeHours: parseFloat(officeHours.toFixed(2)),
-            totalHours: parseFloat(totalHours.toFixed(2))
-          });
-
           return totalHours;
         });
 
         const totalWorkingHours = lecturerWorkingHours.reduce((sum, hours) => sum + hours, 0);
         const averageWorkingHours = safeDivide(totalWorkingHours, lecturers.length);
-
-        debugLog("Average Working Hours", {
-          totalLecturers: lecturers.length,
-          totalWorkingHours: parseFloat(totalWorkingHours.toFixed(2)),
-          averageWorkingHours: parseFloat(averageWorkingHours.toFixed(2))
-        });
 
         return parseFloat(averageWorkingHours.toFixed(2));
       })(),
@@ -572,20 +502,8 @@ export function AcademicOverview() {
 
         const averageModules = safeDivide(totalModules, lecturers.length);
 
-        debugLog("Average Modules per Lecturer", {
-          totalLecturers: lecturers.length,
-          totalModules,
-          averageModules: parseFloat(averageModules.toFixed(2))
-        });
-
         return parseFloat(averageModules.toFixed(2));
       })(),
-
-
-
-
-
-
 
       // ============================================
       // ATTENDANCE TRACKING
@@ -593,33 +511,13 @@ export function AcademicOverview() {
       avgAttendanceRate: (() => {
         if (!attendance?.length) return 0;
         const present = attendance.filter(a => a.status === "present").length;
-        const rate = safePercentage(present, attendance.length);
-
-        debugLog("Average Attendance", {
-          totalRecords: attendance.length,
-          present,
-          rate
-        });
-
-        return rate;
+        return safePercentage(present, attendance.length);
       })(),
-
-
-
-
 
       weeklyAbsenceTrend: (() => {
         if (!attendance?.length) return 0;
         const absent = attendance.filter(a => a.status === "absent").length;
-        const rate = safePercentage(absent, attendance.length);
-
-        debugLog("Weekly Absence Trend", {
-          totalRecords: attendance.length,
-          absent,
-          rate
-        });
-
-        return rate;
+        return safePercentage(absent, attendance.length);
       })(),
 
       // ============================================
@@ -629,19 +527,8 @@ export function AcademicOverview() {
         if (!results?.length) return 0;
         const totalGPA = results.reduce((sum, result) => sum + (result.gpa || 0), 0);
         const average = safeDivide(totalGPA, results.length);
-
-        debugLog("Average GPA", {
-          totalResults: results.length,
-          totalGPA,
-          average: parseFloat(average.toFixed(2))
-        });
-
         return parseFloat(average.toFixed(2));
       })(),
-
-
-
-
 
       // ============================================
       // ENHANCED ATTENDANCE ANALYTICS
@@ -658,11 +545,6 @@ export function AcademicOverview() {
 
           return attendanceRate < 0.75; // Below 75% threshold
         }).length;
-
-        debugLog("Low Attendance Students", {
-          totalStudents: students.length,
-          lowAttendanceStudents
-        });
 
         return lowAttendanceStudents;
       })(),
@@ -695,13 +577,6 @@ export function AcademicOverview() {
         });
 
         const correlation = safePercentage(correlationSum, validStudents);
-
-        debugLog("Attendance-Performance Correlation", {
-          validStudents,
-          correlationSum,
-          correlation
-        });
-
         return correlation;
       })(),
 
@@ -715,47 +590,10 @@ export function AcademicOverview() {
         const totalEnrolled = intakeCourses.reduce((sum, ic) => sum + ic.currentEnrollment, 0);
         const rate = safePercentage(totalEnrolled, totalCapacity);
 
-        debugLog("Enrollment Rate", {
-          totalCapacity,
-          totalEnrolled,
-          rate
-        });
-
         return rate;
       })(),
-
-
-
-
-
-      // ============================================
-      // LECTURER & DEPARTMENT ANALYTICS
-      // ============================================
-
-
-      // ============================================
-      // INFRASTRUCTURE & SCHEDULING ANALYTICS
-      // ============================================
-
     };
   })(); // End of dashboardStats calculation
-
-  // Log final dashboard summary in debug mode
-  debugLog("Dashboard Summary", {
-    totalStudents: dashboardStats.totalStudents,
-    passRate: dashboardStats.passRate,
-    avgAttendance: dashboardStats.avgAttendanceRate
-  });
-
-  /**
-   * CHART DATA PROCESSING
-   * =====================
-   * Process data for visualizations with proper validation and debugging
-   */
-
-
-
-
 
   return (
     <Box p={6} minH="100vh" flex={1}>
@@ -795,7 +633,7 @@ export function AcademicOverview() {
           </HStack>
         </HStack>
 
-        <VStack spacing={2} align="start">
+        <HStack spacing={2} align="start">
           <Badge fontSize="sm" color="green.800" variant="subtle">
             <Text fontSize="sm">
               Current Month: {monthComparisonDebug.monthRanges.current.start} - {monthComparisonDebug.monthRanges.current.end}
@@ -806,7 +644,9 @@ export function AcademicOverview() {
               Last Month: {monthComparisonDebug.monthRanges.last.start} - {monthComparisonDebug.monthRanges.last.end}
             </Text>
           </Badge>
-        </VStack>
+        </HStack>
+
+        <Divider />
 
         {/* Academic Performance Stats */}
         <Box>
@@ -844,22 +684,51 @@ export function AcademicOverview() {
           </Grid>
         </Box>
 
-        {/* Enhanced Academic Analytics */}
+        <Divider />
+
+        {/* Enrollment Overview */}
         <Box>
-          <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
-            Enhanced Academic Analytics
-          </Text>
-          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(1, 1fr)" }} gap={6}>
+          <HStack align={"center"} justify={"space-between"} mb={4}>
+            <Text fontSize="xl" fontWeight="bold" color="gray.800" >
+              Enrollment Overview
+            </Text>
+            {/* Last Update Information */}
+            {lastEnrollmentUpdate && (
+              <Text fontSize="sm" color="gray.600" mt={2}>
+                Last enrollment update: {lastEnrollmentUpdate.toLocaleString()}
+              </Text>
+            )}
+          </HStack>
+
+          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
             <StatsCard
-              title="Enrollment Rate"
-              value={`${dashboardStats.enrollmentRate}%`}
-              change={monthOverMonthStats.enrollmentRate.change}
-              icon={<FiUserPlus />}
+              title="Total Intake Courses"
+              value={intakeCourses.length}
+              icon={<FiBookOpen />}
+              color="blue.500"
+            />
+            <StatsCard
+              title="Total Enrolled Students"
+              value={students.length}
+              icon={<FiUsers />}
               color="green.500"
             />
-
+            <StatsCard
+              title="Available Courses"
+              value={intakeCourses.filter(ic => ic.status === 'available').length}
+              icon={<FiCheckCircle />}
+              color="green.500"
+            />
+            <StatsCard
+              title="Full Courses"
+              value={intakeCourses.filter(ic => ic.status === 'full').length}
+              icon={<FiAlertTriangle />}
+              color="orange.500"
+            />
           </Grid>
         </Box>
+
+        <Divider />
 
         {/* Lecturer Overview Stats */}
         <Box>
@@ -980,40 +849,6 @@ export function AcademicOverview() {
                 </VStack>
               </CardBody>
             </Card>
-          </Grid>
-        </Box>
-
-
-        {/* Attendance Tracking */}
-        <Box>
-          <Text fontSize="xl" fontWeight="bold" color="gray.800" mb={4}>
-            Attendance Tracking
-          </Text>
-          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
-            <StatsCard
-              title="Avg Attendance Rate"
-              value={`${dashboardStats.avgAttendanceRate}%`}
-              icon={<FiCheckSquare />}
-              color="green.500"
-            />
-            <StatsCard
-              title="Low Attendance Students"
-              value={dashboardStats.lowAttendanceStudents}
-              icon={<FiAlertTriangle />}
-              color="red.500"
-            />
-            <StatsCard
-              title="Attendance-Performance Correlation"
-              value={`${dashboardStats.attendancePerformanceCorrelation}%`}
-              icon={<FiTrendingUp />}
-              color="blue.500"
-            />
-            <StatsCard
-              title="Weekly Absence Trend"
-              value={`${dashboardStats.weeklyAbsenceTrend}%`}
-              icon={<FiBarChart />}
-              color="orange.500"
-            />
           </Grid>
         </Box>
       </VStack>

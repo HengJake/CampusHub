@@ -28,13 +28,34 @@ import {
   AlertDescription,
   Flex,
   Divider,
+  Image,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  FormControl,
+  FormLabel,
+  Input,
+  Select,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  Textarea,
+  Checkbox,
+  useToast,
 } from "@chakra-ui/react"
 import { FiMapPin, FiClock, FiNavigation, FiAlertCircle, FiRefreshCw } from "react-icons/fi"
 import { FaBus, FaCar } from "react-icons/fa"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useTransportationStore } from "../../store/transportation.js"
 import { CampusRideModal } from "../../component/student/CampusRideModal"
 import { FaDirections } from "react-icons/fa";
+import { useAuthStore } from "../../store/auth.js";
 
 export default function Transportation() {
   const {
@@ -42,28 +63,53 @@ export default function Transportation() {
     routes,
     stops,
     eHailings,
+    vehicles,
     loading,
     errors,
-    fetchBusSchedules,
-    fetchRoutes,
-    fetchStops,
-    fetchEHailings,
+    fetchBusSchedulesBySchoolId,
+    fetchRoutesBySchoolId,
+    fetchStopsBySchoolId,
+    fetchEHailingsBySchoolId,
+    fetchVehiclesBySchoolId,
   } = useTransportationStore();
 
-  console.log("🚀 ~ Transportation ~ busSchedules:", busSchedules)
-  console.log("🚀 ~ Transportation ~ eHailings:", eHailings)
+  const { getCurrentUser, initializeAuth } = useAuthStore()
+  const [isAuthReady, setIsAuthReady] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null)
+
 
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
   const { isOpen: isRideOpen, onOpen: onRideOpen, onClose: onRideClose } = useDisclosure()
+  const toast = useToast()
 
-  // Fetch data on component mount
+  // Initialize authentication and wait for it to be ready
   useEffect(() => {
-    fetchBusSchedules()
-    fetchRoutes()
-    fetchStops()
-    fetchEHailings()
-  }, [fetchBusSchedules, fetchRoutes, fetchStops, fetchEHailings])
+    const initAuth = async () => {
+      try {
+        await initializeAuth()
+        const user = getCurrentUser()
+        if (user?.user?.student?.schoolId) {
+          setCurrentUser(user)
+          setIsAuthReady(true)
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error)
+      }
+    }
+    initAuth()
+  }, [initializeAuth, getCurrentUser])
+
+  // Fetch data only after authentication is ready
+  useEffect(() => {
+    if (isAuthReady && currentUser?.user?.student?.schoolId) {
+      fetchBusSchedulesBySchoolId()
+      fetchRoutesBySchoolId()
+      fetchStopsBySchoolId()
+      fetchEHailingsBySchoolId()
+      fetchVehiclesBySchoolId()
+    }
+  }, [isAuthReady, currentUser, fetchBusSchedulesBySchoolId, fetchRoutesBySchoolId, fetchStopsBySchoolId, fetchEHailingsBySchoolId, fetchVehiclesBySchoolId])
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -110,7 +156,7 @@ export default function Transportation() {
 
     // Handle single route object
     if (typeof routeId === 'object') {
-      return routeId.name || "Route"
+      return routeId.name || routeId.routeName || "Route"
     }
 
     return "N/A"
@@ -125,6 +171,19 @@ export default function Transportation() {
     }
 
     return vehicleId
+  }
+
+  // Helper function to get route timing info
+  const getRouteTimingInfo = (schedule) => {
+    if (!schedule.routeTiming || schedule.routeTiming.length === 0) {
+      return { startTime: "N/A", endTime: "N/A" }
+    }
+
+    const timing = schedule.routeTiming[0]
+    return {
+      startTime: timing.startTime || "N/A",
+      endTime: timing.endTime || "N/A"
+    }
   }
 
   // Helper function to get student info from studentId
@@ -152,12 +211,12 @@ export default function Transportation() {
     return days[dayNumber] || 'Daily'
   }
 
-  // Helper function to sort schedules by departure time
+  // Helper function to sort schedules by start time
   const sortSchedulesByTime = (schedules) => {
     return [...schedules].sort((a, b) => {
-      const timeA = new Date(a.departureTime || 0)
-      const timeB = new Date(b.departureTime || 0)
-      return timeA - timeB
+      const timeA = a.routeTiming?.[0]?.startTime || "00:00"
+      const timeB = b.routeTiming?.[0]?.startTime || "00:00"
+      return timeA.localeCompare(timeB)
     })
   }
 
@@ -165,7 +224,7 @@ export default function Transportation() {
   const groupSchedulesByDay = (schedules) => {
     const grouped = {}
     schedules.forEach(schedule => {
-      const dayNumber = schedule.dayActive
+      const dayNumber = schedule.dayOfWeek
       const dayName = dayNumber ? getDayName(dayNumber) : 'Daily'
       if (!grouped[dayName]) {
         grouped[dayName] = []
@@ -175,8 +234,23 @@ export default function Transportation() {
     return grouped
   }
 
+
+
   const isLoading = loading.busSchedules || loading.routes || loading.stops || loading.eHailings
   const hasErrors = errors.busSchedules || errors.routes || errors.stops || errors.eHailings
+  const isDataLoading = !isAuthReady || isLoading
+
+  // Show loading state while authentication is not ready
+  if (!isAuthReady) {
+    return (
+      <Box minH="100vh" display="flex" justifyContent="center" alignItems="center">
+        <VStack spacing={4}>
+          <Spinner size="xl" color="blue.500" />
+          <Text color="gray.600">Initializing transportation services...</Text>
+        </VStack>
+      </Box>
+    )
+  }
 
   return (
     <Box minH="100vh">
@@ -195,12 +269,16 @@ export default function Transportation() {
               variant="outline"
               size="sm"
               onClick={() => {
-                fetchBusSchedules()
-                fetchRoutes()
-                fetchStops()
-                fetchEHailings()
+                if (currentUser?.user?.student?.schoolId) {
+                  fetchBusSchedulesBySchoolId()
+                  fetchRoutesBySchoolId()
+                  fetchStopsBySchoolId()
+                  fetchEHailingsBySchoolId()
+                  fetchVehiclesBySchoolId()
+                }
               }}
               isLoading={isLoading}
+              isDisabled={!currentUser?.user?.student?.schoolId}
             >
               Refresh
             </Button>
@@ -234,15 +312,9 @@ export default function Transportation() {
                     Bus Schedule
                   </Text>
                 </HStack>
-                <Badge colorScheme="green" variant="subtle">
-                  <HStack spacing={1}>
-                    <Icon as={FiClock} boxSize={3} />
-                    <Text fontSize="xs">Pre-set Updates</Text>
-                  </HStack>
-                </Badge>
               </HStack>
 
-              {loading.busSchedules ? (
+              {isDataLoading ? (
                 <Box textAlign="center" py={8}>
                   <Spinner size="lg" color="blue.500" />
                   <Text mt={2} color="gray.600">Loading bus schedules...</Text>
@@ -254,100 +326,283 @@ export default function Transportation() {
                 </Box>
               ) : (
                 <VStack spacing={6} align="stretch">
-                  {Object.entries(groupSchedulesByDay(sortSchedulesByTime(busSchedules))).map(([day, daySchedules]) => (
-                    <Box key={day}>
-                      <Text fontSize="lg" fontWeight="semibold" mb={4} color="blue.600">
-                        {day}
-                      </Text>
-                      <VStack spacing={4} align="stretch">
-                        {daySchedules.map((schedule, index) => (
-                          <Flex key={schedule._id} position="relative">
-                            {/* Timeline line */}
-                            <Box
-                              position="absolute"
-                              left="20px"
-                              top="40px"
-                              bottom="-20px"
-                              width="2px"
-                              bg={index === daySchedules.length - 1 ? "transparent" : "gray.200"}
-                            />
+                  {Object.entries(groupSchedulesByDay(sortSchedulesByTime(busSchedules))).map(([day, daySchedules]) => {
+                    return (
+                      <Box key={day}>
+                        <Text fontSize="lg" fontWeight="semibold" mb={4} color="blue.600">
+                          {day}
+                        </Text>
+                        <VStack spacing={4} align="stretch">
+                          {daySchedules.map((schedule, index) => {
+                            console.log("🚀 ~ schedule:", schedule)
+                            return (
+                              <Flex key={schedule._id} position="relative">
+                                {/* Timeline line */}
+                                <Box
+                                  position="absolute"
+                                  left="20px"
+                                  top="40px"
+                                  bottom="-20px"
+                                  width="2px"
+                                  bg={index === daySchedules.length - 1 ? "transparent" : "gray.200"}
+                                />
 
-                            {/* Timeline dot */}
-                            <Box
-                              position="absolute"
-                              left="16px"
-                              top="32px"
-                              width="10px"
-                              height="10px"
-                              borderRadius="full"
-                              bg={schedule.active ? "blue.500" : "gray.400"}
-                              border="2px solid white"
-                              boxShadow="0 0 0 2px blue.100"
-                            />
+                                {/* Timeline dot */}
+                                <Box
+                                  position="absolute"
+                                  left="16px"
+                                  top="32px"
+                                  width="10px"
+                                  height="10px"
+                                  borderRadius="full"
+                                  bg={schedule.active ? "blue.500" : "gray.400"}
+                                  border="2px solid white"
+                                  boxShadow="0 0 0 2px blue.100"
+                                />
 
-                            {/* Schedule card */}
-                            <Card
-                              ml="50px"
-                              flex="1"
-                              bg={schedule.active ? "blue.50" : "gray.50"}
-                              borderLeft="4px solid"
-                              borderLeftColor={schedule.active ? "blue.500" : "gray.400"}
-                              _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
-                              transition="all 0.2s"
-                            >
-                              <CardBody p={4}>
-                                <Flex justify="space-between" align="start" mb={3}>
-                                  <VStack align="start" spacing={1}>
-                                    <Text fontWeight="bold" fontSize="md" color="gray.800">
-                                      {getRouteName(schedule.routeId)}
-                                    </Text>
-                                    <Text fontSize="sm" color="gray.600">
-                                      {getVehicleInfo(schedule.vehicleId)}
-                                    </Text>
-                                  </VStack>
-                                  <Badge
-                                    colorScheme={getStatusColor(schedule.active ? "active" : "inactive")}
-                                    variant="subtle"
-                                    size="sm"
-                                  >
-                                    {schedule.active ? "Active" : "Inactive"}
-                                  </Badge>
-                                </Flex>
+                                {/* Schedule card */}
+                                <Card
+                                  ml="50px"
+                                  flex="1"
+                                  bg={schedule.active ? "blue.50" : "gray.50"}
+                                  borderLeft="4px solid"
+                                  borderLeftColor={schedule.active ? "blue.500" : "gray.400"}
+                                  _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
+                                  transition="all 0.2s"
+                                >
+                                  <CardBody p={4}>
+                                    <Grid templateColumns="1fr 2fr" gap={6}>
+                                      {/* Left Side - Timing Information */}
+                                      <VStack align="start" spacing={4} borderRight={"2px solid"} borderColor={"gray.500"} p={4}>
+                                        {/* Time Display */}
 
-                                <HStack spacing={6} mt={3}>
-                                  <VStack align="start" spacing={1}>
-                                    <HStack spacing={1}>
-                                      <Icon as={FiClock} boxSize={3} color="blue.500" />
-                                      <Text fontSize="xs" color="gray.600" fontWeight="medium">
-                                        Departure
-                                      </Text>
-                                    </HStack>
-                                    <Text fontWeight="bold" color="blue.600" fontSize="lg">
-                                      {formatTime(schedule.departureTime)}
-                                    </Text>
-                                  </VStack>
 
-                                  <Divider orientation="vertical" height="40px" />
+                                        <HStack spacing={2}>
+                                          <Box
+                                            p={3}
+                                            bg="blue.100"
+                                            borderRadius="lg"
+                                            border="2px solid"
+                                            borderColor="blue.200"
+                                          >
+                                            <Text fontSize="xs" color="blue.700" fontWeight="medium" mb={1}>
+                                              Start Time
+                                            </Text>
+                                            <Text fontSize="2xl" fontWeight="bold" color="blue.800">
+                                              {getRouteTimingInfo(schedule).startTime}
+                                            </Text>
+                                          </Box>
 
-                                  <VStack align="start" spacing={1}>
-                                    <HStack spacing={1}>
-                                      <Icon as={FiMapPin} boxSize={3} color="green.500" />
-                                      <Text fontSize="xs" color="gray.600" fontWeight="medium">
-                                        Arrival
-                                      </Text>
-                                    </HStack>
-                                    <Text fontWeight="bold" color="green.600" fontSize="lg">
-                                      {formatTime(schedule.arrivalTime)}
-                                    </Text>
-                                  </VStack>
-                                </HStack>
-                              </CardBody>
-                            </Card>
-                          </Flex>
-                        ))}
-                      </VStack>
-                    </Box>
-                  ))}
+                                          <Box
+                                            p={3}
+                                            bg="green.100"
+                                            borderRadius="lg"
+                                            border="2px solid"
+                                            borderColor="green.200"
+                                          >
+                                            <Text fontSize="xs" color="green.700" fontWeight="medium" mb={1}>
+                                              End Time
+                                            </Text>
+                                            <Text fontSize="2xl" fontWeight="bold" color="green.800">
+                                              {getRouteTimingInfo(schedule).endTime}
+                                            </Text>
+                                          </Box>
+                                        </HStack>
+
+
+                                        {/* Date Information */}
+                                        <Box w="full">
+                                          <VStack spacing={2} align="start">
+                                            <Text fontSize="xs" color="gray.600" fontWeight="medium">
+                                              Effective Period
+                                            </Text>
+                                            <Box p={2} bg="gray.100" borderRadius="md" w="full">
+                                              <Text fontSize="xs" color="gray.700">
+                                                From: {schedule.startDate ? new Date(schedule.startDate).toLocaleDateString() : "N/A"}
+                                              </Text>
+                                              <Text fontSize="xs" color="gray.700">
+                                                To: {schedule.endDate ? new Date(schedule.endDate).toLocaleDateString() : "N/A"}
+                                              </Text>
+                                            </Box>
+                                          </VStack>
+                                        </Box>
+
+                                        {/* Vehicle Info */}
+                                        <Box w="full">
+                                          <VStack spacing={2} align="start">
+                                            <Text fontSize="xs" color="gray.600" fontWeight="medium">
+                                              Vehicle
+                                            </Text>
+                                            <Box p={2} bg="purple.100" borderRadius="md" w="full">
+                                              <Text fontSize="xs" color="purple.700" fontWeight="medium">
+                                                {getVehicleInfo(schedule.vehicleId)}
+                                              </Text>
+                                            </Box>
+                                          </VStack>
+                                        </Box>
+                                      </VStack>
+
+                                      {/* Right Side - Route Information */}
+                                      <VStack align="start" spacing={4} w="full">
+                                        {/* Route Header */}
+                                        <Flex justify="space-between" align="center" w="full">
+                                          <VStack align="start" spacing={1}>
+                                            <Text fontSize="lg" fontWeight="bold" color="gray.800">
+                                              Multiple Routes
+                                            </Text>
+                                            <Text fontSize="sm" color="gray.600">
+                                              {schedule.routeTiming?.length || 0} route(s) scheduled
+                                            </Text>
+                                          </VStack>
+
+                                          <HStack spacing={2}>
+                                            <Badge
+                                              colorScheme={getStatusColor(schedule.active ? "active" : "inactive")}
+                                              variant="subtle"
+                                              size="lg"
+                                              px={3}
+                                              py={2}
+                                            >
+                                              {schedule.active ? "Active" : "Inactive"}
+                                            </Badge>
+
+
+                                          </HStack>
+                                        </Flex>
+
+                                        {/* Multiple Routes Display */}
+                                        <VStack spacing={4} align="stretch" w="full">
+                                          <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                                            Route Details
+                                          </Text>
+
+                                          {schedule.routeTiming && schedule.routeTiming.length > 0 ? (
+                                            <VStack spacing={3} align="stretch">
+                                              {schedule.routeTiming.map((route, routeIndex) => (
+                                                <Card key={route._id || routeIndex} bg="blue.50" border="1px solid" borderColor="blue.200">
+                                                  <CardBody p={4}>
+                                                    <VStack spacing={3} align="stretch">
+                                                      {/* Route Header */}
+                                                      <Flex justify="space-between" align="center">
+                                                        <Text fontSize="md" fontWeight="bold" color="blue.800">
+                                                          Route {routeIndex + 1}: {route.routeId?.name || "Route Name"}
+                                                        </Text>
+                                                        <Badge colorScheme="blue" variant="subtle" size="sm">
+                                                          Active
+                                                        </Badge>
+                                                      </Flex>
+
+                                                      {/* Route Timing */}
+                                                      <Grid templateColumns="1fr 1fr" gap={3}>
+                                                        <Box p={2} bg="white" borderRadius="md" border="1px solid" borderColor="blue.300">
+                                                          <Text fontSize="xs" color="blue.600" fontWeight="medium" mb={1}>
+                                                            Start Time
+                                                          </Text>
+                                                          <Text fontSize="lg" fontWeight="bold" color="blue.800">
+                                                            {route.startTime || "N/A"}
+                                                          </Text>
+                                                        </Box>
+
+                                                        <Box p={2} bg="white" borderRadius="md" border="1px solid" borderColor="blue.300">
+                                                          <Text fontSize="xs" color="blue.600" fontWeight="medium" mb={1}>
+                                                            End Time
+                                                          </Text>
+                                                          <Text fontSize="lg" fontWeight="bold" color="blue.800">
+                                                            {route.endTime || "N/A"}
+                                                          </Text>
+                                                        </Box>
+                                                      </Grid>
+
+                                                      {/* Route Information */}
+                                                      <Grid templateColumns="1fr 1fr" gap={3}>
+                                                        <Box p={2} bg="orange.50" borderRadius="md" border="1px solid" borderColor="orange.300">
+                                                          <Text fontSize="xs" color="orange.700" fontWeight="medium" mb={1}>
+                                                            Est. Time
+                                                          </Text>
+                                                          <Text fontSize="sm" fontWeight="bold" color="orange.800">
+                                                            {route.routeId?.estimateTimeMinute || "N/A"} min
+                                                          </Text>
+                                                        </Box>
+
+                                                        <Box p={2} bg="teal.50" borderRadius="md" border="1px solid" borderColor="teal.300">
+                                                          <Text fontSize="xs" color="teal.700" fontWeight="medium" mb={1}>
+                                                            Fare
+                                                          </Text>
+                                                          <Text fontSize="sm" fontWeight="bold" color="teal.800">
+                                                            ${route.routeId?.fare || "N/A"}
+                                                          </Text>
+                                                        </Box>
+                                                      </Grid>
+
+                                                      {/* Route Stops */}
+                                                      {route.routeId?.stopIds && route.routeId.stopIds.length > 0 && (
+                                                        <Box>
+                                                          <Text fontSize="xs" color="gray.600" fontWeight="medium" mb={2}>
+                                                            Route Stops ({route.routeId.stopIds.length})
+                                                          </Text>
+                                                          <VStack spacing={1} align="start">
+                                                            {route.routeId.stopIds.map((stop, stopIndex) => (
+                                                              <Box
+                                                                key={stop._id || stopIndex}
+                                                                p={2}
+                                                                bg="white"
+                                                                borderRadius="md"
+                                                                w="full"
+                                                                border="1px solid"
+                                                                borderColor="blue.200"
+                                                                _hover={{
+                                                                  bg: "blue.50",
+                                                                  transform: "scale(1.01)"
+                                                                }}
+                                                                transition="all 0.2s"
+                                                                cursor="pointer"
+                                                              >
+                                                                <HStack spacing={2}>
+                                                                  <Box
+                                                                    w="8px"
+                                                                    h="8px"
+                                                                    borderRadius="full"
+                                                                    bg="blue.500"
+                                                                    flexShrink={0}
+                                                                  />
+                                                                  <VStack align="start" spacing={0} flex={1}>
+                                                                    <Text fontSize="xs" color="blue.700" fontWeight="medium">
+                                                                      Stop {stopIndex + 1}
+                                                                    </Text>
+                                                                    <Text fontSize="sm" color="blue.800" fontWeight="semibold">
+                                                                      {stop.name || stop.stopName || "Stop Name"}
+                                                                    </Text>
+                                                                  </VStack>
+                                                                </HStack>
+                                                              </Box>
+                                                            ))}
+                                                          </VStack>
+                                                        </Box>
+                                                      )}
+                                                    </VStack>
+                                                  </CardBody>
+                                                </Card>
+                                              ))}
+                                            </VStack>
+                                          ) : (
+                                            <Box p={4} bg="gray.100" borderRadius="md" textAlign="center">
+                                              <Text fontSize="sm" color="gray.600">
+                                                No route information available
+                                              </Text>
+                                            </Box>
+                                          )}
+                                        </VStack>
+                                      </VStack>
+                                    </Grid>
+                                  </CardBody>
+                                </Card>
+                              </Flex>
+                            )
+                          })}
+                        </VStack>
+                      </Box>
+                    )
+                  })}
                 </VStack>
               )}
 
@@ -372,7 +627,7 @@ export default function Transportation() {
                 </Text>
               </HStack>
 
-              {loading.eHailings ? (
+              {isDataLoading ? (
                 <Box textAlign="center" py={8}>
                   <Spinner size="lg" color="green.500" />
                   <Text mt={2} color="gray.600">Loading e-hailing requests...</Text>
@@ -387,50 +642,50 @@ export default function Transportation() {
               ) : (
                 <VStack spacing={3} align="stretch">
                   {eHailings.map((request) => {
-                    console.log("🚀 ~ request:", request)
-                    return(
-                    <Box key={request._id} p={3} bg="gray.50" borderRadius="md">
-                      <VStack align="start" spacing={2}>
-                        <HStack justify="space-between" w="full">
-                          <Text fontSize="sm" fontWeight="medium">
-                            {getRouteName(request.routeId)}
-                          </Text>
-                          <Badge colorScheme={getStatusColor(request.status)} variant="subtle">
-                            {request.status || "Pending"}
-                          </Badge>
-                        </HStack>
-
-                        <HStack spacing={2} align="center">
-                          <Text fontSize="xs" color="gray.600">
-                            {request.routeId.stopIds[0]?.name || "Start"}
-                          </Text>
-                          <Icon as={FaDirections} boxSize={3} color="blue.500" />
-                          <Text fontSize="xs" color="gray.600">
-                            {request.routeId.stopIds[1]?.name || "End"}
-                          </Text>
-                        </HStack>
-
-                        <Text fontSize="xs" color="gray.600">
-                          Vehicle: {getVehicleInfo(request.vehicleId)}
-                        </Text>
-
-                        <Text fontSize="xs" color="gray.600">
-                          Requested: {formatTime(request.requestAt)}
-                        </Text>
-
-                        {request.routeId && typeof request.routeId === 'object' && (
-                          <VStack align="start" spacing={1}>
-                            <Text fontSize="xs" color="gray.600">
-                              Est. Time: {request.routeId.estimateTimeMinute || "N/A"} min
+                    return (
+                      <Box key={request._id} p={3} bg="gray.50" borderRadius="md">
+                        <VStack align="start" spacing={2}>
+                          <HStack justify="space-between" w="full">
+                            <Text fontSize="sm" fontWeight="medium">
+                              {getRouteName(request.routeId)}
                             </Text>
+                            <Badge colorScheme={getStatusColor(request.status)} variant="subtle">
+                              {request.status || "Pending"}
+                            </Badge>
+                          </HStack>
+
+                          <HStack spacing={2} align="center">
                             <Text fontSize="xs" color="gray.600">
-                              Fare: ${request.routeId.fare || "N/A"}
+                              {request.routeId.stopIds[0]?.name || "Start"}
                             </Text>
-                          </VStack>
-                        )}
-                      </VStack>
-                    </Box>
-                  )})}
+                            <Icon as={FaDirections} boxSize={3} color="blue.500" />
+                            <Text fontSize="xs" color="gray.600">
+                              {request.routeId.stopIds[1]?.name || "End"}
+                            </Text>
+                          </HStack>
+
+                          <Text fontSize="xs" color="gray.600">
+                            Vehicle: {getVehicleInfo(request.vehicleId)}
+                          </Text>
+
+                          <Text fontSize="xs" color="gray.600">
+                            Requested: {formatTime(request.requestAt)}
+                          </Text>
+
+                          {request.routeId && typeof request.routeId === 'object' && (
+                            <VStack align="start" spacing={1}>
+                              <Text fontSize="xs" color="gray.600">
+                                Est. Time: {request.routeId.estimateTimeMinute || "N/A"} min
+                              </Text>
+                              <Text fontSize="xs" color="gray.600">
+                                Fare: ${request.routeId.fare || "N/A"}
+                              </Text>
+                            </VStack>
+                          )}
+                        </VStack>
+                      </Box>
+                    )
+                  })}
                 </VStack>
               )}
             </CardBody>
@@ -446,7 +701,7 @@ export default function Transportation() {
                 Available Routes
               </Text>
 
-              {loading.routes ? (
+              {isDataLoading ? (
                 <Box textAlign="center" py={8}>
                   <Spinner size="lg" color="purple.500" />
                   <Text mt={2} color="gray.600">Loading routes...</Text>
@@ -459,8 +714,6 @@ export default function Transportation() {
               ) : (
                 <VStack spacing={3} align="stretch">
                   {routes.slice(0, 5).map((route) => {
-                    console.log("🚀 ~ route:", route)
-
                     return (
                       <Box key={route._id} p={3} bg="gray.50" borderRadius="md">
                         <VStack align="start" spacing={2}>
@@ -503,7 +756,7 @@ export default function Transportation() {
           <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
             <CardBody>
               <Text fontSize="lg" fontWeight="semibold" mb={4}>
-                Bus Stops
+                Location on Campus
               </Text>
 
               {loading.stops ? (
@@ -518,24 +771,62 @@ export default function Transportation() {
                 </Box>
               ) : (
                 <VStack spacing={3} align="stretch">
-                  {stops.slice(0, 5).map((stop) => (
+                  {stops.map((stop) => (
                     <Box key={stop._id} p={3} bg="gray.50" borderRadius="md">
-                      <VStack align="start" spacing={2}>
-                        <Text fontSize="sm" fontWeight="medium">
-                          {stop.name || stop.stopName}
-                        </Text>
-                        <Text fontSize="xs" color="gray.600">
-                          {stop.location || stop.address}
-                        </Text>
-                        {stop.facilities && (
-                          <Text fontSize="xs" color="gray.600">
-                            Facilities: {stop.facilities.join(", ")}
-                          </Text>
+                      <HStack spacing={3} align="start">
+
+
+                        {stop.image ? (
+                          <Image
+                            src={stop.image}
+                            alt={`${stop.name || stop.stopName} stop`}
+                            boxSize="80px"
+                            objectFit="cover"
+                            borderRadius="md"
+                            onError={(e) => {
+                              e.target.src = "https://via.placeholder.com/80?text=Image+Not+Available";
+                            }}
+                          />
+                        ) : (
+                          <Box
+                            boxSize="80px"
+                            bg="gray.100"
+                            borderRadius="md"
+                            border="2px dashed"
+                            borderColor="gray.300"
+                            display="flex"
+                            flexDirection="column"
+                            alignItems="center"
+                            justifyContent="center"
+                            _hover={{
+                              bg: "gray.150",
+                              borderColor: "gray.400"
+                            }}
+                            transition="all 0.2s ease-in-out"
+                          >
+                            <Icon as={FiMapPin} boxSize={5} color="gray.400" mb={1} />
+                            <Text fontSize="xs" color="gray.500" fontWeight="medium" textAlign="center">
+                              No Image
+                            </Text>
+                          </Box>
                         )}
-                        <Badge colorScheme="green" variant="subtle" size="sm">
-                          Active
-                        </Badge>
-                      </VStack>
+                        <VStack align="start" spacing={2} flex={1}>
+                          <Text fontSize="sm" fontWeight="medium">
+                            {stop.name || stop.stopName}
+                          </Text>
+                          <Text fontSize="xs" color="gray.600">
+                            {stop.location || stop.address}
+                          </Text>
+                          {stop.facilities && (
+                            <Text fontSize="xs" color="gray.600">
+                              Facilities: {stop.facilities.join(", ")}
+                            </Text>
+                          )}
+                          <Badge colorScheme="green" variant="subtle" size="sm">
+                            Active
+                          </Badge>
+                        </VStack>
+                      </HStack>
                     </Box>
                   ))}
                 </VStack>
@@ -570,6 +861,8 @@ export default function Transportation() {
 
       {/* Campus Ride Modal */}
       <CampusRideModal isOpen={isRideOpen} onClose={onRideClose} />
+
+
     </Box>
   )
 }
