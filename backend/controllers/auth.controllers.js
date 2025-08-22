@@ -118,7 +118,7 @@ export const register = async (req, res) => {
       });
     }
 
-    res.status(500).json({ success: false, message: "Server Error" });
+    return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
@@ -141,6 +141,14 @@ export const loginUser = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
+      });
+    }
+
+    // Check if user is an OAuth user (no password field)
+    if (!user.password) {
+      return res.status(401).json({
+        success: false,
+        message: "This account was created with Google. Please use the 'Sign in with Google' option instead.",
       });
     }
 
@@ -213,7 +221,7 @@ export const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in login user :", error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
@@ -285,7 +293,7 @@ export const loginWithOAuth = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in OAuth login:", error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
@@ -489,7 +497,7 @@ export const verifyEmail = async (req, res) => {
     });
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
@@ -543,16 +551,16 @@ export const isAuthenticated = async (req, res) => {
     };
 
     // Fetch role-specific data from database using IDs from JWT token
-    if (decoded.schoolId !== undefined) {
-      responseData.schoolId = decoded.schoolId;
-
-      // Fetch school data if schoolId exists
-      if (decoded.schoolId) {
-        const school = await School.findById(decoded.schoolId);
-        if (school) {
-          responseData.school = school;
-        }
-      }
+    // Find school by user ID instead of relying on decoded.schoolId
+    const school = await School.findOne({ userId: user._id });
+    if (school) {
+      responseData.schoolId = school._id;
+      responseData.school = school;
+      responseData.schoolSetupComplete = true;
+    } else {
+      responseData.schoolId = null;
+      responseData.school = null;
+      responseData.schoolSetupComplete = false;
     }
 
     if (decoded.student !== undefined) {
@@ -563,6 +571,11 @@ export const isAuthenticated = async (req, res) => {
         const student = await Student.findById(decoded.student);
         if (student) {
           responseData.student = student;
+
+          // Set schoolId for students
+          if (student.schoolId) {
+            responseData.schoolId = student.schoolId;
+          }
 
           // Also fetch school data for students if not already fetched
           if (student.schoolId && !responseData.school) {
@@ -595,14 +608,10 @@ export const isAuthenticated = async (req, res) => {
       }
     }
 
-    if (decoded.schoolSetupComplete !== undefined) {
-      responseData.schoolSetupComplete = decoded.schoolSetupComplete;
-    }
-
-    res.json(responseData);
+    return res.json(responseData);
   } catch (error) {
     console.error("Authentication error:", error);
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
       message: "Invalid token"
     });
@@ -613,12 +622,12 @@ export const sendResetOtp = async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
-    res.status(400).json({ success: false, message: "Email is required" });
+    return res.status(400).json({ success: false, message: "Email is required" });
   }
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      res.status(404).json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
     const otp = String(Math.floor(100000 + Math.random() * 900000));
@@ -640,7 +649,83 @@ export const sendResetOtp = async (req, res) => {
     });
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+export const verifyResetOtp = async (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res.status(400).json({
+      success: false,
+      message: "Email and OTP are required",
+    });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    if (user.resetOtp === "" || user.resetOtp !== otp) {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+
+    if (user.resetOtpExpiresAt < Date.now()) {
+      return res
+        .status(400)
+        .json({ success: false, message: "OTP has expired" });
+    }
+
+    // OTP is valid, but don't reset it yet - just verify
+    return res.status(200).json({
+      success: true,
+      message: "OTP verification successful",
+    });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+export const checkExistingOtp = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: "Email is required",
+    });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Check if user has a valid OTP
+    const hasValidOtp = user.resetOtp &&
+      user.resetOtp !== "" &&
+      user.resetOtpExpiresAt &&
+      user.resetOtpExpiresAt > Date.now();
+
+    return res.status(200).json({
+      success: true,
+      hasValidOtp: hasValidOtp,
+      message: hasValidOtp ? "Valid OTP found" : "No valid OTP found",
+    });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
@@ -668,7 +753,7 @@ export const resetPassword = async (req, res) => {
 
     if (user.resetOtpExpiresAt < Date.now()) {
       return res
-        .status(404)
+        .status(400)
         .json({ success: false, message: "OTP has expired" });
     }
 
@@ -686,7 +771,7 @@ export const resetPassword = async (req, res) => {
     });
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
@@ -731,12 +816,74 @@ export const getTokenDuration = async (req, res) => {
     });
   } catch (error) {
     console.error("Token duration error:", error);
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
       message: "Invalid token"
     });
   }
 };
 
+// Google validation endpoint for account termination
+export const validateGoogleForTermination = async (req, res) => {
+  const { email, googleId, name, profilePicture, provider, providerId } = req.body;
 
+  // Basic input check
+  if (!email || !googleId || !provider) {
+    return res.status(400).json({
+      success: false,
+      message: "Please provide email, googleId, and provider",
+    });
+  }
 
+  try {
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found with this email address",
+      });
+    }
+
+    // Check if user has Google authentication enabled
+    if (!user.googleId && !user.authProvider) {
+      return res.status(401).json({
+        success: false,
+        message: "This account was not created with Google authentication. Please use password verification instead.",
+      });
+    }
+
+    // Verify Google ID matches (if user has googleId stored)
+    if (user.googleId && user.googleId !== googleId) {
+      return res.status(401).json({
+        success: false,
+        message: "Google account verification failed. Please try again or use password verification.",
+      });
+    }
+
+    // If user doesn't have googleId stored but has authProvider, allow verification
+    // This handles cases where users might have linked accounts later
+    if (!user.googleId && user.authProvider === 'google') {
+      // Update user with Google ID for future reference
+      user.googleId = googleId;
+      await user.save();
+    }
+
+    // Authentication successful
+    return res.status(200).json({
+      success: true,
+      message: "Google authentication successful",
+      data: {
+        userId: user._id,
+        email: user.email,
+        role: user.role,
+        name: user.name
+      }
+    });
+
+  } catch (error) {
+    console.error("Error in Google validation for termination:", error.message);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 // Pricing plans are hardcoded to match pricing.jsx - no database fetching required
 import {
     Box,
@@ -20,6 +20,14 @@ import {
     Badge,
     Divider,
     useToast,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
+    ModalCloseButton,
+    useDisclosure,
 } from "@chakra-ui/react";
 import {
     CheckIcon
@@ -34,13 +42,14 @@ import ToolTips from "../../../component/common/toolTips.jsx";
 import { TbSchool } from "react-icons/tb";
 
 const SchoolSetup = () => {
-    const { getCurrentUserWithAuth, logout } = useAuthStore();
+    const { getCurrentUserWithAuth, logout, login } = useAuthStore();
     const showToast = useShowToast();
     const navigate = useNavigate();
 
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [touched, setTouched] = useState({});
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
     const [formData, setFormData] = useState({
         // Step 1: School Basic Information
@@ -276,10 +285,7 @@ const SchoolSetup = () => {
         setIsLoading(true);
 
         try {
-            console.log('Starting school setup process...');
             const currentUser = await getCurrentUserWithAuth();
-            console.log('User ID:', currentUser.user._id);
-            console.log('Form data:', formData);
 
             // Check if school already exists for this user
             let schoolId;
@@ -301,7 +307,6 @@ const SchoolSetup = () => {
                 }
 
                 // School exists but no subscription - continue with subscription creation
-                console.log('Resuming setup for existing school:', schoolId);
             } else {
                 // Step 1: Create the school record
                 const schoolData = {
@@ -317,7 +322,6 @@ const SchoolSetup = () => {
                 if (!schoolResponse.success) {
                     throw new Error(schoolResponse.message);
                 }
-                console.log('School created:', schoolResponse);
                 schoolId = schoolResponse.id;
             }
 
@@ -336,10 +340,8 @@ const SchoolSetup = () => {
             if (!subscriptionResponse.success) {
                 throw new Error(subscriptionResponse.message);
             }
-            console.log('Subscription created:', subscriptionResponse);
             const subscriptionId = subscriptionResponse.id;
 
-            console.log('Creating payment with schoolId:', schoolId);
             // Step 3: Create the payment record
             const paymentData = {
                 schoolId: schoolId,
@@ -354,10 +356,8 @@ const SchoolSetup = () => {
             if (!paymentResponse.success) {
                 throw new Error(paymentResponse.message);
             }
-            console.log('Payment created:', paymentResponse);
             const paymentId = paymentResponse.id;
 
-            console.log('Creating invoice with subscriptionId:', subscriptionId);
             // Step 4: Create the invoice record with subscription ID
             const invoiceData = {
                 paymentId: paymentId,
@@ -371,12 +371,23 @@ const SchoolSetup = () => {
                 throw new Error(invoiceResponse.message);
             }
 
-            console.log('All records created successfully!');
+            // Refresh user authentication data to update token with school information
+            const refreshResult = await useAuthStore.getState().refreshUserAuthData();
+
+            if (refreshResult.success) {
+            } else {
+                console.warn('Failed to refresh authentication data:', refreshResult.message);
+            }
+
             showToast.success(
                 "School setup completed successfully!",
                 "Your school has been set up and is ready to use."
             );
-            navigate("/admin-dashboard");
+
+            setTimeout(() => {
+                navigate("/admin-dashboard");
+            }, 1000)
+
 
         } catch (error) {
             console.error('School setup error:', error);
@@ -397,6 +408,74 @@ const SchoolSetup = () => {
             setIsLoading(false);
         }
     };
+
+    // Check authentication and school setup status when page loads
+    useEffect(() => {
+        const checkAuthAndRedirect = async () => {
+            try {
+                setIsCheckingAuth(true);
+
+                const refreshResult = await useAuthStore.getState().refreshUserAuthData();
+
+                if (refreshResult.success) {
+                } else {
+                    console.warn('Failed to refresh authentication data:', refreshResult.message);
+                }
+                const currentUser = await getCurrentUserWithAuth();
+
+                if (currentUser && currentUser.isAuthenticated) {
+                    // Check if user already has school setup completed
+                    if (currentUser.schoolId) {
+                        showToast.success(
+                            "School setup already completed!",
+                            "Redirecting you to your dashboard."
+                        );
+
+                        // Redirect based on user role
+                        if (currentUser.role === "schoolAdmin") {
+                            setTimeout(() => {
+                                navigate("/admin-dashboard");
+                            }, 1000);
+                        } else if (currentUser.role === "student") {
+                            setTimeout(() => {
+                                navigate("/student-dashboard");
+                            }, 1000);
+                        } else if (currentUser.role === "lecturer") {
+                            setTimeout(() => {
+                                navigate("/lecturer-dashboard");
+                            }, 1000);
+                        } else {
+                            // Default fallback
+                            setTimeout(() => {
+                                navigate("/");
+                            }, 1000);
+                        }
+                        return;
+                    }
+                } else {
+                    // User not authenticated, redirect to login
+                    showToast.error(
+                        "Authentication required",
+                        "Please log in to access school setup."
+                    );
+                    navigate("/login");
+                    return;
+                }
+            } catch (error) {
+                console.error("Auth check error:", error);
+                showToast.error(
+                    "Authentication error",
+                    "Please log in again."
+                );
+                navigate("/login");
+                return;
+            } finally {
+                setIsCheckingAuth(false);
+            }
+        };
+
+        checkAuthAndRedirect();
+    }, []);
 
     const renderStep1 = () => (
         <VStack spacing={6} align="stretch">
@@ -660,6 +739,33 @@ const SchoolSetup = () => {
 
     return (
         <Box flex={1}>
+            {/* Loading overlay while checking authentication */}
+            {isCheckingAuth && (
+                <Box
+                    position="fixed"
+                    top={0}
+                    left={0}
+                    right={0}
+                    bottom={0}
+                    bg="rgba(0, 0, 0, 0.5)"
+                    zIndex={9999}
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                >
+                    <Box
+                        bg="white"
+                        p={8}
+                        borderRadius="lg"
+                        textAlign="center"
+                        boxShadow="xl"
+                    >
+                        <Text fontSize="lg" mb={4}>Checking authentication...</Text>
+                        <Text color="gray.600">Please wait while we verify your account.</Text>
+                    </Box>
+                </Box>
+            )}
+
             <Button
                 leftIcon={<CiLogout />}
                 position="absolute"
@@ -667,6 +773,7 @@ const SchoolSetup = () => {
                 top={4}
                 right={4}
                 onClick={() => handleLogout()}
+                isDisabled={isCheckingAuth}
             >
                 Log Out
             </Button>
@@ -682,86 +789,91 @@ const SchoolSetup = () => {
                     </Text>
                 </VStack>
 
-                {/* Progress Steps */}
-                <Box mb={8}>
-                    <HStack spacing={4} justify="center" flexWrap="wrap">
-                        {steps.map((step, index) => (
-                            <HStack
-                                key={index}
-                                spacing={2}
-                                p={3}
-                                borderRadius="full"
-                                bg={currentStep > index + 1 ? "green.100" : currentStep === index + 1 ? "blue.100" : "gray.100"}
-                                color={currentStep > index + 1 ? "green.700" : currentStep === index + 1 ? "blue.700" : "gray.600"}
-                                border={currentStep === index + 1 ? "2px solid" : "1px solid"}
-                                borderColor={currentStep === index + 1 ? "blue.500" : "transparent"}
-                            >
-                                <Box
-                                    w={6}
-                                    h={6}
-                                    borderRadius="full"
-                                    bg={currentStep > index + 1 ? "green.500" : currentStep === index + 1 ? "blue.500" : "gray.400"}
-                                    color="white"
-                                    display="flex"
-                                    alignItems="center"
-                                    justifyContent="center"
-                                    fontSize="sm"
-                                    fontWeight="bold"
-                                >
-                                    {currentStep > index + 1 ? "✓" : index + 1}
-                                </Box>
-                                <Text fontWeight="semibold" fontSize="sm">
-                                    {step}
-                                </Text>
+                {/* Only show form content when auth check is complete */}
+                {!isCheckingAuth && (
+                    <>
+                        {/* Progress Steps */}
+                        <Box mb={8}>
+                            <HStack spacing={4} justify="center" flexWrap="wrap">
+                                {steps.map((step, index) => (
+                                    <HStack
+                                        key={index}
+                                        spacing={2}
+                                        p={3}
+                                        borderRadius="full"
+                                        bg={currentStep > index + 1 ? "green.100" : currentStep === index + 1 ? "blue.100" : "gray.100"}
+                                        color={currentStep > index + 1 ? "green.700" : currentStep === index + 1 ? "blue.700" : "gray.600"}
+                                        border={currentStep === index + 1 ? "2px solid" : "1px solid"}
+                                        borderColor={currentStep === index + 1 ? "blue.500" : "transparent"}
+                                    >
+                                        <Box
+                                            w={6}
+                                            h={6}
+                                            borderRadius="full"
+                                            bg={currentStep > index + 1 ? "green.500" : currentStep === index + 1 ? "blue.500" : "gray.400"}
+                                            color="white"
+                                            display="flex"
+                                            alignItems="center"
+                                            justifyContent="center"
+                                            fontSize="sm"
+                                            fontWeight="bold"
+                                        >
+                                            {currentStep > index + 1 ? "✓" : index + 1}
+                                        </Box>
+                                        <Text fontWeight="semibold" fontSize="sm">
+                                            {step}
+                                        </Text>
+                                    </HStack>
+                                ))}
                             </HStack>
-                        ))}
-                    </HStack>
-                </Box>
+                        </Box>
 
-                {/* Main Content */}
-                <Card>
-                    <CardBody p={8}>
-                        {renderCurrentStep()}
-                    </CardBody>
-                </Card>
+                        {/* Main Content */}
+                        <Card>
+                            <CardBody p={8}>
+                                {renderCurrentStep()}
+                            </CardBody>
+                        </Card>
 
-                {/* Navigation Buttons */}
-                <HStack spacing={4} justify="center" mt={8}>
-                    {currentStep > 1 && (
-                        <Button
-                            onClick={prevStep}
-                            variant="outline"
-                            size="lg"
-                            px={8}
-                        >
-                            Previous
-                        </Button>
-                    )}
+                        {/* Navigation Buttons */}
+                        <HStack spacing={4} justify="center" mt={8}>
+                            {currentStep > 1 && (
+                                <Button
+                                    onClick={prevStep}
+                                    variant="outline"
+                                    size="lg"
+                                    px={8}
+                                >
+                                    Previous
+                                </Button>
+                            )}
 
-                    {currentStep < steps.length ? (
-                        <Button
-                            onClick={nextStep}
-                            colorScheme="blue"
-                            size="lg"
-                            px={8}
-                            isDisabled={!canProceedToNext()}
-                        >
-                            Next
-                        </Button>
-                    ) : (
-                        <Button
-                            onClick={handleSubmit}
-                            colorScheme="green"
-                            size="lg"
-                            px={8}
-                            isLoading={isLoading}
-                            loadingText="Setting up..."
-                            isDisabled={!canProceedToNext()}
-                        >
-                            Complete Setup
-                        </Button>
-                    )}
-                </HStack>
+                            {currentStep < steps.length ? (
+                                <Button
+                                    onClick={nextStep}
+                                    colorScheme="blue"
+                                    size="lg"
+                                    px={8}
+                                    isDisabled={!canProceedToNext()}
+                                >
+                                    Next
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={handleSubmit}
+                                    colorScheme="green"
+                                    size="lg"
+                                    px={8}
+                                    isLoading={isLoading}
+                                    loadingText="Setting up..."
+                                    isDisabled={!canProceedToNext()}
+                                >
+                                    Complete Setup
+                                </Button>
+                            )}
+                        </HStack>
+                    </>
+                )}
             </Box>
         </Box>
     );

@@ -34,6 +34,7 @@ import DataGeneratorModal from "../../component/DataGeneratorModal"
 import ProfilePicture from "../../component/common/ProfilePicture"
 import { clearSchoolData } from "../../utils/academicDataGenerator.js"
 import ComfirmationMessage from "../../component/common/ComfirmationMessage"
+import AccountTerminationModal from "../../component/common/AccountTerminationModal"
 
 const recentActivity = [
   { id: 1, action: "Updated system settings", timestamp: "2024-01-20 14:30", type: "settings" },
@@ -80,6 +81,9 @@ export function AdminProfile() {
   const [dbStats, setDbStats] = useState(null);
   const [isClearDataModalOpen, setIsClearDataModalOpen] = useState(false);
   const [isClearingData, setIsClearingData] = useState(false);
+  const [isTerminateAccountModalOpen, setIsTerminateAccountModalOpen] = useState(false);
+  const [isTerminatingAccount, setIsTerminatingAccount] = useState(false);
+  const [showFinalTerminationConfirm, setShowFinalTerminationConfirm] = useState(false);
 
   const bgColor = useColorModeValue("white", "gray.800")
   const textColor = useColorModeValue("gray.800", "white")
@@ -458,7 +462,7 @@ export function AdminProfile() {
             variant="outline"
             onClick={() => setIsDataGeneratorOpen(true)}
           >
-            Generate
+            Generate Mock
           </Button>
         </HStack>
 
@@ -1138,6 +1142,16 @@ export function AdminProfile() {
 
               </VStack>
             )}
+
+            <Button
+              mt={3}
+              colorScheme="red"
+              variant="solid"
+              onClick={() => setIsTerminateAccountModalOpen(true)}
+            >
+              Terminate Account
+            </Button>
+
           </CardBody>
         </Card>
       </VStack>
@@ -1183,6 +1197,116 @@ export function AdminProfile() {
           }
         }}
         isLoading={isClearingData}
+      />
+
+      {/* Account Termination Modal */}
+      <AccountTerminationModal
+        isOpen={isTerminateAccountModalOpen}
+        onClose={() => setIsTerminateAccountModalOpen(false)}
+        userEmail={profileData.email}
+        onConfirm={() => {
+          // Show final confirmation dialog
+          setIsTerminateAccountModalOpen(false);
+          setShowFinalTerminationConfirm(true);
+        }}
+      />
+
+      {/* Final Account Termination Confirmation */}
+      <ComfirmationMessage
+        title="🚨 FINAL WARNING: Account Termination"
+        description="You are about to PERMANENTLY DELETE your entire account, school, and ALL associated data. This includes all students, courses, modules, lecturers, schedules, attendance records, results, facility bookings, transportation data, and billing information. This action CANNOT be undone. Are you absolutely certain you want to terminate your account?"
+        isOpen={showFinalTerminationConfirm}
+        onClose={() => setShowFinalTerminationConfirm(false)}
+        onConfirm={async () => {
+          try {
+            setIsTerminatingAccount(true);
+
+            // First, clear all school data using the existing function
+            await clearSchoolData(schoolId);
+
+            // Then delete the school account
+            const schoolResponse = await fetch(`/api/school/${schoolId}`, {
+              method: 'DELETE',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+
+            if (!schoolResponse.ok) {
+              const errorData = await schoolResponse.json();
+              throw new Error(errorData.message || 'Failed to delete school account');
+            }
+
+            // Finally, delete the user account
+            const authResponse = await fetch('/auth/is-auth', {
+              method: 'POST',
+              credentials: 'include',
+            });
+
+            if (authResponse.ok) {
+              const authData = await authResponse.json();
+              if (authData.id) {
+                const userResponse = await fetch(`/api/user/${authData.id}`, {
+                  method: 'DELETE',
+                  credentials: 'include',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                });
+
+                if (!userResponse.ok) {
+                  console.warn('Failed to delete user account, but school was deleted');
+                }
+              }
+            }
+
+            // Clear any local storage or session data
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // Clear cookies by setting them to expire
+            document.cookie.split(";").forEach(function (c) {
+              document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+
+            // Logout from the system
+            try {
+              await fetch('/auth/logout', {
+                method: 'POST',
+                credentials: 'include',
+              });
+            } catch (error) {
+              console.warn('Failed to logout, but continuing with account termination');
+            }
+
+            toast({
+              title: "Account Terminated Successfully",
+              description: "Your account, school, and all data have been permanently deleted.",
+              status: "success",
+              duration: 5000,
+              isClosable: true,
+            });
+
+            // Redirect to logout or home page
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 2000);
+          } catch (error) {
+            console.error('Account termination error:', error);
+            toast({
+              title: "Error Terminating Account",
+              description: "Failed to terminate account: " + error.message,
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+            });
+          } finally {
+            setIsTerminatingAccount(false);
+            setShowFinalTerminationConfirm(false);
+          }
+        }}
+        isLoading={isTerminatingAccount}
       />
     </Box>
   )

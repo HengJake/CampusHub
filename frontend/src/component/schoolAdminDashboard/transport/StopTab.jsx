@@ -28,17 +28,12 @@ import {
 import { useTransportationStore } from '../../../store/transportation.js';
 import { getStopTypeLabel } from './utils';
 
-const StopTab = ({ loading, error, onCreate, onView, onEdit }) => {
-    const { stops, deleteStop } = useTransportationStore();
+const StopTab = ({ loading, error, onCreate, onView, onEdit, onDelete }) => {
+    const { stops } = useTransportationStore();
 
-    const handleDelete = async (id) => {
-        try {
-            const result = await deleteStop(id);
-            if (result.success) {
-                // Success message will be handled by the store
-            }
-        } catch (error) {
-            console.error('Error deleting stop:', error);
+    const handleDelete = (stop) => {
+        if (onDelete) {
+            onDelete('stop', stop);
         }
     };
 
@@ -174,7 +169,7 @@ const StopTab = ({ loading, error, onCreate, onView, onEdit }) => {
                                             icon={<DeleteIcon />}
                                             aria-label="Delete"
                                             colorScheme="red"
-                                            onClick={() => handleDelete(stop._id)}
+                                            onClick={() => handleDelete(stop)}
                                         />
                                     </HStack>
                                 </VStack>

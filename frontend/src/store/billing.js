@@ -303,6 +303,75 @@ export const useBillingStore = create((set) => ({
             console.error("Error fetching billing data:", error.message);
             return { success: false, message: error.message };
         }
+    },
+
+    // Get all payments for company admin dashboard
+    getAllPayments: async () => {
+        try {
+            const res = await fetch(`/api/payment`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch all payments");
+            }
+
+            return { success: true, message: data.message, data: data.data };
+        } catch (error) {
+            console.error("Error fetching all payments:", error.message);
+            return { success: false, message: error.message };
+        }
+    },
+
+    // Get all invoices for company admin dashboard
+    getAllInvoices: async () => {
+        try {
+            const res = await fetch(`/api/invoice`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch all invoices");
+            }
+
+            return { success: true, message: data.message, data: data.data };
+        } catch (error) {
+            console.error("Error fetching all invoices:", error.message);
+            return { success: false, message: error.message };
+        }
+    },
+
+    // Get all schools for company admin dashboard
+    getAllSchools: async () => {
+        try {
+            const res = await fetch(`/api/school`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to fetch all schools");
+            }
+
+            return { success: true, message: data.message, data: data.data };
+        } catch (error) {
+            console.error("Error fetching all schools:", error.message);
+            return { success: false, message: error.message };
+        }
     }
 
 }))

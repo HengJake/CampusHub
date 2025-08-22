@@ -37,8 +37,8 @@ import {
 import { useTransportationStore } from '../../../store/transportation.js';
 import { getVehicleTypeLabel, getVehicleStatusLabel, getStatusColor } from './utils';
 
-const VehicleTab = ({ loading, error, onView, onEdit }) => {
-    const { vehicles, deleteVehicle, updateVehicle } = useTransportationStore();
+const VehicleTab = ({ loading, error, onView, onEdit, onDelete }) => {
+    const { vehicles, updateVehicle } = useTransportationStore();
     const [editingVehicle, setEditingVehicle] = useState(null);
     const [editValues, setEditValues] = useState({});
     const [hasChanges, setHasChanges] = useState(false);
@@ -67,27 +67,9 @@ const VehicleTab = ({ loading, error, onView, onEdit }) => {
         }
     };
 
-    const handleDelete = async (id) => {
-        try {
-            const result = await deleteVehicle(id);
-            if (result.success) {
-                toast({
-                    title: "Vehicle deleted",
-                    status: "success",
-                    duration: 3000,
-                    isClosable: true,
-                });
-            } else {
-                throw new Error(result.message || "Failed to delete vehicle");
-            }
-        } catch (error) {
-            toast({
-                title: "Error deleting vehicle",
-                description: error.message,
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
+    const handleDelete = (vehicle) => {
+        if (onDelete) {
+            onDelete('vehicle', vehicle);
         }
     };
 
@@ -354,7 +336,7 @@ const VehicleTab = ({ loading, error, onView, onEdit }) => {
                                             </Button>
                                             <Button
                                                 size="sm"
-                                                onClick={() => handleDelete(vehicle._id)}
+                                                onClick={() => handleDelete(vehicle)}
                                                 colorScheme="red"
                                                 variant="outline"
                                                 borderColor="red.300"

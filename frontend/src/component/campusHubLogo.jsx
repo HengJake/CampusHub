@@ -11,47 +11,31 @@ import {
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/auth";
+import { useEffect } from "react";
 
 export const CampusHubLogo = () => {
   const path = useLocation().pathname;
   let logoLink;
 
-  const { getCurrentUser } = useAuthStore();
+  const { getCurrentUser, initializeAuth } = useAuthStore();
+
+  useEffect(() => {
+    initializeAuth();
+  }, []);
+
   const currentUser = getCurrentUser();
-  const role = currentUser?.role;
+  const userRole = currentUser?.role;
 
   if (
-    role === "student" ||
-    path.startsWith("/user-") ||
-    path.startsWith("/book") ||
-    [
-      "/parking-lot",
-      "/class-schedule",
-      "/classroom-finder",
-      "/result",
-      "/attendance",
-      "/bus-schedule",
-      "/campus-ride",
-      "/feedback",
-    ].includes(path)
+    userRole === "student"
   ) {
     logoLink = "/user-dashboard";
   } else if (
-    role === "schoolAdmin" ||
-    path.startsWith("/admin-") ||
-    path.includes("-management") ||
-    path === "/announcement-management"
+    userRole === "schoolAdmin"
   ) {
     logoLink = "/admin-dashboard";
   } else if (
-    role === "company" ||
-    path.startsWith("/campushub-") ||
-    [
-      "/subscription",
-      "/client-management",
-      "/analytical-report",
-      "/user-oversight",
-    ].includes(path)
+    userRole === "companyAdmin"
   ) {
     logoLink = "/campushub-dashboard";
   } else {

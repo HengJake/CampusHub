@@ -59,7 +59,7 @@ export const useAuthStore = create((set, get) => ({
           user: data.data,
           currentUser: enhancedUser,
           isAuthenticated: true,
-          schoolId: enhancedUser.schoolId,
+          schoolId: enhancedUser.schoolId || enhancedUser.student?.schoolId || null,
           studentId: enhancedUser.studentId || enhancedUser.student?._id || null,
           lecturerId: enhancedUser.lecturerId || enhancedUser.lecturer?._id || null,
           student: enhancedUser.student,
@@ -164,7 +164,7 @@ export const useAuthStore = create((set, get) => ({
           user: authData.data,
           currentUser: enhancedUser,
           isAuthenticated: true,
-          schoolId: enhancedUser.schoolId,
+          schoolId: enhancedUser.schoolId || enhancedUser.student?.schoolId || null,
           studentId: enhancedUser.studentId || enhancedUser.student?._id || null,
           lecturerId: enhancedUser.lecturerId || enhancedUser.lecturer?._id || null,
           student: enhancedUser.student,
@@ -245,7 +245,7 @@ export const useAuthStore = create((set, get) => ({
 
         // Update store state
         set({
-          schoolId: enhancedUser.schoolId,
+          schoolId: enhancedUser.schoolId || enhancedUser.student?.schoolId || null,
           studentId: enhancedUser.studentId || enhancedUser.student?._id || null,
           lecturerId: enhancedUser.lecturerId || enhancedUser.lecturer?._id || null,
           student: enhancedUser.student,
@@ -291,7 +291,7 @@ export const useAuthStore = create((set, get) => ({
       if (authResult.success) {
         return {
           user: authResult.data,
-          schoolId: authResult.schoolId,
+          schoolId: authResult.schoolId || authResult.student?.schoolId || null,
           studentId: authResult.studentId,
           student: authResult.student,
           school: authResult.school,
@@ -310,8 +310,10 @@ export const useAuthStore = create((set, get) => ({
   // Get schoolId for schoolAdmin operations
   getSchoolId: () => {
     const state = get();
-    if (state.currentUser?.role === "schoolAdmin" || state.currentUser?.role === "student") {
+    if (state.currentUser?.role === "schoolAdmin") {
       return state.schoolId;
+    } else if (state.currentUser?.role === "student" && state.student?.schoolId) {
+      return state.student.schoolId;
     }
     return null;
   },
@@ -367,7 +369,7 @@ export const useAuthStore = create((set, get) => ({
       set({
         currentUser: enhancedUser,
         isAuthenticated: true,
-        schoolId: enhancedUser.schoolId,
+        schoolId: enhancedUser.schoolId || enhancedUser.student?.schoolId || null,
         studentId: enhancedUser.student?._id || null,
         student: enhancedUser.student || null,
         school: enhancedUser.school || null,
@@ -381,7 +383,7 @@ export const useAuthStore = create((set, get) => ({
         },
         tokenExpiration: data.tokenExpiration,
         role: data.role,
-        schoolId: enhancedUser.schoolId,
+        schoolId: enhancedUser.schoolId || enhancedUser.student?.schoolId || null,
         studentId: enhancedUser.studentId,
         student: enhancedUser.student || null,
         school: enhancedUser.school || null,
@@ -576,7 +578,7 @@ export const useAuthStore = create((set, get) => ({
           user: data.user,
           currentUser: enhancedUser,
           isAuthenticated: true,
-          schoolId: enhancedUser.schoolId,
+          schoolId: enhancedUser.schoolId || enhancedUser.student?.schoolId || null,
           studentId: enhancedUser.student?._id || null,
           student: enhancedUser.student || null,
           school: enhancedUser.school || null,
@@ -586,7 +588,7 @@ export const useAuthStore = create((set, get) => ({
           success: true,
           message: "Authentication restored from cookies",
           data: enhancedUser,
-          schoolId: enhancedUser.schoolId,
+          schoolId: enhancedUser.schoolId || enhancedUser.student?.schoolId || null,
           studentId: enhancedUser.studentId,
           student: enhancedUser.student || null,
           school: enhancedUser.school || null,
@@ -616,7 +618,6 @@ export const useAuthStore = create((set, get) => ({
       });
 
       const result = await response.json();
-      console.log('unifiedAuth response:', result);
 
       // If login is successful, update the store state
       if (result.success && result.data) {
@@ -636,7 +637,7 @@ export const useAuthStore = create((set, get) => ({
           user: result.data,
           currentUser: enhancedUser,
           isAuthenticated: true,
-          schoolId: enhancedUser.schoolId,
+          schoolId: enhancedUser.schoolId || enhancedUser.student?.schoolId || null,
           studentId: enhancedUser.studentId,
           lecturerId: enhancedUser.lecturerId || enhancedUser.lecturer?._id || null,
           student: enhancedUser.student,
@@ -685,7 +686,7 @@ export const useAuthStore = create((set, get) => ({
           user: result.data,
           currentUser: enhancedUser,
           isAuthenticated: true,
-          schoolId: enhancedUser.schoolId,
+          schoolId: enhancedUser.schoolId || enhancedUser.student?.schoolId || null,
           studentId: enhancedUser.studentId,
           lecturerId: enhancedUser.lecturerId || enhancedUser.lecturer?._id || null,
           student: enhancedUser.student,
@@ -701,6 +702,60 @@ export const useAuthStore = create((set, get) => ({
         success: false,
         message: error.message
       };
+    }
+  },
+
+  // Refresh user authentication data after school setup
+  refreshUserAuthData: async () => {
+    try {
+      // Get fresh authentication data from the server
+      const res = await fetch("/auth/is-auth", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        return { success: false, message: data.message };
+      }
+
+      // Create enhanced user with updated role-specific data
+      const enhancedUser = {
+        ...data.user,
+        schoolId: data.schoolId || null,
+        studentId: data.studentId || null,
+        lecturerId: data.lecturerId || null,
+        student: data.student || null,
+        lecturer: data.lecturer || null,
+        school: data.school || null,
+        schoolSetupComplete: data.schoolSetupComplete || false
+      };
+
+      // Update store state with fresh data
+      set({
+        currentUser: enhancedUser,
+        schoolId: enhancedUser.schoolId || enhancedUser.student?.schoolId || null,
+        studentId: enhancedUser.studentId || enhancedUser.student?._id || null,
+        lecturerId: enhancedUser.lecturerId || enhancedUser.lecturer?._id || null,
+        student: enhancedUser.student,
+        lecturer: enhancedUser.lecturer,
+        school: enhancedUser.school,
+      });
+
+      return {
+        success: true,
+        message: "Authentication data refreshed successfully",
+        data: enhancedUser,
+        schoolId: enhancedUser.schoolId || enhancedUser.student?.schoolId || null,
+        schoolSetupComplete: enhancedUser.schoolSetupComplete
+      };
+    } catch (error) {
+      console.error("Error refreshing authentication data:", error);
+      return { success: false, message: error.message };
     }
   },
 }));

@@ -36,8 +36,8 @@ import {
 } from '@chakra-ui/icons';
 import { useTransportationStore } from '../../../store/transportation.js';
 
-const RouteTab = ({ loading, error, onView, onEdit }) => {
-    const { routes, stops, deleteRoute, updateRoute, fetchStops } = useTransportationStore();
+const RouteTab = ({ loading, error, onView, onEdit, onDelete }) => {
+    const { routes, stops, updateRoute, fetchStops } = useTransportationStore();
     const [editingRoute, setEditingRoute] = useState(null);
     const [editValues, setEditValues] = useState({});
     const [hasChanges, setHasChanges] = useState(false);
@@ -50,27 +50,9 @@ const RouteTab = ({ loading, error, onView, onEdit }) => {
         fetchStops();
     }, [fetchStops]);
 
-    const handleDelete = async (id) => {
-        try {
-            const result = await deleteRoute(id);
-            if (result.success) {
-                toast({
-                    title: "Route deleted",
-                    status: "success",
-                    duration: 3000,
-                    isClosable: true,
-                });
-            } else {
-                throw new Error(result.message || "Failed to delete route");
-            }
-        } catch (error) {
-            toast({
-                title: "Error deleting route",
-                description: error.message,
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
+    const handleDelete = (route) => {
+        if (onDelete) {
+            onDelete('route', route);
         }
     };
 
@@ -391,7 +373,7 @@ const RouteTab = ({ loading, error, onView, onEdit }) => {
                                         </Button>
                                         <Button
                                             size="sm"
-                                            onClick={() => handleDelete(route._id)}
+                                            onClick={() => handleDelete(route)}
                                             colorScheme="red"
                                             variant="outline"
                                             borderColor="red.300"

@@ -7,12 +7,14 @@ import {
     Select,
     HStack,
     Button,
+    IconButton,
     FormHelperText,
     Box,
     Text,
     Badge,
     VStack as ChakraVStack
 } from '@chakra-ui/react';
+import { FiTrash2 } from 'react-icons/fi';
 import { useTransportationStore } from '../../../store/transportation.js';
 
 const BusScheduleForm = ({ onSubmit, selectedItem, isEditMode }) => {
@@ -156,9 +158,6 @@ const BusScheduleForm = ({ onSubmit, selectedItem, isEditMode }) => {
                                                 size="sm"
                                             >
                                                 {routes.map((route) => {
-
-                                                    console.log("🚀 ~ route:", route)
-
                                                     return (
                                                         <option key={route._id} value={route._id}>
                                                             {route.name} - {route.estimateTimeMinute} min, RM {route.fare}
@@ -193,15 +192,15 @@ const BusScheduleForm = ({ onSubmit, selectedItem, isEditMode }) => {
 
                                         {/* Remove Button */}
                                         {formData.routeTiming.length > 1 && (
-                                            <Button
+                                            <IconButton
                                                 size="sm"
                                                 colorScheme="red"
                                                 variant="outline"
                                                 onClick={() => removeRouteTiming(index)}
                                                 mt={6}
-                                            >
-                                                Remove
-                                            </Button>
+                                                icon={<FiTrash2 />}
+                                                aria-label="Remove route timing"
+                                            />
                                         )}
                                     </HStack>
                                 </Box>
@@ -229,11 +228,16 @@ const BusScheduleForm = ({ onSubmit, selectedItem, isEditMode }) => {
                         value={selectedVehicleId}
                         onChange={(e) => setSelectedVehicleId(e.target.value)}
                     >
-                        {vehicles.map((vehicle) => (
-                            <option key={vehicle._id} value={vehicle._id}>
-                                {vehicle.plateNumber} ({vehicle.type})
-                            </option>
-                        ))}
+                        {vehicles.filter(vehicle => {
+                            return vehicle.type === 'bus';
+                        }).map((vehicle) => {
+
+                            return (
+                                <option key={vehicle._id} value={vehicle._id}>
+                                    {vehicle.plateNumber} ({vehicle.type})
+                                </option>
+                            )
+                        })}
                     </Select>
                 </FormControl>
 

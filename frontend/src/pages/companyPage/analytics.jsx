@@ -2,6 +2,9 @@
 
 import React from "react";
 import { useAcademicStore } from "../../store/academic";
+import { useFacilityStore } from "../../store/facility";
+import { useTransportationStore } from "../../store/transportation";
+import { useServiceStore } from "../../store/service";
 import { useEffect } from "react";
 
 import {
@@ -48,39 +51,6 @@ import {
   Cell,
 } from "recharts"
 
-const usageData = [
-  { month: "Jan", lincoln: 4000, roosevelt: 2400, washington: 3200, jefferson: 1800 },
-  { month: "Feb", lincoln: 4200, roosevelt: 2600, washington: 3400, jefferson: 2000 },
-  { month: "Mar", lincoln: 4500, roosevelt: 2800, washington: 3600, jefferson: 2200 },
-  { month: "Apr", lincoln: 4800, roosevelt: 3000, washington: 3800, jefferson: 2400 },
-  { month: "May", lincoln: 5100, roosevelt: 3200, washington: 4000, jefferson: 2600 },
-  { month: "Jun", lincoln: 5400, roosevelt: 3400, washington: 4200, jefferson: 2800 },
-]
-
-const facilityUsageData = [
-  { name: "Library", usage: 85, color: "#3182CE" },
-  { name: "Computer Lab", usage: 72, color: "#38A169" },
-  { name: "Gymnasium", usage: 68, color: "#D69E2E" },
-  { name: "Auditorium", usage: 45, color: "#E53E3E" },
-  { name: "Science Lab", usage: 78, color: "#805AD5" },
-]
-
-const academicData = [
-  { school: "Lincoln High School", avgGrade: 87.5, attendance: 94.2, assignments: 89.1 },
-  { school: "Roosevelt Elementary", avgGrade: 91.2, attendance: 96.8, assignments: 92.4 },
-  { school: "Washington Middle", avgGrade: 84.7, attendance: 91.5, assignments: 86.3 },
-  { school: "Jefferson Academy", avgGrade: 89.3, attendance: 95.1, assignments: 90.7 },
-]
-
-const engagementData = [
-  { name: "Daily Active Users", value: 2847 },
-  { name: "Weekly Active Users", value: 4521 },
-  { name: "Monthly Active Users", value: 6234 },
-  { name: "Session Duration (avg)", value: "24 min" },
-]
-
-const COLORS = ["#3182CE", "#38A169", "#D69E2E", "#E53E3E", "#805AD5"]
-
 export default function Analytics() {
   const [selectedSchool, setSelectedSchool] = useState("all")
   const [dateRange, setDateRange] = useState("6months")
@@ -90,15 +60,263 @@ export default function Analytics() {
   const fetchSchools = useAcademicStore((state) => state.fetchSchools);
   const students = useAcademicStore((state) => state.students);
   const fetchStudents = useAcademicStore((state) => state.fetchStudents);
+  const attendance = useAcademicStore((state) => state.attendance);
+  const fetchAttendance = useAcademicStore((state) => state.fetchAttendance);
+  const results = useAcademicStore((state) => state.results);
+  const fetchResults = useAcademicStore((state) => state.fetchResults);
+  const classSchedules = useAcademicStore((state) => state.classSchedules);
+  const fetchClassSchedules = useAcademicStore((state) => state.fetchClassSchedules);
+
+  // Facility store
+  const bookings = useFacilityStore((state) => state.bookings);
+  const fetchBookings = useFacilityStore((state) => state.fetchBookings);
+  const resources = useFacilityStore((state) => state.resources);
+  const fetchResources = useFacilityStore((state) => state.fetchResources);
+
+  // Transportation store
+  const busSchedules = useTransportationStore((state) => state.busSchedules);
+  const fetchBusSchedules = useTransportationStore((state) => state.fetchBusSchedules);
+
+  // Service store
+  const feedback = useServiceStore((state) => state.feedback);
+  const bugReports = useServiceStore((state) => state.bugReports);
+  const fetchFeedback = useServiceStore((state) => state.fetchFeedback);
+  const fetchBugReports = useServiceStore((state) => state.fetchBugReports);
 
   useEffect(() => {
     fetchSchools();
     fetchStudents();
+    fetchAttendance();
+    fetchResults();
+    fetchClassSchedules();
+    fetchBookings();
+    fetchResources();
+    fetchBusSchedules();
+    fetchFeedback();
+    fetchBugReports();
   }, []);
+
+  // Helper function to get date from range
+  const getDateFromRange = (range) => {
+    const now = new Date();
+    switch (range) {
+      case "1month":
+        return new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+      case "3months":
+        return new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+      case "6months":
+        return new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+      case "1year":
+        return new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+      default:
+        return new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+    }
+  };
+
+  // Generate usage data based on real bookings and schedules
+  const generateUsageData = () => {
+    if (!schools.length) return [];
+
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+    const startDate = getDateFromRange(dateRange);
+
+    return months.map((month, index) => {
+      const monthData = { month };
+
+      schools.forEach(school => {
+        const schoolKey = school.name.toLowerCase().replace(/\s+/g, '');
+
+        // Count bookings for this school in this month
+        const monthBookings = bookings.filter(booking => {
+          const bookingDate = new Date(booking.createdAt);
+          return booking.schoolId === school._id &&
+            bookingDate >= startDate &&
+            bookingDate.getMonth() === index;
+        }).length;
+
+        // Count class schedules for this school in this month
+        const monthSchedules = classSchedules.filter(schedule => {
+          const scheduleDate = new Date(schedule.createdAt);
+          return schedule.schoolId === school._id &&
+            scheduleDate >= startDate &&
+            scheduleDate.getMonth() === index;
+        }).length;
+
+        monthData[schoolKey] = monthBookings + monthSchedules;
+      });
+
+      return monthData;
+    });
+  };
+
+  // Generate facility usage data based on real resource usage
+  const generateFacilityUsageData = () => {
+    if (!resources.length) return [];
+
+    const facilityTypes = {};
+
+    resources.forEach(resource => {
+      const type = resource.type || 'Other';
+      if (!facilityTypes[type]) {
+        facilityTypes[type] = { bookings: 0, total: 0 };
+      }
+
+      // Count bookings for this resource type
+      const resourceBookings = bookings.filter(booking =>
+        booking.resourceId === resource._id &&
+        new Date(booking.createdAt) >= getDateFromRange(dateRange)
+      ).length;
+
+      facilityTypes[type].bookings += resourceBookings;
+      facilityTypes[type].total += 1;
+    });
+
+    // Calculate usage percentage and return formatted data
+    return Object.entries(facilityTypes).map(([type, data]) => {
+      const usage = data.total > 0 ? Math.round((data.bookings / data.total) * 100) : 0;
+      return {
+        name: type,
+        usage: usage,
+        color: getRandomColor(type)
+      };
+    });
+  };
+
+  // Generate academic performance data based on real results and attendance
+  const generateAcademicData = () => {
+    if (!schools.length) return [];
+
+    return schools.map(school => {
+      const schoolResults = results.filter(result =>
+        result.schoolId === school._id &&
+        new Date(result.createdAt) >= getDateFromRange(dateRange)
+      );
+
+      const schoolAttendance = attendance.filter(att =>
+        att.schoolId === school._id &&
+        new Date(att.date) >= getDateFromRange(dateRange)
+      );
+
+      // Calculate average grade
+      let avgGrade = 0;
+      if (schoolResults.length > 0) {
+        const totalMarks = schoolResults.reduce((sum, result) => sum + (result.marks || 0), 0);
+        avgGrade = totalMarks / schoolResults.length;
+      }
+
+      // Calculate attendance rate
+      let attendanceRate = 0;
+      if (schoolAttendance.length > 0) {
+        const presentCount = schoolAttendance.filter(att => att.status === 'present').length;
+        attendanceRate = (presentCount / schoolAttendance.length) * 100;
+      }
+
+      // Calculate assignment completion (based on results with marks)
+      let assignmentCompletion = 0;
+      if (schoolResults.length > 0) {
+        const completedResults = schoolResults.filter(result => result.marks !== undefined && result.marks !== null);
+        assignmentCompletion = (completedResults.length / schoolResults.length) * 100;
+      }
+
+      return {
+        school: school.name,
+        avgGrade: Math.round(avgGrade * 10) / 10,
+        attendance: Math.round(attendanceRate * 10) / 10,
+        assignments: Math.round(assignmentCompletion * 10) / 10
+      };
+    });
+  };
+
+  // Helper function to generate consistent colors
+  const getRandomColor = (seed) => {
+    const colors = ["#3182CE", "#38A169", "#D69E2E", "#E53E3E", "#805AD5", "#DD6B20", "#319795", "#D53F8C"];
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  // Calculate engagement metrics for each school
+  const calculateEngagementMetrics = () => {
+    if (!schools.length) return [];
+
+    return schools.map(school => {
+      const schoolBookings = bookings.filter(booking =>
+        booking.schoolId === school._id &&
+        new Date(booking.createdAt) >= getDateFromRange(dateRange)
+      ).length;
+
+      const schoolBusSchedules = busSchedules.filter(schedule =>
+        schedule.schoolId === school._id &&
+        new Date(schedule.createdAt) >= getDateFromRange(dateRange)
+      ).length;
+
+      const schoolFeedback = feedback.filter(fb =>
+        fb.schoolId === school._id &&
+        new Date(fb.createdAt) >= getDateFromRange(dateRange)
+      ).length;
+
+      const schoolBugReports = bugReports.filter(bug =>
+        bug.schoolId === school._id &&
+        new Date(bug.createdAt) >= getDateFromRange(dateRange)
+      ).length;
+
+      // Calculate total engagement score
+      const totalActions = schoolBookings + schoolBusSchedules + schoolFeedback + schoolBugReports;
+
+      // Determine engagement level based on total actions
+      let engagementLevel = "Low";
+      if (totalActions >= 50) engagementLevel = "High";
+      else if (totalActions >= 20) engagementLevel = "Medium";
+
+      return {
+        schoolId: school._id,
+        schoolName: school.name,
+        bookings: schoolBookings,
+        busSchedules: schoolBusSchedules,
+        feedback: schoolFeedback,
+        bugReports: schoolBugReports,
+        totalActions,
+        engagementLevel
+      };
+    });
+  };
+
+  // Get engagement summary for the engagement levels section
+  const getEngagementSummary = () => {
+    const metrics = calculateEngagementMetrics();
+    if (!metrics.length) return { high: 0, medium: 0, low: 0, total: 0 };
+
+    const high = metrics.filter(m => m.engagementLevel === "High").length;
+    const medium = metrics.filter(m => m.engagementLevel === "Medium").length;
+    const low = metrics.filter(m => m.engagementLevel === "Low").length;
+
+    return { high, medium, low, total: metrics.length };
+  };
+
+  // Generate engagement data for charts
+  const generateEngagementData = () => {
+    if (!schools.length) return [];
+
+    return schools.map(school => {
+      const metrics = calculateEngagementMetrics().find(m => m.schoolId === school._id);
+      return {
+        name: school.name,
+        value: metrics ? metrics.totalActions : 0
+      };
+    });
+  };
 
   const handleExportReport = (format) => {
     console.log(`Exporting report in ${format} format...`)
   }
+
+  const engagementSummary = getEngagementSummary();
+  const usageData = generateUsageData();
+  const facilityUsageData = generateFacilityUsageData();
+  const academicData = generateAcademicData();
+  const engagementData = generateEngagementData();
 
   return (
     <VStack spacing={6} align="stretch" >
@@ -175,10 +393,19 @@ export default function Analytics() {
                         <XAxis dataKey="month" />
                         <YAxis />
                         <Tooltip />
-                        <Line type="monotone" dataKey="lincoln" stroke="#3182CE" strokeWidth={2} />
-                        <Line type="monotone" dataKey="roosevelt" stroke="#38A169" strokeWidth={2} />
-                        <Line type="monotone" dataKey="washington" stroke="#D69E2E" strokeWidth={2} />
-                        <Line type="monotone" dataKey="jefferson" stroke="#E53E3E" strokeWidth={2} />
+                        {schools.map((school, index) => {
+                          const schoolKey = school.name.toLowerCase().replace(/\s+/g, '');
+                          return (
+                            <Line
+                              key={school._id}
+                              type="monotone"
+                              dataKey={schoolKey}
+                              stroke={getRandomColor(school.name)}
+                              strokeWidth={2}
+                              name={school.name}
+                            />
+                          );
+                        })}
                       </LineChart>
                     </ResponsiveContainer>
                   </Box>
@@ -191,18 +418,46 @@ export default function Analytics() {
                     Key Metrics
                   </Text>
                   <VStack spacing={4}>
-                    {engagementData.map((metric, index) => (
-                      <Box key={index} w="full" p={3} bg="gray.50" borderRadius="md">
-                        <HStack justify="space-between">
-                          <Text fontSize="sm" fontWeight="medium">
-                            {metric.name}
-                          </Text>
-                          <Text fontSize="lg" fontWeight="bold" color="blue.500">
-                            {typeof metric.value === "number" ? metric.value.toLocaleString() : metric.value}
-                          </Text>
-                        </HStack>
-                      </Box>
-                    ))}
+                    <Box w="full" p={3} bg="gray.50" borderRadius="md">
+                      <HStack justify="space-between">
+                        <Text fontSize="sm" fontWeight="medium">
+                          Total Bookings
+                        </Text>
+                        <Text fontSize="lg" fontWeight="bold" color="blue.500">
+                          {bookings.filter(b => new Date(b.createdAt) >= getDateFromRange(dateRange)).length}
+                        </Text>
+                      </HStack>
+                    </Box>
+                    <Box w="full" p={3} bg="gray.50" borderRadius="md">
+                      <HStack justify="space-between">
+                        <Text fontSize="sm" fontWeight="medium">
+                          Total Class Schedules
+                        </Text>
+                        <Text fontSize="lg" fontWeight="bold" color="blue.500">
+                          {classSchedules.filter(c => new Date(c.createdAt) >= getDateFromRange(dateRange)).length}
+                        </Text>
+                      </HStack>
+                    </Box>
+                    <Box w="full" p={3} bg="gray.50" borderRadius="md">
+                      <HStack justify="space-between">
+                        <Text fontSize="sm" fontWeight="medium">
+                          Total Feedback
+                        </Text>
+                        <Text fontSize="lg" fontWeight="bold" color="blue.500">
+                          {feedback.filter(f => new Date(f.createdAt) >= getDateFromRange(dateRange)).length}
+                        </Text>
+                      </HStack>
+                    </Box>
+                    <Box w="full" p={3} bg="gray.50" borderRadius="md">
+                      <HStack justify="space-between">
+                        <Text fontSize="sm" fontWeight="medium">
+                          Total Bug Reports
+                        </Text>
+                        <Text fontSize="lg" fontWeight="bold" color="blue.500">
+                          {bugReports.filter(b => new Date(b.createdAt) >= getDateFromRange(dateRange)).length}
+                        </Text>
+                      </HStack>
+                    </Box>
                   </VStack>
                 </CardBody>
               </Card>
@@ -211,7 +466,7 @@ export default function Analytics() {
             <Card mt={6}>
               <CardBody>
                 <Text fontSize="lg" fontWeight="semibold" mb={4}>
-                  Login Activity Comparison
+                  Activity Comparison
                 </Text>
                 <Box h="300px">
                   <ResponsiveContainer width="100%" height="100%">
@@ -220,10 +475,17 @@ export default function Analytics() {
                       <XAxis dataKey="month" />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="lincoln" fill="#3182CE" />
-                      <Bar dataKey="roosevelt" fill="#38A169" />
-                      <Bar dataKey="washington" fill="#D69E2E" />
-                      <Bar dataKey="jefferson" fill="#E53E3E" />
+                      {schools.map((school, index) => {
+                        const schoolKey = school.name.toLowerCase().replace(/\s+/g, '');
+                        return (
+                          <Bar
+                            key={school._id}
+                            dataKey={schoolKey}
+                            fill={getRandomColor(school.name)}
+                            name={school.name}
+                          />
+                        );
+                      })}
                     </BarChart>
                   </ResponsiveContainer>
                 </Box>
@@ -260,31 +522,38 @@ export default function Analytics() {
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {schools.sort((a, b) => {
-                        if (!a.name || !b.name) return 0;
+                      {academicData.sort((a, b) => {
                         if (schoolSortOrder === "asc") {
-                          return a.name.localeCompare(b.name);
+                          return a.school.localeCompare(b.school);
                         } else {
-                          return b.name.localeCompare(a.name);
+                          return b.school.localeCompare(a.school);
                         }
-                      }).map((school) => (
-                        <Tr key={school._id}>
-                          <Td fontWeight="medium">{school.name}</Td>
+                      }).map((school, index) => (
+                        <Tr key={index}>
+                          <Td fontWeight="medium">{school.school}</Td>
                           <Td>
-                            {/* Calculate or fetch avgGrade for this school */}
-                            <Text>--</Text>
+                            {school.avgGrade > 0 ? `${school.avgGrade}%` : 'N/A'}
                           </Td>
                           <Td>
-                            {/* Calculate or fetch attendance for this school */}
-                            <Text>--</Text>
+                            {school.attendance > 0 ? `${school.attendance}%` : 'N/A'}
                           </Td>
                           <Td>
-                            {/* Calculate or fetch assignments for this school */}
-                            <Text>--</Text>
+                            {school.assignments > 0 ? `${school.assignments}%` : 'N/A'}
                           </Td>
                           <Td>
-                            {/* Badge logic based on avgGrade */}
-                            <Badge colorScheme="gray">N/A</Badge>
+                            {school.avgGrade > 0 ? (
+                              <Badge
+                                colorScheme={
+                                  school.avgGrade >= 80 ? "green" :
+                                    school.avgGrade >= 60 ? "yellow" : "red"
+                                }
+                              >
+                                {school.avgGrade >= 80 ? "Excellent" :
+                                  school.avgGrade >= 60 ? "Good" : "Needs Improvement"}
+                              </Badge>
+                            ) : (
+                              <Badge colorScheme="gray">N/A</Badge>
+                            )}
                           </Td>
                         </Tr>
                       ))}
@@ -315,9 +584,12 @@ export default function Analytics() {
                           dataKey="usage"
                           label={({ name, usage }) => `${name}: ${usage}%`}
                         >
-                          {facilityUsageData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
+                          {facilityUsageData.map((entry, index) => {
+
+                            return (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            )
+                          })}
                         </Pie>
                         <Tooltip />
                       </PieChart>
@@ -369,14 +641,19 @@ export default function Analytics() {
                         <XAxis dataKey="month" />
                         <YAxis />
                         <Tooltip />
-                        <Line type="monotone" dataKey="lincoln" stroke="#3182CE" strokeWidth={3} name="Lincoln HS" />
-                        <Line
-                          type="monotone"
-                          dataKey="roosevelt"
-                          stroke="#38A169"
-                          strokeWidth={3}
-                          name="Roosevelt Elem"
-                        />
+                        {schools.slice(0, 2).map((school, index) => {
+                          const schoolKey = school.name.toLowerCase().replace(/\s+/g, '');
+                          return (
+                            <Line
+                              key={school._id}
+                              type="monotone"
+                              dataKey={schoolKey}
+                              stroke={getRandomColor(school.name)}
+                              strokeWidth={3}
+                              name={school.name}
+                            />
+                          );
+                        })}
                       </LineChart>
                     </ResponsiveContainer>
                   </Box>
@@ -391,29 +668,73 @@ export default function Analytics() {
                   <VStack spacing={4}>
                     <Box w="full" p={3} bg="green.50" borderRadius="md" borderLeft="4px" borderColor="green.500">
                       <Text fontSize="sm" fontWeight="medium" color="green.700">
-                        High Engagement
+                        High Engagement (50 actions or more)
                       </Text>
                       <Text fontSize="xs" color="green.600">
-                        2 schools (50%)
+                        {engagementSummary.high} school{engagementSummary.high !== 1 ? 's' : ''} ({engagementSummary.total > 0 ? Math.round((engagementSummary.high / engagementSummary.total) * 100) : 0}%)
                       </Text>
                     </Box>
                     <Box w="full" p={3} bg="yellow.50" borderRadius="md" borderLeft="4px" borderColor="yellow.500">
                       <Text fontSize="sm" fontWeight="medium" color="yellow.700">
-                        Medium Engagement
+                        Medium Engagement (20-49 actions)
                       </Text>
                       <Text fontSize="xs" color="yellow.600">
-                        1 school (25%)
+                        {engagementSummary.medium} school{engagementSummary.medium !== 1 ? 's' : ''} ({engagementSummary.total > 0 ? Math.round((engagementSummary.medium / engagementSummary.total) * 100) : 0}%)
                       </Text>
                     </Box>
                     <Box w="full" p={3} bg="red.50" borderRadius="md" borderLeft="4px" borderColor="red.500">
                       <Text fontSize="sm" fontWeight="medium" color="red.700">
-                        Low Engagement
+                        Low Engagement (less than 20 actions)
                       </Text>
                       <Text fontSize="xs" color="red.600">
-                        1 school (25%)
+                        {engagementSummary.low} school{engagementSummary.low !== 1 ? 's' : ''} ({engagementSummary.total > 0 ? Math.round((engagementSummary.low / engagementSummary.total) * 100) : 0}%)
                       </Text>
                     </Box>
                   </VStack>
+
+                  {/* Engagement Details Table */}
+                  <Box mt={6}>
+                    <Text fontSize="md" fontWeight="semibold" mb={3}>
+                      Engagement Details by School
+                    </Text>
+                    <TableContainer>
+                      <Table variant="simple" size="sm">
+                        <Thead>
+                          <Tr>
+                            <Th>School</Th>
+                            <Th>Bookings</Th>
+                            <Th>Bus Schedules</Th>
+                            <Th>Feedback</Th>
+                            <Th>Bug Reports</Th>
+                            <Th>Total Actions</Th>
+                            <Th>Level</Th>
+                          </Tr>
+                        </Thead>
+                        <Tbody>
+                          {calculateEngagementMetrics().map((metric) => (
+                            <Tr key={metric.schoolId}>
+                              <Td fontWeight="medium">{metric.schoolName}</Td>
+                              <Td>{metric.bookings}</Td>
+                              <Td>{metric.busSchedules}</Td>
+                              <Td>{metric.feedback}</Td>
+                              <Td>{metric.bugReports}</Td>
+                              <Td fontWeight="bold">{metric.totalActions}</Td>
+                              <Td>
+                                <Badge
+                                  colorScheme={
+                                    metric.engagementLevel === "High" ? "green" :
+                                      metric.engagementLevel === "Medium" ? "yellow" : "red"
+                                  }
+                                >
+                                  {metric.engagementLevel}
+                                </Badge>
+                              </Td>
+                            </Tr>
+                          ))}
+                        </Tbody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
                 </CardBody>
               </Card>
             </Grid>

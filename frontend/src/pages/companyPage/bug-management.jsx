@@ -132,7 +132,12 @@ export default function BugManagement() {
             if (!selectedBug?._id) return;
 
             const result = await updateBugReport(selectedBug._id, {
-                status: resolveForm.status,
+                userId: selectedBug.userId._id,
+                image: selectedBug.image,
+                errorFile: selectedBug.errorFile,
+                consoleLogMessage: selectedBug.consoleLogMessage,
+                description: selectedBug.description,
+                status: 'resolved',
                 priority: resolveForm.priority,
                 resolution: resolveForm.resolution,
                 resolvedAt: resolveForm.status === 'resolved' ? new Date().toISOString() : null
@@ -337,67 +342,69 @@ export default function BugManagement() {
                                             </Tr>
                                         </Thead>
                                         <Tbody>
-                                            {filteredReports.map((report) => (
-                                                <Tr key={report._id}>
-                                                    <Td>
-                                                        <VStack align="start" spacing={1}>
-                                                            <Text fontWeight="medium">
-                                                                {report.userId?.name || report.userId?.email || 'Unknown User'}
-                                                            </Text>
-                                                            <Text fontSize="sm" color="gray.500">
-                                                                {report.userId?.role || 'Unknown Role'}
-                                                            </Text>
-                                                            {report.userId && (
-                                                                <Text fontSize="xs" color="gray.400" fontFamily="mono">
-                                                                    ID: {report.userId._id || report.userId}
+                                            {filteredReports.map((report) => {
+                                                return (
+                                                    <Tr key={report._id}>
+                                                        <Td>
+                                                            <VStack align="start" spacing={1}>
+                                                                <Text fontWeight="medium">
+                                                                    {report.userId?.name || report.userId?.email || 'Unknown User'}
                                                                 </Text>
-                                                            )}
-                                                        </VStack>
-                                                    </Td>
-                                                    <Td>
-                                                        <Badge colorScheme={getPriorityColor(report.priority)} variant="subtle">
-                                                            {report.priority}
-                                                        </Badge>
-                                                    </Td>
-                                                    <Td>
-                                                        <Badge colorScheme={getStatusColor(report.status)} variant="subtle">
-                                                            {report.status}
-                                                        </Badge>
-                                                    </Td>
-                                                    <Td>
-                                                        <Text fontSize="sm" fontFamily="mono" color="gray.600" maxW="200px" isTruncated>
-                                                            {report.errorFile}
-                                                        </Text>
-                                                    </Td>
-                                                    <Td>
-                                                        <Text fontSize="sm" color="gray.600">
-                                                            {new Date(report.createdAt).toLocaleDateString()}
-                                                        </Text>
-                                                    </Td>
-                                                    <Td>
-                                                        <HStack spacing={2}>
-                                                            <Button
-                                                                size="sm"
-                                                                colorScheme="blue"
-                                                                variant="ghost"
-                                                                leftIcon={<FiEye />}
-                                                                onClick={() => handleViewBug(report)}
-                                                            >
-                                                                View
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                colorScheme="green"
-                                                                variant="ghost"
-                                                                leftIcon={<FiCheckCircle />}
-                                                                onClick={() => handleResolveBug(report)}
-                                                            >
-                                                                Resolve
-                                                            </Button>
-                                                        </HStack>
-                                                    </Td>
-                                                </Tr>
-                                            ))}
+                                                                <Text fontSize="sm" color="gray.500">
+                                                                    {report.userId?.role || 'Unknown Role'}
+                                                                </Text>
+                                                                {report.userId && (
+                                                                    <Text fontSize="xs" color="gray.400" fontFamily="mono">
+                                                                        ID: {report.userId._id || report.userId}
+                                                                    </Text>
+                                                                )}
+                                                            </VStack>
+                                                        </Td>
+                                                        <Td>
+                                                            <Badge colorScheme={getPriorityColor(report.priority)} variant="subtle">
+                                                                {report.priority}
+                                                            </Badge>
+                                                        </Td>
+                                                        <Td>
+                                                            <Badge colorScheme={getStatusColor(report.status)} variant="subtle">
+                                                                {report.status}
+                                                            </Badge>
+                                                        </Td>
+                                                        <Td>
+                                                            <Text fontSize="sm" fontFamily="mono" color="gray.600" maxW="200px" isTruncated>
+                                                                {report.errorFile}
+                                                            </Text>
+                                                        </Td>
+                                                        <Td>
+                                                            <Text fontSize="sm" color="gray.600">
+                                                                {new Date(report.createdAt).toLocaleDateString()}
+                                                            </Text>
+                                                        </Td>
+                                                        <Td>
+                                                            <HStack spacing={2}>
+                                                                <Button
+                                                                    size="sm"
+                                                                    colorScheme="blue"
+                                                                    variant="ghost"
+                                                                    leftIcon={<FiEye />}
+                                                                    onClick={() => handleViewBug(report)}
+                                                                >
+                                                                    View
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    colorScheme="green"
+                                                                    variant="ghost"
+                                                                    leftIcon={<FiCheckCircle />}
+                                                                    onClick={() => handleResolveBug(report)}
+                                                                >
+                                                                    Resolve
+                                                                </Button>
+                                                            </HStack>
+                                                        </Td>
+                                                    </Tr>
+                                                )
+                                            })}
                                         </Tbody>
                                     </Table>
                                 </TableContainer>

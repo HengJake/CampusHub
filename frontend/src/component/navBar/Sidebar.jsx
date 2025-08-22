@@ -39,7 +39,7 @@ const Sidebar = ({ isOpen, onClose, role = "student", sidebarColors, glassBG }) 
                     "Logged out successfully",
                     res.message
                 );
-                navigate("/login");
+                navigate("/");
             } else {
                 showToast.error(
                     "Failed to log out",

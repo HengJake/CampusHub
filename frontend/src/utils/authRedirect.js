@@ -17,7 +17,7 @@ export const hasValidToken = async () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-            }, 
+            },
             credentials: 'include', // Include cookies
         });
 
@@ -114,6 +114,8 @@ export const getRedirectPath = (role, isSchoolSetupComplete = true) => {
  */
 export const detectTokenAndRedirect = async (navigate) => {
     try {
+        const authResult = await useAuthStore.getState().refreshUserAuthData();
+
         // Check if user is authenticated
         const isAuthenticated = await hasValidToken();
         if (!isAuthenticated) {
@@ -135,6 +137,7 @@ export const detectTokenAndRedirect = async (navigate) => {
             isSchoolSetupComplete = await checkSchoolSetupComplete();
 
         }
+
 
         const redirectPath = getRedirectPath(role, isSchoolSetupComplete);
 

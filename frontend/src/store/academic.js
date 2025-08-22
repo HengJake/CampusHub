@@ -89,7 +89,7 @@ export const useAcademicStore = create((set, get) => ({
         return url;
     },
 
-    buildPUT: async (endpoint, id, updates) => {
+    buildPUT: async (endpoint, id, updates, stateKey) => {
         const authStore = useAuthStore.getState();
         const user = authStore.getCurrentUser();
 
@@ -98,7 +98,7 @@ export const useAcademicStore = create((set, get) => ({
             const schoolId = authStore.getSchoolId();
             updates = { ...updates, "schoolId": schoolId }
         }
-        
+
         const res = await fetch(`${endpoint}/${id}`, {
             method: "PUT",
             headers: {
@@ -107,10 +107,21 @@ export const useAcademicStore = create((set, get) => ({
             body: JSON.stringify(updates),
         })
 
+        const data = await res.json();
+
+        if (data.success && stateKey) {
+            // Update in local state
+            set((state) => ({
+                [stateKey]: state[stateKey].map((item) =>
+                    item._id === id ? data.data : item
+                ),
+            }));
+        }
+
         return res;
     },
 
-    buildPOST: async (endpoint, data) => {
+    buildPOST: async (endpoint, data, stateKey) => {
         const res = await fetch(endpoint, {
             method: "POST",
             headers: {
@@ -118,6 +129,38 @@ export const useAcademicStore = create((set, get) => ({
             },
             body: JSON.stringify(data),
         })
+
+        const responseData = await res.json();
+
+        if (responseData.success && stateKey) {
+            // Add to local state
+            set((state) => ({
+                [stateKey]: [...state[stateKey], responseData.data],
+            }));
+        }
+
+        return res
+    },
+
+    buildPATCH: async (endpoint, id, data, stateKey) => {
+        const res = await fetch(`${endpoint}/${id}`, {
+            method: "PATCH",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+
+        const responseData = await res.json();
+
+        if (responseData.success && stateKey) {
+            // Update in local state
+            set((state) => ({
+                [stateKey]: state[stateKey].map((item) =>
+                    item._id === id ? responseData.data : item
+                ),
+            }));
+        }
 
         return res
     },
@@ -184,25 +227,12 @@ export const useAcademicStore = create((set, get) => ({
 
     createSchool: async (schoolData) => {
         try {
-
-            const res = await fetch('/api/school', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(schoolData),
-            });
-
+            const res = await get().buildPOST('/api/school', schoolData, 'schools');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create school");
             }
-
-            // Add to local state
-            set((state) => ({
-                schools: [...state.schools, data.data],
-            }));
 
             return { success: true, data: data.data };
 
@@ -215,26 +245,13 @@ export const useAcademicStore = create((set, get) => ({
 
     updateSchool: async (id, updates) => {
         try {
-            const res = await fetch(`/api/school/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updates),
-            });
+            const res = await get().buildPUT('/api/school', id, updates, 'schools');
 
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update school");
             }
-
-            // Update in local state
-            set((state) => ({
-                schools: state.schools.map((school) =>
-                    school._id === id ? data.data : school
-                ),
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -244,20 +261,11 @@ export const useAcademicStore = create((set, get) => ({
 
     deleteSchool: async (id) => {
         try {
-            const res = await fetch(`/api/school/${id}`, {
-                method: "DELETE",
-            });
-
-            const data = await res.json();
+            const data = await get().buildDELETE('/api/school', id, 'schools');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to delete school");
             }
-
-            // Remove from local state
-            set((state) => ({
-                schools: state.schools.filter((school) => school._id !== id),
-            }));
 
             return { success: true };
         } catch (error) {
@@ -309,18 +317,13 @@ export const useAcademicStore = create((set, get) => ({
                 return { success: false, message: "Only school can create student" };
             }
 
-            const res = await get().buildPOST('/api/student', studentData)
+            const res = await get().buildPOST('/api/student', studentData, 'students')
 
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create student");
             }
-
-            // Add to local state
-            set((state) => ({
-                students: [...state.students, data.data],
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -331,20 +334,13 @@ export const useAcademicStore = create((set, get) => ({
     updateStudent: async (id, updates) => {
         try {
 
-            const res = await get().buildPUT('/api/student', id, updates)
+            const res = await get().buildPUT('/api/student', id, updates, 'students')
 
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update student");
             }
-
-            // Update in local state
-            set((state) => ({
-                students: state.students.map((student) =>
-                    student._id === id ? data.data : student
-                ),
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -354,20 +350,11 @@ export const useAcademicStore = create((set, get) => ({
 
     deleteStudent: async (id) => {
         try {
-            const res = await fetch(`/api/student/${id}`, {
-                method: "DELETE",
-            });
-
-            const data = await res.json();
+            const data = await get().buildDELETE("/api/student", id, 'students');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to delete student");
             }
-
-            // Remove from local state
-            set((state) => ({
-                students: state.students.filter((student) => student._id !== id),
-            }));
 
             return { success: true };
         } catch (error) {
@@ -416,23 +403,12 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await fetch("/api/course", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(courseData),
-            });
-
+            const res = await get().buildPOST("/api/course", courseData, 'courses');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create course");
             }
-
-            set((state) => ({
-                courses: [...state.courses, data.data],
-            }));
 
             return { success: true, message: data.message, data: data.data };
         } catch (error) {
@@ -442,26 +418,13 @@ export const useAcademicStore = create((set, get) => ({
 
     updateCourse: async (id, updates) => {
         try {
-            const res = await fetch(`/api/course/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updates),
-            });
+            const res = await get().buildPUT("/api/course", id, updates, 'courses');
 
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update course");
             }
-
-            // Update in local state
-            set((state) => ({
-                courses: state.courses.map((course) =>
-                    course._id === id ? data.data : course
-                ),
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -471,20 +434,11 @@ export const useAcademicStore = create((set, get) => ({
 
     deleteCourse: async (id) => {
         try {
-            const res = await fetch(`/api/course/${id}`, {
-                method: 'DELETE',
-            });
-
-            const data = await res.json();
+            const data = await get().buildDELETE("/api/course", id, 'courses');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to delete course");
             }
-
-            // Remove from local state
-            set(state => ({
-                courses: state.courses.filter(course => course._id !== id)
-            }));
 
             return { success: true };
         } catch (error) {
@@ -541,23 +495,12 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await fetch("/api/lecturer", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(lecturerData),
-            });
-
+            const res = await get().buildPOST("/api/lecturer", lecturerData, 'lecturers');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create lecturer");
             }
-
-            set((state) => ({
-                lecturers: [...state.lecturers, data.data],
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -567,26 +510,13 @@ export const useAcademicStore = create((set, get) => ({
 
     updateLecturer: async (id, updates) => {
         try {
-            const res = await fetch(`/api/lecturer/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updates),
-            });
+            const res = await get().buildPUT("/api/lecturer", id, updates, 'lecturers');
 
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update lecturer");
             }
-
-            // Update in local state
-            set((state) => ({
-                lecturers: state.lecturers.map((lecturer) =>
-                    lecturer._id === id ? data.data : lecturer
-                ),
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -596,20 +526,11 @@ export const useAcademicStore = create((set, get) => ({
 
     deleteLecturer: async (id) => {
         try {
-            const res = await fetch(`/api/lecturer/${id}`, {
-                method: "DELETE",
-            });
-
-            const data = await res.json();
+            const data = await get().buildDELETE("/api/lecturer", id, 'lecturers');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to delete lecturer");
             }
-
-            // Remove from local state
-            set((state) => ({
-                lecturers: state.lecturers.filter((lecturer) => lecturer._id !== id),
-            }));
 
             return { success: true };
         } catch (error) {
@@ -658,23 +579,12 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await fetch("/api/department", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(departmentData),
-            });
-
+            const res = await get().buildPOST("/api/department", departmentData, 'departments');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create department");
             }
-
-            set((state) => ({
-                departments: [...state.departments, data.data],
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -684,26 +594,13 @@ export const useAcademicStore = create((set, get) => ({
 
     updateDepartment: async (id, updates) => {
         try {
-            const res = await fetch(`/api/department/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updates),
-            });
+            const res = await get().buildPUT("/api/department", id, updates, 'departments');
 
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update department");
             }
-
-            // Update in local state
-            set((state) => ({
-                departments: state.departments.map((department) =>
-                    department._id === id ? data.data : department
-                ),
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -713,22 +610,11 @@ export const useAcademicStore = create((set, get) => ({
 
     deleteDepartment: async (id) => {
         try {
-            const res = await fetch(`/api/department/${id}`, {
-                method: "DELETE",
-            });
-
-            const data = await res.json();
+            const data = await get().buildDELETE("/api/department", id, 'departments');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to delete department");
             }
-
-            // Remove from local state
-            set((state) => ({
-                departments: state.departments.filter(
-                    (department) => department._id !== id
-                ),
-            }));
 
             return { success: true };
         } catch (error) {
@@ -777,23 +663,12 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await fetch("/api/module", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(moduleData),
-            });
-
+            const res = await get().buildPOST("/api/module", moduleData, 'modules');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create module");
             }
-
-            set((state) => ({
-                modules: [...state.modules, data.data],
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -803,26 +678,13 @@ export const useAcademicStore = create((set, get) => ({
 
     updateModule: async (id, updates) => {
         try {
-            const res = await fetch(`/api/module/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updates),
-            });
+            const res = await get().buildPUT("/api/module", id, updates, 'modules');
 
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update module");
             }
-
-            // Update in local state
-            set((state) => ({
-                modules: state.modules.map((module) =>
-                    module._id === id ? data.data : module
-                ),
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -832,20 +694,11 @@ export const useAcademicStore = create((set, get) => ({
 
     deleteModule: async (id) => {
         try {
-            const res = await fetch(`/api/module/${id}`, {
-                method: "DELETE",
-            });
-
-            const data = await res.json();
+            const data = await get().buildDELETE("/api/module", id, 'modules');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to delete module");
             }
-
-            // Remove from local state
-            set((state) => ({
-                modules: state.modules.filter((module) => module._id !== id),
-            }));
 
             return { success: true };
         } catch (error) {
@@ -910,16 +763,12 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST('/api/intake-course', intakeCourseData);
+            const res = await get().buildPOST('/api/intake-course', intakeCourseData, 'intakeCourses');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create intake course");
             }
-
-            set((state) => ({
-                intakeCourses: [...state.intakeCourses, data.data],
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -943,20 +792,13 @@ export const useAcademicStore = create((set, get) => ({
 
     updateIntakeCourse: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/intake-course', id, updates);
+            const res = await get().buildPUT('/api/intake-course', id, updates, 'intakeCourses');
 
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update intake course");
             }
-
-            // Update in local state
-            set((state) => ({
-                intakeCourses: state.intakeCourses.map((intakeCourse) =>
-                    intakeCourse._id === id ? data.data : intakeCourse
-                ),
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -966,26 +808,12 @@ export const useAcademicStore = create((set, get) => ({
 
     updateEnrollment: async (id, action) => {
         try {
-            const res = await fetch(`/api/intake-course/${id}/enrollment`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ action }),
-            });
-
+            const res = await get().buildPATCH("/api/intake-course", id, { action }, 'intakeCourses');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update enrollment");
             }
-
-            // Update in local state
-            set((state) => ({
-                intakeCourses: state.intakeCourses.map((ic) =>
-                    ic._id === id ? data.data : ic
-                ),
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -1034,23 +862,12 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await fetch("/api/attendance", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(attendanceData),
-            });
-
+            const res = await get().buildPOST("/api/attendance", attendanceData, 'attendance');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create attendance");
             }
-
-            set((state) => ({
-                attendance: [...state.attendance, data.data],
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -1060,19 +877,12 @@ export const useAcademicStore = create((set, get) => ({
 
     updateAttendance: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/attendance', id, updates);
+            const res = await get().buildPUT('/api/attendance', id, updates, 'attendance');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update attendance");
             }
-
-            // Update in local state
-            set((state) => ({
-                attendance: state.attendance.map((attendance) =>
-                    attendance._id === id ? data.data : attendance
-                ),
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -1197,23 +1007,12 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await fetch("/api/class-schedule", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(scheduleData),
-            });
-
+            const res = await get().buildPOST("/api/class-schedule", scheduleData, 'classSchedules');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create class schedule");
             }
-
-            set((state) => ({
-                classSchedules: [...state.classSchedules, data.data],
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -1223,16 +1022,12 @@ export const useAcademicStore = create((set, get) => ({
 
     updateClassSchedule: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/class-schedule', id, updates);
+            const res = await get().buildPUT('/api/class-schedule', id, updates, 'classSchedules');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update class schedule");
             }
-
-            set((state) => ({
-                classSchedules: [...state.classSchedules, data.data],
-            }));
 
             return { success: true, data: data.data };
 
@@ -1312,7 +1107,7 @@ export const useAcademicStore = create((set, get) => ({
 
     createResult: async (resultData) => {
         try {
-            // Automatically add schoolId for schoolAdmin
+            // Automatically add schoolId for schoolId
             const authStore = useAuthStore.getState();
             const user = authStore.getCurrentUser();
 
@@ -1323,23 +1118,12 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await fetch("/api/result", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(resultData),
-            });
-
+            const res = await get().buildPOST("/api/result", resultData, 'results');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create result");
             }
-
-            set((state) => ({
-                results: [...state.results, data.data],
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -1349,19 +1133,12 @@ export const useAcademicStore = create((set, get) => ({
 
     updateResult: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/result', id, updates);
+            const res = await get().buildPUT('/api/result', id, updates, 'results');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update result");
             }
-
-            // Update in local state
-            set((state) => ({
-                results: state.results.map((result) =>
-                    result._id === id ? data.data : result
-                ),
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -1423,16 +1200,12 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST('/api/intake', intakeData);
+            const res = await get().buildPOST('/api/intake', intakeData, 'intakes');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create intake");
             }
-
-            set((state) => ({
-                intakes: [...state.intakes, data.data],
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -1442,19 +1215,12 @@ export const useAcademicStore = create((set, get) => ({
 
     updateIntake: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/intake', id, updates);
+            const res = await get().buildPUT('/api/intake', id, updates, 'intakes');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update intake");
             }
-
-            // Update in local state
-            set((state) => ({
-                intakes: state.intakes.map((intake) =>
-                    intake._id === id ? data.data : intake
-                ),
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -1944,16 +1710,12 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST('/api/room', roomData);
+            const res = await get().buildPOST('/api/room', roomData, 'rooms');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create room");
             }
-
-            set((state) => ({
-                rooms: [...state.rooms, data.data],
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -1963,19 +1725,12 @@ export const useAcademicStore = create((set, get) => ({
 
     updateRoom: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/room', id, updates);
+            const res = await get().buildPUT('/api/room', id, updates, 'rooms');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update room");
             }
-
-            // Update in local state
-            set((state) => ({
-                rooms: state.rooms.map((room) =>
-                    room._id === id ? data.data : room
-                ),
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -2131,16 +1886,12 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST('/api/exam-schedule', examScheduleData);
+            const res = await get().buildPOST('/api/exam-schedule', examScheduleData, 'examSchedules');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create exam schedule");
             }
-
-            set((state) => ({
-                examSchedules: [...state.examSchedules, data.data],
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -2150,19 +1901,12 @@ export const useAcademicStore = create((set, get) => ({
 
     updateExamSchedule: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/exam-schedule', id, updates);
+            const res = await get().buildPUT('/api/exam-schedule', id, updates, 'examSchedules');
             const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update exam schedule");
             }
-
-            // Update in local state
-            set((state) => ({
-                examSchedules: state.examSchedules.map((schedule) =>
-                    schedule._id === id ? data.data : schedule
-                ),
-            }));
 
             return { success: true, data: data.data };
         } catch (error) {
@@ -2292,7 +2036,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST('/api/semester', semesterData);
+            const res = await get().buildPOST('/api/semester', semesterData, 'semesters');
             const data = await res.json();
 
             if (!data.success) {
@@ -2302,10 +2046,6 @@ export const useAcademicStore = create((set, get) => ({
                 };
             }
 
-            set((state) => ({
-                semesters: [...state.semesters, data.data],
-            }));
-
             return { success: true, data: data.data };
         } catch (error) {
             return { success: false, message: error.message };
@@ -2314,7 +2054,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateSemester: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/semester', id, updates);
+            const res = await get().buildPUT('/api/semester', id, updates, 'semesters');
             const data = await res.json();
 
             if (!data.success) {
@@ -2323,13 +2063,6 @@ export const useAcademicStore = create((set, get) => ({
                     message: data.message || "Failed to update semester"
                 };
             }
-
-            // Update in local state
-            set((state) => ({
-                semesters: state.semesters.map((semester) =>
-                    semester._id === id ? data.data : semester
-                ),
-            }));
 
             return { success: true, data: data.data, message: data.message };
         } catch (error) {
@@ -2383,14 +2116,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateSemesterStatus: async (id, status) => {
         try {
-            const res = await fetch(`/api/semester/${id}/status`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ status }),
-            });
-
+            const res = await get().buildPATCH("/api/semester", id, { status }, 'semesters');
             const data = await res.json();
 
             if (!data.success) {
@@ -2398,12 +2124,6 @@ export const useAcademicStore = create((set, get) => ({
             }
 
             // Update in local state
-            set((state) => ({
-                semesters: state.semesters.map((semester) =>
-                    semester._id === id ? data.data : semester
-                ),
-            }));
-
             return { success: true, data: data.data };
         } catch (error) {
             return { success: false, message: error.message };

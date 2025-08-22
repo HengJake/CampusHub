@@ -33,6 +33,7 @@ import VehicleTab from '../../component/schoolAdminDashboard/transport/VehicleTa
 import StopTab from '../../component/schoolAdminDashboard/transport/StopTab';
 import RouteTab from '../../component/schoolAdminDashboard/transport/RouteTab';
 import TransportModal from '../../component/schoolAdminDashboard/transport/TransportModal';
+import DeleteConfirmationModal from '../../component/schoolAdminDashboard/transport/DeleteConfirmationModal';
 import { useAuthStore } from '../../store/auth.js';
 
 // Loading fallback component
@@ -56,7 +57,11 @@ const TransportationManagement = () => {
         fetchBusSchedulesBySchoolId,
         fetchVehiclesBySchoolId,
         fetchStopsBySchoolId,
-        fetchRoutesBySchoolId
+        fetchRoutesBySchoolId,
+        deleteBusSchedule,
+        deleteVehicle,
+        deleteStop,
+        deleteRoute
     } = useTransportationStore();
 
     const { isAuthenticated, schoolId } = useAuthStore();
@@ -72,6 +77,12 @@ const TransportationManagement = () => {
         routes: false
     });
     const { isOpen, onOpen, onClose } = useDisclosure();
+
+    // Delete confirmation modal state
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
+    const [deleteModalType, setDeleteModalType] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Load data based on active tab
     const loadTabData = async (tabIndex) => {
@@ -151,6 +162,111 @@ const TransportationManagement = () => {
         setActiveTab(index);
     };
 
+    // Function to refresh data based on modal type
+    const handleRefresh = async () => {
+        try {
+            console.log('🔄 Starting refresh for modal type:', modalType);
+
+            // Add a small delay to ensure server-side operations are complete
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            switch (modalType) {
+                case 'busSchedule':
+                    console.log('🔄 Refreshing bus schedules...');
+                    const busResult = await fetchBusSchedulesBySchoolId({}, true); // Force refresh
+                    console.log('🔄 Bus schedules refresh result:', busResult);
+                    setDataLoaded(prev => ({ ...prev, busSchedules: true }));
+                    break;
+                case 'vehicle':
+                    console.log('🔄 Refreshing vehicles...');
+                    const vehicleResult = await fetchVehiclesBySchoolId({}, true); // Force refresh
+                    console.log('🔄 Vehicles refresh result:', vehicleResult);
+                    setDataLoaded(prev => ({ ...prev, vehicles: true }));
+                    break;
+                case 'stop':
+                    console.log('🔄 Refreshing stops...');
+                    const stopResult = await fetchStopsBySchoolId({}, true); // Force refresh
+                    console.log('🔄 Stops refresh result:', stopResult);
+                    setDataLoaded(prev => ({ ...prev, stops: true }));
+                    break;
+                case 'route':
+                    console.log('🔄 Refreshing routes...');
+                    const routeResult = await fetchRoutesBySchoolId({}, true); // Force refresh
+                    console.log('🔄 Routes refresh result:', routeResult);
+                    setDataLoaded(prev => ({ ...prev, routes: true }));
+                    break;
+                default:
+                    console.log('🔄 Unknown modal type for refresh:', modalType);
+                    break;
+            }
+
+            console.log('🔄 Refresh completed successfully');
+        } catch (error) {
+            console.error('❌ Error refreshing data:', error);
+        }
+    };
+
+    // Function to open delete confirmation modal
+    const openDeleteModal = (type, item) => {
+        setDeleteModalType(type);
+        setItemToDelete(item);
+        setDeleteModalOpen(true);
+    };
+
+    // Function to handle delete confirmation
+    const handleDeleteConfirm = async () => {
+        if (!itemToDelete || !deleteModalType) return;
+
+        setIsDeleting(true);
+        try {
+            let result;
+
+            // Call the appropriate delete function based on modal type
+            switch (deleteModalType) {
+                case 'busSchedule':
+                    result = await deleteBusSchedule(itemToDelete._id);
+                    break;
+                case 'vehicle':
+                    result = await deleteVehicle(itemToDelete._id);
+                    break;
+                case 'stop':
+                    result = await deleteStop(itemToDelete._id);
+                    break;
+                case 'route':
+                    result = await deleteRoute(itemToDelete._id);
+                    break;
+                default:
+                    throw new Error('Unknown modal type for deletion');
+            }
+
+            if (result.success) {
+                // Close the modal
+                setDeleteModalOpen(false);
+                setItemToDelete(null);
+                setDeleteModalType('');
+
+                // Refresh the current tab data
+                await loadTabData(activeTab);
+            } else {
+                throw new Error(result.message || 'Failed to delete item');
+            }
+        } catch (error) {
+            console.error('Error during delete process:', error);
+            // Error toast will be handled by the modal
+            throw error;
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    // Function to close delete modal
+    const closeDeleteModal = () => {
+        setDeleteModalOpen(false);
+        setItemToDelete(null);
+        setDeleteModalType('');
+        setIsDeleting(false);
+    };
+
     return (
         <Box>
             <Heading size="lg" mb={6}>Transportation Management</Heading>
@@ -171,6 +287,7 @@ const TransportationManagement = () => {
                             onCreate={openCreateModal}
                             onView={openViewModal}
                             onEdit={openEditModal}
+                            onDelete={openDeleteModal}
                         />
                     </TabPanel>
                     <TabPanel>
@@ -180,6 +297,7 @@ const TransportationManagement = () => {
                             onCreate={openCreateModal}
                             onView={openViewModal}
                             onEdit={openEditModal}
+                            onDelete={openDeleteModal}
                         />
                     </TabPanel>
                     <TabPanel>
@@ -189,6 +307,7 @@ const TransportationManagement = () => {
                             onCreate={openCreateModal}
                             onView={openViewModal}
                             onEdit={openEditModal}
+                            onDelete={openDeleteModal}
                         />
                     </TabPanel>
                     <TabPanel>
@@ -198,6 +317,7 @@ const TransportationManagement = () => {
                             onCreate={openCreateModal}
                             onView={openViewModal}
                             onEdit={openEditModal}
+                            onDelete={openDeleteModal}
                         />
                     </TabPanel>
                 </TabPanels>
@@ -209,6 +329,16 @@ const TransportationManagement = () => {
                 modalType={modalType}
                 selectedItem={selectedItem}
                 isEditMode={isEditMode}
+                onRefresh={handleRefresh}
+            />
+
+            <DeleteConfirmationModal
+                isOpen={deleteModalOpen}
+                onClose={closeDeleteModal}
+                onConfirm={handleDeleteConfirm}
+                itemToDelete={itemToDelete}
+                modalType={deleteModalType}
+                isDeleting={isDeleting}
             />
 
             {!isEditMode && selectedItem && (
@@ -224,22 +354,24 @@ const TransportationManagement = () => {
                                 </Box>
                                 <Box>
                                     <Text fontWeight="bold">Routes:</Text>
-                                    {selectedItem.routeId && selectedItem.routeId.length > 0 ? (
+                                    {selectedItem.routeTiming && selectedItem.routeTiming.length > 0 ? (
                                         <VStack align="start" spacing={2}>
-                                            {selectedItem.routeId.map((route, index) => (
-                                                <Box key={route._id} p={3} border="1px" borderColor="gray.200" borderRadius="md" w="100%">
-                                                    <Text fontWeight="semibold">{route.name}</Text>
-                                                    <Text fontSize="sm" color="gray.600">
-                                                        Duration: {route.estimateTimeMinute} minutes | Fare: RM {route.fare}
-                                                    </Text>
-                                                    <Text fontSize="sm" color="gray.600">
-                                                        Stops: {route.stopIds?.length || 0} stops
-                                                    </Text>
-                                                </Box>
-                                            ))}
+                                            {selectedItem.routeTiming.map((route, index) => {
+                                                return (
+                                                    <Box key={route.routeId._id} p={3} border="1px" borderColor="gray.200" borderRadius="md" w="100%">
+                                                        <Text fontWeight="semibold">{route.routeId?.name}</Text>
+                                                        <Text fontSize="sm" color="gray.600">
+                                                            Duration: {route.estimateTimeMinute} minutes | Fare: RM {route.fare}
+                                                        </Text>
+                                                        <Text fontSize="sm" color="gray.600">
+                                                            Stops: {route.stopIds?.length || 0} stops
+                                                        </Text>
+                                                    </Box>
+                                                )
+                                            })}
                                         </VStack>
                                     ) : (
-                                        <Text color="gray.500">No routes assigned</Text>
+                                        <Text color="gray.300">No routes assigned</Text>
                                     )}
                                 </Box>
                                 <Box>

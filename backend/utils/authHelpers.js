@@ -30,6 +30,7 @@ export const generateTokenPayload = async (user) => {
             const school = await School.findOne({ _id: student?.schoolId });
             if (student) {
                 tokenPayload = {
+                    schoolId: student.schoolId,
                     student: student._id,
                     school: school?._id,
                     user: user._id

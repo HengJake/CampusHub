@@ -182,6 +182,7 @@ export const useTransportationStore = create((set, get) => ({
 
         try {
             const authStore = useAuthStore.getState();
+            console.log("🚀 ~ authStore:", authStore)
             const schoolId = authStore.getSchoolId();
             if (!schoolId) {
                 throw new Error("School ID not found");
@@ -232,7 +233,18 @@ export const useTransportationStore = create((set, get) => ({
             if (!data.success) {
                 throw new Error(data.message || "Failed to create bus schedule");
             }
-            set((state) => ({ busSchedules: [...state.busSchedules, data.data] }));
+
+            // Ensure the new record has all required fields including _id
+            if (data.data && data.data._id) {
+                set((state) => ({
+                    busSchedules: [...state.busSchedules, data.data],
+                    // Reset cache to force fresh fetch on next request
+                    lastFetched: { ...state.lastFetched, busSchedules: null }
+                }));
+            } else {
+                console.error('🚀 Created bus schedule missing _id:', data.data);
+            }
+
             return { success: true, data: data.data };
         } catch (error) {
             return { success: false, message: error.message };
@@ -372,7 +384,18 @@ export const useTransportationStore = create((set, get) => ({
             if (!data.success) {
                 throw new Error(data.message || "Failed to create eHailing");
             }
-            set((state) => ({ eHailings: [...state.eHailings, data.data] }));
+
+            // Ensure the new record has all required fields including _id
+            if (data.data && data.data._id) {
+                set((state) => ({
+                    eHailings: [...state.eHailings, data.data],
+                    // Reset cache to force fresh fetch on next request
+                    lastFetched: { ...state.lastFetched, eHailings: null }
+                }));
+            } else {
+                console.error('🚀 Created eHailing missing _id:', data.data);
+            }
+
             return { success: true, data: data.data };
         } catch (error) {
             return { success: false, message: error.message };
@@ -512,7 +535,18 @@ export const useTransportationStore = create((set, get) => ({
             if (!data.success) {
                 throw new Error(data.message || "Failed to create route");
             }
-            set((state) => ({ routes: [...state.routes, data.data] }));
+
+            // Ensure the new record has all required fields including _id
+            if (data.data && data.data._id) {
+                set((state) => ({
+                    routes: [...state.routes, data.data],
+                    // Reset cache to force fresh fetch on next request
+                    lastFetched: { ...state.lastFetched, routes: null }
+                }));
+            } else {
+                console.error('🚀 Created route missing _id:', data.data);
+            }
+
             return { success: true, data: data.data };
         } catch (error) {
             return { success: false, message: error.message };
@@ -653,7 +687,18 @@ export const useTransportationStore = create((set, get) => ({
             if (!data.success) {
                 throw new Error(data.message || "Failed to create stop");
             }
-            set((state) => ({ stops: [...state.stops, data.data] }));
+
+            // Ensure the new record has all required fields including _id
+            if (data.data && data.data._id) {
+                set((state) => ({
+                    stops: [...state.stops, data.data],
+                    // Reset cache to force fresh fetch on next request
+                    lastFetched: { ...state.lastFetched, stops: null }
+                }));
+            } else {
+                console.error('🚀 Created stop missing _id:', data.data);
+            }
+
             return { success: true, data: data.data };
         } catch (error) {
             return { success: false, message: error.message };
@@ -793,7 +838,18 @@ export const useTransportationStore = create((set, get) => ({
             if (!data.success) {
                 throw new Error(data.message || "Failed to create vehicle");
             }
-            set((state) => ({ vehicles: [...state.vehicles, data.data] }));
+
+            // Ensure the new record has all required fields including _id
+            if (data.data && data.data._id) {
+                set((state) => ({
+                    vehicles: [...state.vehicles, data.data],
+                    // Reset cache to force fresh fetch on next request
+                    lastFetched: { ...state.lastFetched, vehicles: null }
+                }));
+            } else {
+                console.error('🚀 Created vehicle missing _id:', data.data);
+            }
+
             return { success: true, data: data.data };
         } catch (error) {
             return { success: false, message: error.message };

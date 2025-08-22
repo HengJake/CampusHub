@@ -1824,133 +1824,116 @@ async function createFullSchoolData({
 
     console.log(`[${schoolPrefix}] Transportation: Creating BusSchedules...`);
 
-    // Create multiple bus schedules with different time slots and recurring patterns
-    const busSchedulesData = [
-        // Morning route - Monday to Friday
-        {
-            routeTiming: [
-                {
-                    routeId: createdIds.routes[0],
-                    startTime: "07:30",
-                    endTime: "08:00"  // Will be auto-calculated by controller
-                }
-            ],
-            vehicleId: createdIds.vehicles[0], // Bus vehicle
-            dayOfWeek: 1, // Monday
-            startDate: new Date().toISOString(),
-            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
-            active: true,
-            schoolId: createdIds.school
-        },
-        {
-            routeTiming: [
-                {
-                    routeId: createdIds.routes[0],
-                    startTime: "08:00",
-                    endTime: "08:30"  // Will be auto-calculated by controller
-                }
-            ],
-            vehicleId: createdIds.vehicles[0], // Bus vehicle
-            dayOfWeek: 1, // Monday
-            startDate: new Date().toISOString(),
-            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-            active: true,
-            schoolId: createdIds.school
-        },
-        // Afternoon route - Monday to Friday
-        {
-            routeTiming: [
-                {
-                    routeId: createdIds.routes[0],
-                    startTime: "12:00",
-                    endTime: "12:30"  // Will be auto-calculated by controller
-                }
-            ],
-            vehicleId: createdIds.vehicles[0], // Bus vehicle
-            dayOfWeek: 1, // Monday
-            startDate: new Date().toISOString(),
-            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-            active: true,
-            schoolId: createdIds.school
-        },
-        {
-            routeTiming: [
-                {
-                    routeId: createdIds.routes[0],
-                    startTime: "13:00",
-                    endTime: "13:30"  // Will be auto-calculated by controller
-                }
-            ],
-            vehicleId: createdIds.vehicles[0], // Bus vehicle
-            dayOfWeek: 1, // Monday
-            startDate: new Date().toISOString(),
-            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-            active: true,
-            schoolId: createdIds.school
-        },
-        // Evening route - Monday to Friday
-        {
-            routeTiming: [
-                {
-                    routeId: createdIds.routes[0],
-                    startTime: "17:00",
-                    endTime: "17:30"  // Will be auto-calculated by controller
-                }
-            ],
-            vehicleId: createdIds.vehicles[0], // Bus vehicle
-            dayOfWeek: 1, // Monday
-            startDate: new Date().toISOString(),
-            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-            active: true,
-            schoolId: createdIds.school
-        },
-        {
-            routeTiming: [
-                {
-                    routeId: createdIds.routes[0],
-                    startTime: "18:00",
-                    endTime: "18:30"  // Will be auto-calculated by controller
-                }
-            ],
-            vehicleId: createdIds.vehicles[0], // Bus vehicle
-            dayOfWeek: 1, // Monday
-            startDate: new Date().toISOString(),
-            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-            active: true,
-            schoolId: createdIds.school
-        },
-        // Weekend route - Saturday only
-        {
-            routeTiming: [
-                {
-                    routeId: createdIds.routes[0],
-                    startTime: "09:00",
-                    endTime: "09:30"  // Will be auto-calculated by controller
-                }
-            ],
-            vehicleId: createdIds.vehicles[0], // Bus vehicle
-            dayOfWeek: 6, // Saturday
-            startDate: new Date().toISOString(),
-            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-            active: true,
-            schoolId: createdIds.school
-        },
-        {
-            routeTiming: [
-                {
-                    routeId: createdIds.routes[0],
-                    startTime: "14:00",
-                    endTime: "14:30"  // Will be auto-calculated by controller
-                }
-            ],
-            vehicleId: createdIds.vehicles[0], // Bus vehicle
-            dayOfWeek: 6, // Saturday
-            startDate: new Date().toISOString(),
-            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-            active: true,
-            schoolId: createdIds.school
-        }
+    // Create consolidated bus schedules for all days of the week
+    const busSchedulesData = [];
+
+    // All time slots for weekdays
+    const weekdayTimeSlots = [
+        { startTime: "07:30", endTime: "08:00" },   // Morning
+        { startTime: "08:00", endTime: "08:30" },   // Morning
+        { startTime: "12:00", endTime: "12:30" },   // Afternoon
+        { startTime: "13:00", endTime: "13:30" },   // Afternoon
+        { startTime: "17:00", endTime: "17:30" },   // Evening
+        { startTime: "18:00", endTime: "18:30" }    // Evening
     ];
+
+    // Weekend time slots (reduced frequency)
+    const weekendTimeSlots = [
+        { startTime: "09:00", endTime: "09:30" },   // Morning
+        { startTime: "14:00", endTime: "14:30" }    // Afternoon
+    ];
+
+    // Create one consolidated schedule for Monday to Friday (days 1-5)
+    const weekdayRouteTimings = weekdayTimeSlots.map(slot => ({
+        routeId: createdIds.routes[0],
+        startTime: slot.startTime,
+        endTime: slot.endTime  // Will be auto-calculated by controller
+    }));
+
+    busSchedulesData.push({
+        routeTiming: weekdayRouteTimings,
+        vehicleId: createdIds.vehicles[0], // Bus vehicle
+        dayOfWeek: 1, // Monday
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
+        active: true,
+        schoolId: createdIds.school
+    });
+
+    // Create one consolidated schedule for Tuesday to Friday (days 2-5)
+    busSchedulesData.push({
+        routeTiming: weekdayRouteTimings,
+        vehicleId: createdIds.vehicles[0], // Bus vehicle
+        dayOfWeek: 2, // Tuesday
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        active: true,
+        schoolId: createdIds.school
+    });
+
+    busSchedulesData.push({
+        routeTiming: weekdayRouteTimings,
+        vehicleId: createdIds.vehicles[0], // Bus vehicle
+        dayOfWeek: 3, // Wednesday
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        active: true,
+        schoolId: createdIds.school
+    });
+
+    busSchedulesData.push({
+        routeTiming: weekdayRouteTimings,
+        vehicleId: createdIds.vehicles[0], // Bus vehicle
+        dayOfWeek: 4, // Thursday
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        active: true,
+        schoolId: createdIds.school
+    });
+
+    busSchedulesData.push({
+        routeTiming: weekdayRouteTimings,
+        vehicleId: createdIds.vehicles[0], // Bus vehicle
+        dayOfWeek: 5, // Friday
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        active: true,
+        schoolId: createdIds.school
+    });
+
+    // Create one consolidated schedule for Saturday (day 6)
+    const saturdayRouteTimings = weekendTimeSlots.map(slot => ({
+        routeId: createdIds.routes[0],
+        startTime: slot.startTime,
+        endTime: slot.endTime  // Will be auto-calculated by controller
+    }));
+
+    busSchedulesData.push({
+        routeTiming: saturdayRouteTimings,
+        vehicleId: createdIds.vehicles[0], // Bus vehicle
+        dayOfWeek: 6, // Saturday
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        active: true,
+        schoolId: createdIds.school
+    });
+
+    // Create one consolidated schedule for Sunday (day 0) - minimal service
+    busSchedulesData.push({
+        routeTiming: [
+            {
+                routeId: createdIds.routes[0],
+                startTime: "10:00",
+                endTime: "10:30"  // Will be auto-calculated by controller
+            }
+        ],
+        vehicleId: createdIds.vehicles[0], // Bus vehicle
+        dayOfWeek: 7, // Sunday
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        active: true,
+        schoolId: createdIds.school
+    });
 
     for (let i = 0; i < busSchedulesData.length; i++) {
         const busScheduleRes = await apiCall('POST', '/api/bus-schedule', busSchedulesData[i]);
