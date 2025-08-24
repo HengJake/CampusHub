@@ -73,7 +73,7 @@ const StopTab = ({ loading, error, onCreate, onView, onEdit, onDelete }) => {
                     <Card key={stop._id} shadow="md" _hover={{ shadow: "lg" }} transition="all 0.2s">
 
                         {/* Type */}
-                        <Box position="absolute" top={2} right={2} zIndex={1000}>
+                        <Box position="absolute" top={2} right={2} zIndex={99}>
                             <Badge colorScheme="blue" fontSize="sm" px={3} py={1}>
                                 {getStopTypeLabel(stop.type)}
                             </Badge>
@@ -94,7 +94,7 @@ const StopTab = ({ loading, error, onCreate, onView, onEdit, onDelete }) => {
                                         position="absolute"
                                         bottom={2}
                                         left={2}
-                                        zIndex={1000}
+                                        zIndex={99}
                                         px={3}
                                         py={2}
                                         borderRadius="md"

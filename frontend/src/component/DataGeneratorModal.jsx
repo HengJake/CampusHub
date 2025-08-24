@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: DataGeneratorModal.jsx
+// Description: Modal component for generating sample data across different modules, providing bulk data creation functionality for testing and development
+// First Written on: June 25, 2024
+// Edited on: Friday, August 2, 2024
+
 import React, { useState, useEffect } from 'react';
 import {
     Modal,
@@ -33,8 +39,10 @@ import { generateAcademicData, generateAcademicSummary } from '../utils/academic
 import { useAuthStore } from '../store/auth';
 
 const DataGeneratorModal = ({ isOpen, onClose, onDataGenerated }) => {
-    const { getCurrentUser } = useAuthStore();
-    const [schoolPrefix, setSchoolPrefix] = useState('SCH');
+    const { getCurrentUser, school } = useAuthStore();
+    const schoolName = school?.name || "";
+
+    const [schoolPrefix, setSchoolPrefix] = useState(school?.prefix || 'SCH');
     const [schoolId, setSchoolId] = useState('');
     const [userCounts, setUserCounts] = useState({
         lecturer: 8,
@@ -124,6 +132,13 @@ const DataGeneratorModal = ({ isOpen, onClose, onDataGenerated }) => {
         }
     }, [isOpen, getCurrentUser]);
 
+    // Update school prefix when school data changes
+    useEffect(() => {
+        if (school?.prefix) {
+            setSchoolPrefix(school.prefix);
+        }
+    }, [school?.prefix]);
+
 
     const handleGenerate = async () => {
 
@@ -210,7 +225,7 @@ const DataGeneratorModal = ({ isOpen, onClose, onDataGenerated }) => {
     };
 
     const resetForm = () => {
-        setSchoolPrefix('SCH');
+        // Don't reset schoolPrefix as it comes from school data
         setUserCounts({
             lecturer: 8,
             student: 50
@@ -279,11 +294,11 @@ const DataGeneratorModal = ({ isOpen, onClose, onDataGenerated }) => {
 
                         {/* School Prefix */}
                         <FormControl>
-                            <FormLabel>School Prefix</FormLabel>
+                            <FormLabel>School Prefix (Auto-populated)</FormLabel>
                             <Input
                                 value={schoolPrefix}
-                                onChange={(e) => setSchoolPrefix(e.target.value)}
-                                placeholder="e.g., APU, BPU, SCH"
+                                isReadOnly
+                                placeholder="School prefix from database"
                                 isDisabled={isGenerating || generatedData}
                             />
                         </FormControl>
@@ -384,7 +399,7 @@ const DataGeneratorModal = ({ isOpen, onClose, onDataGenerated }) => {
                             </Button>
                         )}
 
-          
+
 
                         <Button
                             colorScheme="green"

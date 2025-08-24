@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: user.controllers.js
+// Description: User management controller handling CRUD operations for user profiles, role management, and user data operations
+// First Written on: July 15, 2024
+// Edited on: Friday, July 19, 2024
+
 import User from "../../models/Academic/user.model.js";
 import bcrypt from "bcrypt";
 import {

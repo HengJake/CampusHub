@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: Locker.jsx
+// Description: Student locker booking page providing interface for viewing available lockers, making reservations, and managing existing bookings
+// First Written on: July 20, 2024
+// Edited on: Friday, August 8, 2024
+
 "use client"
 
 import { useState, useEffect } from "react"

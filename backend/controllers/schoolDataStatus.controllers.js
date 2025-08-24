@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: schoolDataStatus.controllers.js
+// Description: School data status controller managing academic year status, data synchronization, and system state management
+// First Written on: July 14, 2024
+// Edited on: Friday, July 17, 2024
+
 import { isDataGenerationEnabled } from "../utils/checkExist.js";
 import { controllerWrapper } from "../utils/reusable.js";
 

@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: user.model.js
+// Description: User model schema defining user authentication and profile data structure with role-based access control
+// First Written on: June 28, 2024
+// Edited on: Friday, July 5, 2024
+
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
@@ -133,8 +139,8 @@ userSchema.methods.isOAuthLinked = function (provider, providerId) {
 };
 
 // Indexes for better query performance
-userSchema.index({ email: 1 }, {unique: true});
-userSchema.index({ phoneNumber: 1 }, {unique: true});
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ phoneNumber: 1 }, { unique: true });
 userSchema.index({ role: 1 });
 userSchema.index({ authProvider: 1 }); // New index for auth method
 userSchema.index({ email: 1, authProvider: 1 }); // Compound index for OAuth lookups

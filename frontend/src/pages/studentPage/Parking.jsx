@@ -3,7 +3,6 @@ import {
     Text,
     Card,
     CardBody,
-    CardHeader,
     VStack,
     HStack,
     Badge,
@@ -11,18 +10,16 @@ import {
     useColorModeValue,
     Button,
     SimpleGrid,
-    Progress,
-    Stat,
-    StatLabel,
-    StatNumber,
-    StatHelpText,
-    StatArrow,
     Container,
-    Divider,
-    Alert,
-    AlertIcon,
-    AlertTitle,
-    AlertDescription,
+    Select,
+    Input,
+    InputGroup,
+    InputLeftElement,
+    Tabs,
+    TabList,
+    TabPanels,
+    Tab,
+    TabPanel,
     useToast,
     Modal,
     ModalOverlay,
@@ -32,340 +29,265 @@ import {
     ModalBody,
     ModalCloseButton,
     useDisclosure,
-    FormControl,
-    FormLabel,
-    Select,
-    Input,
-    Textarea,
-    Switch,
+    Stat,
+    StatLabel,
+    StatNumber,
+    StatHelpText,
+    Divider,
+    Alert,
+    AlertIcon,
+    AlertTitle,
+    AlertDescription,
+    Spinner,
+    IconButton
 } from "@chakra-ui/react"
 import {
     FiMapPin,
-    FiClock,
-    FiRefreshCw,
-    FiAlertCircle,
-    FiCheckCircle,
-    FiXCircle,
-    FiNavigation,
-    FiBell,
-    FiUsers,
-    FiFilter,
     FiSearch,
+    FiFilter,
+    FiRefreshCw,
+    FiInfo,
+    FiClock,
+    FiNavigation,
 } from "react-icons/fi"
 import {
     FaParking,
-    FaCar
+    FaCar,
+    FaMapMarkedAlt,
 } from "react-icons/fa"
 import { useState, useEffect } from "react"
-
-// Mock parking data with real-time simulation
-const initialParkingData = [
-    {
-        id: "P1",
-        name: "Main Campus Parking",
-        zone: "Academic Block",
-        totalSpots: 150,
-        availableSpots: 45,
-        occupiedSpots: 105,
-        location: { lat: 40.7128, lng: -74.006 },
-        distance: "0.2 km",
-        walkTime: "3 min",
-        hourlyRate: 2.5,
-        maxStay: "8 hours",
-        features: ["Covered", "Security", "EV Charging"],
-        accessibility: true,
-        vehicleTypes: ["Car", "Motorcycle"],
-        peakHours: "8:00 AM - 6:00 PM",
-        status: "available",
-        lastUpdated: new Date(),
-        floors: [
-            { floor: "Ground", total: 50, available: 15, occupied: 35 },
-            { floor: "Level 1", total: 50, available: 18, occupied: 32 },
-            { floor: "Level 2", total: 50, available: 12, occupied: 38 },
-        ],
-    },
-    {
-        id: "P2",
-        name: "Library Complex Parking",
-        zone: "Library Block",
-        totalSpots: 80,
-        availableSpots: 12,
-        occupiedSpots: 68,
-        location: { lat: 40.713, lng: -74.0058 },
-        distance: "0.4 km",
-        walkTime: "5 min",
-        hourlyRate: 2.0,
-        maxStay: "4 hours",
-        features: ["Covered", "24/7 Access"],
-        accessibility: true,
-        vehicleTypes: ["Car", "Motorcycle", "Bicycle"],
-        peakHours: "9:00 AM - 5:00 PM",
-        status: "limited",
-        lastUpdated: new Date(),
-        floors: [
-            { floor: "Ground", total: 40, available: 5, occupied: 35 },
-            { floor: "Level 1", total: 40, available: 7, occupied: 33 },
-        ],
-    },
-    {
-        id: "P3",
-        name: "Sports Complex Parking",
-        zone: "Sports & Recreation",
-        totalSpots: 60,
-        availableSpots: 0,
-        occupiedSpots: 60,
-        location: { lat: 40.7125, lng: -74.0065 },
-        distance: "0.6 km",
-        walkTime: "8 min",
-        hourlyRate: 1.5,
-        maxStay: "6 hours",
-        features: ["Open Air", "Security"],
-        accessibility: true,
-        vehicleTypes: ["Car", "Motorcycle"],
-        peakHours: "6:00 AM - 10:00 PM",
-        status: "full",
-        lastUpdated: new Date(),
-        floors: [{ floor: "Ground", total: 60, available: 0, occupied: 60 }],
-    },
-    {
-        id: "P4",
-        name: "Dormitory Parking",
-        zone: "Residential Area",
-        totalSpots: 120,
-        availableSpots: 35,
-        occupiedSpots: 85,
-        location: { lat: 40.7132, lng: -74.0062 },
-        distance: "0.8 km",
-        walkTime: "10 min",
-        hourlyRate: 1.0,
-        maxStay: "24 hours",
-        features: ["Covered", "Resident Priority", "Security"],
-        accessibility: true,
-        vehicleTypes: ["Car", "Motorcycle", "Bicycle"],
-        peakHours: "6:00 PM - 8:00 AM",
-        status: "available",
-        lastUpdated: new Date(),
-        floors: [
-            { floor: "Ground", total: 60, available: 20, occupied: 40 },
-            { floor: "Level 1", total: 60, available: 15, occupied: 45 },
-        ],
-    },
-    {
-        id: "P5",
-        name: "Visitor Parking",
-        zone: "Main Entrance",
-        totalSpots: 40,
-        availableSpots: 8,
-        occupiedSpots: 32,
-        location: { lat: 40.7126, lng: -74.0059 },
-        distance: "0.1 km",
-        walkTime: "2 min",
-        hourlyRate: 3.0,
-        maxStay: "3 hours",
-        features: ["Visitor Only", "Security", "Reception Nearby"],
-        accessibility: true,
-        vehicleTypes: ["Car"],
-        peakHours: "9:00 AM - 4:00 PM",
-        status: "limited",
-        lastUpdated: new Date(),
-        floors: [{ floor: "Ground", total: 40, available: 8, occupied: 32 }],
-    },
-]
+import { useFacilityStore } from "../../store/facility.js"
 
 export default function Parking() {
-    const [parkingData, setParkingData] = useState(initialParkingData)
-    const [selectedParking, setSelectedParking] = useState(null)
+    const [selectedZone, setSelectedZone] = useState("") // Empty string means "All Zones"
+    const [searchTerm, setSearchTerm] = useState("")
+    const [selectedSlot, setSelectedSlot] = useState(null)
     const [isAutoRefresh, setIsAutoRefresh] = useState(true)
     const [lastRefresh, setLastRefresh] = useState(new Date())
-    const [filterZone, setFilterZone] = useState("all")
-    const [filterStatus, setFilterStatus] = useState("all")
-    const [searchTerm, setSearchTerm] = useState("")
-    const [notifications, setNotifications] = useState([])
 
-    const { isOpen: isDetailsOpen, onOpen: onDetailsOpen, onClose: onDetailsClose } = useDisclosure()
-    const { isOpen: isReportOpen, onOpen: onReportOpen, onClose: onReportClose } = useDisclosure()
-    const { isOpen: isNotifyOpen, onOpen: onNotifyOpen, onClose: onNotifyClose } = useDisclosure()
+    const { isOpen: isSlotDetailsOpen, onOpen: onSlotDetailsOpen, onClose: onSlotDetailsClose } = useDisclosure()
 
     const toast = useToast()
     const bgColor = useColorModeValue("white", "gray.800")
     const borderColor = useColorModeValue("gray.200", "gray.600")
+    const cardBg = useColorModeValue("white", "gray.700")
 
-    // Real-time simulation effect
+    // Get parking data from facility store
+    const {
+        parkingLots,
+        loading,
+        errors,
+        fetchParkingLotsBySchoolId
+    } = useFacilityStore()
+
+    // Transform parking lots data into zone-based structure
+    const transformParkingData = (parkingLots) => {
+        if (!parkingLots || parkingLots.length === 0) return {}
+
+        // Group parking lots by zone
+        const zones = {}
+        parkingLots.forEach(lot => {
+            const zone = lot.zone || "Unknown Zone"
+            if (!zones[zone]) {
+                zones[zone] = {
+                    name: zone,
+                    description: `Parking area in ${zone}`,
+                    totalSlots: 0,
+                    availableSlots: 0,
+                    slots: []
+                }
+            }
+
+            // Create slot object
+            const slot = {
+                id: lot._id,
+                slotNumber: lot.slotNumber,
+                zone: zone,
+                active: lot.active || false,
+                lastUpdated: lot.updatedAt ? new Date(lot.updatedAt) : new Date(),
+                status: lot.status || "available"
+            }
+
+            zones[zone].slots.push(slot)
+            zones[zone].totalSlots++
+            if (lot.active) {
+                zones[zone].availableSlots++
+            }
+        })
+
+        return zones
+    }
+
+    const parkingData = transformParkingData(parkingLots)
+    const availableZones = Object.keys(parkingData)
+
+    // Get all slots from all zones
+    const getAllSlots = () => {
+        const allSlots = []
+        Object.values(parkingData).forEach(zone => {
+            allSlots.push(...zone.slots)
+        })
+        return allSlots
+    }
+
+    // Fetch parking data on component mount
+    useEffect(() => {
+        fetchParkingLotsBySchoolId()
+    }, [])
+
+    // Real-time simulation effect (only if auto-refresh is enabled)
     useEffect(() => {
         if (!isAutoRefresh) return
 
         const interval = setInterval(() => {
-            setParkingData((prevData) =>
-                prevData.map((parking) => {
-                    // Simulate random changes in parking availability
-                    const change = Math.floor(Math.random() * 6) - 3 // -3 to +3 change
-                    const newAvailable = Math.max(0, Math.min(parking.totalSpots, parking.availableSpots + change))
-                    const newOccupied = parking.totalSpots - newAvailable
-
-                    let newStatus = "available"
-                    if (newAvailable === 0) newStatus = "full"
-                    else if (newAvailable < parking.totalSpots * 0.2) newStatus = "limited"
-
-                    // Update floor data proportionally
-                    const updatedFloors = parking.floors.map((floor) => {
-                        const floorRatio = floor.total / parking.totalSpots
-                        const floorAvailable = Math.round(newAvailable * floorRatio)
-                        return {
-                            ...floor,
-                            available: floorAvailable,
-                            occupied: floor.total - floorAvailable,
-                        }
-                    })
-
-                    return {
-                        ...parking,
-                        availableSpots: newAvailable,
-                        occupiedSpots: newOccupied,
-                        status: newStatus,
-                        lastUpdated: new Date(),
-                        floors: updatedFloors,
-                    }
-                }),
-            )
+            fetchParkingLotsBySchoolId()
             setLastRefresh(new Date())
-        }, 5000) // Update every 5 seconds
+        }, 30000) // Update every 30 seconds
 
         return () => clearInterval(interval)
-    }, [isAutoRefresh])
+    }, [isAutoRefresh, fetchParkingLotsBySchoolId])
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case "available":
-                return "green"
-            case "limited":
-                return "yellow"
-            case "full":
-                return "red"
-            default:
-                return "gray"
-        }
-    }
-
-    const getStatusIcon = (status) => {
-        switch (status) {
-            case "available":
-                return FiCheckCircle
-            case "limited":
-                return FiAlertCircle
-            case "full":
-                return FiXCircle
-            default:
-                return FaParking
-        }
-    }
-
-    const getOccupancyPercentage = (parking) => {
-        return Math.round((parking.occupiedSpots / parking.totalSpots) * 100)
-    }
-
-    const getTotalStats = () => {
-        const total = parkingData.reduce((acc, p) => acc + p.totalSpots, 0)
-        const available = parkingData.reduce((acc, p) => acc + p.availableSpots, 0)
-        const occupied = parkingData.reduce((acc, p) => acc + p.occupiedSpots, 0)
+    const getZoneStats = () => {
+        const total = Object.values(parkingData).reduce((acc, zone) => acc + zone.totalSlots, 0)
+        const available = Object.values(parkingData).reduce((acc, zone) => acc + zone.availableSlots, 0)
+        const occupied = total - available
         return { total, available, occupied }
     }
 
-    const filteredParkingData = parkingData.filter((parking) => {
-        const matchesZone = filterZone === "all" || parking.zone.toLowerCase().includes(filterZone.toLowerCase())
-        const matchesStatus = filterStatus === "all" || parking.status === filterStatus
-        const matchesSearch =
-            parking.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            parking.zone.toLowerCase().includes(searchTerm.toLowerCase())
-        return matchesZone && matchesStatus && matchesSearch
-    })
+    // Filter slots based on selected zone and search term
+    const getFilteredSlots = () => {
+        let slots = selectedZone ? parkingData[selectedZone]?.slots || [] : getAllSlots()
 
-    const handleRefresh = () => {
-        // Simulate manual refresh
-        toast({
-            title: "Refreshing parking data...",
-            status: "info",
-            duration: 1000,
-            isClosable: true,
-        })
-        setLastRefresh(new Date())
+        if (searchTerm) {
+            slots = slots.filter(slot =>
+                slot.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                slot.slotNumber.toString().includes(searchTerm) ||
+                slot.zone.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+        }
+
+        return slots
     }
 
-    const handleNotifyWhenAvailable = (parkingId) => {
-        const parking = parkingData.find((p) => p.id === parkingId)
-        setNotifications((prev) => [
-            ...prev,
-            {
-                id: Date.now(),
-                parkingId,
-                parkingName: parking.name,
-                threshold: 5,
-                active: true,
-            },
-        ])
-        toast({
-            title: "Notification Set",
-            description: `You'll be notified when ${parking.name} has available spots`,
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-        })
-        onNotifyClose()
+    const filteredSlots = getFilteredSlots()
+
+    const handleSlotClick = (slot) => {
+        setSelectedSlot(slot)
+        onSlotDetailsOpen()
     }
 
-    const handleReportIssue = () => {
-        toast({
-            title: "Issue Reported",
-            description: "Thank you for reporting the parking issue. Our team will investigate.",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-        })
-        onReportClose()
+    const handleRefresh = async () => {
+        try {
+            await fetchParkingLotsBySchoolId()
+            setLastRefresh(new Date())
+            toast({
+                title: "Parking data refreshed",
+                status: "success",
+                duration: 2000,
+                isClosable: true,
+            })
+        } catch (error) {
+            toast({
+                title: "Failed to refresh parking data",
+                description: error.message,
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            })
+        }
     }
 
-    const stats = getTotalStats()
+    const stats = getZoneStats()
+
+    // Show loading state
+    if (loading.parkingLots) {
+        return (
+            <Container maxW="7xl" py={6}>
+                <VStack spacing={6} align="center" py={20}>
+                    <Spinner size="xl" color="blue.500" />
+                    <Text fontSize="lg" color="gray.600">Loading parking data...</Text>
+                </VStack>
+            </Container>
+        )
+    }
+
+    // Show error state
+    if (errors.parkingLots) {
+        return (
+            <Container maxW="7xl" py={6}>
+                <Alert status="error" borderRadius="md">
+                    <AlertIcon />
+                    <Box flex="1">
+                        <AlertTitle>Error loading parking data</AlertTitle>
+                        <AlertDescription>{errors.parkingLots}</AlertDescription>
+                    </Box>
+                    <Button colorScheme="blue" onClick={handleRefresh}>
+                        Retry
+                    </Button>
+                </Alert>
+            </Container>
+        )
+    }
+
+    // Show no data state
+    if (availableZones.length === 0) {
+        return (
+            <Container maxW="7xl" py={6}>
+                <VStack spacing={6} align="center" py={20}>
+                    <Icon as={FaParking} boxSize={16} color="gray.400" />
+                    <Text fontSize="xl" fontWeight="medium" color="gray.500">
+                        No parking zones available
+                    </Text>
+                    <Text fontSize="sm" color="gray.400" textAlign="center">
+                        Parking zones will appear here once they are configured by administrators.
+                    </Text>
+                    <Button colorScheme="blue" onClick={handleRefresh}>
+                        Refresh
+                    </Button>
+                </VStack>
+            </Container>
+        )
+    }
 
     return (
-        <Container maxW="7xl" py={6}>
+        <Container maxW="7xl" px={0}>
             <VStack spacing={6} align="stretch">
                 {/* Header Section */}
                 <Box>
-                    <HStack justify="space-between" align="center" mb={4}>
-                        <VStack align="start" spacing={1}>
-                            <HStack>
-                                <Icon as={FaParking} boxSize={8} color="blue.500" />
-                                <Text fontSize="3xl" fontWeight="bold" color="gray.800">
-                                    Real-Time Parking
-                                </Text>
-                            </HStack>
-                            <Text color="gray.600">
-                                Live parking availability across campus • Last updated: {lastRefresh.toLocaleTimeString()}
+                    <VStack align="start" spacing={2} mb={6}>
+                        <HStack>
+                            <Icon as={FaParking} boxSize={8} color="blue.500" />
+                            <Text fontSize="3xl" fontWeight="bold" color="gray.800">
+                                Parking Lot Availability
                             </Text>
-                        </VStack>
-
-                        <HStack spacing={3}>
-                            <HStack>
-                                <Text fontSize="sm" color="gray.600">
-                                    Auto-refresh
-                                </Text>
-                                <Switch
-                                    isChecked={isAutoRefresh}
-                                    onChange={(e) => setIsAutoRefresh(e.target.checked)}
-                                    colorScheme="blue"
-                                />
-                            </HStack>
-                            <Button leftIcon={<FiRefreshCw />} onClick={handleRefresh} variant="outline" size="sm">
-                                Refresh
-                            </Button>
                         </HStack>
-                    </HStack>
+                        <Text color="gray.600" fontSize="lg">
+                            Check real-time availability of parking slots across different zones.
+                        </Text>
+                        <HStack spacing={4} fontSize="sm" color="gray.500">
+                            <HStack>
+                                <Icon as={FiClock} />
+                                <Text>Last updated: {lastRefresh.toLocaleTimeString()}</Text>
+                            </HStack>
+                            <HStack>
+                                <IconButton
+                                    bg={"transparent"}
+                                    onClick={() => setIsAutoRefresh(!isAutoRefresh)}
+                                    aria-label="Toggle auto-refresh"
+                                >
+                                    <Icon as={FiRefreshCw} />
+                                </IconButton>
+                                <Text>Auto-refresh: {isAutoRefresh ? "On" : "Off"}</Text>
+                            </HStack>
+                        </HStack>
+                    </VStack>
 
                     {/* Overall Stats */}
                     <SimpleGrid columns={{ base: 1, md: 4 }} spacing={4} mb={6}>
                         <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                             <CardBody>
                                 <Stat>
-                                    <StatLabel>Total Spots</StatLabel>
+                                    <StatLabel>Total Slots</StatLabel>
                                     <StatNumber color="blue.500">{stats.total}</StatNumber>
                                     <StatHelpText>
                                         <Icon as={FaParking} mr={1} />
@@ -381,7 +303,7 @@ export default function Parking() {
                                     <StatLabel>Available Now</StatLabel>
                                     <StatNumber color="green.500">{stats.available}</StatNumber>
                                     <StatHelpText>
-                                        <StatArrow type="increase" />
+                                        <Icon as={FaCar} mr={1} />
                                         Ready to use
                                     </StatHelpText>
                                 </Stat>
@@ -405,514 +327,380 @@ export default function Parking() {
                             <CardBody>
                                 <Stat>
                                     <StatLabel>Occupancy Rate</StatLabel>
-                                    <StatNumber color="purple.500">{Math.round((stats.occupied / stats.total) * 100)}%</StatNumber>
+                                    <StatNumber color="purple.500">
+                                        {stats.total > 0 ? Math.round((stats.occupied / stats.total) * 100) : 0}%
+                                    </StatNumber>
                                     <StatHelpText>
-                                        <Icon as={FiUsers} mr={1} />
+                                        <Icon as={FiMapPin} mr={1} />
                                         Campus average
                                     </StatHelpText>
                                 </Stat>
                             </CardBody>
                         </Card>
                     </SimpleGrid>
+                </Box>
 
-                    {/* Filters and Search */}
-                    <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" mb={6}>
-                        <CardBody>
-                            <HStack spacing={4} wrap="wrap">
+                {/* Controls */}
+                <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" mb={6}>
+                    <CardBody>
+                        <HStack spacing={4} wrap="wrap" justify="space-between">
+                            <HStack spacing={4}>
                                 <HStack>
                                     <Icon as={FiFilter} color="gray.500" />
-                                    <Text fontSize="sm" fontWeight="medium">
-                                        Filters:
-                                    </Text>
+                                    <Text fontSize="sm" fontWeight="medium">Zone:</Text>
                                 </HStack>
+                                <Select
+                                    value={selectedZone}
+                                    onChange={(e) => setSelectedZone(e.target.value)}
+                                    maxW="200px"
+                                    size="sm"
+                                    placeholder="All Zones"
+                                >
+                                    {availableZones.map(zone => (
+                                        <option key={zone} value={zone}>
+                                            {parkingData[zone]?.name || zone}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </HStack>
 
-                                <FormControl maxW="200px">
-                                    <Select size="sm" value={filterZone} onChange={(e) => setFilterZone(e.target.value)}>
-                                        <option value="all">All Zones</option>
-                                        <option value="academic">Academic Block</option>
-                                        <option value="library">Library Block</option>
-                                        <option value="sports">Sports & Recreation</option>
-                                        <option value="residential">Residential Area</option>
-                                        <option value="main">Main Entrance</option>
-                                    </Select>
-                                </FormControl>
-
-                                <FormControl maxW="150px">
-                                    <Select size="sm" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                                        <option value="all">All Status</option>
-                                        <option value="available">Available</option>
-                                        <option value="limited">Limited</option>
-                                        <option value="full">Full</option>
-                                    </Select>
-                                </FormControl>
-
-                                <HStack>
-                                    <Icon as={FiSearch} color="gray.500" />
+                            <HStack spacing={4}>
+                                <InputGroup maxW="250px" size="sm">
+                                    <InputLeftElement>
+                                        <Icon as={FiSearch} color="gray.400" />
+                                    </InputLeftElement>
                                     <Input
-                                        placeholder="Search parking areas..."
-                                        size="sm"
-                                        maxW="250px"
+                                        placeholder="Search by slot number, zone..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
-                                </HStack>
+                                </InputGroup>
+
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    leftIcon={<FiRefreshCw />}
+                                    onClick={handleRefresh}
+                                    isLoading={loading.parkingLots}
+                                >
+                                    Refresh
+                                </Button>
                             </HStack>
-                        </CardBody>
-                    </Card>
-                </Box>
+                        </HStack>
+                    </CardBody>
+                </Card>
 
-                {/* Parking Areas Grid */}
-                <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
-                    {filteredParkingData.map((parking) => (
-                        <Card
-                            key={parking.id}
-                            bg={bgColor}
-                            borderColor={borderColor}
-                            borderWidth="1px"
-                            _hover={{ shadow: "lg", transform: "translateY(-2px)" }}
-                            transition="all 0.2s"
-                        >
-                            <CardHeader pb={3}>
-                                <HStack justify="space-between" align="start">
-                                    <VStack align="start" spacing={1}>
-                                        <HStack>
-                                            <Icon as={getStatusIcon(parking.status)} color={`${getStatusColor(parking.status)}.500`} />
-                                            <Text fontSize="lg" fontWeight="bold">
-                                                {parking.name}
-                                            </Text>
-                                        </HStack>
-                                        <HStack spacing={4}>
-                                            <HStack spacing={1}>
-                                                <Icon as={FiMapPin} size="sm" color="gray.500" />
-                                                <Text fontSize="sm" color="gray.600">
-                                                    {parking.zone}
-                                                </Text>
-                                            </HStack>
-                                            <HStack spacing={1}>
-                                                <Icon as={FiNavigation} size="sm" color="gray.500" />
-                                                <Text fontSize="sm" color="gray.600">
-                                                    {parking.distance} • {parking.walkTime}
-                                                </Text>
-                                            </HStack>
-                                        </HStack>
-                                    </VStack>
-
-                                    <Badge colorScheme={getStatusColor(parking.status)} variant="solid" px={3} py={1} borderRadius="full">
-                                        {parking.status.toUpperCase()}
-                                    </Badge>
+                {/* Zone Information - Only show when a specific zone is selected */}
+                {selectedZone && parkingData[selectedZone] && (
+                    <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" mb={6}>
+                        <CardBody>
+                            <VStack align="start" spacing={3}>
+                                <HStack>
+                                    <Icon as={FiMapPin} color="blue.500" />
+                                    <Text fontSize="xl" fontWeight="bold">
+                                        {parkingData[selectedZone].name}
+                                    </Text>
                                 </HStack>
-                            </CardHeader>
-
-                            <CardBody pt={0}>
-                                <VStack spacing={4} align="stretch">
-                                    {/* Availability Stats */}
-                                    <HStack justify="space-between">
-                                        <VStack align="start" spacing={0}>
-                                            <Text fontSize="2xl" fontWeight="bold" color="green.500">
-                                                {parking.availableSpots}
-                                            </Text>
-                                            <Text fontSize="sm" color="gray.600">
-                                                Available
-                                            </Text>
-                                        </VStack>
-
-                                        <VStack align="center" spacing={0}>
-                                            <Text fontSize="lg" fontWeight="semibold">
-                                                {parking.totalSpots}
-                                            </Text>
-                                            <Text fontSize="sm" color="gray.600">
-                                                Total Spots
-                                            </Text>
-                                        </VStack>
-
-                                        <VStack align="end" spacing={0}>
-                                            <Text fontSize="2xl" fontWeight="bold" color="orange.500">
-                                                {parking.occupiedSpots}
-                                            </Text>
-                                            <Text fontSize="sm" color="gray.600">
-                                                Occupied
-                                            </Text>
-                                        </VStack>
+                                <Text color="gray.600">
+                                    {parkingData[selectedZone].description}
+                                </Text>
+                                <HStack spacing={6} fontSize="sm">
+                                    <HStack>
+                                        <Text fontWeight="medium">Total Slots:</Text>
+                                        <Badge colorScheme="blue" variant="subtle">
+                                            {parkingData[selectedZone].totalSlots}
+                                        </Badge>
                                     </HStack>
-
-                                    {/* Occupancy Progress Bar */}
-                                    <Box>
-                                        <HStack justify="space-between" mb={2}>
-                                            <Text fontSize="sm" fontWeight="medium">
-                                                Occupancy
-                                            </Text>
-                                            <Text fontSize="sm" color="gray.600">
-                                                {getOccupancyPercentage(parking)}%
-                                            </Text>
-                                        </HStack>
-                                        <Progress
-                                            value={getOccupancyPercentage(parking)}
-                                            colorScheme={
-                                                getOccupancyPercentage(parking) > 80
-                                                    ? "red"
-                                                    : getOccupancyPercentage(parking) > 60
-                                                        ? "yellow"
-                                                        : "green"
-                                            }
-                                            size="lg"
-                                            borderRadius="md"
-                                        />
-                                    </Box>
-
-                                    {/* Floor Breakdown */}
-                                    {parking.floors.length > 1 && (
-                                        <Box>
-                                            <Text fontSize="sm" fontWeight="medium" mb={2}>
-                                                Floor Breakdown
-                                            </Text>
-                                            <VStack spacing={2}>
-                                                {parking.floors.map((floor, index) => (
-                                                    <HStack key={index} justify="space-between" w="full">
-                                                        <Text fontSize="sm">{floor.floor}</Text>
-                                                        <HStack spacing={2}>
-                                                            <Badge colorScheme="green" variant="subtle">
-                                                                {floor.available} free
-                                                            </Badge>
-                                                            <Badge colorScheme="gray" variant="subtle">
-                                                                {floor.total} total
-                                                            </Badge>
-                                                        </HStack>
-                                                    </HStack>
-                                                ))}
-                                            </VStack>
-                                        </Box>
-                                    )}
-
-                                    {/* Features */}
-                                    <Box>
-                                        <Text fontSize="sm" fontWeight="medium" mb={2}>
-                                            Features
-                                        </Text>
-                                        <HStack wrap="wrap" spacing={2}>
-                                            {parking.features.map((feature, index) => (
-                                                <Badge key={index} variant="outline" colorScheme="blue">
-                                                    {feature}
-                                                </Badge>
-                                            ))}
-                                            {parking.accessibility && (
-                                                <Badge variant="outline" colorScheme="purple">
-                                                    Accessible
-                                                </Badge>
-                                            )}
-                                        </HStack>
-                                    </Box>
-
-                                    {/* Pricing and Info */}
-                                    <HStack justify="space-between" fontSize="sm" color="gray.600">
-                                        <Text>${parking.hourlyRate}/hour</Text>
-                                        <Text>Max: {parking.maxStay}</Text>
-                                        <Text>Peak: {parking.peakHours}</Text>
+                                    <HStack>
+                                        <Text fontWeight="medium">Available:</Text>
+                                        <Badge colorScheme="green" variant="subtle">
+                                            {parkingData[selectedZone].availableSlots}
+                                        </Badge>
                                     </HStack>
-
-                                    <Divider />
-
-                                    {/* Action Buttons */}
-                                    <HStack spacing={2}>
-                                        <Button
-                                            size="sm"
-                                            colorScheme="blue"
-                                            variant="solid"
-                                            flex={1}
-                                            onClick={() => {
-                                                setSelectedParking(parking)
-                                                onDetailsOpen()
-                                            }}
-                                        >
-                                            View Details
-                                        </Button>
-
-                                        {parking.status === "full" && (
-                                            <Button
-                                                size="sm"
-                                                colorScheme="orange"
-                                                variant="outline"
-                                                leftIcon={<FiBell />}
-                                                onClick={() => {
-                                                    setSelectedParking(parking)
-                                                    onNotifyOpen()
-                                                }}
-                                            >
-                                                Notify Me
-                                            </Button>
-                                        )}
-
-                                        <Button
-                                            size="sm"
-                                            colorScheme="red"
-                                            variant="ghost"
-                                            leftIcon={<FiAlertCircle />}
-                                            onClick={() => {
-                                                setSelectedParking(parking)
-                                                onReportOpen()
-                                            }}
-                                        >
-                                            Report Issue
-                                        </Button>
+                                    <HStack>
+                                        <Text fontWeight="medium">Occupied:</Text>
+                                        <Badge colorScheme="orange" variant="subtle">
+                                            {parkingData[selectedZone].totalSlots - parkingData[selectedZone].availableSlots}
+                                        </Badge>
                                     </HStack>
-
-                                    {/* Last Updated */}
-                                    <HStack justify="center" spacing={1}>
-                                        <Icon as={FiClock} size="sm" color="gray.400" />
-                                        <Text fontSize="xs" color="gray.500">
-                                            Updated {parking.lastUpdated.toLocaleTimeString()}
-                                        </Text>
-                                    </HStack>
-                                </VStack>
-                            </CardBody>
-                        </Card>
-                    ))}
-                </SimpleGrid>
-
-                {/* No Results Message */}
-                {filteredParkingData.length === 0 && (
-                    <Alert status="info">
-                        <AlertIcon />
-                        <AlertTitle>No parking areas found!</AlertTitle>
-                        <AlertDescription>Try adjusting your filters or search terms to find parking areas.</AlertDescription>
-                    </Alert>
-                )}
-
-                {/* Active Notifications */}
-                {notifications.length > 0 && (
-                    <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-                        <CardHeader>
-                            <HStack>
-                                <Icon as={FiBell} color="orange.500" />
-                                <Text fontWeight="bold">Active Notifications</Text>
-                            </HStack>
-                        </CardHeader>
-                        <CardBody pt={0}>
-                            <VStack spacing={2} align="stretch">
-                                {notifications.map((notification) => (
-                                    <Alert key={notification.id} status="info" borderRadius="md">
-                                        <AlertIcon />
-                                        <Box flex="1">
-                                            <AlertTitle fontSize="sm">Watching {notification.parkingName}</AlertTitle>
-                                            <AlertDescription fontSize="xs">You'll be notified when spots become available</AlertDescription>
-                                        </Box>
-                                        <Button
-                                            size="xs"
-                                            variant="ghost"
-                                            onClick={() => setNotifications((prev) => prev.filter((n) => n.id !== notification.id))}
-                                        >
-                                            Cancel
-                                        </Button>
-                                    </Alert>
-                                ))}
+                                </HStack>
                             </VStack>
                         </CardBody>
                     </Card>
                 )}
+
+                {/* Parking Slots Grid */}
+                <Box>
+                    <Text fontSize="lg" fontWeight="semibold" mb={4}>
+                        {selectedZone ? `Available Slots in ${selectedZone}` : 'All Available Parking Slots'}
+                    </Text>
+
+                    {selectedZone ? (
+                        // Show slots for specific zone
+                        <SimpleGrid
+                            columns={{ base: 2, lg: 6 }}
+                            spacing={{ base: 1, lg: 3 }}
+                            mb={6}
+                        >
+                            {filteredSlots.map((slot) => (
+                                <Card
+                                    key={slot.id}
+                                    bg={slot.active ? "green.50" : "gray.100"}
+                                    borderColor={slot.active ? "green.200" : "gray.300"}
+                                    borderWidth="2px"
+                                    _hover={{
+                                        shadow: "lg",
+                                        transform: "translateY(-2px)",
+                                        cursor: "pointer"
+                                    }}
+                                    transition="all 0.2s"
+                                    onClick={() => handleSlotClick(slot)}
+                                >
+                                    <CardBody p={3} textAlign="center">
+                                        <VStack spacing={2}>
+                                            <Text
+                                                fontSize="xl"
+                                                fontWeight="bold"
+                                                color={slot.active ? "green.700" : "gray.500"}
+                                            >
+                                                {slot.slotNumber}
+                                            </Text>
+
+                                            <Badge
+                                                colorScheme={slot.active ? "green" : "red"}
+                                                variant="solid"
+                                                size="sm"
+                                                borderRadius="full"
+                                                px={2}
+                                            >
+                                                {slot.active ? "🟢 Available" : "🔴 Occupied"}
+                                            </Badge>
+
+                                            <Text
+                                                fontSize="xs"
+                                                color="gray.500"
+                                                fontWeight="medium"
+                                            >
+                                                Zone {slot.zone}
+                                            </Text>
+                                        </VStack>
+                                    </CardBody>
+                                </Card>
+                            ))}
+                        </SimpleGrid>
+                    ) : (
+                        // Show all zones separated into segments
+                        <VStack spacing={6} align="stretch">
+                            {availableZones.map((zone) => {
+                                const zoneSlots = parkingData[zone]?.slots || []
+                                const filteredZoneSlots = searchTerm
+                                    ? zoneSlots.filter(slot =>
+                                        slot.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        slot.slotNumber.toString().includes(searchTerm) ||
+                                        slot.zone.toLowerCase().includes(searchTerm.toLowerCase())
+                                    )
+                                    : zoneSlots
+
+                                if (filteredZoneSlots.length === 0) return null
+
+                                return (
+                                    <Card key={zone} bg={bgColor} borderColor={borderColor} borderWidth="1px">
+                                        <CardBody p={{ base: 2, lg: 5 }}>
+                                            <VStack align="start" spacing={4}>
+                                                {/* Zone Header */}
+                                                <HStack justify="space-between" w="100%">
+                                                    <HStack>
+                                                        <Icon as={FiMapPin} color="blue.500" />
+                                                        <Text fontSize="lg" fontWeight="bold">
+                                                            {parkingData[zone]?.name || zone}
+                                                        </Text>
+                                                    </HStack>
+                                                    <HStack spacing={4} fontSize="sm">
+                                                        <HStack>
+                                                            <Text fontWeight="medium">Total:</Text>
+                                                            <Badge colorScheme="blue" variant="subtle">
+                                                                {parkingData[zone]?.totalSlots || 0}
+                                                            </Badge>
+                                                        </HStack>
+                                                        <HStack>
+                                                            <Text fontWeight="medium">Available:</Text>
+                                                            <Badge colorScheme="green" variant="subtle">
+                                                                {parkingData[zone]?.availableSlots || 0}
+                                                            </Badge>
+                                                        </HStack>
+                                                        <HStack>
+                                                            <Text fontWeight="medium">Occupied:</Text>
+                                                            <Badge colorScheme="orange" variant="subtle">
+                                                                {(parkingData[zone]?.totalSlots || 0) - (parkingData[zone]?.availableSlots || 0)}
+                                                            </Badge>
+                                                        </HStack>
+                                                    </HStack>
+                                                </HStack>
+
+                                                {/* Zone Description */}
+                                                <Text color="gray.600" fontSize="sm">
+                                                    {parkingData[zone]?.description || `Parking area in ${zone}`}
+                                                </Text>
+
+                                                {/* Slots Grid for this Zone */}
+                                                <SimpleGrid
+                                                    columns={{ base: 2, lg: 9 }}
+                                                    spacing={{ base: 1, lg: 3 }}
+                                                    w="100%"
+                                                >
+                                                    {filteredZoneSlots.map((slot) => (
+                                                        <Card
+                                                            key={slot.id}
+                                                            bg={slot.active ? "green.50" : "gray.100"}
+                                                            borderColor={slot.active ? "green.200" : "gray.300"}
+                                                            borderWidth="2px"
+                                                            _hover={{
+                                                                shadow: "lg",
+                                                                transform: "translateY(-2px)",
+                                                                cursor: "pointer"
+                                                            }}
+                                                            transition="all 0.2s"
+                                                            onClick={() => handleSlotClick(slot)}
+                                                        >
+                                                            <CardBody p={3} textAlign="center">
+                                                                <VStack spacing={2}>
+                                                                    <Text
+                                                                        fontSize="xl"
+                                                                        fontWeight="bold"
+                                                                        color={slot.active ? "green.700" : "gray.500"}
+                                                                    >
+                                                                        {slot.slotNumber}
+                                                                    </Text>
+
+                                                                    <Badge
+                                                                        colorScheme={slot.active ? "green" : "red"}
+                                                                        variant="solid"
+                                                                        size="sm"
+                                                                        borderRadius="full"
+                                                                        px={2}
+                                                                    >
+                                                                        {slot.active ? "🟢 Available" : "🔴 Occupied"}
+                                                                    </Badge>
+
+                                                                    <Text
+                                                                        fontSize="xs"
+                                                                        color="gray.500"
+                                                                        fontWeight="medium"
+                                                                    >
+                                                                        Zone {slot.zone}
+                                                                    </Text>
+                                                                </VStack>
+                                                            </CardBody>
+                                                        </Card>
+                                                    ))}
+                                                </SimpleGrid>
+                                            </VStack>
+                                        </CardBody>
+                                    </Card>
+                                )
+                            })}
+                        </VStack>
+                    )}
+
+                    {/* No Results Message */}
+                    {filteredSlots.length === 0 && (
+                        <Alert status="info" borderRadius="md">
+                            <AlertIcon />
+                            <Box flex="1">
+                                <AlertTitle>No slots found!</AlertTitle>
+                                <AlertDescription>
+                                    {selectedZone
+                                        ? `No slots found in ${selectedZone}. Try selecting a different zone or clearing the zone filter.`
+                                        : "No slots found matching your search criteria. Try adjusting your search terms or zone filter."
+                                    }
+                                </AlertDescription>
+                            </Box>
+                        </Alert>
+                    )}
+                </Box>
             </VStack>
 
-            {/* Parking Details Modal */}
-            <Modal isOpen={isDetailsOpen} onClose={onDetailsClose} size="xl">
+            {/* Slot Details Modal */}
+            <Modal isOpen={isSlotDetailsOpen} onClose={onSlotDetailsClose} size="md" >
                 <ModalOverlay />
                 <ModalContent>
                     <ModalHeader>
                         <HStack>
                             <Icon as={FaParking} color="blue.500" />
-                            <Text>{selectedParking?.name}</Text>
+                            <Text>Slot {selectedSlot?.slotNumber} Details</Text>
                         </HStack>
                     </ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        {selectedParking && (
+                        {selectedSlot && (
                             <VStack spacing={4} align="stretch">
+                                <Box textAlign="center" py={4}>
+                                    <Text fontSize="4xl" fontWeight="bold" color={selectedSlot.active ? "green.500" : "red.500"}>
+                                        {selectedSlot.slotNumber}
+                                    </Text>
+                                    <Badge
+                                        colorScheme={selectedSlot.active ? "green" : "red"}
+                                        variant="solid"
+                                        size="lg"
+                                        borderRadius="full"
+                                        px={4}
+                                        py={2}
+                                        mt={2}
+                                    >
+                                        {selectedSlot.active ? "🟢 Available" : "🔴 Occupied"}
+                                    </Badge>
+                                </Box>
+
+                                <Divider />
+
                                 <SimpleGrid columns={2} spacing={4}>
-                                    <Stat>
-                                        <StatLabel>Available Spots</StatLabel>
-                                        <StatNumber color="green.500">{selectedParking.availableSpots}</StatNumber>
-                                    </Stat>
-                                    <Stat>
-                                        <StatLabel>Total Capacity</StatLabel>
-                                        <StatNumber>{selectedParking.totalSpots}</StatNumber>
-                                    </Stat>
+                                    <Box>
+                                        <Text fontSize="sm" color="gray.500" fontWeight="medium">
+                                            Zone
+                                        </Text>
+                                        <Text fontSize="md" fontWeight="semibold">
+                                            {selectedSlot.zone}
+                                        </Text>
+                                    </Box>
+                                    <Box>
+                                        <Text fontSize="sm" color="gray.500" fontWeight="medium">
+                                            Slot ID
+                                        </Text>
+                                        <Text fontSize="md" fontWeight="semibold" fontFamily="mono">
+                                            {selectedSlot.id}
+                                        </Text>
+                                    </Box>
                                 </SimpleGrid>
 
                                 <Box>
-                                    <Text fontWeight="bold" mb={2}>
-                                        Location & Access
+                                    <Text fontSize="sm" color="gray.500" fontWeight="medium">
+                                        Last Updated
                                     </Text>
-                                    <VStack align="start" spacing={1}>
-                                        <Text fontSize="sm">Zone: {selectedParking.zone}</Text>
-                                        <Text fontSize="sm">Distance: {selectedParking.distance}</Text>
-                                        <Text fontSize="sm">Walking Time: {selectedParking.walkTime}</Text>
-                                    </VStack>
+                                    <Text fontSize="md" fontWeight="semibold">
+                                        {selectedSlot.lastUpdated.toLocaleTimeString()}
+                                    </Text>
                                 </Box>
 
                                 <Box>
-                                    <Text fontWeight="bold" mb={2}>
-                                        Pricing & Rules
+                                    <Text fontSize="sm" color="gray.500" fontWeight="medium">
+                                        Status
                                     </Text>
-                                    <VStack align="start" spacing={1}>
-                                        <Text fontSize="sm">Hourly Rate: ${selectedParking.hourlyRate}</Text>
-                                        <Text fontSize="sm">Maximum Stay: {selectedParking.maxStay}</Text>
-                                        <Text fontSize="sm">Peak Hours: {selectedParking.peakHours}</Text>
-                                    </VStack>
-                                </Box>
-
-                                <Box>
-                                    <Text fontWeight="bold" mb={2}>
-                                        Vehicle Types Allowed
+                                    <Text fontSize="md" fontWeight="semibold" color={selectedSlot.active ? "green.600" : "red.600"}>
+                                        {selectedSlot.active ? "Available for parking" : "Currently occupied"}
                                     </Text>
-                                    <HStack wrap="wrap" spacing={2}>
-                                        {selectedParking.vehicleTypes.map((type, index) => (
-                                            <Badge key={index} colorScheme="blue" variant="outline">
-                                                {type}
-                                            </Badge>
-                                        ))}
-                                    </HStack>
                                 </Box>
-
-                                <Box>
-                                    <Text fontWeight="bold" mb={2}>
-                                        Features & Amenities
-                                    </Text>
-                                    <HStack wrap="wrap" spacing={2}>
-                                        {selectedParking.features.map((feature, index) => (
-                                            <Badge key={index} colorScheme="green" variant="outline">
-                                                {feature}
-                                            </Badge>
-                                        ))}
-                                    </HStack>
-                                </Box>
-
-                                {selectedParking.floors.length > 1 && (
-                                    <Box>
-                                        <Text fontWeight="bold" mb={2}>
-                                            Floor Details
-                                        </Text>
-                                        <VStack spacing={2}>
-                                            {selectedParking.floors.map((floor, index) => (
-                                                <HStack key={index} justify="space-between" w="full" p={2} bg="gray.50" borderRadius="md">
-                                                    <Text fontWeight="medium">{floor.floor}</Text>
-                                                    <HStack spacing={4}>
-                                                        <Text fontSize="sm" color="green.600">
-                                                            {floor.available} available
-                                                        </Text>
-                                                        <Text fontSize="sm" color="gray.600">
-                                                            {floor.occupied} occupied
-                                                        </Text>
-                                                        <Text fontSize="sm" color="blue.600">
-                                                            {floor.total} total
-                                                        </Text>
-                                                    </HStack>
-                                                </HStack>
-                                            ))}
-                                        </VStack>
-                                    </Box>
-                                )}
                             </VStack>
                         )}
                     </ModalBody>
                     <ModalFooter>
-                        <Button colorScheme="blue" mr={3} onClick={onDetailsClose}>
+                        <Button colorScheme="blue" mr={3} onClick={onSlotDetailsClose}>
                             Close
                         </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-
-            {/* Notification Setup Modal */}
-            <Modal isOpen={isNotifyOpen} onClose={onNotifyClose}>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Set Parking Notification</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <VStack spacing={4} align="stretch">
-                            <Text>
-                                Get notified when <strong>{selectedParking?.name}</strong> has available parking spots.
-                            </Text>
-
-                            <FormControl>
-                                <FormLabel>Notify me when at least</FormLabel>
-                                <Select defaultValue="5">
-                                    <option value="1">1 spot is available</option>
-                                    <option value="3">3 spots are available</option>
-                                    <option value="5">5 spots are available</option>
-                                    <option value="10">10 spots are available</option>
-                                </Select>
-                            </FormControl>
-
-                            <FormControl>
-                                <FormLabel>Notification method</FormLabel>
-                                <VStack align="start" spacing={2}>
-                                    <HStack>
-                                        <Switch defaultChecked />
-                                        <Text fontSize="sm">Push notification</Text>
-                                    </HStack>
-                                    <HStack>
-                                        <Switch />
-                                        <Text fontSize="sm">Email notification</Text>
-                                    </HStack>
-                                    <HStack>
-                                        <Switch />
-                                        <Text fontSize="sm">SMS notification</Text>
-                                    </HStack>
-                                </VStack>
-                            </FormControl>
-                        </VStack>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button variant="ghost" mr={3} onClick={onNotifyClose}>
-                            Cancel
-                        </Button>
-                        <Button colorScheme="blue" onClick={() => handleNotifyWhenAvailable(selectedParking?.id)}>
-                            Set Notification
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-
-            {/* Report Issue Modal */}
-            <Modal isOpen={isReportOpen} onClose={onReportClose}>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Report Parking Issue</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <VStack spacing={4} align="stretch">
-                            <Text>
-                                Report an issue with <strong>{selectedParking?.name}</strong>
-                            </Text>
-
-                            <FormControl>
-                                <FormLabel>Issue Type</FormLabel>
-                                <Select placeholder="Select issue type">
-                                    <option value="incorrect-count">Incorrect spot count</option>
-                                    <option value="blocked-access">Blocked access</option>
-                                    <option value="lighting">Poor lighting</option>
-                                    <option value="security">Security concern</option>
-                                    <option value="maintenance">Maintenance needed</option>
-                                    <option value="other">Other</option>
-                                </Select>
-                            </FormControl>
-
-                            <FormControl>
-                                <FormLabel>Description</FormLabel>
-                                <Textarea placeholder="Please describe the issue in detail..." rows={4} />
-                            </FormControl>
-
-                            <FormControl>
-                                <FormLabel>Your Contact (Optional)</FormLabel>
-                                <Input placeholder="Email or phone number for follow-up" />
-                            </FormControl>
-                        </VStack>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button variant="ghost" mr={3} onClick={onReportClose}>
-                            Cancel
-                        </Button>
-                        <Button colorScheme="red" onClick={handleReportIssue}>
-                            Submit Report
-                        </Button>
+                        {selectedSlot?.active && (
+                            <Button colorScheme="green" leftIcon={<FiNavigation />}>
+                                Navigate to Slot
+                            </Button>
+                        )}
                     </ModalFooter>
                 </ModalContent>
             </Modal>

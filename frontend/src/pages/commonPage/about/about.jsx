@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: about.jsx
+// Description: About page component providing company information, mission statement, and team details for CampusHub
+// First Written on: June 30, 2024
+// Edited on: Friday, July 25, 2024
+
 import {
   Box,
   Heading,

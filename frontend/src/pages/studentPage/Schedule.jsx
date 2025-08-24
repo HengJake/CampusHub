@@ -141,6 +141,8 @@ export default function Schedule() {
     const [filterDay, setFilterDay] = useState("all")
     const [viewMode, setViewMode] = useState("table")
     const [lastRefresh, setLastRefresh] = useState(new Date())
+    const [selectedSemester, setSelectedSemester] = useState("")
+    const [selectedYear, setSelectedYear] = useState("")
 
     const bgColor = useColorModeValue("white", "gray.800")
     const borderColor = useColorModeValue("gray.200", "gray.600")
@@ -154,11 +156,13 @@ export default function Schedule() {
         fetchModules,
         fetchLecturers,
         fetchIntakeCourses,
+        fetchSemesters,
         classSchedules,
         rooms,
         modules,
         lecturers,
         intakeCourses,
+        semesters,
         loading,
         errors
     } = useAcademicStore()
@@ -186,7 +190,8 @@ export default function Schedule() {
                             fetchRooms(),
                             fetchModules(),
                             fetchLecturers(),
-                            fetchIntakeCourses()
+                            fetchIntakeCourses(),
+                            fetchSemesters()
                         ]);
                     }
                 } else {
@@ -214,13 +219,13 @@ export default function Schedule() {
         };
 
         initializeAndFetch();
-    }, [initializeAuth, fetchClassSchedulesByStudentId, fetchRooms, fetchModules, fetchLecturers, fetchIntakeCourses, toast]);
+    }, [initializeAuth, fetchClassSchedulesByStudentId, fetchRooms, fetchModules, fetchLecturers, fetchIntakeCourses, fetchSemesters, toast]);
 
     // Use useMemo to transform data when raw data changes
     const scheduleData = useMemo(() => {
         // Add safety checks for all required data
         if (!classSchedules || classSchedules.length === 0 ||
-            !rooms || !modules || !lecturers || !intakeCourses) {
+            !rooms || !modules || !lecturers || !intakeCourses || !semesters) {
             return {
                 classSchedules: [],
                 studentProfile: {
@@ -250,14 +255,38 @@ export default function Schedule() {
         const userIntakeCourseId = currentUser?.student?.intakeCourseId;
         const userIntakeCourse = intakeCourses.find(ic => ic._id === userIntakeCourseId);
 
+        // Filter class schedules by selected semester/year if specified
+        let filteredClassSchedules = classSchedules;
+        if (selectedSemester && selectedYear) {
+            filteredClassSchedules = classSchedules.filter(schedule => {
+                if (!schedule.semesterId) return false;
+
+                const semester = semesters.find(s => s._id === schedule.semesterId._id);
+                if (!semester) return false;
+
+                return semester.semesterNumber.toString() === selectedSemester &&
+                    semester.year.toString() === selectedYear;
+            });
+        }
+
         // Transform the data
         const transformedClassSchedules = transformClassScheduleData(
-            classSchedules,
+            filteredClassSchedules,
             rooms,
             modules,
             lecturers,
             userIntakeCourse
         );
+
+        // Get current semester/year info
+        let semesterInfo = "Current Semester";
+        if (selectedSemester && selectedYear) {
+            semesterInfo = `Year ${selectedYear} Semester ${selectedSemester}`;
+        } else if (selectedSemester) {
+            semesterInfo = `Semester ${selectedSemester}`;
+        } else if (selectedYear) {
+            semesterInfo = `Year ${selectedYear}`;
+        }
 
         return {
             classSchedules: transformedClassSchedules,
@@ -265,15 +294,15 @@ export default function Schedule() {
                 name: currentUser?.name || "Student",
                 studentId: currentUser?.student?._id || "N/A",
                 intakeCourse: userIntakeCourse ? `${userIntakeCourse.intakeId?.intakeName || 'N/A'} - ${userIntakeCourse.courseId?.courseName || 'N/A'}` : "N/A",
-                semester: "Current Semester",
+                semester: semesterInfo,
                 advisor: "Academic Advisor",
             }
         };
-    }, [classSchedules, rooms, modules, lecturers, intakeCourses, currentUser?.name, currentUser?.user?.student?.studentId, currentUser?.user?.student?.intakeCourseId]);
+    }, [classSchedules, rooms, modules, lecturers, intakeCourses, semesters, selectedSemester, selectedYear, currentUser?.name, currentUser?.user?.student?.studentId, currentUser?.user?.student?.intakeCourseId]);
 
     const handleRefresh = async () => {
         try {
-            if (!currentUser?.studentId) {
+            if (!currentUser?.student._id) {
                 toast({
                     title: "Refresh Failed",
                     description: "No student ID available",
@@ -285,11 +314,12 @@ export default function Schedule() {
             }
 
             await Promise.all([
-                fetchClassSchedulesByStudentId(currentUser.studentId),
+                fetchClassSchedulesByStudentId(currentUser.student._id),
                 fetchRooms(),
                 fetchModules(),
                 fetchLecturers(),
-                fetchIntakeCourses()
+                fetchIntakeCourses(),
+                fetchSemesters()
             ]);
 
             setLastRefresh(new Date());
@@ -378,6 +408,47 @@ export default function Schedule() {
 
     const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
+    // Get available semesters and years from the data
+    const availableSemesters = useMemo(() => {
+        if (!semesters || !classSchedules) return [];
+
+        const semesterNumbers = [...new Set(
+            classSchedules
+                .filter(schedule => schedule.semesterId)
+                .map(schedule => {
+                    const semester = semesters.find(s => s._id === schedule.semesterId._id);
+                    return semester?.semesterNumber;
+                })
+                .filter(Boolean)
+        )].sort((a, b) => a - b);
+
+        return semesterNumbers;
+    }, [semesters, classSchedules]);
+
+    const availableYears = useMemo(() => {
+        if (!semesters || !classSchedules) return [];
+
+        const years = [...new Set(
+            classSchedules
+                .filter(schedule => schedule.semesterId)
+                .map(schedule => {
+                    const semester = semesters.find(s => s._id === schedule.semesterId._id);
+                    return semester?.year;
+                })
+                .filter(Boolean)
+        )].sort((a, b) => a - b);
+
+        return years;
+    }, [semesters, classSchedules]);
+
+    const handleResetFilters = () => {
+        setSearchTerm("");
+        setFilterType("all");
+        setFilterDay("all");
+        setSelectedSemester("");
+        setSelectedYear("");
+    };
+
     // Show loading state
     if (isInitializing || loading.classSchedules || loading.rooms) {
         return (
@@ -452,6 +523,51 @@ export default function Schedule() {
                         />
                     </HStack>
                 </Flex>
+
+                {/* Filter Summary */}
+                {(selectedSemester || selectedYear || searchTerm || filterType !== "all" || filterDay !== "all") && (
+                    <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
+                        <CardBody>
+                            <HStack justify="space-between" align="center">
+                                <VStack align="start" spacing={1}>
+                                    <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                                        Active Filters:
+                                    </Text>
+                                    <HStack spacing={2} wrap="wrap">
+                                        {selectedSemester && (
+                                            <Badge colorScheme="blue" variant="subtle">
+                                                Semester {selectedSemester}
+                                            </Badge>
+                                        )}
+                                        {selectedYear && (
+                                            <Badge colorScheme="green" variant="subtle">
+                                                Year {selectedYear}
+                                            </Badge>
+                                        )}
+                                        {searchTerm && (
+                                            <Badge colorScheme="purple" variant="subtle">
+                                                Search: "{searchTerm}"
+                                            </Badge>
+                                        )}
+                                        {filterType !== "all" && (
+                                            <Badge colorScheme="orange" variant="subtle">
+                                                Type: {filterType}
+                                            </Badge>
+                                        )}
+                                        {filterDay !== "all" && (
+                                            <Badge colorScheme="teal" variant="subtle">
+                                                Day: {filterDay}
+                                            </Badge>
+                                        )}
+                                    </HStack>
+                                </VStack>
+                                <Text fontSize="sm" color="gray.600">
+                                    {filteredSchedule.length} course{filteredSchedule.length !== 1 ? 's' : ''} found
+                                </Text>
+                            </HStack>
+                        </CardBody>
+                    </Card>
+                )}
 
                 {/* Quick Stats */}
                 <Grid templateColumns={{ base: "1fr", md: "repeat(1, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
@@ -539,9 +655,48 @@ export default function Schedule() {
                                             </option>
                                         ))}
                                     </Select>
+
+                                    <Select
+                                        maxW={{ base: "100%", sm: "150px" }}
+                                        minW="120px"
+                                        value={selectedSemester}
+                                        onChange={(e) => setSelectedSemester(e.target.value)}
+                                        placeholder="Semester"
+                                    >
+                                        <option value="">All Semesters</option>
+                                        {availableSemesters.map(semester => (
+                                            <option key={semester} value={semester}>
+                                                Semester {semester}
+                                            </option>
+                                        ))}
+                                    </Select>
+
+                                    <Select
+                                        maxW={{ base: "100%", sm: "150px" }}
+                                        minW="120px"
+                                        value={selectedYear}
+                                        onChange={(e) => setSelectedYear(e.target.value)}
+                                        placeholder="Year"
+                                    >
+                                        <option value="">All Years</option>
+                                        {availableYears.map(year => (
+                                            <option key={year} value={year}>
+                                                Year {year}
+                                            </option>
+                                        ))}
+                                    </Select>
                                 </HStack>
 
                                 <HStack flexShrink={0} gap={2}>
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={handleResetFilters}
+                                        colorScheme="gray"
+                                    >
+                                        Reset Filters
+                                    </Button>
+
                                     <HStack bg="gray.100" p={1} borderRadius="md" display={{ base: "none", lg: "flex" }}>
                                         <IconButton
                                             icon={<FiList />}
@@ -797,10 +952,10 @@ export default function Schedule() {
                 <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                     <CardBody>
                         <Text fontSize="lg" fontWeight="semibold" mb={4}>
-                            Course Information
+                            Academic Timeline
                         </Text>
 
-                        <Alert status="info" borderRadius="md" mb={4}>
+                        <Alert status="info" borderRadius="md" mb={6}>
                             <AlertIcon />
                             <Box>
                                 <AlertTitle>Academic Advisor:</AlertTitle>
@@ -813,38 +968,232 @@ export default function Schedule() {
                                 <Text color="gray.500">No courses found to display</Text>
                             </Center>
                         ) : (
-                            <Grid templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }} gap={4}>
-                                {filteredSchedule.slice(0, 4).map((course) => (
-                                    <Box key={course.id} p={4} bg="gray.50" borderRadius="md" borderWidth="1px">
-                                        <VStack align="stretch" spacing={3}>
-                                            <HStack justify="space-between">
-                                                <Text fontWeight="bold" noOfLines={1}>{course.courseCode}</Text>
-                                                <Badge colorScheme={course.color} variant="subtle" flexShrink={0}>
-                                                    {course.credits} Credits
-                                                </Badge>
-                                            </HStack>
-                                            <Text fontSize="sm" fontWeight="medium" noOfLines={2}>
-                                                {course.courseName}
-                                            </Text>
-                                            <Text fontSize="sm" color="gray.600" noOfLines={3}>
-                                                {course.description}
-                                            </Text>
-                                            <Divider />
-                                            <VStack align="stretch" spacing={1}>
-                                                <Text fontSize="xs" color="gray.500" noOfLines={2}>
-                                                    <strong>Prerequisites:</strong> {course.prerequisites}
-                                                </Text>
-                                                <Text fontSize="xs" color="gray.500" noOfLines={2}>
-                                                    <strong>Textbook:</strong> {course.textbook}
-                                                </Text>
-                                                <Text fontSize="xs" color="gray.500" noOfLines={2}>
-                                                    <strong>Instructor:</strong> {course.instructor}
-                                                </Text>
-                                            </VStack>
-                                        </VStack>
-                                    </Box>
-                                ))}
-                            </Grid>
+                            <Box>
+                                {/* Timeline Container */}
+                                <VStack spacing={0} align="stretch">
+                                    {/* Group modules by semester */}
+                                    {(() => {
+                                        // Group modules by semester
+                                        const modulesBySemester = {};
+                                        
+                                        // Get unique semesters from the schedule data
+                                        const uniqueSemesters = [...new Set(
+                                            filteredSchedule
+                                                .filter(course => course.semesterId)
+                                                .map(course => {
+                                                    const semester = semesters.find(s => s._id === course.semesterId);
+                                                    return semester ? `${semester.year}-${semester.semesterNumber}` : null;
+                                                })
+                                                .filter(Boolean)
+                                        )].sort();
+
+                                        // If no semester data, group by intake course
+                                        if (uniqueSemesters.length === 0) {
+                                            const intakeCourse = intakeCourses.find(ic => 
+                                                ic._id === currentUser?.student?.intakeCourseId
+                                            );
+                                            if (intakeCourse) {
+                                                modulesBySemester['Current Intake'] = filteredSchedule;
+                                            }
+                                        } else {
+                                            uniqueSemesters.forEach(semesterKey => {
+                                                const [year, semesterNum] = semesterKey.split('-');
+                                                const semesterModules = filteredSchedule.filter(course => {
+                                                    const semester = semesters.find(s => 
+                                                        s._id === course.semesterId
+                                                    );
+                                                    return semester && 
+                                                           semester.year.toString() === year && 
+                                                           semester.semesterNumber.toString() === semesterNum;
+                                                });
+                                                modulesBySemester[semesterKey] = semesterModules;
+                                            });
+                                        }
+
+                                        return Object.entries(modulesBySemester).map(([semesterKey, modules], semesterIndex) => {
+                                            const [year, semesterNum] = semesterKey.split('-');
+                                            const semesterLabel = year && semesterNum 
+                                                ? `Year ${year} - Semester ${semesterNum}`
+                                                : semesterKey;
+                                            
+                                            return (
+                                                <Box key={semesterKey} position="relative">
+                                                    {/* Semester Header */}
+                                                    <Box
+                                                        bg="blue.50"
+                                                        border="2px solid"
+                                                        borderColor="blue.200"
+                                                        borderRadius="lg"
+                                                        p={4}
+                                                        mb={4}
+                                                        position="relative"
+                                                        _before={{
+                                                            content: '""',
+                                                            position: 'absolute',
+                                                            left: { base: '50%', lg: '20px' },
+                                                            top: { base: '100%', lg: '50%' },
+                                                            transform: { base: 'translateX(-50%)', lg: 'translateY(-50%)' },
+                                                            width: { base: '2px', lg: '20px' },
+                                                            height: { base: '20px', lg: '2px' },
+                                                            bg: 'blue.200',
+                                                            display: semesterIndex === Object.keys(modulesBySemester).length - 1 ? 'none' : 'block'
+                                                        }}
+                                                    >
+                                                        <HStack justify="space-between" align="center">
+                                                            <VStack align={{ base: "center", lg: "start" }} spacing={2}>
+                                                                <Text 
+                                                                    fontSize={{ base: "lg", lg: "xl" }} 
+                                                                    fontWeight="bold" 
+                                                                    color="blue.700"
+                                                                    textAlign={{ base: "center", lg: "left" }}
+                                                                >
+                                                                    {semesterLabel}
+                                                                </Text>
+                                                                <Text 
+                                                                    fontSize="sm" 
+                                                                    color="blue.600"
+                                                                    textAlign={{ base: "center", lg: "left" }}
+                                                                >
+                                                                    {modules.length} Module{modules.length !== 1 ? 's' : ''}
+                                                                </Text>
+                                                            </VStack>
+                                                            <Badge 
+                                                                colorScheme="blue" 
+                                                                variant="solid" 
+                                                                fontSize={{ base: "xs", lg: "sm" }}
+                                                                display={{ base: "none", lg: "block" }}
+                                                            >
+                                                                {modules.reduce((total, module) => total + (module.credits || 0), 0)} Credits
+                                                            </Badge>
+                                                        </HStack>
+                                                    </Box>
+
+                                                    {/* Modules Grid */}
+                                                    <Box 
+                                                        ml={{ base: 0, lg: '40px' }}
+                                                        position="relative"
+                                                        _before={{
+                                                            content: '""',
+                                                            position: 'absolute',
+                                                            left: { base: '50%', lg: '0' },
+                                                            top: { base: '0', lg: '50%' },
+                                                            transform: { base: 'translateX(-50%)', lg: 'translateY(-50%)' },
+                                                            width: { base: '2px', lg: '2px' },
+                                                            height: { base: '20px', lg: '100%' },
+                                                            bg: 'blue.200',
+                                                            display: semesterIndex === Object.keys(modulesBySemester).length - 1 ? 'none' : 'block'
+                                                        }}
+                                                    >
+                                                        <Grid 
+                                                            templateColumns={{ 
+                                                                base: "1fr", 
+                                                                lg: "repeat(auto-fit, minmax(280px, 1fr))" 
+                                                            }} 
+                                                            gap={4}
+                                                            mb={6}
+                                                        >
+                                                            {modules.map((module, moduleIndex) => (
+                                                                <Box 
+                                                                    key={module.id || moduleIndex}
+                                                                    p={4} 
+                                                                    bg="white" 
+                                                                    borderRadius="lg" 
+                                                                    borderWidth="1px"
+                                                                    borderColor="gray.200"
+                                                                    boxShadow="sm"
+                                                                    position="relative"
+                                                                    _hover={{
+                                                                        boxShadow: "md",
+                                                                        transform: "translateY(-2px)",
+                                                                        transition: "all 0.2s"
+                                                                    }}
+                                                                    transition="all 0.2s"
+                                                                    _before={{
+                                                                        content: '""',
+                                                                        position: 'absolute',
+                                                                        left: { base: '50%', lg: '-20px' },
+                                                                        top: { base: '0', lg: '50%' },
+                                                                        transform: { base: 'translateX(-50%)', lg: 'translateY(-50%)' },
+                                                                        width: { base: '12px', lg: '12px' },
+                                                                        height: { base: '12px', lg: '12px' },
+                                                                        bg: 'blue.400',
+                                                                        borderRadius: '50%',
+                                                                        border: '3px solid white',
+                                                                        boxShadow: '0 0 0 2px blue.200'
+                                                                    }}
+                                                                >
+                                                                    <VStack align="stretch" spacing={3}>
+                                                                        <HStack justify="space-between">
+                                                                            <Text 
+                                                                                fontWeight="bold" 
+                                                                                fontSize={{ base: "sm", lg: "md" }}
+                                                                                noOfLines={1}
+                                                                                color="gray.800"
+                                                                            >
+                                                                                {module.courseCode}
+                                                                            </Text>
+                                                                            <Badge 
+                                                                                colorScheme="blue" 
+                                                                                variant="subtle" 
+                                                                                flexShrink={0}
+                                                                                fontSize={{ base: "xs", lg: "sm" }}
+                                                                            >
+                                                                                {module.credits || 0} Credits
+                                                                            </Badge>
+                                                                        </HStack>
+                                                                        
+                                                                        <Text 
+                                                                            fontSize={{ base: "sm", lg: "md" }} 
+                                                                            fontWeight="medium" 
+                                                                            noOfLines={2}
+                                                                            color="gray.700"
+                                                                        >
+                                                                            {module.courseName}
+                                                                        </Text>
+                                                                        
+                                                                        <Text 
+                                                                            fontSize={{ base: "xs", lg: "sm" }} 
+                                                                            color="gray.600" 
+                                                                            noOfLines={3}
+                                                                        >
+                                                                            {module.description}
+                                                                        </Text>
+                                                                        
+                                                                        <Divider />
+                                                                        
+                                                                        <VStack align="stretch" spacing={2}>
+                                                                            <HStack justify="space-between" fontSize={{ base: "xs", lg: "sm" }}>
+                                                                                <Text color="gray.500" fontWeight="medium">Instructor:</Text>
+                                                                                <Text color="gray.700" noOfLines={1}>
+                                                                                    {module.instructor}
+                                                                                </Text>
+                                                                            </HStack>
+                                                                            
+                                                                            <HStack justify="space-between" fontSize={{ base: "xs", lg: "sm" }}>
+                                                                                <Text color="gray.500" fontWeight="medium">Schedule:</Text>
+                                                                                <Text color="gray.700" noOfLines={1}>
+                                                                                    {module.day} • {module.time}
+                                                                                </Text>
+                                                                            </HStack>
+                                                                            
+                                                                            <HStack justify="space-between" fontSize={{ base: "xs", lg: "sm" }}>
+                                                                                <Text color="gray.500" fontWeight="medium">Room:</Text>
+                                                                                <Text color="gray.700" noOfLines={1}>
+                                                                                    {module.room}
+                                                                                </Text>
+                                                                            </HStack>
+                                                                        </VStack>
+                                                                    </VStack>
+                                                                </Box>
+                                                            ))}
+                                                        </Grid>
+                                                    </Box>
+                                                </Box>
+                                            );
+                                        });
+                                    })()}
+                                </VStack>
+                            </Box>
                         )}
                     </CardBody>
                 </Card>

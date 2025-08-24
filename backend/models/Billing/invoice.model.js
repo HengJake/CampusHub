@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: invoice.model.js
+// Description: Invoice model schema defining billing document generation, payment terms, and financial record keeping
+// First Written on: July 10, 2024
+// Edited on: Friday, July 10, 2024
+
 import mongoose from "mongoose";
 
 const invoiceSchema = new mongoose.Schema({

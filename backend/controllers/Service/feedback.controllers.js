@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: feedback.controllers.js
+// Description: Feedback management controller handling user feedback collection, rating systems, and service improvement tracking
+// First Written on: July 16, 2024
+// Edited on: Friday, July 19, 2024
+
 import {
     createRecord,
     getAllRecords,

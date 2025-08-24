@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: result.model.js
+// Description: Result model schema defining student academic performance, grades, GPA calculation, and transcript management
+// First Written on: July 10, 2024
+// Edited on: Friday, July 10, 2024
+
 import mongoose from "mongoose";
 
 const resultSchema = new mongoose.Schema(

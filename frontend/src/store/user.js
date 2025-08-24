@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: user.js
+// Description: User management store handling user profiles, role management, and user data operations across different user types
+// First Written on: July 24, 2024
+// Edited on: Friday, August 4, 2024
+
 import { create } from "zustand";
 
 export const useUserStore = create((set) => ({
@@ -7,6 +13,40 @@ export const useUserStore = create((set) => ({
   },
   error: {
     users: null,
+  },
+
+  fetchUsers: async () => {
+    set((state) => ({
+      loading: { ...state.loading, users: true },
+      error: { ...state.error, users: null },
+    }));
+    try {
+      const res = await fetch(`/api/user`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to fetch users");
+      }
+
+      set((state) => ({
+        loading: { ...state.loading, users: false },
+        error: { ...state.error, users: null },
+        users: data.data || [],
+      }));
+
+      return { success: true, message: data.message, data: data.data };
+    } catch (error) {
+      set((state) => ({
+        loading: { ...state.loading, users: false },
+        error: { ...state.error, users: error.message },
+      }));
+      console.error("Error fetching users:", error.message);
+      return { success: false, message: error.message };
+    }
   },
 
   createUser: async (user) => {

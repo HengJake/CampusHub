@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: facility.js
+// Description: Facility management store handling resource bookings, locker units, parking lots, and facility availability management
+// First Written on: July 16, 2024
+// Edited on: Friday, August 12, 2024
+
 import { create } from "zustand";
 import { useAuthStore } from "./auth.js";
 import { useShowToast } from "./utils/toast"
@@ -950,7 +956,7 @@ export const useFacilityStore = create((set, get) => ({
             const schoolId = get().getCurrentUser().schoolId;
             resourceData.schoolId = schoolId;
 
-            console.log("🚀 ~ facilityData:", resourceData)
+
             console.log(get().resources)
 
             // Update resource with timeslots included

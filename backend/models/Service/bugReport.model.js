@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: bugReport.model.js
+// Description: BugReport model schema defining software issue reporting, bug tracking, and resolution workflow management
+// First Written on: July 10, 2024
+// Edited on: Friday, July 10, 2024
+
 import mongoose from 'mongoose';
 
 const bugReportSchema = new mongoose.Schema({

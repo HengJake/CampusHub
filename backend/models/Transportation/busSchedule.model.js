@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: busSchedule.model.js
+// Description: BusSchedule model schema defining bus timetable management, departure times, and route scheduling
+// First Written on: July 10, 2024
+// Edited on: Friday, July 10, 2024
+
 import mongoose from "mongoose";
 
 const routeTimingSchema = new mongoose.Schema({

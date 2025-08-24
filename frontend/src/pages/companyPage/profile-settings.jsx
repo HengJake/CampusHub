@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: profile-settings.jsx
+// Description: Profile and settings management interface for company administrators to configure account preferences and company information
+// First Written on: July 16, 2024
+// Edited on: Friday, August 6, 2024
+
 "use client";
 
 import React from "react";
@@ -439,6 +445,17 @@ export default function ProfileSettings() {
                         }
                         isReadOnly={!isEditing}
                         bg={isEditing ? "white" : "gray.50"}
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel>User ID</FormLabel>
+                      <Input
+                        value={adminData.id || "Loading..."}
+                        isReadOnly
+                        bg="gray.50"
+                        fontFamily="mono"
+                        fontSize="sm"
                       />
                     </FormControl>
 

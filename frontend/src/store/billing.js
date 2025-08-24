@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: billing.js
+// Description: Billing management store handling subscriptions, payments, invoices, and financial transaction management
+// First Written on: July 22, 2024
+// Edited on: Friday, August 6, 2024
+
 import { create } from "zustand";
 
 export const useBillingStore = create((set) => ({

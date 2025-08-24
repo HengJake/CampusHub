@@ -74,7 +74,7 @@ export const combineScheduleData = (classSchedules, examSchedules) => {
 
 // Get color scheme for schedule types
 export const getTypeColor = (type, examType = null) => {
-    console.log("🚀 ~ getTypeColor ~ type:", type)
+
     if (type == "class") {
         return { bg: 'gray.100', border: 'gray.400', text: 'gray.800' }
     }

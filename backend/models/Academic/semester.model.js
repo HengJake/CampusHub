@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: semester.model.js
+// Description: Semester model schema defining academic term structure, start/end dates, and enrollment periods
+// First Written on: July 5, 2024
+// Edited on: Friday, July 8, 2024
+
 import mongoose from "mongoose";
 
 const semesterSchema = new mongoose.Schema({

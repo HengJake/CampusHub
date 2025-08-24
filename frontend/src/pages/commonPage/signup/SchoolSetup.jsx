@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: SchoolSetup.jsx
+// Description: School setup wizard component for new school administrators to configure their institution settings, departments, and initial data
+// First Written on: June 25, 2024
+// Edited on: Friday, August 9, 2024
+
 import React, { useState, useEffect } from "react";
 // Pricing plans are hardcoded to match pricing.jsx - no database fetching required
 import {
@@ -42,7 +48,7 @@ import ToolTips from "../../../component/common/toolTips.jsx";
 import { TbSchool } from "react-icons/tb";
 
 const SchoolSetup = () => {
-    const { getCurrentUserWithAuth, logout, login } = useAuthStore();
+    const { logout, login, initializeAuth } = useAuthStore();
     const showToast = useShowToast();
     const navigate = useNavigate();
 
@@ -50,10 +56,12 @@ const SchoolSetup = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [touched, setTouched] = useState({});
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [currentUser, setCurrentUser] = useState(null);
 
     const [formData, setFormData] = useState({
         // Step 1: School Basic Information
         schoolName: "",
+        prefix: "",
         address: "",
         city: "",
         country: "Malaysia",
@@ -79,46 +87,77 @@ const SchoolSetup = () => {
         {
             id: "basic",
             name: "Basic",
-            price: 99,
-            period: "per month",
+            price: 0,
+            period: "Free",
             features: [
-                "Secure User Authentication with MFA option",
-                "Personalized Dashboard",
-                "Course & Material Management",
-                "Student Communication Tools",
-                "Grading & Feedback System",
-                "View Timetable and Consultation Bookings"
-            ],
-            color: "blue"
-        },
-        {
-            id: "standard",
-            name: "Standard",
-            price: 249,
-            period: "per month",
-            features: [
-                "Advanced Assessment & Grading Tools",
-                "Student Performance Analytics Dashboard",
-                "Teaching Assistant Management & Oversight",
-                "Professional Development & Workload Overview",
-                "Consultation Booking Management",
-                "Internal Academic Messaging System"
+                "View classroom schedules",
+                "Lost & Found search only",
+                "View transport schedule",
+                "Personal academic profile (view-only)",
+                "Basic classroom finder",
+                "View academic & exam schedules",
+                "Submit feedback (limited)",
+                "Admin dashboard (view-only KPIs)",
+                "User management (view/search only)",
+                "Transport management (view-only)",
+                "Academic data tools (read-only)",
+                "Basic reports & dashboards",
+                "Account management"
             ],
             color: "green"
         },
         {
-            id: "premium",
-            name: "Premium",
-            price: 499,
+            id: "standard",
+            name: "Standard",
+            price: 99,
             period: "per month",
             features: [
-                "Research Management Portal",
-                "Curriculum Development & Review Access",
-                "Career Services Hub",
-                "Integrated Grant Application Tracker",
-                "Workload Prediction & Balancing Tools",
-                "Full Integrated Library Services",
-                "Cross-Faculty Collaboration Tools"
+                "Gym locker booking (short-term)",
+                "Sport courts booking",
+                "Reserve study/seminar rooms",
+                "Lost & Found: Search + Report",
+                "Internal campus e-hailing",
+                "Edit profile details",
+                "Enhanced classroom finder",
+                "Full academic schedule access",
+                "Exam notifications & reminders",
+                "Basic attendance tracking",
+                "View academic performance",
+                "Multi-category feedback system",
+                "Edit user profiles & disable accounts",
+                "Add/modify/remove parking & lockers",
+                "Submit & approve facility bookings",
+                "Enter student performance & manage attendance",
+                "Facility usage trends & downloadable reports",
+                "Security monitoring of admin activity"
+            ],
+            color: "blue"
+        },
+        {
+            id: "premium",
+            name: "Premium",
+            price: 199,
+            period: "per month",
+            features: [
+                "Gym locker booking (long-term)",
+                "Priority sport court reservations",
+                "Extended hours & priority room slots",
+                "Full Lost & Found with alerts",
+                "Real-time transport updates",
+                "Priority e-hailing with discounts",
+                "Live map & navigation support",
+                "Schedule sync (Google/Outlook)",
+                "Smart study planner",
+                "Attendance analytics & alerts",
+                "Detailed performance insights",
+                "Priority feedback channel",
+                "Full facility management & policies",
+                "Automated class & exam scheduling",
+                "Course/exam registration tools",
+                "Advanced analytics & engagement metrics",
+                "Full PDF + Excel exports",
+                "Advanced security & audit trails",
+                "Priority support & dedicated tools"
             ],
             color: "purple"
         }
@@ -171,6 +210,12 @@ const SchoolSetup = () => {
         switch (name) {
             case "schoolName":
                 return value.length < 3 ? "School name must be at least 3 characters" : "";
+            case "prefix":
+                if (!value.trim()) return "School prefix is required";
+                if (value.length < 2) return "School prefix must be at least 2 characters";
+                if (value.length > 10) return "School prefix must be at most 10 characters";
+                if (!/^[A-Za-z]+$/.test(value)) return "School prefix must contain only letters";
+                return "";
             case "cardNumber":
                 if (!value.trim()) return "Card number is required";
                 const cleanCardNumber = value.replace(/\s/g, '');
@@ -214,6 +259,7 @@ const SchoolSetup = () => {
 
 
     const handleInputChange = (name, value) => {
+        console.log("🚀 ~ handleInputChange ~ value:", value)
         let formattedValue = value;
 
         // Format card number with spaces
@@ -261,7 +307,7 @@ const SchoolSetup = () => {
     const getCurrentStepFields = () => {
         switch (currentStep) {
             case 1:
-                return ["schoolName", "address", "city", "country"];
+                return ["schoolName", "prefix", "address", "city", "country"];
             case 2:
                 return ["selectedPlan"];
             case 3:
@@ -285,8 +331,6 @@ const SchoolSetup = () => {
         setIsLoading(true);
 
         try {
-            const currentUser = await getCurrentUserWithAuth();
-
             // Check if school already exists for this user
             let schoolId;
             schoolId = await useAuthStore.getState().getSchoolId();
@@ -310,8 +354,9 @@ const SchoolSetup = () => {
             } else {
                 // Step 1: Create the school record
                 const schoolData = {
-                    userId: currentUser.user._id,
+                    userId: currentUser._id,
                     name: formData.schoolName,
+                    prefix: formData.prefix.toUpperCase(),
                     address: formData.address,
                     city: formData.city,
                     country: formData.country,
@@ -327,6 +372,7 @@ const SchoolSetup = () => {
 
             // Step 2: Create the subscription record
             const selectedPlan = subscriptionPlans.find(p => p.id === formData.selectedPlan);
+            console.log("🚀 ~ handleSubmit ~ selectedPlan:", selectedPlan)
             const subscriptionData = {
                 schoolId: schoolId,
                 plan: selectedPlan.name, // Changed from planName to plan
@@ -412,7 +458,11 @@ const SchoolSetup = () => {
     // Check authentication and school setup status when page loads
     useEffect(() => {
         const checkAuthAndRedirect = async () => {
+
             try {
+
+
+
                 setIsCheckingAuth(true);
 
                 const refreshResult = await useAuthStore.getState().refreshUserAuthData();
@@ -421,33 +471,32 @@ const SchoolSetup = () => {
                 } else {
                     console.warn('Failed to refresh authentication data:', refreshResult.message);
                 }
-                const currentUser = await getCurrentUserWithAuth();
+                const userResult = await initializeAuth();
+                console.log("🚀 ~ checkAuthAndRedirect ~ userResult:", userResult.data)
 
-                if (currentUser && currentUser.isAuthenticated) {
+                // Set current user in state
+                setCurrentUser(userResult.data);
+
+                if (userResult && userResult.success) {
                     // Check if user already has school setup completed
-                    if (currentUser.schoolId) {
+                    if (userResult.data?.schoolId) {
                         showToast.success(
                             "School setup already completed!",
                             "Redirecting you to your dashboard."
                         );
 
                         // Redirect based on user role
-                        if (currentUser.role === "schoolAdmin") {
+                        if (currentUser.data?.role === "schoolAdmin") {
                             setTimeout(() => {
                                 navigate("/admin-dashboard");
                             }, 1000);
-                        } else if (currentUser.role === "student") {
+                        } else if (currentUser.data?.role === "student") {
                             setTimeout(() => {
                                 navigate("/student-dashboard");
                             }, 1000);
-                        } else if (currentUser.role === "lecturer") {
+                        } else if (currentUser.data?.role === "lecturer") {
                             setTimeout(() => {
                                 navigate("/lecturer-dashboard");
-                            }, 1000);
-                        } else {
-                            // Default fallback
-                            setTimeout(() => {
-                                navigate("/");
                             }, 1000);
                         }
                         return;
@@ -458,7 +507,7 @@ const SchoolSetup = () => {
                         "Authentication required",
                         "Please log in to access school setup."
                     );
-                    navigate("/login");
+                    navigate("/");
                     return;
                 }
             } catch (error) {
@@ -467,7 +516,7 @@ const SchoolSetup = () => {
                     "Authentication error",
                     "Please log in again."
                 );
-                navigate("/login");
+                navigate("/");
                 return;
             } finally {
                 setIsCheckingAuth(false);
@@ -495,6 +544,24 @@ const SchoolSetup = () => {
                         errorBorderColor="red.300"
                     />
                     {errors.schoolName && <Text color="red.500" fontSize="sm">{errors.schoolName}</Text>}
+                </VStack>
+
+                <VStack align="stretch">
+                    <Text fontWeight="semibold">School Prefix *</Text>
+                    <Input
+                        placeholder="e.g., APU, BPU"
+                        value={formData.prefix}
+                        onChange={(e) => handleInputChange("prefix", e.target.value)}
+                        onBlur={() => handleBlur("prefix")}
+                        isInvalid={errors.prefix}
+                        errorBorderColor="red.300"
+                        maxLength={10}
+                        textTransform="uppercase"
+                    />
+                    {errors.prefix && <Text color="red.500" fontSize="sm">{errors.prefix}</Text>}
+                    {!errors.prefix && formData.prefix && (
+                        <Text color="green.500" fontSize="sm">✓ Valid prefix</Text>
+                    )}
                 </VStack>
 
 
@@ -550,8 +617,6 @@ const SchoolSetup = () => {
         </VStack>
     );
 
-
-
     const renderStep2 = () => (
         <VStack spacing={6} align="stretch">
             <Heading size="md" textAlign="center" color="blue.600">
@@ -563,68 +628,71 @@ const SchoolSetup = () => {
             </Text>
 
             <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-                {subscriptionPlans.map((plan) => (
-                    <Card
-                        key={plan.id}
-                        border={formData.selectedPlan === plan.id ? `3px solid ${plan.color}.500` : "1px solid"}
-                        borderColor={formData.selectedPlan === plan.id ? `${plan.color}.500` : "gray.200"}
-                        bg={formData.selectedPlan === plan.id ? `${plan.color}.50` : "white"}
-                        cursor="pointer"
-                        onClick={() => handleInputChange("selectedPlan", plan.id)}
-                        _hover={{ transform: "translateY(-2px)", shadow: "lg" }}
-                        transition="all 0.2s"
-                        position="relative"
-                        overflow="hidden"
-                    >
-                        {formData.selectedPlan === plan.id && (
-                            <Box
-                                position="absolute"
-                                top={0}
-                                left={0}
-                                right={0}
-                                h={1}
-                                bg={`${plan.color}.500`}
-                            />
-                        )}
-                        <CardBody textAlign="center">
-                            <Badge
-                                colorScheme={plan.color}
-                                mb={3}
-                                p={2}
-                                borderRadius="full"
-                                position="relative"
-                            >
-                                {formData.selectedPlan === plan.id && (
-                                    <CheckIcon
-                                        position="absolute"
-                                        top={-1}
-                                        right={-1}
-                                        color="white"
-                                        bg="green.500"
-                                        borderRadius="full"
-                                        p={1}
-                                        boxSize={4}
-                                    />
-                                )}
-                                {plan.name}
-                            </Badge>
-                            <Heading size="lg" color={`${plan.color}.600`} mb={2}>
-                                RM {plan.price}
-                            </Heading>
-                            <Text color="gray.500" mb={2}>
-                                {plan.period}
-                            </Text>
-                            <Divider mb={4} />
-                            <VStack align="stretch" spacing={2}>
-                                {plan.features.map((feature, index) => (
-                                    <Text key={index} fontSize="sm" color="gray.600">
-                                        ✓ {feature}
-                                    </Text>
-                                ))}
-                            </VStack>
-                        </CardBody>
-                    </Card>
-                ))}
+                {subscriptionPlans.map((plan) => {
+
+                    return (
+                        <Card
+                            key={plan.id}
+                            border={formData.selectedPlan === plan.id ? `3px solid ${plan.color}.500` : "1px solid"}
+                            borderColor={formData.selectedPlan === plan.id ? `${plan.color}.500` : "gray.200"}
+                            bg={formData.selectedPlan === plan.id ? `${plan.color}.50` : "white"}
+                            cursor="pointer"
+                            onClick={() => handleInputChange("selectedPlan", plan.id)}
+                            _hover={{ transform: "translateY(-2px)", shadow: "lg" }}
+                            transition="all 0.2s"
+                            position="relative"
+                            overflow="hidden"
+                        >
+                            {formData.selectedPlan === plan.id && (
+                                <Box
+                                    position="absolute"
+                                    top={0}
+                                    left={0}
+                                    right={0}
+                                    h={1}
+                                    bg={`${plan.color}.500`}
+                                />
+                            )}
+                            <CardBody textAlign="center">
+                                <Badge
+                                    colorScheme={plan.color}
+                                    mb={3}
+                                    p={2}
+                                    borderRadius="full"
+                                    position="relative"
+                                >
+                                    {formData.selectedPlan === plan.id && (
+                                        <CheckIcon
+                                            position="absolute"
+                                            top={-1}
+                                            right={-1}
+                                            color="white"
+                                            bg="green.500"
+                                            borderRadius="full"
+                                            p={1}
+                                            boxSize={4}
+                                        />
+                                    )}
+                                    {plan.name}
+                                </Badge>
+                                <Heading size="lg" color={`${plan.color}.600`} mb={2}>
+                                    {plan.price === 0 ? 'Free' : `RM ${plan.price}`}
+                                </Heading>
+                                <Text color="gray.500" mb={2}>
+                                    {plan.period}
+                                </Text>
+                                <Divider mb={4} />
+                                <VStack align="stretch" spacing={2}>
+                                    {plan.features.map((feature, index) => (
+                                        <Text key={index} fontSize="sm" color="gray.600">
+                                            ✓ {feature}
+                                        </Text>
+                                    ))}
+                                </VStack>
+                            </CardBody>
+                        </Card>
+                    )
+                })}
             </SimpleGrid>
 
             {errors.selectedPlan && (
@@ -766,18 +834,70 @@ const SchoolSetup = () => {
                 </Box>
             )}
 
-            <Button
-                leftIcon={<CiLogout />}
-                position="absolute"
-                colorScheme="red"
-                top={4}
-                right={4}
-                onClick={() => handleLogout()}
-                isDisabled={isCheckingAuth}
-            >
-                Log Out
-            </Button>
             <Box maxW="6xl" mx="auto" px={4}>
+
+                <Button
+                    leftIcon={<CiLogout />}
+                    colorScheme="red"
+                    onClick={() => handleLogout()}
+                    isDisabled={isCheckingAuth}
+                    mb={3}
+                >
+                    Log Out
+                </Button>
+
+                {/* User Information */}
+                {!isCheckingAuth && (
+                    <Box
+                        bg="blue.50"
+                        p={4}
+                        borderRadius="lg"
+                        border="1px solid"
+                        borderColor="blue.200"
+                        mb={6}
+                    >
+                        <HStack justify="space-between" align="center">
+                            <VStack align="start" spacing={2}>
+                                <HStack spacing={3}>
+                                    <Box
+                                        w={12}
+                                        h={12}
+                                        borderRadius="full"
+                                        bg="blue.500"
+                                        color="white"
+                                        display="flex"
+                                        alignItems="center"
+                                        justifyContent="center"
+                                        fontSize="lg"
+                                        fontWeight="bold"
+                                    >
+                                        {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                    </Box>
+                                    <VStack align="start">
+                                        <Text fontWeight="bold" color="blue.700" fontSize="lg">
+                                            {currentUser?.name || 'User'}
+                                        </Text>
+                                        <Text color="blue.600" fontSize="sm">
+                                            {currentUser?.email || 'user@example.com'}
+                                        </Text>
+                                        <Badge colorScheme="blue" variant="subtle">
+                                            {currentUser?.role || 'User'}
+                                        </Badge>
+                                    </VStack>
+                                </HStack>
+                            </VStack>
+                            <VStack align="end" spacing={1}>
+                                <Text fontSize="sm" color="blue.600" fontWeight="medium">
+                                    Account Status
+                                </Text>
+                                <Badge colorScheme="green" variant="solid">
+                                    Active
+                                </Badge>
+                            </VStack>
+                        </HStack>
+                    </Box>
+                )}
+
                 {/* Header */}
                 <VStack spacing={6} mb={8}>
                     <Heading size="xl" color="blue.600" textAlign="center">

@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: lecturer.model.js
+// Description: Lecturer model schema defining faculty member information, qualifications, and teaching assignments
+// First Written on: July 3, 2024
+// Edited on: Friday, July 6, 2024
+
 import mongoose from 'mongoose';
 import Department from './department.model.js';
 import Module from './module.model.js';

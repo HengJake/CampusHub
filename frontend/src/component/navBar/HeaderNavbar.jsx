@@ -206,7 +206,7 @@ const HeaderNavbar = ({ role }) => {
                 top={2}
                 left={{ base: "24px", lg: "96px" }}
                 right={{ base: "24px", lg: "8px" }}
-                zIndex={100}
+                zIndex={200}
                 direction={"row"}
                 bg={glassBG}
                 sx={{

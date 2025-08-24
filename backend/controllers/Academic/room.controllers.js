@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: room.controllers.js
+// Description: Room management controller handling CRUD operations for classroom facilities, availability, and scheduling management
+// First Written on: July 16, 2024
+// Edited on: Friday, July 19, 2024
+
 import Room from '../../models/Academic/room.model.js';
 import ClassSchedule from '../../models/Academic/classSchedule.model.js';
 import ExamSchedule from '../../models/Academic/examSchedule.model.js';

@@ -45,7 +45,7 @@ const validateLostItemData = async (data) => {
 
   // Validate status enum if provided
   if (status) {
-    const validStatuses = ['reported', 'in_search', 'found', 'claimed', 'archived'];
+    const validStatuses = ['reported', 'found', 'claimed'];
     if (!validStatuses.includes(status)) {
       return { isValid: false, message: `status must be one of: ${validStatuses.join(', ')}` };
     }
@@ -69,12 +69,12 @@ export const createLostItem = controllerWrapper(async (req, res) => {
 });
 
 export const getAllLostItems = controllerWrapper(async (req, res) => {
-  return await getAllRecords(LostItem, "lostItems", ["personId", "schoolId", "matchedItem"]);
+  return await getAllRecords(LostItem, "lostItems", [{ path: "personId", populate: "userId" }, "schoolId", "matchedItem"]);
 });
 
 export const getLostItemById = controllerWrapper(async (req, res) => {
   const { id } = req.params;
-  return await getRecordById(LostItem, id, "lostItem", ["personId", "schoolId", "matchedItem"]);
+  return await getRecordById(LostItem, id, "lostItem", [{ path: "personId", populate: "userId" }, "schoolId", "matchedItem"]);
 });
 
 // Get LostItems by owner (personId)
@@ -83,8 +83,19 @@ export const getLostItemsByOwner = controllerWrapper(async (req, res) => {
   return await getAllRecords(
     LostItem,
     "lostItems",
-    ["personId", "schoolId", "matchedItem"],
+    [{ path: "personId", populate: "userId" }, "schoolId", "matchedItem"],
     { personId: owner }
+  );
+});
+
+// Get LostItems by student ID
+export const getLostItemsByStudentId = controllerWrapper(async (req, res) => {
+  const { studentId } = req.params;
+  return await getAllRecords(
+    LostItem,
+    "lostItems",
+    [{ path: "personId", populate: "userId" }, "schoolId", "matchedItem"],
+    { personId: studentId }
   );
 });
 
@@ -94,7 +105,7 @@ export const getLostItemsByMatchedItem = controllerWrapper(async (req, res) => {
   return await getAllRecords(
     LostItem,
     "lostItems",
-    ["personId", "schoolId", "matchedItem"],
+    [{ path: "personId", populate: "userId" }, "schoolId", "matchedItem"],
     { matchedItem: matchedItem }
   );
 });
@@ -105,7 +116,7 @@ export const getLostItemsBySchoolId = controllerWrapper(async (req, res) => {
   return await getAllRecords(
     LostItem,
     "lostItems",
-    ["personId", "schoolId", "matchedItem"],
+    [{ path: "personId", populate: "userId" }, "schoolId", "matchedItem"],
     { schoolId: schoolId }
   );
 });
@@ -122,4 +133,112 @@ export const deleteLostItem = controllerWrapper(async (req, res) => {
 
 export const deleteAllLostItems = controllerWrapper(async (req, res) => {
   return await deleteAllRecords(LostItem, "lostItems");
+});
+
+// Match a reported item with a found item
+export const matchLostItems = controllerWrapper(async (req, res) => {
+  const { reportedItemId, foundItemId } = req.body;
+
+  if (!reportedItemId || !foundItemId) {
+    return {
+      success: false,
+      message: "Both reportedItemId and foundItemId are required",
+      statusCode: 400
+    };
+  }
+
+  try {
+    // Get both items
+    const reportedItem = await LostItem.findById(reportedItemId);
+    console.log("🚀 ~ reportedItem:", reportedItem)
+    const foundItem = await LostItem.findById(foundItemId);
+    console.log("🚀 ~ foundItem:", foundItem)
+
+    if (!reportedItem || !foundItem) {
+      return {
+        success: false,
+        message: "One or both items not found",
+        statusCode: 404
+      };
+    }
+
+    // Validate that items can be matched
+    if (reportedItem.status !== 'reported') {
+      return {
+        success: false,
+        message: "First item must have 'reported' status",
+        statusCode: 400
+      };
+    }
+
+    if (foundItem.status !== 'found') {
+      return {
+        success: false,
+        message: "Second item must have 'found' status",
+        statusCode: 400
+      };
+    }
+
+    if (reportedItem.schoolId.toString() !== foundItem.schoolId.toString()) {
+      return {
+        success: false,
+        message: "Items must belong to the same school",
+        statusCode: 400
+      };
+    }
+
+    // Update both items to link them and change status to claimed
+    const updateData = {
+      status: 'claimed',
+      matchedItem: foundItemId,
+      resolution: {
+        status: 'matched',
+        date: new Date(),
+        notes: `Matched with item: ${foundItem.itemDetails.name}`
+      }
+    };
+
+    // Update reported item
+    await LostItem.findByIdAndUpdate(reportedItemId, updateData);
+
+    // Update found item
+    await LostItem.findByIdAndUpdate(foundItemId, {
+      status: 'claimed',
+      matchedItem: reportedItemId,
+      resolution: {
+        status: 'matched',
+        date: new Date(),
+        notes: `Matched with reported item: ${reportedItem.itemDetails.name}`
+      }
+    });
+
+    // Get updated items with populated references
+    const updatedReportedItem = await LostItem.findById(reportedItemId)
+      .populate('personId')
+      .populate('schoolId')
+      .populate('matchedItem');
+
+    const updatedFoundItem = await LostItem.findById(foundItemId)
+      .populate('personId')
+      .populate('schoolId')
+      .populate('matchedItem');
+
+    return {
+      success: true,
+      message: "Items successfully matched and status updated to claimed",
+      data: {
+        reportedItem: updatedReportedItem,
+        foundItem: updatedFoundItem
+      },
+      statusCode: 200
+    };
+  } catch (error) {
+    console.error('Error matching lost items:', error);
+    return {
+      success: false,
+      message: "Failed to match items",
+      error: error.message,
+      statusCode: 500
+    };
+  }
 });

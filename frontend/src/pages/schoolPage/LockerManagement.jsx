@@ -79,6 +79,7 @@ export function LockerManagement() {
         deleteLockerUnit,
         resources,
         fetchResources,
+        updateResource,
     } = useFacilityStore();
 
     const { getSchoolId } = useAuthStore();
@@ -99,6 +100,7 @@ export function LockerManagement() {
         resourceId: "",
         status: "Available",
         isAvailable: true,
+        resourceName: "",
     });
 
     // Bulk upload form data
@@ -412,6 +414,7 @@ export function LockerManagement() {
             resourceId: locker.resourceId?._id || locker.resourceId || "",
             status: locker.status || "Available",
             isAvailable: locker.isAvailable !== undefined ? locker.isAvailable : true,
+            resourceName: locker.resourceId?.name || "",
         });
         setIsEdit(true);
         setSelectedLocker(locker);
@@ -431,17 +434,44 @@ export function LockerManagement() {
             return;
         }
 
+        if (isEdit && !formData.resourceName.trim()) {
+            toast({
+                title: "Validation Error",
+                description: "Please enter a resource name",
+                status: "error",
+                duration: 3000,
+                isClosable: true
+            });
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             let res;
             let submitData = { ...formData };
 
             if (isEdit && selectedLocker) {
-                submitData = {
+                // Update both locker unit and resource
+                const lockerUpdateData = {
                     status: formData.status,
                     isAvailable: formData.status === "Available"
                 };
-                res = await updateLockerUnit(selectedLocker._id, submitData);
+                
+                // Update locker unit
+                const lockerRes = await updateLockerUnit(selectedLocker._id, lockerUpdateData);
+                
+                // Update resource name if it changed
+                if (formData.resourceName !== selectedLocker.resourceId?.name) {
+                    const resourceRes = await updateResource(formData.resourceId, {
+                        name: formData.resourceName
+                    });
+                    
+                    if (!resourceRes.success) {
+                        throw new Error("Failed to update resource name");
+                    }
+                }
+                
+                res = lockerRes;
             } else {
                 submitData.isAvailable = submitData.status === "Available";
                 res = await createLockerUnit(submitData);
@@ -458,7 +488,8 @@ export function LockerManagement() {
                     duration: 3000,
                     isClosable: true
                 });
-                fetchLockerUnits();
+                // Refresh both locker units and resources to get updated data
+                await Promise.all([fetchLockerUnits(), fetchResources()]);
                 onClose();
                 resetForm();
             } else {
@@ -490,6 +521,7 @@ export function LockerManagement() {
             resourceId: "",
             status: "Available",
             isAvailable: true,
+            resourceName: "",
         });
         setIsEdit(false);
         setSelectedLocker(null);
@@ -589,6 +621,9 @@ export function LockerManagement() {
         return (
             <Box position="relative">
                 <Badge
+                    pos={"absolute"}
+                    top={"-25px"}
+                    right={"-25px"}
                     colorScheme={getStatusColor(locker.status)}
                     variant="solid"
                     px={3}
@@ -611,8 +646,6 @@ export function LockerManagement() {
                 >
                     <Icon as={getStatusIcon(locker.status)} boxSize={4} />
                 </Badge>
-
-//TODO: to implement company admin
 
                 {isDropdownOpen && (
                     <Box
@@ -981,9 +1014,9 @@ export function LockerManagement() {
                                         <FormLabel>Resource Name</FormLabel>
                                         <VStack align="start" spacing={1}>
                                             <Input
-                                                value={resources.find(r => r._id === formData.resourceId)?.name || selectedLocker?.resourceId?.name || 'N/A'}
-                                                isReadOnly
-                                                bg="gray.100"
+                                                value={formData.resourceName}
+                                                onChange={(e) => setFormData(f => ({ ...f, resourceName: e.target.value }))}
+                                                placeholder="Enter resource name"
                                             />
                                             <Text fontSize="sm" color="gray.600">
                                                 Location: {resources.find(r => r._id === formData.resourceId)?.location || selectedLocker?.resourceId?.location || 'N/A'}

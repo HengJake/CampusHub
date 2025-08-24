@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: booking.routes.js
+// Description: Facility booking route definitions for resource reservation, time slot management, and booking confirmation endpoints
+// First Written on: July 18, 2024
+// Edited on: Friday, July 19, 2024
+
 import express from "express";
 import {
   createBooking,

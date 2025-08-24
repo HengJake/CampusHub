@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: campusHubLogo.jsx
+// Description: Reusable logo component for CampusHub branding, providing consistent logo display across different pages and components
+// First Written on: June 18, 2024
+// Edited on: Friday, July 26, 2024
+
 import {
   Button,
   Container,
@@ -26,7 +32,13 @@ export const CampusHubLogo = () => {
   const currentUser = getCurrentUser();
   const userRole = currentUser?.role;
 
-  if (
+  // Redirect to "/" if on a common page
+  const commonPages = [
+    "/", "/service", "/contact-us", "/pricing", "/login", "/signup", "/school-setup", "/about", "/test"
+  ];
+  if (commonPages.includes(path)) {
+    logoLink = "/";
+  } else if (
     userRole === "student"
   ) {
     logoLink = "/user-dashboard";

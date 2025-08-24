@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: attendance.model.js
+// Description: Attendance model schema defining student class attendance tracking, absence records, and attendance statistics
+// First Written on: July 10, 2024
+// Edited on: Friday, July 10, 2024
+
 import mongoose from 'mongoose';
 
 const attendanceSchema = new mongoose.Schema({

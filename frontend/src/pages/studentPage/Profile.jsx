@@ -25,8 +25,11 @@ import {
   Spinner,
   Alert,
   AlertIcon,
+  Input,
+  FormControl,
+  FormLabel,
 } from "@chakra-ui/react"
-import { FiMail, FiPhone, FiMapPin, FiCalendar, FiEdit, FiDownload } from "react-icons/fi"
+import { FiMail, FiPhone, FiMapPin, FiCalendar, FiEdit, FiDownload, FiSave } from "react-icons/fi"
 import { useEffect, useState } from "react"
 import { useAcademicStore } from "../../store/academic.js"
 import { useFacilityStore } from "../../store/facility.js"
@@ -42,9 +45,13 @@ export default function Profile() {
     attendance,
     fetchResultsByStudentId,
     fetchAttendanceByStudentId,
+    fetchIntakeCoursesBySchoolId,
+    intakeCourses,
     loading: academicLoading,
     errors: academicErrors
   } = useAcademicStore()
+
+
   const {
     bookings,
     fetchBookingsByStudentId,
@@ -62,6 +69,8 @@ export default function Profile() {
   const [isDataLoaded, setIsDataLoaded] = useState(false)
   const [loadingTimeout, setLoadingTimeout] = useState(false)
   const [authData, setAuthData] = useState(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editableProfile, setEditableProfile] = useState({})
 
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
@@ -112,6 +121,9 @@ export default function Profile() {
 
     const fetchProfileData = async () => {
       try {
+
+        await fetchIntakeCoursesBySchoolId()
+
         // Use authData if available, otherwise fall back to currentUser
         const user = authData || currentUser;
 
@@ -160,26 +172,31 @@ export default function Profile() {
 
   // Process student profile from auth data
   useEffect(() => {
+
     if (authData) {
       const { user, student, school } = authData;
+      console.log("🚀 ~ Profile ~ student:", student)
 
       if (user && student) {
-        setStudentProfile({
+        const profileData = {
           id: user._id,
           name: user.name || `${student.firstName || ''} ${student.lastName || ''}`.trim() || 'Student Name',
           email: user.email,
           studentId: student._id,
-          program: student.intakeCourseId || 'Not specified',
+          program: intakeCourses.find(course => course._id == student.intakeCourseId)?.courseId?.courseName || 'Not specified',
+          intake: intakeCourses.find(course => course._id == student.intakeCourseId)?.intakeId?.intakeName || 'Not specified',
           year: student.currentYear || 1,
           semester: student.currentSemester || 'Current',
           profilePicture: user.profilePicture || null,
           phone: user.phoneNumber || 'Not provided',
           address: school?.address || 'Not provided',
           schoolName: school?.name || 'Not specified'
-        })
+        };
+        setStudentProfile(profileData);
+        setEditableProfile(profileData);
       }
     } else if (student) {
-      setStudentProfile({
+      const profileData = {
         id: student._id,
         name: `${student.firstName} ${student.lastName}`,
         email: student.email,
@@ -190,7 +207,9 @@ export default function Profile() {
         profilePicture: student.profilePicture || null,
         phone: student.phone || 'Not provided',
         address: student.address || 'Not provided'
-      })
+      };
+      setStudentProfile(profileData);
+      setEditableProfile(profileData);
     } else {
       // No student data available
     }
@@ -457,50 +476,169 @@ export default function Profile() {
     return Math.round(attendanceRecords.reduce((acc, record) => acc + (record.percentage || 0), 0) / attendanceRecords.length)
   }
 
+  const handleSave = async () => {
+    try {
+      if (!authData?.user?._id) {
+        toast({
+          title: "Error",
+          description: "User not authenticated",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // Update user profile
+      const updateResponse = await fetch(`/api/user/${authData.user._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: editableProfile.name,
+          phoneNumber: editableProfile.phone || "",
+        }),
+      });
+
+      if (updateResponse.ok) {
+        // Update local state
+        setStudentProfile(editableProfile);
+
+        toast({
+          title: "Profile Updated",
+          description: "Your profile has been updated successfully",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        setIsEditing(false);
+      } else {
+        const errorData = await updateResponse.json();
+        toast({
+          title: "Update Failed",
+          description: errorData.message || "Failed to update profile",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Update Failed",
+        description: "An error occurred while updating your profile",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  }
+
+  const handleCancel = () => {
+    setEditableProfile(studentProfile || {});
+    setIsEditing(false);
+  }
+
   return (
-    <Box minH="100vh">
+    <Box minH="100%">
       <VStack spacing={6} align="stretch">
-        {/* Header */}
-        <Box>
-          <Text fontSize="2xl" fontWeight="bold" color="gray.800" mb={2}>
-            Student Profile
-          </Text>
-          <Text color="gray.600">Manage your personal information and academic records</Text>
-        </Box>
 
         <Grid templateColumns={{ base: "1fr", lg: "1fr 2fr" }} gap={6}>
           {/* Profile Information */}
-          <VStack spacing={6}>
+          <VStack spacing={6} >
             {/* Basic Info Card */}
-            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full">
+            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full" h={"full"} >
               <CardBody>
-                <VStack spacing={4}>
+                <VStack spacing={4} h={"full"} justify={"center"}>
                   <ProfilePicture
-                    src={studentProfile.profilePicture}
-                    name={studentProfile.name}
+                    src={studentProfile?.profilePicture}
+                    name={studentProfile?.name || "Student"}
                     size="2xl"
                     bgColor="#3182ce"
                     onPhotoChange={handleProfilePictureChange}
                   />
                   <VStack spacing={1}>
                     <Text fontSize="xl" fontWeight="bold">
-                      {studentProfile.name}
+                      {studentProfile?.name || "Student Name"}
                     </Text>
-                    <Text color="gray.600">{studentProfile.studentId}</Text>
+                    <Text color="gray.600">{studentProfile?.studentId || "N/A"}</Text>
                     <Badge colorScheme="blue" variant="subtle">
-                      {studentProfile.program}
+                      {studentProfile?.program || "Not specified"}
                     </Badge>
-                    {studentProfile.schoolName && (
+                    <Badge colorScheme="blue" variant="outline">
+                      {studentProfile?.intake || "Not specified"}
+                    </Badge>
+                    {studentProfile?.schoolName && (
                       <Text fontSize="sm" color="gray.500">{studentProfile.schoolName}</Text>
                     )}
                   </VStack>
-                  <Button leftIcon={<FiEdit />} colorScheme="blue" size="sm">
-                    Edit Profile
-                  </Button>
+                  <HStack spacing={2}>
+                    {isEditing ? (
+                      <>
+                        <Button leftIcon={<FiSave />} colorScheme="green" size="sm" onClick={handleSave}>
+                          Save
+                        </Button>
+                        <Button colorScheme="gray" size="sm" onClick={handleCancel}>
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <Button leftIcon={<FiEdit />} colorScheme="blue" size="sm" onClick={() => setIsEditing(true)}>
+                        Edit Profile
+                      </Button>
+                    )}
+                  </HStack>
                 </VStack>
               </CardBody>
             </Card>
 
+            {/* Editable Profile Information */}
+            {isEditing && (
+              <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full">
+                <CardBody>
+                  <Text fontSize="lg" fontWeight="semibold" mb={4}>
+                    Edit Profile Information
+                  </Text>
+                  <VStack spacing={4} align="stretch">
+                    <FormControl>
+                      <FormLabel fontSize="sm">Full Name</FormLabel>
+                      <Input
+                        value={editableProfile.name || ""}
+                        onChange={(e) => setEditableProfile({ ...editableProfile, name: e.target.value })}
+                        placeholder="Enter full name"
+                        bg={isEditing ? "white" : "gray.50"}
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel fontSize="sm">Phone Number</FormLabel>
+                      <Input
+                        value={editableProfile.phone || ""}
+                        onChange={(e) => setEditableProfile({ ...editableProfile, phone: e.target.value })}
+                        placeholder="Enter phone number"
+                        bg={isEditing ? "white" : "gray.50"}
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel fontSize="sm">Address</FormLabel>
+                      <Input
+                        value={editableProfile.address || ""}
+                        onChange={(e) => setEditableProfile({ ...editableProfile, address: e.target.value })}
+                        placeholder="Enter address"
+                        bg={isEditing ? "white" : "gray.50"}
+                      />
+                    </FormControl>
+                  </VStack>
+                </CardBody>
+              </Card>
+            )}
+          </VStack>
+
+          {/* Detailed Information */}
+          <VStack spacing={6}>
             {/* Contact Information */}
             <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full">
               <CardBody>
@@ -510,20 +648,26 @@ export default function Profile() {
                 <VStack spacing={3} align="stretch">
                   <HStack>
                     <Icon as={FiMail} color="gray.400" />
-                    <Text fontSize="sm">{studentProfile.email}</Text>
+                    <Text fontSize="sm">{studentProfile?.email || "N/A"}</Text>
                   </HStack>
                   <HStack>
                     <Icon as={FiPhone} color="gray.400" />
-                    <Text fontSize="sm">{studentProfile.phone}</Text>
+                    <Text fontSize="sm">{studentProfile?.phone || "N/A"}</Text>
                   </HStack>
                   <HStack>
                     <Icon as={FiMapPin} color="gray.400" />
-                    <Text fontSize="sm">{studentProfile.address}</Text>
+                    <Text fontSize="sm">{studentProfile?.address || "N/A"}</Text>
                   </HStack>
                   <HStack>
                     <Icon as={FiCalendar} color="gray.400" />
                     <Text fontSize="sm">
-                      Year {studentProfile.year} • {studentProfile.semester}
+                      Year {studentProfile?.year || "N/A"} • {studentProfile?.semester || "N/A"}
+                    </Text>
+                  </HStack>
+                  <HStack>
+                    <Icon as={FiCalendar} color="gray.400" />
+                    <Text fontSize="sm" fontFamily="mono" >
+                      Student ID: {studentProfile?.studentId || "N/A"}
                     </Text>
                   </HStack>
                 </VStack>
@@ -558,148 +702,6 @@ export default function Profile() {
                     <Text fontWeight="medium">{getAttendanceAverage()}%</Text>
                   </HStack>
                   <Progress value={getAttendanceAverage()} colorScheme="blue" size="sm" w="full" />
-                </VStack>
-              </CardBody>
-            </Card>
-          </VStack>
-
-          {/* Detailed Information */}
-          <VStack spacing={6}>
-            {/* Academic Performance */}
-            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full">
-              <CardBody>
-                <HStack justify="space-between" mb={4}>
-                  <Text fontSize="lg" fontWeight="semibold">
-                    Academic Performance
-                  </Text>
-                  <Button leftIcon={<FiDownload />} size="sm" variant="outline">
-                    Download Transcript
-                  </Button>
-                </HStack>
-
-                {academicResults.length > 0 ? (
-                  <TableContainer>
-                    <Table variant="simple" size="sm">
-                      <Thead>
-                        <Tr>
-                          <Th>Course</Th>
-                          <Th>Semester</Th>
-                          <Th>Grade</Th>
-                          <Th>Credits</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {academicResults.map((result) => (
-                          <Tr key={result.id}>
-                            <Td>
-                              <Text fontSize="sm" fontWeight="medium">
-                                {result.course}
-                              </Text>
-                            </Td>
-                            <Td>
-                              <Text fontSize="sm">{result.semester}</Text>
-                            </Td>
-                            <Td>
-                              <Badge
-                                colorScheme={
-                                  result.grade.startsWith("A")
-                                    ? "green"
-                                    : result.grade.startsWith("B")
-                                      ? "blue"
-                                      : "yellow"
-                                }
-                                variant="subtle"
-                              >
-                                {result.grade}
-                              </Badge>
-                            </Td>
-                            <Td>
-                              <Text fontSize="sm">{result.credits}</Text>
-                            </Td>
-                          </Tr>
-                        ))}
-                      </Tbody>
-                    </Table>
-                  </TableContainer>
-                ) : (
-                  <Text color="gray.500" textAlign="center" py={4}>
-                    No academic results available
-                  </Text>
-                )}
-              </CardBody>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full">
-              <CardBody>
-                <Text fontSize="lg" fontWeight="semibold" mb={4}>
-                  Recent Activity
-                </Text>
-                {myBookings.length > 0 ? (
-                  <VStack spacing={3} align="stretch">
-                    {myBookings.slice(0, 5).map((booking) => (
-                      <HStack key={booking.id} justify="space-between" p={3} bg="gray.50" borderRadius="md">
-                        <VStack align="start" spacing={1}>
-                          <Text fontSize="sm" fontWeight="medium">
-                            {booking.type}: {booking.resource}
-                          </Text>
-                          <Text fontSize="xs" color="gray.600">
-                            {booking.date} • {booking.time}
-                          </Text>
-                        </VStack>
-                        <Badge
-                          colorScheme={
-                            booking.status === "confirmed" ? "green" : booking.status === "pending" ? "yellow" : "red"
-                          }
-                          variant="subtle"
-                        >
-                          {booking.status}
-                        </Badge>
-                      </HStack>
-                    ))}
-                  </VStack>
-                ) : (
-                  <Text color="gray.500" textAlign="center" py={4}>
-                    No recent bookings
-                  </Text>
-                )}
-              </CardBody>
-            </Card>
-
-            {/* Settings & Preferences */}
-            <Card bg={bgColor} borderColor={borderColor} borderWidth="1px" w="full">
-              <CardBody>
-                <Text fontSize="lg" fontWeight="semibold" mb={4}>
-                  Settings & Preferences
-                </Text>
-                <VStack spacing={3} align="stretch">
-                  <HStack justify="space-between">
-                    <Text fontSize="sm">Email Notifications</Text>
-                    <Badge colorScheme="green" variant="subtle">
-                      Enabled
-                    </Badge>
-                  </HStack>
-                  <Divider />
-                  <HStack justify="space-between">
-                    <Text fontSize="sm">SMS Alerts</Text>
-                    <Badge colorScheme="gray" variant="subtle">
-                      Disabled
-                    </Badge>
-                  </HStack>
-                  <Divider />
-                  <HStack justify="space-between">
-                    <Text fontSize="sm">Calendar Sync</Text>
-                    <Badge colorScheme="blue" variant="subtle">
-                      Google Calendar
-                    </Badge>
-                  </HStack>
-                  <Divider />
-                  <HStack justify="space-between">
-                    <Text fontSize="sm">Privacy Settings</Text>
-                    <Button size="xs" variant="outline">
-                      Configure
-                    </Button>
-                  </HStack>
                 </VStack>
               </CardBody>
             </Card>

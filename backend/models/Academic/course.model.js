@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: course.model.js
+// Description: Course model schema defining academic course structure, credits, duration, and relationship with departments and modules
+// First Written on: July 1, 2024
+// Edited on: Friday, July 7, 2024
+
 import mongoose from "mongoose";
 
 const courseSchema = new mongoose.Schema({

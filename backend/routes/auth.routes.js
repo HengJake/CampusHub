@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: auth.routes.js
+// Description: Authentication route definitions for user login, registration, password reset, and token validation endpoints
+// First Written on: July 13, 2024
+// Edited on: Friday, July 18, 2024
+
 import e from "express";
 import {
   logout,

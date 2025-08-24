@@ -136,7 +136,7 @@ const TransportModal = ({ isOpen, onClose, modalType, selectedItem, isEditMode, 
     };
 
     const renderViewContent = () => {
-        console.log("🚀 ~ renderViewContent ~ selectedItem:", selectedItem)
+
         if (!selectedItem) return null;
 
         switch (modalType) {

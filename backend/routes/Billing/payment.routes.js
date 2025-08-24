@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: payment.routes.js
+// Description: Payment processing route definitions for transaction handling, payment verification, and financial reconciliation endpoints
+// First Written on: July 18, 2024
+// Edited on: Friday, July 19, 2024
+
 import e from "express";
 import {
     createPayment,

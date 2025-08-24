@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: utils.js
+// Description: Utility functions for the booking system, including date formatting, validation helpers, and common booking operations
+// First Written on: July 25, 2024
+// Edited on: Friday, July 30, 2024
+
 import { FiBook, FiUsers, FiMonitor } from "react-icons/fi"
 
 export const getStatusColor = (status) => {

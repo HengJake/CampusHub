@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: room.model.js
+// Description: Room model schema defining classroom facilities, capacity, equipment, and availability for scheduling
+// First Written on: July 9, 2024
+// Edited on: Friday, July 10, 2024
+
 import mongoose from 'mongoose';
 
 const roomSchema = new mongoose.Schema({

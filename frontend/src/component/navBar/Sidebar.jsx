@@ -64,7 +64,7 @@ const Sidebar = ({ isOpen, onClose, role = "student", sidebarColors, glassBG }) 
             borderRadius={10}
             transition={isMobile ? ("all 0.5s ease-in") : ("all 0.2s")}
             position="fixed"
-            zIndex={101}
+            zIndex={201}
             bg={glassBG}
             sx={{
                 backdropFilter: "blur(10px)",

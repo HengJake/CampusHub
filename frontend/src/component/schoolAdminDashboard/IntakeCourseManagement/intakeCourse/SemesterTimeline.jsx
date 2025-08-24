@@ -10,7 +10,7 @@ import {
 } from '@chakra-ui/react';
 import { FiCalendar, FiBook, FiClock } from 'react-icons/fi';
 
-export function SemesterTimeline({ semesters, currentSemesterIndex, onSemesterClick }) {
+export function SemesterTimeline({ semesters, currentSemesterIndex, onSemesterClick, moduleCounts = {} }) {
     // Sort semesters by start date
     const sortedSemesters = [...semesters].sort((a, b) => {
         const dateA = new Date(a.startDate);
@@ -146,8 +146,35 @@ export function SemesterTimeline({ semesters, currentSemesterIndex, onSemesterCl
                                                     Duration: {calculateDuration(semester.startDate, semester.endDate)}
                                                 </Text>
                                             </HStack>
+
+                                            <HStack spacing={2}>
+                                                <Icon as={FiBook} boxSize={4} color="gray.500" />
+                                                <Text fontSize="sm" color="gray.600">
+                                                    Modules: {moduleCounts[semester._id] || 0}
+                                                </Text>
+                                            </HStack>
                                         </VStack>
                                     </VStack>
+                                </Box>
+
+
+                                <Box
+                                    position="relative"
+                                    zIndex={2}
+                                >
+                                    <Box
+                                        bg={color}
+                                        color="white"
+                                        px={3}
+                                        py={1}
+                                        borderRadius="full"
+                                        fontSize="sm"
+                                        fontWeight="bold"
+                                        transform="rotate(90deg)"
+                                        whiteSpace="nowrap"
+                                    >
+                                        {semester.startDate ? new Date(semester.startDate).getFullYear() : 'N/A'}
+                                    </Box>
                                 </Box>
 
                                 {/* Right Side - Year Badge */}

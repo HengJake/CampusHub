@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: student.model.js
+// Description: Student model schema defining student academic information, enrollment details, and relationship with courses and modules
+// First Written on: June 30, 2024
+// Edited on: Friday, July 8, 2024
+
 import mongoose from 'mongoose';
 
 const studentSchema = new mongoose.Schema({

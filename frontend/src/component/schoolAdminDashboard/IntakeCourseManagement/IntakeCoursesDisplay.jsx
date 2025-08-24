@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { useAcademicStore } from "../../../store/academic";
 import { FiRefreshCw } from "react-icons/fi";
 import { IntakeCourseCard } from "./intakeCourse/IntakeCourseCard";
-import { SemesterDetailsModal } from "./intakeCourse/SemesterDetailsModal";
+import SemesterDetailsModal from "./intakeCourse/SemesterDetailsModal";
 import { SemesterFormModal } from "./intakeCourse/SemesterFormModal";
 
 // Intake Courses Display Component
@@ -240,7 +240,7 @@ export function IntakeCoursesDisplay() {
                 });
 
                 // Refresh semesters and close modal
-                await fetchSemesters();
+                await fetchSemestersBySchoolId();
                 await handleRefreshCurrentSemesters(); // Add this line to refresh current semesters
                 handleCloseAddSemesterModal();
             } else {
@@ -317,7 +317,7 @@ export function IntakeCoursesDisplay() {
                 });
 
                 // Refresh semesters and close modal
-                await fetchSemesters();
+                await fetchSemestersBySchoolId();
                 await handleRefreshCurrentSemesters(); // Add this line to refresh current semesters
                 handleCloseAddSemesterModal();
             } else {

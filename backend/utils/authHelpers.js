@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: authHelpers.js
+// Description: Authentication helper functions for token payload generation, OAuth account linking, and authentication workflow management
+// First Written on: July 15, 2024
+// Edited on: Friday, August 17, 2024
+
 import School from '../models/Billing/school.model.js';
 import Student from '../models/Academic/student.model.js';
 import Lecturer from '../models/Academic/lecturer.model.js';

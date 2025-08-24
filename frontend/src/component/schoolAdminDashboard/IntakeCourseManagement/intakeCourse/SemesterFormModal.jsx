@@ -166,7 +166,6 @@ export function SemesterFormModal({
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="lg" scrollBehavior="inside">
-            <ModalOverlay />
             <ModalContent>
                 <ModalHeader>{isEditMode ? 'Edit Semester' : 'Add New Semester'}</ModalHeader>
                 <ModalCloseButton />

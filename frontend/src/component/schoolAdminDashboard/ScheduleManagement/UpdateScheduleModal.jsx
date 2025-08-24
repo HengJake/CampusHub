@@ -59,7 +59,7 @@ const UpdateScheduleModal = ({ schedule, isOpenEdit, onCloseEdit }) => {
                     invigilatorObjects = invigilatorObjects.filter(obj => obj !== null && obj !== undefined);
                 }
 
-                console.log("🚀 ~ initFormData ~ schedule:", schedule)
+
                 setFormData({
                     type: schedule.type || "",
                     dayOfWeek: schedule.dayOfWeek || "",

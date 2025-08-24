@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: student.controllers.js
+// Description: Student management controller handling CRUD operations for student records, enrollment, and academic data management
+// First Written on: July 15, 2024
+// Edited on: Friday, July 18, 2024
+
 import Student from "../../models/Academic/student.model.js";
 import User from "../../models/Academic/user.model.js";
 import School from "../../models/Billing/school.model.js";

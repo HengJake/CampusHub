@@ -78,13 +78,11 @@ export const getStopTypeLabel = (type) => {
 
 export const getStatusColor = (status) => {
     switch (status) {
-        case 'available':
+        case 'in_progress':
             return 'green';
-        case 'in_service':
+        case 'waiting':
             return 'blue';
-        case 'under_maintenance':
-            return 'orange';
-        case 'inactive':
+        case 'delayed':
             return 'red';
         default:
             return 'gray';

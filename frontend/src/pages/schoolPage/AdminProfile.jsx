@@ -163,6 +163,7 @@ export function AdminProfile() {
 
               const fixedProfilePictureUrl = fixGoogleProfilePictureUrl(user.profilePicture);
               const finalProfileData = {
+                id: userResult.data._id,
                 name: user.name || "",
                 email: user.email || "",
                 phone: user.phoneNumber || "",
@@ -552,6 +553,30 @@ export function AdminProfile() {
                     <FormControl>
                       <FormLabel>Join Date</FormLabel>
                       <Input value={profileData.joinDate} isReadOnly bg="gray.50" />
+                    </FormControl>
+                  </Grid>
+
+                  <Grid templateColumns="1fr 1fr" gap={4} w="full">
+                    <FormControl>
+                      <FormLabel>School ID</FormLabel>
+                      <Input
+                        value={schoolId || "Loading..."}
+                        isReadOnly
+                        bg="gray.50"
+                        fontFamily="mono"
+                        fontSize="sm"
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel>User ID</FormLabel>
+                      <Input
+                        value={profileData.id || "Loading..."}
+                        isReadOnly
+                        bg="gray.50"
+                        fontFamily="mono"
+                        fontSize="sm"
+                      />
                     </FormControl>
                   </Grid>
                 </VStack>
@@ -1013,6 +1038,10 @@ export function AdminProfile() {
                                 <HStack justify="space-between">
                                   <Text fontSize="xs">Semesters</Text>
                                   <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.semesters || 0}</Text>
+                                </HStack>
+                                <HStack justify="space-between">
+                                  <Text fontSize="xs">Semester Modules</Text>
+                                  <Text fontSize="xs" fontWeight="semibold">{dbStats.collections?.semesterModules || 0}</Text>
                                 </HStack>
                               </SimpleGrid>
                             </Box>

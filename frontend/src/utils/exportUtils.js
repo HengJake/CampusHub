@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: exportUtils.js
+// Description: Export utility functions for generating Excel reports, CSV files, and data exports across different modules and data types
+// First Written on: July 21, 2024
+// Edited on: Friday, August 12, 2024
+
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import Chart from 'chart.js/auto'

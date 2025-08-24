@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: academic.js
+// Description: Academic module store managing student, course, module, and academic data operations with comprehensive CRUD functionality
+// First Written on: July 14, 2024
+// Edited on: Friday, August 14, 2024
+
 import { create } from "zustand";
 import { useAuthStore } from "./auth.js";
 
@@ -16,6 +22,7 @@ export const useAcademicStore = create((set, get) => ({
     results: [],
     rooms: [],
     semesters: [],
+    semesterModules: [],
     schools: [], // Add schools state
 
     // Loading states
@@ -33,6 +40,7 @@ export const useAcademicStore = create((set, get) => ({
         results: false,
         rooms: false,
         semesters: false,
+        semesterModules: false,
         schools: false, // Add schools loading state
     },
 
@@ -51,6 +59,7 @@ export const useAcademicStore = create((set, get) => ({
         results: null,
         rooms: null,
         semesters: null,
+        semesterModules: null,
         schools: null, // Add schools error state
     },
 
@@ -118,7 +127,7 @@ export const useAcademicStore = create((set, get) => ({
             }));
         }
 
-        return res;
+        return data;
     },
 
     buildPOST: async (endpoint, data, stateKey) => {
@@ -139,7 +148,7 @@ export const useAcademicStore = create((set, get) => ({
             }));
         }
 
-        return res
+        return responseData
     },
 
     buildPATCH: async (endpoint, id, data, stateKey) => {
@@ -162,7 +171,7 @@ export const useAcademicStore = create((set, get) => ({
             }));
         }
 
-        return res
+        return responseData
     },
 
     buildDELETE: async (endpoint, id, localstorage) => {
@@ -227,8 +236,7 @@ export const useAcademicStore = create((set, get) => ({
 
     createSchool: async (schoolData) => {
         try {
-            const res = await get().buildPOST('/api/school', schoolData, 'schools');
-            const data = await res.json();
+            const data = await get().buildPOST('/api/school', schoolData, 'schools');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create school");
@@ -317,9 +325,7 @@ export const useAcademicStore = create((set, get) => ({
                 return { success: false, message: "Only school can create student" };
             }
 
-            const res = await get().buildPOST('/api/student', studentData, 'students')
-
-            const data = await res.json();
+            const data = await get().buildPOST('/api/student', studentData, 'students')
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create student");
@@ -403,8 +409,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST("/api/course", courseData, 'courses');
-            const data = await res.json();
+            const data = await get().buildPOST("/api/course", courseData, 'courses');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create course");
@@ -495,8 +500,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST("/api/lecturer", lecturerData, 'lecturers');
-            const data = await res.json();
+            const data = await get().buildPOST("/api/lecturer", lecturerData, 'lecturers');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create lecturer");
@@ -579,8 +583,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST("/api/department", departmentData, 'departments');
-            const data = await res.json();
+            const data = await get().buildPOST("/api/department", departmentData, 'departments');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create department");
@@ -663,8 +666,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST("/api/module", moduleData, 'modules');
-            const data = await res.json();
+            const data = await get().buildPOST("/api/module", moduleData, 'modules');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create module");
@@ -763,8 +765,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST('/api/intake-course', intakeCourseData, 'intakeCourses');
-            const data = await res.json();
+            const data = await get().buildPOST('/api/intake-course', intakeCourseData, 'intakeCourses');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create intake course");
@@ -862,8 +863,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST("/api/attendance", attendanceData, 'attendance');
-            const data = await res.json();
+            const data = await get().buildPOST("/api/attendance", attendanceData, 'attendance');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create attendance");
@@ -1007,8 +1007,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST("/api/class-schedule", scheduleData, 'classSchedules');
-            const data = await res.json();
+            const data = await get().buildPOST("/api/class-schedule", scheduleData, 'classSchedules');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create class schedule");
@@ -1118,8 +1117,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST("/api/result", resultData, 'results');
-            const data = await res.json();
+            const data = await get().buildPOST("/api/result", resultData, 'results');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create result");
@@ -1200,8 +1198,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST('/api/intake', intakeData, 'intakes');
-            const data = await res.json();
+            const data = await get().buildPOST('/api/intake', intakeData, 'intakes');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create intake");
@@ -1710,8 +1707,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST('/api/room', roomData, 'rooms');
-            const data = await res.json();
+            const data = await get().buildPOST('/api/room', roomData, 'rooms');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create room");
@@ -1725,8 +1721,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateRoom: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/room', id, updates, 'rooms');
-            const data = await res.json();
+            const data = await get().buildPUT('/api/room', id, updates, 'rooms');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update room");
@@ -1886,8 +1881,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST('/api/exam-schedule', examScheduleData, 'examSchedules');
-            const data = await res.json();
+            const data = await get().buildPOST('/api/exam-schedule', examScheduleData, 'examSchedules');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to create exam schedule");
@@ -1917,7 +1911,7 @@ export const useAcademicStore = create((set, get) => ({
     deleteExamSchedule: async (id) => {
         try {
             const data = await get().buildDELETE('/api/exam-schedule', id, 'examSchedules');
-            console.log("🚀 ~ data:", data)
+
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to delete exam schedule");
@@ -2036,8 +2030,7 @@ export const useAcademicStore = create((set, get) => ({
                 }
             }
 
-            const res = await get().buildPOST('/api/semester', semesterData, 'semesters');
-            const data = await res.json();
+            const data = await get().buildPOST('/api/semester', semesterData, 'semesters');
 
             if (!data.success) {
                 return {
@@ -2125,6 +2118,121 @@ export const useAcademicStore = create((set, get) => ({
 
             // Update in local state
             return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    // Semester Module Functions
+    fetchSemesterModulesBySchoolId: async () => {
+        try {
+            const data = await get().buildGET('/api/semester-module/school');
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchModulesBySemester: async (semesterId) => {
+        try {
+            const res = await fetch(`/api/semester-module/semester/${semesterId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch semester modules");
+            }
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    getModuleCountBySemester: async (semesterId) => {
+        try {
+            const res = await fetch(`/api/semester-module/count/${semesterId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch module count");
+            }
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    getAvailableModulesForSemester: async (semesterId, courseId) => {
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            
+            const res = await fetch(`/api/semester-module/available/${semesterId}/${courseId}/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch available modules");
+            }
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    addModuleToSemester: async (semesterId, moduleId, courseId, intakeCourseId) => {
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+            
+            const semesterModuleData = {
+                semesterId,
+                moduleId,
+                courseId,
+                intakeCourseId,
+                schoolId
+            };
+
+            const res = await fetch('/api/semester-module', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(semesterModuleData),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to add module to semester");
+            }
+
+            // Refresh semester modules
+            await get().fetchSemesterModulesBySchoolId();
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    removeModuleFromSemester: async (semesterModuleId) => {
+        try {
+            const res = await fetch(`/api/semester-module/${semesterModuleId}`, {
+                method: 'DELETE',
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to remove module from semester");
+            }
+
+            // Refresh semester modules
+            await get().fetchSemesterModulesBySchoolId();
+
+            return { success: true, message: data.message };
         } catch (error) {
             return { success: false, message: error.message };
         }

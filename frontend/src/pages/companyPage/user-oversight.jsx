@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: user-oversight.jsx
+// Description: User oversight panel for company administrators to monitor user activities, manage permissions, and oversee system access
+// First Written on: July 14, 2024
+// Edited on: Friday, August 8, 2024
+
 "use client";
 
 import React, { useEffect } from "react";
@@ -61,7 +67,7 @@ export default function UserOversight() {
     avgGrowthRate:
       schools.length > 0
         ? schools.reduce((sum, s) => sum + (s.growthRate || 0), 0) /
-          schools.length
+        schools.length
         : 0,
   };
 

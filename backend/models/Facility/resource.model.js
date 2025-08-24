@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: resource.model.js
+// Description: Resource model schema defining facility resource management, availability tracking, and resource allocation
+// First Written on: July 8, 2024
+// Edited on: Friday, July 10, 2024
+
 import mongoose from "mongoose";
 
 const ResourceSchema = new mongoose.Schema({

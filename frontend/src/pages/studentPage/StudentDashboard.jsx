@@ -59,11 +59,6 @@ export default function StudentDashboard() {
   const currentUser = getCurrentUser()
   const navigate = useNavigate()
 
-  // Debug logging
-  console.log('StudentDashboard - currentUser:', currentUser);
-  console.log('StudentDashboard - currentUser.user:', currentUser?.user);
-  console.log('StudentDashboard - currentUser.student:', currentUser?.student);
-
   // Use real data from stores
   const { feedback, responds, fetchFeedbackByStudentId, fetchResponds } = useServiceStore()
   const { bookings, fetchBookingsByStudentId, parkingLots, fetchParkingLotsBySchoolId } = useFacilityStore()
@@ -193,11 +188,22 @@ export default function StudentDashboard() {
         const isToday = schedule.dayOfWeek === todayDayOfWeek
 
         // Check if the module is currently active (between start and end dates)
-        const moduleStartDate = new Date(schedule.moduleStartDate)
-        const moduleEndDate = new Date(schedule.moduleEndDate)
-        const isModuleActive = today >= moduleStartDate && today <= moduleEndDate
+        if (schedule.moduleStartDate && schedule.moduleEndDate) {
+          const moduleStartDate = new Date(schedule.moduleStartDate)
+          const moduleEndDate = new Date(schedule.moduleEndDate)
 
-        return isToday && isModuleActive
+          // Reset time to start of day for accurate comparison
+          const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+          const startDate = new Date(moduleStartDate.getFullYear(), moduleStartDate.getMonth(), moduleStartDate.getDate())
+          const endDate = new Date(moduleEndDate.getFullYear(), moduleEndDate.getMonth(), moduleEndDate.getDate())
+
+          const isModuleActive = todayStart >= startDate && todayStart <= endDate
+
+          return isToday && isModuleActive
+        }
+
+        // If no module dates, only check day of week
+        return isToday
       }).length
 
       // Pending feedback responses
@@ -476,21 +482,6 @@ export default function StudentDashboard() {
             </Box>
           </Tooltip>
 
-          <Tooltip label="Total available parking spots across all zones" placement="top">
-            <Box>
-              <QuickStatCard
-                title="Available Parking"
-                value={statsData.availableParking}
-                icon={FiMapPin}
-                color="purple.500"
-                isLoading={isLoading}
-              />
-            </Box>
-          </Tooltip>
-        </Grid>
-
-        {/* Additional Stats Row */}
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
           <Tooltip label="Classes scheduled for today" placement="top">
             <Box>
               <QuickStatCard
@@ -498,42 +489,6 @@ export default function StudentDashboard() {
                 value={statsData.todayClasses}
                 icon={FiBook}
                 color="teal.500"
-                isLoading={isLoading}
-              />
-            </Box>
-          </Tooltip>
-
-          <Tooltip label="Pending feedback responses from admin" placement="top">
-            <Box>
-              <QuickStatCard
-                title="Pending Feedback"
-                value={statsData.pendingFeedback}
-                icon={FiMessageSquare}
-                color="pink.500"
-                isLoading={isLoading}
-              />
-            </Box>
-          </Tooltip>
-
-          <Tooltip label="Current shuttle service status" placement="top">
-            <Box>
-              <QuickStatCard
-                title="Shuttle Status"
-                value={statsData.shuttleStatus === 'no-data' ? 'N/A' : statsData.shuttleStatus}
-                icon={FaBus}
-                color={getStatusColor(statsData.shuttleStatus)}
-                isLoading={isLoading}
-              />
-            </Box>
-          </Tooltip>
-
-          <Tooltip label="Your current academic progress" placement="top">
-            <Box>
-              <QuickStatCard
-                title="Academic Status"
-                value={currentUser?.student?.status || 'Enrolled'}
-                icon={FiCheckCircle}
-                color="green.500"
                 isLoading={isLoading}
               />
             </Box>
@@ -711,7 +666,7 @@ export default function StudentDashboard() {
                           <Th>Start Time</Th>
                           <Th>End Time</Th>
                           <Th>Vehicle</Th>
-                          <Th>Status</Th>
+                          <Th display={{ base: "none", lg: "table-cell" }}>Status</Th>
                         </Tr>
                       </Thead>
                       <Tbody>
@@ -737,13 +692,21 @@ export default function StudentDashboard() {
                           const nextArrival = routeTiming.startTime || 'N/A'
 
                           return (
-                            <Tr key={schedule._id}>
-                              <Td>{schedule.routeTiming?.[0]?.routeId?.name || 'Route N/A'}</Td>
-                              <Td>{getDayName(schedule.dayOfWeek)}</Td>
-                              <Td fontWeight="medium">{routeTiming.startTime || 'N/A'}</Td>
-                              <Td>{routeTiming.endTime || 'N/A'}</Td>
+                            <Tr
+                              key={schedule._id}
+                              sx={{
+                                '@media (max-width: 62em)': {
+                                  backgroundColor: schedule.active ? 'green.50' : 'gray.50',
+                                }
+                              }}
+                            >
+                              <Td fontSize="xs">{schedule.routeTiming?.[0]?.routeId?.name || 'Route N/A'}</Td>
+                              <Td fontSize="xs">{getDayName(schedule.dayOfWeek)}</Td>
+                              <Td fontWeight="medium" fontSize="xs">{routeTiming.startTime || 'N/A'}</Td>
+                              <Td fontSize="xs">{routeTiming.endTime || 'N/A'}</Td>
                               <Td>{schedule.vehicleId?.plateNumber || 'Vehicle N/A'}</Td>
-                              <Td>
+                              {/* Hide status on base screens */}
+                              <Td display={{ base: "none", lg: "table-cell" }}>
                                 <Badge
                                   colorScheme={schedule.active ? "green" : "gray"}
                                   variant="subtle"

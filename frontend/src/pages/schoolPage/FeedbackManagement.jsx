@@ -36,6 +36,7 @@ import {
 import { FiMessageSquare, FiClock, FiCheckCircle, FiAlertCircle } from "react-icons/fi"
 import { useState, useEffect } from "react"
 import { useServiceStore } from "../../store/service.js"
+import { useAuthStore } from "../../store/auth.js"
 import React from "react"
 
 export function FeedbackManagement() {
@@ -53,6 +54,9 @@ export function FeedbackManagement() {
   const bgColor = useColorModeValue("white", "gray.800")
   const borderColor = useColorModeValue("gray.200", "gray.600")
 
+  // Use auth store
+  const { initializeAuth, currentUser } = useAuthStore()
+
   // Use service store
   const {
     feedback,
@@ -64,6 +68,11 @@ export function FeedbackManagement() {
     updateFeedback,
     createRespond
   } = useServiceStore()
+
+  // Initialize auth on component mount
+  useEffect(() => {
+    initializeAuth()
+  }, [])
 
   // Fetch feedback data from backend
   const loadFeedback = async () => {
@@ -115,11 +124,13 @@ export function FeedbackManagement() {
     }
   }
 
-  // Load feedback data on component mount
+  // Load feedback data after auth is initialized
   useEffect(() => {
-    loadFeedback()
-    loadResponds()
-  }, [])
+    if (currentUser) {
+      loadFeedback()
+      loadResponds()
+    }
+  }, [currentUser])
 
   // Transform backend data to match frontend expectations
   const transformFeedbackData = (backendData) => {
@@ -274,6 +285,18 @@ export function FeedbackManagement() {
   const resolvedCount = respondedFeedback.filter((f) => f && f.status === "resolved").length
   const totalUnresponded = unrespondedFeedback.length
   const totalResponded = respondedFeedback.length
+
+  // Show loading while auth is initializing
+  if (!currentUser) {
+    return (
+      <Box p={6} minH="100vh" display="flex" alignItems="center" justifyContent="center">
+        <VStack spacing={4}>
+          <Spinner size="xl" color="#344E41" />
+          <Text>Initializing authentication...</Text>
+        </VStack>
+      </Box>
+    )
+  }
 
   if (loading.feedback) {
     return (

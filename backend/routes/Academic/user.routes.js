@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: user.routes.js
+// Description: User management route definitions for CRUD operations, profile management, and user data endpoints
+// First Written on: July 15, 2024
+// Edited on: Friday, July 19, 2024
+
 import e from "express";
 import {
     createUser,

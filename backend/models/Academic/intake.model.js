@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: intake.model.js
+// Description: Intake model schema defining student enrollment batches, admission periods, and cohort management
+// First Written on: July 6, 2024
+// Edited on: Friday, July 9, 2024
+
 import mongoose from "mongoose";
 
 const intakeSchema = new mongoose.Schema({

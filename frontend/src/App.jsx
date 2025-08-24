@@ -37,6 +37,7 @@ import Locker from "./pages/studentPage/Locker.jsx";
 import Schedule from "./pages/studentPage/Schedule.jsx";
 import Exams from "./pages/studentPage/Exams.jsx";
 import Attendance from "./pages/studentPage/Attendance.jsx";
+import { LostFoundReport } from "./pages/studentPage/LostFoundReport.jsx";
 
 // School Admin Pages
 import { Dashboard as AdminDashboard } from "./pages/schoolPage/Dashboard.jsx";
@@ -46,6 +47,7 @@ import { ParkingManagement } from "./pages/schoolPage/ParkingManagement.jsx";
 import { LockerManagement } from "./pages/schoolPage/LockerManagement.jsx";
 import { BookingManagement } from "./pages/schoolPage/BookingManagement.jsx";
 import { FeedbackManagement } from "./pages/schoolPage/FeedbackManagement.jsx";
+import { LostAndFoundManagement } from "./pages/schoolPage/LostAndFoundManagement.jsx";
 import { AnnouncementManagement } from "./pages/schoolPage/AnnouncementManagement.jsx";
 import { AdminSetting } from "./pages/schoolPage/AdminSetting.jsx";
 import { AdminProfile } from "./pages/schoolPage/AdminProfile.jsx";
@@ -112,6 +114,7 @@ function App() {
     "/user-dashboard",
     "/user-profile",
     "/feedback",
+    "/lost-found-report",
     "/academic",
     "/transportation",
     "/facility/parking",
@@ -132,6 +135,7 @@ function App() {
     "/parking-management",
     "/booking-management",
     "/feedback-management",
+    "/lost-found-management",
     "/academic-management",
     "/course-management",
     "/lecturer-management",
@@ -282,6 +286,7 @@ function App() {
           <Route path="/class-finder" element={wrapWithAuth(<ClassFinder />)} />
           <Route path="/user-profile" element={wrapWithAuth(<Profile />)} />
           <Route path="/feedback" element={wrapWithAuth(<Feedback />)} />
+          <Route path="/lost-found-report" element={wrapWithAuth(<LostFoundReport />)} />
           <Route path="/academic" element={wrapWithAuth(<Academic />)} />
           <Route path="/transportation" element={wrapWithAuth(<Transportation />)} />
 
@@ -301,6 +306,7 @@ function App() {
           <Route path="/parking-management" element={wrapWithAuth(<ParkingManagement />)} />
           <Route path="/booking-management" element={wrapWithAuth(<BookingManagement />)} />
           <Route path="/feedback-management" element={wrapWithAuth(<FeedbackManagement />)} />
+          <Route path="/lost-found-management" element={wrapWithAuth(<LostAndFoundManagement />)} />
           <Route path="/academic-overview" element={wrapWithAuth(<AcademicOverview />)} />
           <Route path="/course-management" element={wrapWithAuth(<CourseManagementPage />)} />
           <Route path="/announcement-management" element={wrapWithAuth(<AnnouncementManagement />)} />

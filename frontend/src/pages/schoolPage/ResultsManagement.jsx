@@ -37,7 +37,7 @@ import {
 
 export default function ResultsBulkUpload() {
     const { fetchStudentsBySchoolId, fetchSemestersBySchoolId, semesters, createResult, fetchStudents, students, fetchIntakeCoursesBySchoolId, intakeCourses, results, fetchResultsBySchoolId, modules, fetchModulesBySchoolId, updateResult, deleteResult } = useAcademicStore();
-    console.log("🚀 ~ ResultsBulkUpload ~ results:", results)
+
     const { exportTemplate } = useGeneralStore();
     const showToast = useShowToast();
 
@@ -362,7 +362,7 @@ export default function ResultsBulkUpload() {
     // Edit handlers
     const handleEditClick = (result) => {
         setSelectedResult(result);
-        console.log("🚀 ~ handleEditClick ~ result:", result)
+
         setEditFormData({
             grade: result.grade || '',
             creditHours: result.creditHours || '',

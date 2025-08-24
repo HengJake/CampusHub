@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: service.js
+// Description: Service management store handling feedback, bug reports, lost items, and customer support ticket management
+// First Written on: July 20, 2024
+// Edited on: Friday, August 8, 2024
+
 import { create } from "zustand";
 import { useAuthStore } from "../store/auth.js";
 
@@ -324,6 +330,32 @@ export const useServiceStore = create((set, get) => ({
             return { success: false, message: error.message };
         }
     },
+
+    fetchLostItemsByStudentId: async (studentId) => {
+        set((state) => ({ loading: { ...state.loading, lostItems: true } }));
+        try {
+            const res = await fetch(`/api/lost-item/student/${studentId}`, {
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch lost items by student ID");
+            }
+            set((state) => ({
+                lostItems: data.data,
+                loading: { ...state.loading, lostItems: false },
+                errors: { ...state.errors, lostItems: null },
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, lostItems: false },
+                errors: { ...state.errors, lostItems: error.message },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
     updateLostItem: async (id, updates) => {
         try {
             const res = await fetch(`/api/lost-item/${id}`, {
@@ -360,6 +392,39 @@ export const useServiceStore = create((set, get) => ({
                 lostItems: state.lostItems.filter((item) => item._id !== id),
             }));
             return { success: true };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    // Match a reported item with a found item
+    matchLostItems: async (reportedItemId, foundItemId) => {
+        try {
+            const res = await fetch("/api/lost-item/match", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: 'include',
+                body: JSON.stringify({ reportedItemId, foundItemId }),
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to match lost items");
+            }
+            
+            // Update the local state with the matched items
+            set((state) => ({
+                lostItems: state.lostItems.map((item) => {
+                    if (item._id === reportedItemId) {
+                        return data.data.reportedItem;
+                    }
+                    if (item._id === foundItemId) {
+                        return data.data.foundItem;
+                    }
+                    return item;
+                }),
+            }));
+            
+            return { success: true, data: data.data };
         } catch (error) {
             return { success: false, message: error.message };
         }
@@ -687,3 +752,104 @@ export const useServiceStore = create((set, get) => ({
         });
     },
 }));
+
+// Lost and Found API functions
+export const lostItemAPI = {
+  // Get all lost items for a school
+  getAllLostItems: async (schoolId) => {
+    try {
+      const response = await fetch(`/api/lost-items/school/${schoolId}`);
+      if (!response.ok) throw new Error('Failed to fetch lost items');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching lost items:', error);
+      throw error;
+    }
+  },
+
+  // Get lost item by ID
+  getLostItemById: async (id) => {
+    try {
+      const response = await fetch(`/api/lost-items/${id}`);
+      if (!response.ok) throw new Error('Failed to fetch lost item');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching lost item:', error);
+      throw error;
+    }
+  },
+
+  // Create new lost item
+  createLostItem: async (itemData) => {
+    try {
+      const response = await fetch('/api/lost-items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(itemData),
+      });
+      if (!response.ok) throw new Error('Failed to create lost item');
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating lost item:', error);
+      throw error;
+    }
+  },
+
+  // Update lost item
+  updateLostItem: async (id, updateData) => {
+    try {
+      const response = await fetch(`/api/lost-items/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
+      if (!response.ok) throw new Error('Failed to update lost item');
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating lost item:', error);
+      throw error;
+    }
+  },
+
+  // Delete lost item
+  deleteLostItem: async (id) => {
+    try {
+      const response = await fetch(`/api/lost-items/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete lost item');
+      return await response.json();
+    } catch (error) {
+      console.error('Error deleting lost item:', error);
+      throw error;
+    }
+  },
+
+  // Get lost items by owner
+  getLostItemsByOwner: async (ownerId) => {
+    try {
+      const response = await fetch(`/api/lost-items/owner/${ownerId}`);
+      if (!response.ok) throw new Error('Failed to fetch owner items');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching owner items:', error);
+      throw error;
+    }
+  },
+
+  // Get lost items by matched item
+  getLostItemsByMatchedItem: async (matchedItemId) => {
+    try {
+      const response = await fetch(`/api/lost-items/matchedItem/${matchedItemId}`);
+      if (!response.ok) throw new Error('Failed to fetch matched items');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching matched items:', error);
+      throw error;
+    }
+  }
+};

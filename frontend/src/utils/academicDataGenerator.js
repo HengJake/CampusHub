@@ -7,6 +7,7 @@ import { useUserStore } from '../store/user.js';
 import { useFacilityStore } from '../store/facility.js';
 import { useServiceStore } from '../store/service.js';
 import { useTransportationStore } from '../store/transportation.js';
+import { convertImageFileToBase64 } from './imageToBase64.js';
 
 // Function to delete all school data
 export const deleteAllSchoolData = async (schoolId) => {
@@ -86,6 +87,56 @@ const generateNames = () => {
     return `${firstName} ${lastName}`;
 };
 
+// Helper function to validate store responses
+const validateStoreResponse = (response, methodName, itemData) => {
+    if (!response) {
+        throw new Error(`No response from ${methodName}`);
+    }
+
+    if (!response.success) {
+        throw new Error(`Failed to create ${methodName.replace('create', '').toLowerCase()}: ${response.message}`);
+    }
+
+    if (!response.data) {
+        throw new Error(`No data in ${methodName} response: ${JSON.stringify(response)}`);
+    }
+
+    return response.data;
+};
+
+// Utility function to generate unique student names
+const generateUniqueStudentName = (schoolPrefix, studentIndex, intakeIndex, courseIndex) => {
+    const firstNames = [
+        "Ahmad", "Aisha", "Ali", "Aminah", "Amir", "Anisa", "Arif", "Azizah", "Bilal", "Diana",
+        "Elena", "Fadil", "Fatima", "Hassan", "Huda", "Ibrahim", "Iman", "Jamal", "Khadijah", "Layla",
+        "Malik", "Mariam", "Nabil", "Nadia", "Omar", "Rania", "Rashid", "Sara", "Tariq", "Yasmin",
+        "Zainab", "Zakir", "Alya", "Bakar", "Camelia", "Danish", "Ehsan", "Farah", "Ghazal", "Hakim",
+        "Iqbal", "Jasmine", "Karim", "Laila", "Mahmoud", "Noor", "Othman", "Parveen", "Qasim", "Rashida"
+    ];
+
+    const lastNames = [
+        "Abdullah", "Ahmad", "Ali", "Bakar", "Chowdhury", "Das", "Fernandez", "Garcia", "Hassan", "Ibrahim",
+        "Jamil", "Khan", "Lee", "Mahmood", "Nguyen", "Omar", "Patel", "Qureshi", "Rahman", "Singh",
+        "Tan", "Uddin", "Verma", "Wong", "Xavier", "Yusuf", "Zaman", "Ahmed", "Begum", "Chowdhury",
+        "Das", "Fernandez", "Garcia", "Hassan", "Ibrahim", "Jamil", "Khan", "Lee", "Mahmood", "Nguyen"
+    ];
+
+    // Use a combination of indices to ensure uniqueness
+    const firstNameIndex = (studentIndex + intakeIndex * 10 + courseIndex * 5) % firstNames.length;
+    const lastNameIndex = (studentIndex + intakeIndex * 7 + courseIndex * 3) % lastNames.length;
+
+    const firstName = firstNames[firstNameIndex];
+    const lastName = lastNames[lastNameIndex];
+
+    // Add a unique identifier to prevent any potential duplicates
+    const uniqueId = `${schoolPrefix}_${intakeIndex}_${courseIndex}_${studentIndex}`;
+
+    return {
+        fullName: `${firstName} ${lastName}`,
+        uniqueId: uniqueId
+    };
+};
+
 // Generate academic data for an existing school
 export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userCounts = { lecturer: 8, student: 50 }) => {
     const { lecturer: lecturerCount, student: studentCount } = userCounts;
@@ -93,6 +144,10 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
     // Get store instances
     const academicStore = useAcademicStore.getState();
     const userStore = useUserStore.getState();
+
+    if (!academicStore || typeof academicStore.createRoom !== 'function') {
+        throw new Error('Academic store is not properly initialized or createRoom method is missing');
+    }
 
     try {
         // First, delete all existing data for this school
@@ -611,6 +666,81 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
             }
         }
 
+        // 7.5. Generate Semester Modules (Assign modules to semesters)
+        const semesterModules = [];
+        console.log('Generating semester modules...');
+        console.log(`Total modules: ${modules.length}, Total semesters: ${semesters.length}`);
+
+        // Assign modules to semesters based on course
+        for (let courseIndex = 0; courseIndex < courses.length; courseIndex++) {
+            const courseId = courses[courseIndex]._id;
+            const courseModules = modules.filter(module => {
+                // Handle courseId as array since modules can belong to multiple courses
+                if (Array.isArray(module.courseId)) {
+                    return module.courseId.includes(courseId);
+                } else {
+                    // Fallback for single courseId (if model was changed)
+                    return module.courseId === courseId;
+                }
+            });
+
+            // Find the matching intake course for this course
+            const matchingIntakeCourse = intakeCourses.find(ic => ic.courseId === courseId);
+            if (!matchingIntakeCourse) {
+                console.warn(`No intake course found for course ${courses[courseIndex].courseName}`);
+                continue;
+            }
+
+            // Get semesters for this specific course (6 semesters per course: 3 years × 2 semesters)
+            const courseSemesters = semesters.filter(semester => semester.courseId === courseId);
+
+            console.log(`Assigning ${courseModules.length} modules to ${courseSemesters.length} semesters for ${courses[courseIndex].courseName}...`);
+
+            // Distribute modules evenly across semesters
+            for (let semesterIndex = 0; semesterIndex < courseSemesters.length; semesterIndex++) {
+                const semesterId = courseSemesters[semesterIndex]._id;
+                const semesterNumber = semesterIndex + 1;
+
+                // Calculate how many modules should go to this semester
+                const modulesPerSemester = Math.ceil(courseModules.length / courseSemesters.length);
+                const startModuleIndex = semesterIndex * modulesPerSemester;
+                const endModuleIndex = Math.min(startModuleIndex + modulesPerSemester, courseModules.length);
+                const semesterModulesForSemester = courseModules.slice(startModuleIndex, endModuleIndex);
+
+                console.log(`Semester ${semesterNumber} will get ${semesterModulesForSemester.length} modules`);
+
+                // Create semester module relationships
+                for (const module of semesterModulesForSemester) {
+                    const semesterModuleData = {
+                        semesterId: semesterId,
+                        moduleId: module._id,
+                        courseId: courseId,
+                        intakeCourseId: matchingIntakeCourse._id,
+                        schoolId: schoolId
+                    };
+
+                    try {
+                        console.log(`Assigning module ${module.code} to semester ${semesterNumber}...`);
+                        const createdSemesterModule = await academicStore.addModuleToSemester(
+                            semesterId,
+                            module._id,
+                            courseId,
+                            matchingIntakeCourse._id
+                        );
+                        if (createdSemesterModule.success) {
+                            semesterModules.push(createdSemesterModule.data);
+                            console.log(`✅ Module ${module.code} assigned to semester ${semesterNumber}`);
+                        } else {
+                            console.warn(`⚠️ Module assignment failed: ${createdSemesterModule.message}`);
+                        }
+                    } catch (error) {
+                        console.error(`❌ Failed to assign module ${module.code} to semester ${semesterNumber}:`, error);
+                        // Don't throw error, continue with other modules
+                    }
+                }
+            }
+        }
+
         // 8. Generate Lecturers
         const lecturers = [];
         const lecturerUsers = []; // Array to store user documents for lecturers
@@ -670,11 +800,19 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
             const statuses = ['enrolled', 'in_progress', 'graduated', 'dropped', 'suspended'];
             const standings = ['good', 'warning', 'probation', 'suspended'];
 
+            // Generate unique name for this student
+            const courseIndex = intakeCourseIndex % courses.length;
+            const { fullName, uniqueId } = generateUniqueStudentName(schoolPrefix, i, intakeCourseIndex, courseIndex);
+
             // Create user document for this student
             const studentUserData = {
-                name: `${schoolPrefix} Student_${i + 1}`,
-                email: `student${i + 1}@student.${schoolPrefix.toLowerCase()}.edu.my`,
-                password: "password123",
+                name: fullName,
+                email: (schoolPrefix === "APU" && i === 0)
+                    ? "studentcampushub@gmail.com"
+                    : `student${i + 1}@student.${schoolPrefix.toLowerCase()}.edu.my`,
+                password: (schoolPrefix === "APU" && i === 0)
+                    ? "P@ssw0rd$$"
+                    : "password123",
                 phoneNumber: generatePhoneNumber(60123456800 + i),
                 role: "student",
                 twoFA_enabled: false,
@@ -1223,7 +1361,6 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
             const bulkResult = await facilityStore.bulkCreateParkingLots(parkingData);
             if (bulkResult.success) {
                 parkingLots.push(...bulkResult.data);
-                console.log(`✅ Created ${bulkResult.data.length} parking lots using bulk endpoint`);
             } else {
                 console.error('Failed to create parking lots in bulk:', bulkResult.message);
                 if (bulkResult.errors) {
@@ -1296,32 +1433,104 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
         // 17. Generate Lost Items
         const lostItems = [];
 
-        students.forEach(async (student, studentIndex) => {
-            if (studentIndex < 5) { // Limit to 5 lost items
-                const statuses = ["reported", "found", "claimed"];
+        const lostItemSampleData = [
+            {
+                name: "Water Bottle",
+                description: "Lost white cylindrical water bottle with black lid. Has 'Botella' text printed on it.",
+                location: "cafeteria",
+                imagePath: "/bottle.jpeg",
+                imageData: null, // Will be populated with base64 data
+                imageType: null
+            },
+            {
+                name: "USB Flash Drive",
+                description: "Lost black USB flash drive (SanDisk Cruzer micro 4GB) with retractable connector.",
+                location: "library",
+                imagePath: "/pendrive.jpeg",
+                imageData: null, // Will be populated with base64 data
+                imageType: null
+            },
+            {
+                name: "Laptop Charger",
+                description: "Lost laptop charger with black cable and rectangular connector.",
+                location: "classroom",
+                imagePath: "/laptopCharger.jpeg",
+                imageData: null, // Will be populated with base64 data
+                imageType: null
+            },
+            {
+                name: "Student ID Card",
+                description: "Lost student identification card with photo and student number.",
+                location: "gym",
+                imagePath: "/studentId.jpeg",
+                imageData: null, // Will be populated with base64 data
+                imageType: null
+            },
+            {
+                name: "Textbook",
+                description: "Lost mathematics textbook with blue cover and calculus content.",
+                location: "library",
+                imagePath: "/textbook.jpeg",
+                imageData: null, // Will be populated with base64 data
+                imageType: null
+            },
+            {
+                name: "Textbook",
+                description: "Found a mathematics textbook with blue cover and calculus content.",
+                location: "library",
+                imagePath: "/textbook.jpeg",
+                imageData: null, // Will be populated with base64 data
+                imageType: null
+            },
+        ];
 
-                const lostItemData = {
-                    personId: student._id,
-                    schoolId: schoolId,
-                    itemDetails: {
-                        name: "Sample Item",
-                        description: `Lost item description ${studentIndex + 1}`,
-                        location: "cafeteria",
-                        lostDate: new Date().toISOString()
-                    },
-                    status: statuses[studentIndex % statuses.length]
+        // Function to convert image file to base64
+        const convertImageToBase64 = async (imagePath) => {
+            try {
+                // Use the utility function to convert actual image files to base64
+                return await convertImageFileToBase64(imagePath);
+            } catch (error) {
+                console.error('Failed to convert image to base64:', error);
+                // Return a placeholder image if conversion fails
+                return {
+                    imageData: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxAAPwCdABmX/9k=',
+                    imageType: 'image/jpeg'
                 };
-
-                try {
-                    const serviceStore = useServiceStore.getState();
-                    const createdLostItem = await serviceStore.createLostItem(lostItemData);
-                    lostItems.push(createdLostItem.data);
-                } catch (error) {
-                    console.error('Failed to create lost item:', error);
-                    throw error;
-                }
             }
-        });
+        };
+
+        for (let i = 0; i < Math.min(students.length, 5); i++) {
+            const student = students[i];
+            const sampleData = lostItemSampleData[i % lostItemSampleData.length];
+            const statuses = ["reported", "found", "claimed"];
+
+            // Convert image to base64
+            const imageData = await convertImageToBase64(sampleData.imagePath);
+
+            const lostItemData = {
+                personId: student._id,
+                schoolId: schoolId,
+                itemDetails: {
+                    name: sampleData.name,
+                    description: sampleData.description,
+                    location: sampleData.location,
+                    lostDate: new Date().toISOString(),
+                    image: null, // Don't store file path
+                    imageData: imageData.imageData, // Store base64 data
+                    imageType: imageData.imageType // Store MIME type
+                },
+                status: statuses[i % statuses.length]
+            };
+
+            try {
+                const serviceStore = useServiceStore.getState();
+                const createdLostItem = await serviceStore.createLostItem(lostItemData);
+                lostItems.push(createdLostItem.data);
+            } catch (error) {
+                console.error('Failed to create lost item:', error);
+                throw error;
+            }
+        }
 
         // 18. Generate Transportation Data
         const transportationStore = useTransportationStore.getState();
@@ -1587,6 +1796,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
             intakeCourses,
             modules,
             semesters,
+            semesterModules,
             lecturers,
             students,
             classSchedules,
@@ -1624,6 +1834,7 @@ export const generateAcademicSummary = (academicData) => {
         totalIntakes: academicData.intakes.length,
         totalModules: academicData.modules.length,
         totalSemesters: academicData.semesters.length,
+        totalSemesterModules: academicData.semesterModules?.length || 0,
         totalLecturers: academicData.lecturers.length,
         totalStudents: academicData.students.length,
         totalClassSchedules: academicData.classSchedules.length,

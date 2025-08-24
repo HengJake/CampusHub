@@ -13,7 +13,7 @@ import {
 } from "../../utils/reusable.js";
 
 const validateSchoolData = async (data) => {
-    const { userId, name, address, city, country, status } = data;
+    const { userId, name, prefix, address, city, country, status } = data;
 
     // Check required fields
     if (!userId) {
@@ -26,6 +26,12 @@ const validateSchoolData = async (data) => {
         return {
             isValid: false,
             message: "name is required"
+        };
+    }
+    if (!prefix) {
+        return {
+            isValid: false,
+            message: "prefix is required"
         };
     }
     if (!address) {
@@ -44,6 +50,14 @@ const validateSchoolData = async (data) => {
         return {
             isValid: false,
             message: "country is required"
+        };
+    }
+
+    // Validate prefix format
+    if (prefix && (prefix.length < 2 || prefix.length > 10)) {
+        return {
+            isValid: false,
+            message: "prefix must be between 2 and 10 characters"
         };
     }
 

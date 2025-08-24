@@ -1,5 +1,9 @@
 "use client"
 
+// Transportation component with combined schedule functionality
+// Schedules with the same ID are automatically combined to show all route timings in one card
+// This reduces page clutter and provides a more organized view of transportation options
+
 import {
   Box,
   Grid,
@@ -68,8 +72,7 @@ export default function Transportation() {
     errors,
     fetchBusSchedulesBySchoolId,
     fetchRoutesBySchoolId,
-    fetchStopsBySchoolId,
-    fetchEHailingsBySchoolId,
+    fetchEHailingsByStudentId,
     fetchVehiclesBySchoolId,
   } = useTransportationStore();
 
@@ -89,7 +92,7 @@ export default function Transportation() {
       try {
         await initializeAuth()
         const user = getCurrentUser()
-        if (user?.user?.student?.schoolId) {
+        if (user?.user?.studentId || user?.user?.student._id) {
           setCurrentUser(user)
           setIsAuthReady(true)
         }
@@ -102,14 +105,15 @@ export default function Transportation() {
 
   // Fetch data only after authentication is ready
   useEffect(() => {
-    if (isAuthReady && currentUser?.user?.student?.schoolId) {
+    if (isAuthReady && currentUser?.user?.student._id) {
+      const studentId = currentUser.user.student._id
       fetchBusSchedulesBySchoolId()
       fetchRoutesBySchoolId()
-      fetchStopsBySchoolId()
-      fetchEHailingsBySchoolId()
+      fetchEHailingsByStudentId(studentId)
       fetchVehiclesBySchoolId()
+      // Stops are fetched when the CampusRideModal opens to avoid unnecessary API calls
     }
-  }, [isAuthReady, currentUser, fetchBusSchedulesBySchoolId, fetchRoutesBySchoolId, fetchStopsBySchoolId, fetchEHailingsBySchoolId, fetchVehiclesBySchoolId])
+  }, [isAuthReady, currentUser, fetchBusSchedulesBySchoolId, fetchRoutesBySchoolId, fetchEHailingsByStudentId, fetchVehiclesBySchoolId])
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -173,42 +177,6 @@ export default function Transportation() {
     return vehicleId
   }
 
-  // Helper function to get route timing info
-  const getRouteTimingInfo = (schedule) => {
-    if (!schedule.routeTiming || schedule.routeTiming.length === 0) {
-      return { startTime: "N/A", endTime: "N/A" }
-    }
-
-    const timing = schedule.routeTiming[0]
-    return {
-      startTime: timing.startTime || "N/A",
-      endTime: timing.endTime || "N/A"
-    }
-  }
-
-  // Helper function to get all route timings for a schedule
-  const getAllRouteTimings = (schedule) => {
-    if (!schedule.routeTiming || schedule.routeTiming.length === 0) {
-      return []
-    }
-    return schedule.routeTiming.map(timing => ({
-      startTime: timing.startTime || "N/A",
-      endTime: timing.endTime || "N/A",
-      routeName: timing.routeId?.name || "Route"
-    }))
-  }
-
-  // Helper function to get student info from studentId
-  const getStudentInfo = (studentId) => {
-    if (!studentId) return "N/A"
-
-    if (typeof studentId === 'object') {
-      return `Student ID: ${studentId._id || "N/A"}`
-    }
-
-    return studentId
-  }
-
   // Helper function to convert day number to day name
   const getDayName = (dayNumber) => {
     const days = {
@@ -246,6 +214,61 @@ export default function Transportation() {
     return grouped
   }
 
+  // Helper function to combine schedules with the same ID and merge their route timings
+  const combineSchedulesById = (schedules) => {
+    const combinedMap = new Map()
+
+    schedules.forEach(schedule => {
+      const key = schedule._id
+      if (!combinedMap.has(key)) {
+        // Create a new combined schedule object
+        combinedMap.set(key, {
+          ...schedule,
+          routeTiming: [...(schedule.routeTiming || [])]
+        })
+      } else {
+        // Merge route timings from schedules with the same ID
+        const existing = combinedMap.get(key)
+        if (schedule.routeTiming && schedule.routeTiming.length > 0) {
+          existing.routeTiming.push(...schedule.routeTiming)
+        }
+      }
+    })
+
+    return Array.from(combinedMap.values())
+  }
+
+  // Helper function to get all route timings for a combined schedule
+  const getAllRouteTimings = (schedule) => {
+    if (!schedule.routeTiming || schedule.routeTiming.length === 0) {
+      return []
+    }
+
+    // Group timings by route ID and collect all times for each route
+    const routeTimingsMap = new Map()
+
+    schedule.routeTiming.forEach(timing => {
+      const routeId = timing.routeId?._id || timing.routeId
+      const routeName = timing.routeId?.name || "Route"
+
+      if (!routeTimingsMap.has(routeId)) {
+        routeTimingsMap.set(routeId, {
+          routeName: routeName,
+          routeId: routeId,
+          timings: []
+        })
+      }
+
+      // Add this timing to the route's timings array
+      const existing = routeTimingsMap.get(routeId)
+      existing.timings.push({
+        startTime: timing.startTime || "N/A",
+        endTime: timing.endTime || "N/A"
+      })
+    })
+
+    return Array.from(routeTimingsMap.values())
+  }
 
 
   const isLoading = loading.busSchedules || loading.routes || loading.stops || loading.eHailings
@@ -281,16 +304,17 @@ export default function Transportation() {
               variant="outline"
               size="sm"
               onClick={() => {
-                if (currentUser?.user?.student?.schoolId) {
-                  fetchBusSchedulesBySchoolId()
-                  fetchRoutesBySchoolId()
-                  fetchStopsBySchoolId()
-                  fetchEHailingsBySchoolId()
-                  fetchVehiclesBySchoolId()
+                if (currentUser?.user?.studentId) {
+                  const studentId = currentUser.user.studentId
+                  fetchBusSchedulesByStudentId(studentId)
+                  fetchRoutesByStudentId(studentId)
+                  fetchStopsByStudentId(studentId)
+                  fetchEHailingsByStudentId(studentId)
+                  fetchVehiclesByStudentId(studentId)
                 }
               }}
               isLoading={isLoading}
-              isDisabled={!currentUser?.user?.student?.schoolId}
+              isDisabled={!currentUser?.user?.studentId}
             >
               Refresh
             </Button>
@@ -313,7 +337,83 @@ export default function Transportation() {
           </Alert>
         )}
 
-        <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={6}>
+        <Grid templateColumns={{ base: "1fr", lg: "1fr 3fr" }} gap={6}>
+          {/* E-Hailing Services */}
+          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
+            <CardBody>
+              <HStack mb={4}>
+                <Icon as={FaCar} color="green.500" boxSize={5} />
+                <Text fontSize="lg" fontWeight="semibold">
+                  E-Hailing Requests
+                </Text>
+              </HStack>
+
+              {isDataLoading ? (
+                <Box textAlign="center" py={8}>
+                  <Spinner size="lg" color="green.500" />
+                  <Text mt={2} color="gray.600">Loading e-hailing requests...</Text>
+                </Box>
+              ) : eHailings.length === 0 ? (
+                <Box textAlign="center" py={8}>
+                  <Icon as={FaCar} boxSize={8} color="gray.400" mb={2} />
+                  <Text color="gray.500" fontSize="sm">
+                    No e-hailing requests available
+                  </Text>
+                </Box>
+              ) : (
+                <VStack spacing={3} align="stretch">
+                  {eHailings.filter(request => {
+                    return request && request.routeId;
+                  }).map((request) => {
+                    return (
+                      <Box key={request._id} p={3} bg="gray.50" borderRadius="md">
+                        <VStack align="start" spacing={2}>
+                          <HStack justify="space-between" w="full">
+                            <Text fontSize="sm" fontWeight="medium">
+                              {request.routeId?.name || getRouteName(request.routeId) || "Route"}
+                            </Text>
+                            <Badge colorScheme={getStatusColor(request.status)} variant="subtle">
+                              {request.status || "Pending"}
+                            </Badge>
+                          </HStack>
+
+                          <HStack spacing={2} align="center">
+                            <Text fontSize="xs" color="gray.600">
+                              {request.routeId?.stopIds?.[0]?.name || "Start"}
+                            </Text>
+                            <Icon as={FaDirections} boxSize={3} color="blue.500" />
+                            <Text fontSize="xs" color="gray.600">
+                              {request.routeId?.stopIds?.[1]?.name || "End"}
+                            </Text>
+                          </HStack>
+
+                          <Text fontSize="xs" color="gray.600">
+                            Vehicle: {getVehicleInfo(request.vehicleId)}
+                          </Text>
+
+                          <Text fontSize="xs" color="gray.600">
+                            Requested: {formatTime(request.requestAt)}
+                          </Text>
+
+                          {request.routeId && typeof request.routeId === 'object' && (
+                            <VStack align="start" spacing={1}>
+                              <Text fontSize="sm" color="gray.600">
+                                Est. Time: {request.routeId.estimateTimeMinute || "N/A"} min
+                              </Text>
+                              <Text fontSize="sm" color="gray.600">
+                                Fare: ${request.routeId.fare || "N/A"}
+                              </Text>
+                            </VStack>
+                          )}
+                        </VStack>
+                      </Box>
+                    )
+                  })}
+                </VStack>
+              )}
+            </CardBody>
+          </Card>
+
           {/* Bus Schedule */}
           <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
             <CardBody>
@@ -337,14 +437,14 @@ export default function Transportation() {
                   <Text color="gray.500">No bus schedules available</Text>
                 </Box>
               ) : (
-                <VStack spacing={6} align="stretch">
-                  {Object.entries(groupSchedulesByDay(sortSchedulesByTime(busSchedules))).map(([day, daySchedules]) => {
+                <VStack spacing={4} align="stretch">
+                  {Object.entries(groupSchedulesByDay(sortSchedulesByTime(combineSchedulesById(busSchedules)))).map(([day, daySchedules]) => {
                     return (
                       <Box key={day}>
-                        <Text fontSize="lg" fontWeight="semibold" mb={4} color="blue.600" borderBottom="2px solid" borderColor="blue.200" pb={2}>
+                        <Text fontSize="lg" fontWeight="semibold" mb={3} color="blue.600" borderBottom="2px solid" borderColor="blue.200" pb={2}>
                           {day}
                         </Text>
-                        <VStack spacing={3} align="stretch">
+                        <VStack spacing={2} align="stretch" >
                           {daySchedules.map((schedule, index) => {
                             const routeTimings = getAllRouteTimings(schedule)
                             return (
@@ -356,8 +456,8 @@ export default function Transportation() {
                                 _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
                                 transition="all 0.2s"
                               >
-                                <CardBody p={4}>
-                                  <VStack spacing={4} align="stretch">
+                                <CardBody p={3} >
+                                  <VStack spacing={3} align="stretch">
                                     {/* Schedule Header */}
                                     <HStack justify="space-between" align="center">
                                       <HStack spacing={3}>
@@ -367,9 +467,16 @@ export default function Transportation() {
                                           borderRadius="full"
                                           bg={schedule.active ? "blue.500" : "gray.400"}
                                         />
-                                        <Text fontSize="md" fontWeight="bold" color="gray.800">
-                                          Bus Schedule
-                                        </Text>
+                                        <VStack spacing={0} align="start">
+                                          <Text fontSize="md" fontWeight="bold" color="gray.800">
+                                            Bus Schedule
+                                          </Text>
+                                          {schedule.routeTiming && schedule.routeTiming.length > 1 && (
+                                            <Text fontSize="xs" color="gray.500">
+                                              {getAllRouteTimings(schedule).length} routes combined
+                                            </Text>
+                                          )}
+                                        </VStack>
                                       </HStack>
                                       <Badge
                                         colorScheme={getStatusColor(schedule.active ? "active" : "inactive")}
@@ -382,11 +489,11 @@ export default function Transportation() {
 
                                     {/* Route Timings */}
                                     {routeTimings.length > 0 ? (
-                                      <VStack spacing={3} align="stretch">
-                                        {routeTimings.map((timing, timingIndex) => (
+                                      <VStack spacing={2} align="stretch">
+                                        {routeTimings.map((route, routeIndex) => (
                                           <Box
-                                            key={timingIndex}
-                                            p={3}
+                                            key={routeIndex}
+                                            p={2}
                                             bg="white"
                                             borderRadius="md"
                                             border="1px solid"
@@ -394,49 +501,54 @@ export default function Transportation() {
                                           >
                                             <HStack justify="space-between" align="center" mb={2}>
                                               <Text fontSize="sm" fontWeight="semibold" color="blue.700">
-                                                {timing.routeName}
+                                                {route.routeName}
                                               </Text>
                                               <Badge colorScheme="blue" variant="outline" size="sm">
-                                                Route {timingIndex + 1}
+                                                Route {routeIndex + 1}
                                               </Badge>
                                             </HStack>
 
-                                            <HStack spacing={4} justify="center">
-                                              <VStack spacing={1} align="center">
-                                                <Text fontSize="xs" color="gray.600" fontWeight="medium">
-                                                  Departure
-                                                </Text>
-                                                <Text fontSize="lg" fontWeight="bold" color="blue.600">
-                                                  {timing.startTime}
-                                                </Text>
-                                              </VStack>
+                                            {/* All timings for this route */}
+                                            <VStack spacing={1} align="stretch">
+                                              {route.timings.map((timing, timingIndex) => (
+                                                <HStack key={timingIndex} spacing={2} justify="center" p={1} bg="blue.50" borderRadius="sm">
+                                                  <VStack spacing={0} align="center" minW="60px">
+                                                    <Text fontSize="xs" color="gray.600" fontWeight="medium">
+                                                      Departure
+                                                    </Text>
+                                                    <Text fontSize="sm" fontWeight="bold" color="blue.600">
+                                                      {timing.startTime}
+                                                    </Text>
+                                                  </VStack>
 
-                                              <Box
-                                                w="40px"
-                                                h="2px"
-                                                bg="blue.300"
-                                                position="relative"
-                                              >
-                                                <Icon
-                                                  as={FaDirections}
-                                                  position="absolute"
-                                                  top="-6px"
-                                                  left="50%"
-                                                  transform="translateX(-50%)"
-                                                  color="blue.500"
-                                                  boxSize={3}
-                                                />
-                                              </Box>
+                                                  <Box
+                                                    w="16px"
+                                                    h="2px"
+                                                    bg="blue.300"
+                                                    position="relative"
+                                                  >
+                                                    <Icon
+                                                      as={FaDirections}
+                                                      position="absolute"
+                                                      top="-6px"
+                                                      left="50%"
+                                                      transform="translateX(-50%)"
+                                                      color="blue.500"
+                                                      boxSize={3}
+                                                    />
+                                                  </Box>
 
-                                              <VStack spacing={1} align="center">
-                                                <Text fontSize="xs" color="gray.600" fontWeight="medium">
-                                                  Arrival
-                                                </Text>
-                                                <Text fontSize="lg" fontWeight="bold" color="green.600">
-                                                  {timing.endTime}
-                                                </Text>
-                                              </VStack>
-                                            </HStack>
+                                                  <VStack spacing={0} align="center" minW="60px">
+                                                    <Text fontSize="xs" color="gray.600" fontWeight="medium">
+                                                      Arrival
+                                                    </Text>
+                                                    <Text fontSize="sm" fontWeight="bold" color="green.600">
+                                                      {timing.endTime}
+                                                    </Text>
+                                                  </VStack>
+                                                </HStack>
+                                              ))}
+                                            </VStack>
                                           </Box>
                                         ))}
                                       </VStack>
@@ -479,80 +591,6 @@ export default function Transportation() {
               </Box>
             </CardBody>
           </Card>
-
-          {/* E-Hailing Services */}
-          <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
-            <CardBody>
-              <HStack mb={4}>
-                <Icon as={FaCar} color="green.500" boxSize={5} />
-                <Text fontSize="lg" fontWeight="semibold">
-                  E-Hailing Requests
-                </Text>
-              </HStack>
-
-              {isDataLoading ? (
-                <Box textAlign="center" py={8}>
-                  <Spinner size="lg" color="green.500" />
-                  <Text mt={2} color="gray.600">Loading e-hailing requests...</Text>
-                </Box>
-              ) : eHailings.length === 0 ? (
-                <Box textAlign="center" py={8}>
-                  <Icon as={FaCar} boxSize={8} color="gray.400" mb={2} />
-                  <Text color="gray.500" fontSize="sm">
-                    No e-hailing requests available
-                  </Text>
-                </Box>
-              ) : (
-                <VStack spacing={3} align="stretch">
-                  {eHailings.map((request) => {
-                    return (
-                      <Box key={request._id} p={3} bg="gray.50" borderRadius="md">
-                        <VStack align="start" spacing={2}>
-                          <HStack justify="space-between" w="full">
-                            <Text fontSize="sm" fontWeight="medium">
-                              {getRouteName(request.routeId)}
-                            </Text>
-                            <Badge colorScheme={getStatusColor(request.status)} variant="subtle">
-                              {request.status || "Pending"}
-                            </Badge>
-                          </HStack>
-
-                          <HStack spacing={2} align="center">
-                            <Text fontSize="xs" color="gray.600">
-                              {request.routeId.stopIds[0]?.name || "Start"}
-                            </Text>
-                            <Icon as={FaDirections} boxSize={3} color="blue.500" />
-                            <Text fontSize="xs" color="gray.600">
-                              {request.routeId.stopIds[1]?.name || "End"}
-                            </Text>
-                          </HStack>
-
-                          <Text fontSize="xs" color="gray.600">
-                            Vehicle: {getVehicleInfo(request.vehicleId)}
-                          </Text>
-
-                          <Text fontSize="xs" color="gray.600">
-                            Requested: {formatTime(request.requestAt)}
-                          </Text>
-
-                          {request.routeId && typeof request.routeId === 'object' && (
-                            <VStack align="start" spacing={1}>
-                              <Text fontSize="xs" color="gray.600">
-                                Est. Time: {request.routeId.estimateTimeMinute || "N/A"} min
-                              </Text>
-                              <Text fontSize="xs" color="gray.600">
-                                Fare: ${request.routeId.fare || "N/A"}
-                              </Text>
-                            </VStack>
-                          )}
-                        </VStack>
-                      </Box>
-                    )
-                  })}
-                </VStack>
-              )}
-            </CardBody>
-          </Card>
         </Grid>
 
         {/* Routes and Stops Section */}
@@ -576,20 +614,20 @@ export default function Transportation() {
                 </Box>
               ) : (
                 <VStack spacing={3} align="stretch">
-                  {routes.slice(0, 5).map((route) => {
+                  {routes.filter(route => route && route.stopIds).slice(0, 5).map((route) => {
                     return (
                       <Box key={route._id} p={3} bg="gray.50" borderRadius="md">
                         <VStack align="start" spacing={2}>
                           <Text fontSize="sm" fontWeight="medium">
-                            {route.name || route.routeName}
+                            {route.name || route.routeName || "Unnamed Route"}
                           </Text>
                           <HStack spacing={2} align="center">
                             <Text fontSize="xs" color="gray.600">
-                              {route.stopIds[0]?.name || "Start"}
+                              {route.stopIds?.[0]?.name || "Start"}
                             </Text>
                             <Icon as={FaDirections} boxSize={3} color="blue.500" />
                             <Text fontSize="xs" color="gray.600">
-                              {route.stopIds[1]?.name || "End"}
+                              {route.stopIds?.[1]?.name || "End"}
                             </Text>
                           </HStack>
                           <Text fontSize="xs" color="gray.600">
@@ -724,7 +762,6 @@ export default function Transportation() {
 
       {/* Campus Ride Modal */}
       <CampusRideModal isOpen={isRideOpen} onClose={onRideClose} />
-
 
     </Box>
   )

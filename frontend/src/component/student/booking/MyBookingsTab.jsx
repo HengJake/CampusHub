@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: MyBookingsTab.jsx
+// Description: Tab component displaying user's existing bookings with management options like cancellation and modification
+// First Written on: July 18, 2024
+// Edited on: Friday, August 6, 2024
+
 import { VStack, Card, CardBody, Text, SimpleGrid, Stat, StatLabel, StatNumber, TableContainer, Table, Thead, Tbody, Tr, Th, Button } from "@chakra-ui/react"
 import { FiCalendar, FiPlus } from "react-icons/fi"
 import BookingRow from "./BookingRow"

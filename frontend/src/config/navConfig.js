@@ -40,7 +40,8 @@ const navConfig = {
                 { label: "Attendance☑️", path: "/academic/attendance", icon: FiList }
             ]
         },
-        { label: "Feedback☑️", path: "/feedback", icon: FiMessageSquare }
+        { label: "Feedback☑️", path: "/feedback", icon: FiMessageSquare },
+        { label: "Lost & Found", path: "/lost-found-report", icon: FiAlertTriangle }
     ],
 
     schoolAdmin: [
@@ -68,6 +69,7 @@ const navConfig = {
             ]
         },
         { label: "Feedback Management☑️", path: "/feedback-management", icon: FiMessageSquare },
+        { label: "Lost & Found", path: "/lost-found-management", icon: FiAlertTriangle },
         { label: "Announcement🗿", path: "/announcement-management", icon: GoMegaphone },
     ],
 

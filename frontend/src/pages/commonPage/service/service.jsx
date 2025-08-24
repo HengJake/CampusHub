@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: service.jsx
+// Description: Service overview page component showcasing CampusHub service offerings, features, and service categories
+// First Written on: June 26, 2024
+// Edited on: Friday, July 31, 2024
+
 import {
   Box,
   Heading,

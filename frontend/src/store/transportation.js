@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: transportation.js
+// Description: Transportation management store handling bus schedules, routes, stops, and e-hailing services for campus mobility
+// First Written on: July 18, 2024
+// Edited on: Friday, August 10, 2024
+
 import { create } from "zustand";
 import { useAuthStore } from "./auth.js";
 
@@ -41,8 +47,7 @@ export const useTransportationStore = create((set, get) => ({
 
     // Test function to verify store is working
     testStore: () => {
-        console.log('🚀 Store test function called - store is working');
-        console.log('🚀 Current state:', get());
+
         return { success: true, message: 'Store is working' };
     },
 
@@ -63,7 +68,6 @@ export const useTransportationStore = create((set, get) => ({
         try {
             const authStore = useAuthStore.getState();
             const userContext = authStore.getCurrentUser();
-            console.log('🚀 Getting current user from auth store:', userContext);
             return userContext;
         } catch (error) {
             console.error('🚀 Error getting current user:', error);
@@ -182,7 +186,6 @@ export const useTransportationStore = create((set, get) => ({
 
         try {
             const authStore = useAuthStore.getState();
-            console.log("🚀 ~ authStore:", authStore)
             const schoolId = authStore.getSchoolId();
             if (!schoolId) {
                 throw new Error("School ID not found");
@@ -214,6 +217,8 @@ export const useTransportationStore = create((set, get) => ({
             return { success: false, message: error.message };
         }
     },
+
+
     createBusSchedule: async (busScheduleData) => {
         try {
             const authStore = useAuthStore.getState();
@@ -360,7 +365,46 @@ export const useTransportationStore = create((set, get) => ({
         } catch (error) {
             set((state) => ({
                 loading: { ...state.loading, eHailings: false },
-                errors: { ...state.errors, eHailings: error.message },
+                errors: { ...state.errors, eHailings: null },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchEHailingsByStudentId: async (studentId, filters = {}, forceRefresh = false) => {
+        const state = get();
+
+        if (!forceRefresh && !state.shouldFetchData('eHailings')) {
+            return { success: true, data: state.eHailings, fromCache: true };
+        }
+
+        set((state) => {
+            if (state.loading.eHailings) return state;
+            return { loading: { ...state.loading, eHailings: true } };
+        });
+
+        try {
+            if (!studentId) {
+                throw new Error("Student ID not found");
+            }
+
+            const url = `/api/e-hailing/student/${studentId}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch eHailings");
+            }
+            set((state) => ({
+                eHailings: data.data,
+                loading: { ...state.loading, eHailings: false },
+                errors: { ...state.errors, eHailings: null },
+                lastFetched: { ...state.lastFetched, eHailings: Date.now() }
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, eHailings: false },
+                errors: { ...state.errors, eHailings: null },
             }));
             return { success: false, message: error.message };
         }
@@ -368,13 +412,18 @@ export const useTransportationStore = create((set, get) => ({
     createEHailing: async (eHailingData) => {
         try {
             const authStore = useAuthStore.getState();
-            const userContext = authStore.getCurrentUser();
-            if (userContext.role === "schoolAdmin") {
-                const schoolId = authStore.getSchoolId();
-                if (schoolId) {
-                    eHailingData.schoolId = schoolId;
-                }
+            const schoolId = authStore.getSchoolId();
+
+            if (!schoolId) {
+                throw new Error("School ID not found");
             }
+
+            // Add schoolId to the eHailing data
+            eHailingData.schoolId = schoolId;
+
+            // Note: vehicleId is now automatically assigned by the backend
+            // No need to specify it in the request
+
             const res = await fetch("/api/e-hailing", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -417,6 +466,31 @@ export const useTransportationStore = create((set, get) => ({
                     item._id === id ? data.data : item
                 ),
             }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    updateEHailingStatus: async (id, updates) => {
+        try {
+            const res = await fetch(`/api/e-hailing/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updates),
+            });
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update eHailing status");
+            }
+
+            // Update the local state
+            set((state) => ({
+                eHailings: state.eHailings.map((item) =>
+                    item._id === id ? { ...item, ...updates } : item
+                ),
+            }));
+
             return { success: true, data: data.data };
         } catch (error) {
             return { success: false, message: error.message };
@@ -511,11 +585,13 @@ export const useTransportationStore = create((set, get) => ({
         } catch (error) {
             set((state) => ({
                 loading: { ...state.loading, routes: false },
-                errors: { ...state.errors, routes: error.message },
+                errors: { ...state.errors, routes: null },
             }));
             return { success: false, message: error.message };
         }
     },
+
+
     createRoute: async (routeData) => {
         try {
             const authStore = useAuthStore.getState();
@@ -662,7 +738,47 @@ export const useTransportationStore = create((set, get) => ({
         } catch (error) {
             set((state) => ({
                 loading: { ...state.loading, stops: false },
-                errors: { ...state.errors, stops: error.message },
+                errors: { ...state.errors, stops: null },
+            }));
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchStopsByStudentId: async (studentId, filters = {}, forceRefresh = false) => {
+        const state = get();
+
+        if (!forceRefresh && !state.shouldFetchData('stops')) {
+            return { success: true, data: state.stops, fromCache: true };
+        }
+
+        set((state) => {
+            if (state.loading.stops) return state;
+            return { loading: { ...state.loading, stops: true } };
+        });
+
+        try {
+            const schoolId = get().getSchoolId();
+            if (!schoolId) {
+                throw new Error("School ID not found");
+            }
+
+            const url = `/api/stop/school/${schoolId}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch stops");
+            }
+            set((state) => ({
+                stops: data.data,
+                loading: { ...state.loading, stops: false },
+                errors: { ...state.errors, stops: null },
+                lastFetched: { ...state.lastFetched, stops: Date.now() }
+            }));
+            return { success: true, data: data.data };
+        } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, stops: false },
+                errors: { ...state.errors, stops: null },
             }));
             return { success: false, message: error.message };
         }
@@ -814,11 +930,13 @@ export const useTransportationStore = create((set, get) => ({
         } catch (error) {
             set((state) => ({
                 loading: { ...state.loading, vehicles: false },
-                errors: { ...state.errors, vehicles: error.message },
+                errors: { ...state.errors, vehicles: null },
             }));
             return { success: false, message: error.message };
         }
     },
+
+
     createVehicle: async (vehicleData) => {
         try {
             const authStore = useAuthStore.getState();

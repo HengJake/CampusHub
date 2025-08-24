@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: dashboard.jsx
+// Description: Company admin dashboard providing overview of system metrics, user statistics, and quick access to administrative functions
+// First Written on: July 10, 2024
+// Edited on: Friday, August 12, 2024
+
 "use client";
 import React from "react";
 import { useAcademicStore } from "../../store/academic";

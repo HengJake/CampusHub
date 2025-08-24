@@ -1,10 +1,16 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: general.js
+// Description: General utility store providing common functionality and shared state management across the application
+// First Written on: July 26, 2024
+// Edited on: Friday, August 2, 2024
+
 import { create } from "zustand";
 
 export const useGeneralStore = create((set, get) => ({
     exportTemplate: async (columns, prefilledData, fileName) => {
 
         const parcel = { columns: columns, prefilledData: prefilledData, fileName: fileName };
-        console.log("🚀 ~ exportTemplate: ~ parcel:", parcel)
+
 
         try {
             const response = await fetch("/export", {
@@ -29,7 +35,7 @@ export const useGeneralStore = create((set, get) => ({
             a.click();
             a.remove();
             window.URL.revokeObjectURL(url);
-            
+
             return { success: true, message: `${fileName}.xlsx template has been downloaded` };
 
         } catch (error) {

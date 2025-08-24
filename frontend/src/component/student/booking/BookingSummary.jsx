@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: BookingSummary.jsx
+// Description: Summary component displaying booking details and confirmation information after successful resource reservation
+// First Written on: July 23, 2024
+// Edited on: Friday, August 1, 2024
+
 import { Card, CardBody, Text, SimpleGrid, Stat, StatLabel, StatNumber } from "@chakra-ui/react"
 
 const BookingSummary = ({ bookings }) => {

@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: subscription.model.js
+// Description: Subscription model schema defining service subscription plans, billing cycles, and plan management
+// First Written on: July 8, 2024
+// Edited on: Friday, July 10, 2024
+
 import mongoose from "mongoose";
 
 const subscriptionSchema = new mongoose.Schema({

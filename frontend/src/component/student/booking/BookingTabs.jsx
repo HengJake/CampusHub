@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: BookingTabs.jsx
+// Description: Tab navigation component for the booking system, providing switching between available resources and user bookings
+// First Written on: July 20, 2024
+// Edited on: Friday, August 4, 2024
+
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react"
 import { useState } from "react"
 import MyBookingsTab from "./MyBookingsTab"

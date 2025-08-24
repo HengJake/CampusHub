@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: BookingModal.jsx
+// Description: Modal component for creating and editing resource bookings, handling form validation and submission for facility reservations
+// First Written on: July 16, 2024
+// Edited on: Friday, August 8, 2024
+
 import { useState, useEffect } from "react"
 import {
     Modal,

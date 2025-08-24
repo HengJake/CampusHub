@@ -179,8 +179,7 @@ const ClassFinder = () => {
     }
 
   }, []);
-  console.log("🚀 ~ ClassFinder ~ classSchedule:", classSchedules)
-  console.log("🚀 ~ ClassFinder ~ rooms:", rooms)
+
 
   // const filteredRooms = rooms.filter(room => room.status === "available")
   const filteredRooms = rooms

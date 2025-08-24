@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: route.model.js
+// Description: Route model schema defining transportation route paths, stop sequences, and route optimization
+// First Written on: July 8, 2024
+// Edited on: Friday, July 10, 2024
+
 import mongoose from "mongoose";
 
 // Route schema

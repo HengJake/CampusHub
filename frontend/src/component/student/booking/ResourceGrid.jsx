@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: ResourceGrid.jsx
+// Description: Grid layout component for displaying available resources in the booking system, providing visual representation of bookable facilities
+// First Written on: July 15, 2024
+// Edited on: Friday, August 9, 2024
+
 import { Grid, Card, CardBody, VStack, HStack, Badge, Text, Divider, Alert, AlertIcon, AlertTitle, AlertDescription, Button, Box } from "@chakra-ui/react"
 import { FiMapPin, FiUsers, FiCalendar, FiSearch } from "react-icons/fi"
 import { getTypeIcon, getTypeColor, getStatusColor, getCapacityCategory, getCapacityCategoryColor } from "./utils"

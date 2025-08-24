@@ -10,7 +10,7 @@ import {
 import ParkingLot from "../../models/Facility/parkingLot.model.js";
 import School from "../../models/Billing/school.model.js";
 
-const validateParkingLotData = async (data) => {
+const validateParkingLotData = async (data, excludeId = null) => {
   const { schoolId, zone, slotNumber, active } = data;
   if (!schoolId) return { isValid: false, message: "schoolId is required" };
   if (!zone) return { isValid: false, message: "zone is required" };
@@ -25,11 +25,18 @@ const validateParkingLotData = async (data) => {
 
   // Check for duplicate slot number in the same school and zone
   try {
-    const existingParkingLot = await ParkingLot.findOne({
+    let query = {
       schoolId,
       zone,
       slotNumber
-    });
+    };
+
+    // Exclude current record when updating
+    if (excludeId) {
+      query._id = { $ne: excludeId };
+    }
+
+    const existingParkingLot = await ParkingLot.findOne(query);
 
     if (existingParkingLot) {
       return {
@@ -71,7 +78,13 @@ export const getParkingLotsBySchoolId = controllerWrapper(async (req, res) => {
 
 export const updateParkingLot = controllerWrapper(async (req, res) => {
   const { id } = req.params;
-  return await updateRecord(ParkingLot, id, req.body, "parkingLot", validateParkingLotData);
+  
+  // Create a custom validation function that includes the excludeId
+  const validateUpdate = async (updates) => {
+    return await validateParkingLotData(updates, id);
+  };
+  
+  return await updateRecord(ParkingLot, id, req.body, "parkingLot", validateUpdate);
 });
 
 export const deleteParkingLot = controllerWrapper(async (req, res) => {

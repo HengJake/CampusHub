@@ -212,7 +212,7 @@ export function ModuleManagement() {
       moduleName: module.moduleName || "",
       code: module.code || "",
       moduleDescription: module.moduleDescription || "",
-      totalCreditHour: module.totalCreditHour || "",
+      totalCreditHour: module.totalCreditHours || "",
       courseId: Array.isArray(module.courseId)
         ? module.courseId.filter(c => c && c._id).map(c => c._id)
         : module.courseId?._id
@@ -259,7 +259,7 @@ export function ModuleManagement() {
         module.code || "N/A",
         module.moduleName || "N/A",
         module.moduleDescription || "N/A",
-        module.totalCreditHour || "N/A",
+        module.totalCreditHours || "N/A",
         Array.isArray(module.courseId)
           ? module.courseId.map(c => c.courseName || c).join("; ")
           : "N/A",
@@ -395,7 +395,7 @@ export function ModuleManagement() {
                             ))
                             : "N/A"}
                         </Td>
-                        <Td>{module.totalCreditHour || "N/A"}</Td>
+                        <Td>{module.totalCreditHours || "N/A"}</Td>
                         <Td>
                           <HStack wrap="wrap">
                             {(module.assessmentMethods || []).map((method, idx) => (
@@ -464,7 +464,7 @@ export function ModuleManagement() {
                           </Box>
                           <Box>
                             <Text fontWeight="semibold">Credit Hours:</Text>
-                            <Text>{module.totalCreditHour || "N/A"}</Text>
+                            <Text>{module.totalCreditHours || "N/A"}</Text>
                           </Box>
                           <Box>
                             <Text fontWeight="semibold">Assessment Methods:</Text>
@@ -735,7 +735,7 @@ export function ModuleManagement() {
                     </Box>
                     <Box>
                       <Text fontWeight="semibold">Credit Hours:</Text>
-                      <Text>{selectedModule.totalCreditHour || "N/A"}</Text>
+                      <Text>{selectedModule.totalCreditHours || "N/A"}</Text>
                     </Box>
                     <Box>
                       <Text fontWeight="semibold">Prerequisites:</Text>

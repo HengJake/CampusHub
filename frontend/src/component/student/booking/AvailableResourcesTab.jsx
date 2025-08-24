@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: AvailableResourcesTab.jsx
+// Description: Tab component showing available resources for booking, including filtering and search functionality for facility discovery
+// First Written on: July 19, 2024
+// Edited on: Friday, August 5, 2024
+
 import { useState } from "react"
 import { VStack, Card, CardBody, Text, Grid, HStack } from "@chakra-ui/react"
 import ResourceFilters from "./ResourceFilters"

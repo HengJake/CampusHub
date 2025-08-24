@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: auth.js
+// Description: Authentication store managing user authentication state, login/logout operations, and user session management using Zustand
+// First Written on: July 12, 2024
+// Edited on: Friday, August 16, 2024
+
 import { create } from "zustand";
 
 export const useAuthStore = create((set, get) => ({

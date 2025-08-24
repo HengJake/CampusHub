@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: landing.jsx
+// Description: Main landing page component showcasing CampusHub features, pricing, and call-to-action for new users
+// First Written on: June 18, 2024
+// Edited on: Friday, July 26, 2024
+
 import {
   Box,
   Flex,
@@ -61,6 +67,8 @@ const landing = () => {
                 Get Started <Box as={FiArrowRight} ml={2} />
               </Button>
               <Button
+                as="a"
+                href="/signup"
                 variant="outline"
                 size="lg"
                 colorScheme="brand"

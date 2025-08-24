@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: ServiceCard.jsx
+// Description: Reusable service card component displaying individual service information with icons and descriptions
+// First Written on: June 28, 2024
+// Edited on: Friday, July 28, 2024
+
 import { Box, Text, Button } from "@chakra-ui/react";
 import React from "react";
 

@@ -169,6 +169,21 @@ export const getBusSchedulesBySchoolId = controllerWrapper(async (req, res) => {
   );
 });
 
+// Get BusSchedules by Student ID
+export const getBusSchedulesByStudentId = controllerWrapper(async (req, res) => {
+  const { studentId } = req.params;
+  return await getAllRecords(
+    BusSchedule,
+    "busSchedules",
+    [
+      "routeTiming.routeId",
+      { path: "routeTiming.routeId", populate: { path: "stopIds" } },
+      "vehicleId"
+    ],
+    { studentId: studentId }
+  );
+});
+
 // Get BusSchedules by Day of Week
 export const getBusSchedulesByDayOfWeek = controllerWrapper(async (req, res) => {
   const { dayOfWeek } = req.params;

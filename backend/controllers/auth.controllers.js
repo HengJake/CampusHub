@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: auth.controllers.js
+// Description: Authentication controller handling user login, registration, password management, and JWT token operations
+// First Written on: July 13, 2024
+// Edited on: Friday, July 18, 2024
+
 import User from "../models/Academic/user.model.js";
 import bcrypt from "bcrypt";
 import generateToken from "../utils/jwtUtils.js";

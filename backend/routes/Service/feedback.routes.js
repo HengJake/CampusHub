@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: feedback.routes.js
+// Description: Feedback management route definitions for user feedback collection, rating systems, and service improvement endpoints
+// First Written on: July 16, 2024
+// Edited on: Friday, July 19, 2024
+
 import express from "express";
 import { userAuth } from "../../utils/authMiddleware.js";
 import {

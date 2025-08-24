@@ -258,7 +258,7 @@ export default function Exams() {
   // Group results by semester (only for current student)
   const resultsBySemester = currentStudentResults.reduce((acc, result) => {
     const semesterKey = result.semesterId?._id || "unknown"
-    console.log("🚀 ~ Exams ~ result:", result)
+
 
     if (!acc[semesterKey]) {
       acc[semesterKey] = {

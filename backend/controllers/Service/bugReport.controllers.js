@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: bugReport.controllers.js
+// Description: Bug report management controller handling software issue reporting, bug tracking, and resolution workflow
+// First Written on: July 17, 2024
+// Edited on: Friday, July 19, 2024
+
 import BugReport from '../../models/Service/bugReport.model.js';
 import {
     createRecord,

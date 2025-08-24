@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: student.routes.js
+// Description: Student management route definitions for enrollment, academic records, and student data management endpoints
+// First Written on: July 15, 2024
+// Edited on: Friday, July 18, 2024
+
 import e from "express";
 import {
     createStudent,

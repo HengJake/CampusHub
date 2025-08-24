@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: intakeCourse.model.js
+// Description: IntakeCourse model schema defining the relationship between student intakes and available courses for enrollment
+// First Written on: July 7, 2024
+// Edited on: Friday, July 10, 2024
+
 import mongoose from "mongoose";
 
 const intakeCourseSchema = new mongoose.Schema({

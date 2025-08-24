@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: contactUs.jsx
+// Description: Contact us page component providing contact form, company information, and support contact details
+// First Written on: June 24, 2024
+// Edited on: Friday, July 29, 2024
+
 import { useState } from "react";
 import {
   Box,

@@ -5,6 +5,39 @@ dotenv.config();
 // Helper function to add delay between API calls
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Utility function to generate unique student names
+const generateUniqueStudentName = (schoolPrefix, studentIndex, intakeIndex, courseIndex) => {
+    const firstNames = [
+        "Ahmad", "Aisha", "Ali", "Aminah", "Amir", "Anisa", "Arif", "Azizah", "Bilal", "Diana",
+        "Elena", "Fadil", "Fatima", "Hassan", "Huda", "Ibrahim", "Iman", "Jamal", "Khadijah", "Layla",
+        "Malik", "Mariam", "Nabil", "Nadia", "Omar", "Rania", "Rashid", "Sara", "Tariq", "Yasmin",
+        "Zainab", "Zakir", "Alya", "Bakar", "Camelia", "Danish", "Ehsan", "Farah", "Ghazal", "Hakim",
+        "Iqbal", "Jasmine", "Karim", "Laila", "Mahmoud", "Noor", "Othman", "Parveen", "Qasim", "Rashida"
+    ];
+
+    const lastNames = [
+        "Abdullah", "Ahmad", "Ali", "Bakar", "Chowdhury", "Das", "Fernandez", "Garcia", "Hassan", "Ibrahim",
+        "Jamil", "Khan", "Lee", "Mahmood", "Nguyen", "Omar", "Patel", "Qureshi", "Rahman", "Singh",
+        "Tan", "Uddin", "Verma", "Wong", "Xavier", "Yusuf", "Zaman", "Ahmed", "Begum", "Chowdhury",
+        "Das", "Fernandez", "Garcia", "Hassan", "Ibrahim", "Jamil", "Khan", "Lee", "Mahmood", "Nguyen"
+    ];
+
+    // Use a combination of indices to ensure uniqueness
+    const firstNameIndex = (studentIndex + intakeIndex * 10 + courseIndex * 5) % firstNames.length;
+    const lastNameIndex = (studentIndex + intakeIndex * 7 + courseIndex * 3) % lastNames.length;
+
+    const firstName = firstNames[firstNameIndex];
+    const lastName = lastNames[lastNameIndex];
+
+    // Add a unique identifier to prevent any potential duplicates
+    const uniqueId = `${schoolPrefix}_${intakeIndex}_${courseIndex}_${studentIndex}`;
+
+    return {
+        fullName: `${firstName} ${lastName}`,
+        uniqueId: uniqueId
+    };
+};
+
 // Helper function to make API calls with retry and rate limiting
 const apiCall = async (method, endpoint, data = null, retries = 3) => {
     const url = `http://localhost:5000${endpoint}`;
@@ -83,6 +116,7 @@ async function createFullSchoolData({
         modules: [],
         intakeCourses: [],
         semesters: [],
+        semesterModules: [],
         classSchedules: [],
         examSchedules: [],
         students: [],
@@ -110,7 +144,7 @@ async function createFullSchoolData({
     };
 
     console.log(`\n==============================`);
-    console.log(`🚀 Starting data creation for: ${schoolName}`);
+
     console.log(`==============================`);
 
     // 1. Create Users (Admins, Lecturers, Students)
@@ -183,6 +217,7 @@ async function createFullSchoolData({
     const schoolData = {
         userId: createdIds.users.schoolAdmin[0],
         name: schoolName,
+        prefix: schoolPrefix,
         address: schoolAddress,
         city: schoolCity,
         country: schoolCountry,
@@ -421,50 +456,121 @@ async function createFullSchoolData({
 
     // 8. Create Modules
     console.log(`[${schoolPrefix}] 8. Creating Modules...`);
-    const modulesData = [
+
+    // Generate comprehensive modules for Computer Science course (minimum 21 modules for 7 semesters)
+    const csModulesData = [
+        // Year 1 Semester 1
         {
-            moduleName: "Database Systems",
-            code: "CS301",
+            moduleName: "Introduction to Programming",
+            code: "CS101",
             totalCreditHours: 3,
             courseId: createdIds.courses[0],
             prerequisites: [],
-            moduleDescription: "Introduction to database design and management",
+            moduleDescription: "Fundamentals of programming concepts and logic",
             learningOutcomes: [
-                "Understand database concepts",
-                "Design relational databases",
-                "Write SQL queries"
-            ],
-            assessmentMethods: ["exam", "assignment", "project"],
-            isActive: true,
-            schoolId: createdIds.school
-        },
-        {
-            moduleName: "Web Development",
-            code: "CS302",
-            totalCreditHours: 3,
-            courseId: createdIds.courses[0],
-            prerequisites: [],
-            moduleDescription: "Learn to build modern web applications",
-            learningOutcomes: [
-                "Understand web technologies",
-                "Build responsive websites",
-                "Deploy web apps"
+                "Understand basic programming concepts",
+                "Write simple programs",
+                "Use control structures and functions"
             ],
             assessmentMethods: ["exam", "assignment"],
             isActive: true,
             schoolId: createdIds.school
         },
         {
-            moduleName: "Software Engineering",
-            code: "CS303",
+            moduleName: "Mathematics for Computing",
+            code: "CS102",
             totalCreditHours: 3,
             courseId: createdIds.courses[0],
             prerequisites: [],
-            moduleDescription: "Principles of software engineering",
+            moduleDescription: "Mathematical foundations for computer science",
             learningOutcomes: [
-                "Understand SDLC",
-                "Apply design patterns",
-                "Work in teams"
+                "Apply mathematical concepts",
+                "Solve computational problems",
+                "Use mathematical tools"
+            ],
+            assessmentMethods: ["exam", "assignment"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Computer Architecture",
+            code: "CS103",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: [],
+            moduleDescription: "Understanding computer hardware and organization",
+            learningOutcomes: [
+                "Understand computer components",
+                "Analyze system performance",
+                "Design simple circuits"
+            ],
+            assessmentMethods: ["exam", "lab"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+
+        // Year 1 Semester 2
+        {
+            moduleName: "Object-Oriented Programming",
+            code: "CS104",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS101"],
+            moduleDescription: "Advanced programming with OOP principles",
+            learningOutcomes: [
+                "Implement OOP concepts",
+                "Design class hierarchies",
+                "Use inheritance and polymorphism"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Data Structures",
+            code: "CS105",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS101"],
+            moduleDescription: "Fundamental data structures and algorithms",
+            learningOutcomes: [
+                "Implement basic data structures",
+                "Analyze algorithm complexity",
+                "Choose appropriate structures"
+            ],
+            assessmentMethods: ["exam", "assignment"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Digital Logic Design",
+            code: "CS106",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS102"],
+            moduleDescription: "Digital circuit design and Boolean algebra",
+            learningOutcomes: [
+                "Design digital circuits",
+                "Use Boolean algebra",
+                "Implement logic gates"
+            ],
+            assessmentMethods: ["exam", "lab"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+
+        // Year 2 Semester 1
+        {
+            moduleName: "Advanced Data Structures & Algorithms",
+            code: "CS201",
+            totalCreditHours: 4,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS105"],
+            moduleDescription: "Complex data structures and algorithm analysis",
+            learningOutcomes: [
+                "Implement advanced data structures",
+                "Analyze algorithm efficiency",
+                "Solve complex problems"
             ],
             assessmentMethods: ["exam", "project"],
             isActive: true,
@@ -472,45 +578,97 @@ async function createFullSchoolData({
         },
         {
             moduleName: "Computer Networks",
-            code: "CS304",
+            code: "CS202",
             totalCreditHours: 3,
             courseId: createdIds.courses[0],
-            prerequisites: [],
-            moduleDescription: "Fundamentals of computer networking",
+            prerequisites: ["CS103"],
+            moduleDescription: "Network protocols and communication",
             learningOutcomes: [
                 "Understand network protocols",
                 "Configure network devices",
                 "Troubleshoot network issues"
             ],
-            assessmentMethods: ["exam", "assignment"],
+            assessmentMethods: ["exam", "lab"],
             isActive: true,
             schoolId: createdIds.school
         },
         {
-            moduleName: "Data Structures & Algorithms",
-            code: "CS305",
-            totalCreditHours: 4,
-            courseId: createdIds.courses[0],
-            prerequisites: [],
-            moduleDescription: "Advanced data structures and algorithm analysis",
-            learningOutcomes: [
-                "Implement complex data structures",
-                "Analyze algorithm efficiency",
-                "Solve algorithmic problems"
-            ],
-            assessmentMethods: ["exam", "assignment", "project"],
-            isActive: true,
-            schoolId: createdIds.school
-        },
-        {
-            moduleName: "Artificial Intelligence",
-            code: "CS306",
+            moduleName: "Database Systems",
+            code: "CS203",
             totalCreditHours: 3,
             courseId: createdIds.courses[0],
-            prerequisites: [],
-            moduleDescription: "Introduction to AI and machine learning",
+            prerequisites: ["CS101"],
+            moduleDescription: "Database design and management",
             learningOutcomes: [
-                "Understand AI concepts",
+                "Design relational databases",
+                "Write SQL queries",
+                "Normalize database schemas"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+
+        // Year 2 Semester 2
+        {
+            moduleName: "Software Engineering",
+            code: "CS204",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS104"],
+            moduleDescription: "Software development lifecycle and practices",
+            learningOutcomes: [
+                "Understand SDLC",
+                "Apply design patterns",
+                "Work in development teams"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Operating Systems",
+            code: "CS205",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS103"],
+            moduleDescription: "OS concepts and system programming",
+            learningOutcomes: [
+                "Understand OS concepts",
+                "Implement system calls",
+                "Manage processes and memory"
+            ],
+            assessmentMethods: ["exam", "lab"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Web Development",
+            code: "CS206",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS104"],
+            moduleDescription: "Modern web application development",
+            learningOutcomes: [
+                "Build responsive websites",
+                "Use modern web technologies",
+                "Deploy web applications"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+
+        // Year 3 Semester 1
+        {
+            moduleName: "Artificial Intelligence",
+            code: "CS301",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS201"],
+            moduleDescription: "AI concepts and machine learning",
+            learningOutcomes: [
+                "Understand AI fundamentals",
                 "Implement ML algorithms",
                 "Build AI applications"
             ],
@@ -519,32 +677,50 @@ async function createFullSchoolData({
             schoolId: createdIds.school
         },
         {
-            moduleName: "IT Infrastructure",
-            code: "IT301",
+            moduleName: "Computer Graphics",
+            code: "CS302",
             totalCreditHours: 3,
-            courseId: createdIds.courses[1],
-            prerequisites: [],
-            moduleDescription: "IT infrastructure and system administration",
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS201"],
+            moduleDescription: "Graphics programming and visualization",
             learningOutcomes: [
-                "Manage IT infrastructure",
-                "Configure servers",
-                "Implement security measures"
+                "Implement graphics algorithms",
+                "Create 3D visualizations",
+                "Use graphics libraries"
             ],
-            assessmentMethods: ["exam", "assignment"],
+            assessmentMethods: ["exam", "project"],
             isActive: true,
             schoolId: createdIds.school
         },
         {
-            moduleName: "Cybersecurity",
-            code: "IT302",
+            moduleName: "Software Testing",
+            code: "CS303",
             totalCreditHours: 3,
-            courseId: createdIds.courses[1],
-            prerequisites: [],
-            moduleDescription: "Cybersecurity principles and practices",
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS204"],
+            moduleDescription: "Testing methodologies and quality assurance",
             learningOutcomes: [
-                "Understand security threats",
-                "Implement security measures",
-                "Conduct security audits"
+                "Design test cases",
+                "Implement testing strategies",
+                "Ensure software quality"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+
+        // Year 3 Semester 2
+        {
+            moduleName: "Mobile Application Development",
+            code: "CS304",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS206"],
+            moduleDescription: "Mobile app development for iOS and Android",
+            learningOutcomes: [
+                "Develop mobile applications",
+                "Use mobile frameworks",
+                "Deploy to app stores"
             ],
             assessmentMethods: ["exam", "project"],
             isActive: true,
@@ -552,21 +728,543 @@ async function createFullSchoolData({
         },
         {
             moduleName: "Cloud Computing",
-            code: "IT303",
+            code: "CS305",
             totalCreditHours: 3,
-            courseId: createdIds.courses[1],
-            prerequisites: [],
-            moduleDescription: "Cloud computing technologies and services",
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS202"],
+            moduleDescription: "Cloud technologies and distributed systems",
             learningOutcomes: [
                 "Deploy cloud applications",
                 "Manage cloud resources",
-                "Understand cloud security"
+                "Understand distributed computing"
             ],
-            assessmentMethods: ["exam", "assignment"],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Cybersecurity",
+            code: "CS306",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS202"],
+            moduleDescription: "Security principles and practices",
+            learningOutcomes: [
+                "Implement security measures",
+                "Conduct security audits",
+                "Protect against threats"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+
+        // Year 4 Semester 1 (Capstone)
+        {
+            moduleName: "Final Year Project I",
+            code: "CS401",
+            totalCreditHours: 6,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS204", "CS301"],
+            moduleDescription: "Capstone project planning and design",
+            learningOutcomes: [
+                "Plan complex projects",
+                "Apply learned concepts",
+                "Design system architecture"
+            ],
+            assessmentMethods: ["project", "presentation"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Advanced Software Architecture",
+            code: "CS402",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS204"],
+            moduleDescription: "Enterprise software architecture patterns",
+            learningOutcomes: [
+                "Design scalable architectures",
+                "Apply architectural patterns",
+                "Optimize system performance"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Data Science",
+            code: "CS403",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS203", "CS301"],
+            moduleDescription: "Data analysis and machine learning",
+            learningOutcomes: [
+                "Analyze large datasets",
+                "Apply ML techniques",
+                "Create data visualizations"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+
+        // Year 4 Semester 2 (Capstone)
+        {
+            moduleName: "Final Year Project II",
+            code: "CS404",
+            totalCreditHours: 6,
+            courseId: createdIds.courses[0],
+            prerequisites: ["CS401"],
+            moduleDescription: "Capstone project implementation and delivery",
+            learningOutcomes: [
+                "Implement complex systems",
+                "Deploy production applications",
+                "Present project results"
+            ],
+            assessmentMethods: ["project", "presentation", "demo"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Professional Practice",
+            code: "CS405",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: [],
+            moduleDescription: "Professional ethics and industry practices",
+            learningOutcomes: [
+                "Understand professional ethics",
+                "Prepare for industry",
+                "Develop soft skills"
+            ],
+            assessmentMethods: ["exam", "presentation"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Emerging Technologies",
+            code: "CS406",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[0],
+            prerequisites: [],
+            moduleDescription: "Latest trends in computing technology",
+            learningOutcomes: [
+                "Explore new technologies",
+                "Evaluate emerging trends",
+                "Prepare for future developments"
+            ],
+            assessmentMethods: ["exam", "research"],
             isActive: true,
             schoolId: createdIds.school
         }
     ];
+
+    // Generate comprehensive modules for Information Technology course (minimum 21 modules for 7 semesters)
+    const itModulesData = [
+        // Year 1 Semester 1
+        {
+            moduleName: "IT Fundamentals",
+            code: "IT101",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: [],
+            moduleDescription: "Introduction to information technology",
+            learningOutcomes: [
+                "Understand IT concepts",
+                "Use basic IT tools",
+                "Navigate digital environments"
+            ],
+            assessmentMethods: ["exam", "assignment"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Programming Basics",
+            code: "IT102",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: [],
+            moduleDescription: "Basic programming concepts",
+            learningOutcomes: [
+                "Write simple programs",
+                "Use programming logic",
+                "Debug code"
+            ],
+            assessmentMethods: ["exam", "lab"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Computer Hardware",
+            code: "IT103",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: [],
+            moduleDescription: "Computer components and maintenance",
+            learningOutcomes: [
+                "Assemble computers",
+                "Troubleshoot hardware",
+                "Perform maintenance"
+            ],
+            assessmentMethods: ["exam", "lab"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+
+        // Year 1 Semester 2
+        {
+            moduleName: "Web Technologies",
+            code: "IT104",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT102"],
+            moduleDescription: "Web development fundamentals",
+            learningOutcomes: [
+                "Create web pages",
+                "Use HTML/CSS",
+                "Implement basic JavaScript"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Database Fundamentals",
+            code: "IT105",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT102"],
+            moduleDescription: "Database concepts and SQL",
+            learningOutcomes: [
+                "Design simple databases",
+                "Write SQL queries",
+                "Manage data"
+            ],
+            assessmentMethods: ["exam", "assignment"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Networking Basics",
+            code: "IT106",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT103"],
+            moduleDescription: "Computer networking fundamentals",
+            learningOutcomes: [
+                "Configure networks",
+                "Understand protocols",
+                "Troubleshoot connectivity"
+            ],
+            assessmentMethods: ["exam", "lab"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+
+        // Year 2 Semester 1
+        {
+            moduleName: "System Administration",
+            code: "IT201",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT103", "IT106"],
+            moduleDescription: "Operating system administration",
+            learningOutcomes: [
+                "Manage system resources",
+                "Configure user accounts",
+                "Maintain system security"
+            ],
+            assessmentMethods: ["exam", "lab"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Network Administration",
+            code: "IT202",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT106"],
+            moduleDescription: "Advanced network management",
+            learningOutcomes: [
+                "Configure network devices",
+                "Implement security policies",
+                "Monitor network performance"
+            ],
+            assessmentMethods: ["exam", "lab"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Web Application Development",
+            code: "IT203",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT104"],
+            moduleDescription: "Full-stack web development",
+            learningOutcomes: [
+                "Build web applications",
+                "Use modern frameworks",
+                "Deploy web services"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+
+        // Year 2 Semester 2
+        {
+            moduleName: "IT Project Management",
+            code: "IT204",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT203"],
+            moduleDescription: "Project management for IT projects",
+            learningOutcomes: [
+                "Plan IT projects",
+                "Manage project timelines",
+                "Coordinate team efforts"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "IT Security",
+            code: "IT205",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT201"],
+            moduleDescription: "Information security principles",
+            learningOutcomes: [
+                "Implement security measures",
+                "Conduct security audits",
+                "Protect information assets"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Cloud Infrastructure",
+            code: "IT206",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT201"],
+            moduleDescription: "Cloud computing and virtualization",
+            learningOutcomes: [
+                "Deploy cloud services",
+                "Manage virtual machines",
+                "Optimize cloud resources"
+            ],
+            assessmentMethods: ["exam", "lab"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+
+        // Year 3 Semester 1
+        {
+            moduleName: "Advanced Networking",
+            code: "IT301",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT202"],
+            moduleDescription: "Advanced network technologies",
+            learningOutcomes: [
+                "Configure advanced protocols",
+                "Implement network security",
+                "Optimize network performance"
+            ],
+            assessmentMethods: ["exam", "lab"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Data Analytics",
+            code: "IT302",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT105"],
+            moduleDescription: "Data analysis and visualization",
+            learningOutcomes: [
+                "Analyze data sets",
+                "Create visualizations",
+                "Make data-driven decisions"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Mobile Technologies",
+            code: "IT303",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT203"],
+            moduleDescription: "Mobile app development",
+            learningOutcomes: [
+                "Develop mobile applications",
+                "Use mobile frameworks",
+                "Test mobile apps"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.courses[1]
+        },
+
+        // Year 3 Semester 2
+        {
+            moduleName: "Enterprise Systems",
+            code: "IT304",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT203"],
+            moduleDescription: "Large-scale IT systems",
+            learningOutcomes: [
+                "Design enterprise solutions",
+                "Integrate systems",
+                "Manage complex deployments"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "IT Governance",
+            code: "IT305",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT204"],
+            moduleDescription: "IT governance and compliance",
+            learningOutcomes: [
+                "Implement IT policies",
+                "Ensure compliance",
+                "Manage IT risks"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Emerging IT Trends",
+            code: "IT306",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: [],
+            moduleDescription: "Latest IT innovations",
+            learningOutcomes: [
+                "Explore new technologies",
+                "Evaluate emerging trends",
+                "Prepare for future IT"
+            ],
+            assessmentMethods: ["exam", "research"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+
+        // Year 4 Semester 1 (Capstone)
+        {
+            moduleName: "IT Capstone Project I",
+            code: "IT401",
+            totalCreditHours: 6,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT204", "IT302"],
+            moduleDescription: "Major IT project planning",
+            learningOutcomes: [
+                "Plan complex IT projects",
+                "Apply technical skills",
+                "Design system solutions"
+            ],
+            assessmentMethods: ["project", "presentation"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "IT Strategy",
+            code: "IT402",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT305"],
+            moduleDescription: "Strategic IT planning",
+            learningOutcomes: [
+                "Develop IT strategies",
+                "Align IT with business",
+                "Plan technology roadmaps"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Advanced Security",
+            code: "IT403",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT205"],
+            moduleDescription: "Advanced cybersecurity",
+            learningOutcomes: [
+                "Implement advanced security",
+                "Conduct penetration testing",
+                "Respond to security incidents"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+
+        // Year 4 Semester 2 (Capstone)
+        {
+            moduleName: "IT Capstone Project II",
+            code: "IT404",
+            totalCreditHours: 6,
+            courseId: createdIds.courses[1],
+            prerequisites: ["IT401"],
+            moduleDescription: "Major IT project implementation",
+            learningOutcomes: [
+                "Implement IT solutions",
+                "Deploy production systems",
+                "Present project results"
+            ],
+            assessmentMethods: ["project", "presentation", "demo"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "Professional IT Practice",
+            code: "IT405",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: [],
+            moduleDescription: "Professional IT skills",
+            learningOutcomes: [
+                "Develop professional skills",
+                "Prepare for IT industry",
+                "Understand IT ethics"
+            ],
+            assessmentMethods: ["exam", "presentation"],
+            isActive: true,
+            schoolId: createdIds.school
+        },
+        {
+            moduleName: "IT Innovation",
+            code: "IT406",
+            totalCreditHours: 3,
+            courseId: createdIds.courses[1],
+            prerequisites: [],
+            moduleDescription: "Innovation in IT",
+            learningOutcomes: [
+                "Foster innovation",
+                "Evaluate new ideas",
+                "Create innovative solutions"
+            ],
+            assessmentMethods: ["exam", "project"],
+            isActive: true,
+            schoolId: createdIds.school
+        }
+    ];
+
+    // Combine all modules
+    const modulesData = [...csModulesData, ...itModulesData];
     for (let i = 0; i < modulesData.length; i++) {
         const moduleResponse = await apiCall('POST', '/api/module', modulesData[i]);
         createdIds.modules.push(moduleResponse.data._id);
@@ -625,19 +1323,19 @@ async function createFullSchoolData({
     // 10. Create Semesters
     console.log(`[${schoolPrefix}] 10. Creating Semesters...`);
 
-    // Generate semesters for each course
+    // Generate semesters for each course (4 years = 8 semesters)
     for (let courseIndex = 0; courseIndex < coursesData.length; courseIndex++) {
         const courseData = coursesData[courseIndex];
         const courseId = createdIds.courses[courseIndex];
-        const totalYears = courseData.totalYear;
-        const semestersPerYear = 2; // Assuming 2 semesters per year
+        const totalYears = 4; // Fixed to 4 years for comprehensive coverage
+        const semestersPerYear = 2; // 2 semesters per year
 
-        console.log(`[${schoolPrefix}] Creating ${courseData.totalSemester} semesters for ${courseData.courseName}...`);
+        console.log(`[${schoolPrefix}] Creating ${totalYears * semestersPerYear} semesters for ${courseData.courseName}...`);
 
         for (let year = 1; year <= totalYears; year++) {
             for (let semesterInYear = 1; semesterInYear <= semestersPerYear; semesterInYear++) {
-                // Calculate overall semester number
-                const semesterNumber = semesterInYear;
+                // Calculate overall semester number (1-8)
+                const semesterNumber = (year - 1) * 2 + semesterInYear;
 
                 // Calculate dates based on year and semester
                 const baseYear = 2024;
@@ -659,7 +1357,7 @@ async function createFullSchoolData({
                     courseId: courseId,
                     semesterNumber: semesterNumber,
                     year: year,
-                    semesterName: `Year ${year} Semester ${semesterNumber}`,
+                    semesterName: `Year ${year} Semester ${semesterInYear}`,
                     startDate: startDate.toISOString(),
                     endDate: endDate.toISOString(),
                     registrationStartDate: regStartDate.toISOString(),
@@ -681,127 +1379,396 @@ async function createFullSchoolData({
         }
     }
 
+    // 10.5. Create Semester Modules (Assign modules to semesters)
+    console.log(`[${schoolPrefix}] 10.5. Creating Semester Modules...`);
+
+    // Get CS modules (first 21 modules) and IT modules (next 21 modules)
+    const csModules = createdIds.modules.slice(0, 21);
+    const itModules = createdIds.modules.slice(21, 42);
+
+    // Assign modules to semesters based on course
+    for (let courseIndex = 0; courseIndex < coursesData.length; courseIndex++) {
+        const courseId = createdIds.courses[courseIndex];
+        const courseModules = courseIndex === 0 ? csModules : itModules;
+        const intakeCourseId = createdIds.intakeCourses[courseIndex % createdIds.intakeCourses.length];
+        
+        // Get semesters for this course (8 semesters per course)
+        const courseSemesters = createdIds.semesters.slice(courseIndex * 8, (courseIndex + 1) * 8);
+        
+        console.log(`[${schoolPrefix}] Assigning ${courseModules.length} modules to ${courseSemesters.length} semesters for ${coursesData[courseIndex].courseName}...`);
+
+        // Distribute modules across semesters (3 modules per semester for first 7 semesters, 3 modules for last semester)
+        for (let semesterIndex = 0; semesterIndex < courseSemesters.length; semesterIndex++) {
+            const semesterId = courseSemesters[semesterIndex];
+            const semesterNumber = semesterIndex + 1;
+            
+            // Calculate how many modules for this semester
+            let modulesPerSemester;
+            if (semesterNumber <= 7) {
+                modulesPerSemester = 3; // 3 modules per semester for first 7 semesters
+            } else {
+                modulesPerSemester = 3; // 3 modules for last semester
+            }
+            
+            // Calculate start and end module indices for this semester
+            const startModuleIndex = semesterIndex * 3;
+            const endModuleIndex = Math.min(startModuleIndex + modulesPerSemester, courseModules.length);
+            const semesterModules = courseModules.slice(startModuleIndex, endModuleIndex);
+            
+            // Create semester module relationships
+            for (const moduleId of semesterModules) {
+                const semesterModuleData = {
+                    semesterId: semesterId,
+                    moduleId: moduleId,
+                    courseId: courseId,
+                    intakeCourseId: intakeCourseId,
+                    schoolId: createdIds.school
+                };
+                
+                try {
+                    const semesterModuleResponse = await apiCall('POST', '/api/semester-module', semesterModuleData);
+                    createdIds.semesterModules.push(semesterModuleResponse.data._id);
+                    console.log(`[${schoolPrefix}] ✅ Semester Module created: Module assigned to ${semesterNumber} (${semesterModuleResponse.data._id})`);
+                } catch (error) {
+                    console.error(`[${schoolPrefix}] ❌ Failed to create semester module for semester ${semesterNumber}`, error.message);
+                }
+            }
+        }
+    }
+
     // 11. Create Class Schedules
     console.log(`[${schoolPrefix}] 11. Creating Class Schedules...`);
-    const classSchedulesData = [
-        {
+
+    // Generate comprehensive class schedules for all modules across semesters
+    const classSchedulesData = [];
+
+    // Use the existing CS and IT modules from semester module creation
+    // const csModules = createdIds.modules.slice(0, 21);
+    // const itModules = createdIds.modules.slice(21, 42);
+
+    // Create schedules for CS course (Year 1-4, 7 semesters)
+    console.log(`[${schoolPrefix}] Creating class schedules for Computer Science course...`);
+
+    // Year 1 Semester 1 (CS101, CS102, CS103)
+    for (let i = 0; i < 3; i++) {
+        const days = ["Monday", "Tuesday", "Wednesday"];
+        const times = ["09:00", "13:00", "10:00"];
+        const endTimes = ["12:00", "16:00", "13:00"];
+
+        classSchedulesData.push({
             roomId: createdIds.rooms.classroom,
-            moduleId: createdIds.modules[0],
-            lecturerId: createdIds.lecturers[0],
-            dayOfWeek: "Monday",
-            startTime: "09:00",
-            endTime: "12:00",
-            intakeCourseId: createdIds.intakeCourses[0],
-            semesterId: createdIds.semesters[0],
+            moduleId: csModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i],
+            startTime: times[i],
+            endTime: endTimes[i],
+            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
+            semesterId: createdIds.semesters[0], // Year 1 Semester 1
             schoolId: createdIds.school,
             moduleStartDate: "2024-02-01T00:00:00.000Z",
             moduleEndDate: "2024-06-30T23:59:59.000Z"
-        },
-        {
+        });
+    }
+
+    // Year 1 Semester 2 (CS104, CS105, CS106)
+    for (let i = 3; i < 6; i++) {
+        const days = ["Monday", "Tuesday", "Wednesday"];
+        const times = ["14:00", "09:00", "13:00"];
+        const endTimes = ["17:00", "12:00", "16:00"];
+
+        classSchedulesData.push({
             roomId: createdIds.rooms.classroom,
-            moduleId: createdIds.modules[1],
-            lecturerId: createdIds.lecturers[1],
-            dayOfWeek: "Tuesday",
-            startTime: "13:00",
-            endTime: "16:00",
-            intakeCourseId: createdIds.intakeCourses[1],
-            semesterId: createdIds.semesters[1],
+            moduleId: csModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i - 3],
+            startTime: times[i - 3],
+            endTime: endTimes[i - 3],
+            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
+            semesterId: createdIds.semesters[1], // Year 1 Semester 2
+            schoolId: createdIds.school,
+            moduleStartDate: "2024-07-01T00:00:00.000Z",
+            moduleEndDate: "2024-11-30T23:59:59.000Z"
+        });
+    }
+
+    // Year 2 Semester 1 (CS201, CS202, CS203)
+    for (let i = 6; i < 9; i++) {
+        const days = ["Thursday", "Friday", "Monday"];
+        const times = ["09:00", "13:00", "10:00"];
+        const endTimes = ["12:00", "16:00", "13:00"];
+
+        classSchedulesData.push({
+            roomId: createdIds.rooms.classroom,
+            moduleId: csModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i - 6],
+            startTime: times[i - 6],
+            endTime: endTimes[i - 6],
+            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
+            semesterId: createdIds.semesters[2], // Year 2 Semester 1
+            schoolId: createdIds.school,
+            moduleStartDate: "2025-02-01T00:00:00.000Z",
+            moduleEndDate: "2025-06-30T23:59:59.000Z"
+        });
+    }
+
+    // Year 2 Semester 2 (CS204, CS205, CS206)
+    for (let i = 9; i < 12; i++) {
+        const days = ["Tuesday", "Wednesday", "Thursday"];
+        const times = ["14:00", "09:00", "13:00"];
+        const endTimes = ["17:00", "12:00", "16:00"];
+
+        classSchedulesData.push({
+            roomId: createdIds.rooms.classroom,
+            moduleId: csModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i - 9],
+            startTime: times[i - 9],
+            endTime: endTimes[i - 9],
+            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
+            semesterId: createdIds.semesters[3], // Year 2 Semester 2
+            schoolId: createdIds.school,
+            moduleStartDate: "2025-07-01T00:00:00.000Z",
+            moduleEndDate: "2025-11-30T23:59:59.000Z"
+        });
+    }
+
+    // Year 3 Semester 1 (CS301, CS302, CS303)
+    for (let i = 12; i < 15; i++) {
+        const days = ["Friday", "Monday", "Tuesday"];
+        const times = ["09:00", "13:00", "10:00"];
+        const endTimes = ["12:00", "16:00", "13:00"];
+
+        classSchedulesData.push({
+            roomId: createdIds.rooms.classroom,
+            moduleId: csModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i - 12],
+            startTime: times[i - 12],
+            endTime: endTimes[i - 12],
+            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
+            semesterId: createdIds.semesters[4], // Year 3 Semester 1
+            schoolId: createdIds.school,
+            moduleStartDate: "2026-02-01T00:00:00.000Z",
+            moduleEndDate: "2026-06-30T23:59:59.000Z"
+        });
+    }
+
+    // Year 3 Semester 2 (CS304, CS305, CS306)
+    for (let i = 15; i < 18; i++) {
+        const days = ["Wednesday", "Thursday", "Friday"];
+        const times = ["14:00", "09:00", "13:00"];
+        const endTimes = ["17:00", "12:00", "16:00"];
+
+        classSchedulesData.push({
+            roomId: createdIds.rooms.classroom,
+            moduleId: csModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i - 15],
+            startTime: times[i - 15],
+            endTime: endTimes[i - 15],
+            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
+            semesterId: createdIds.semesters[5], // Year 3 Semester 2
+            schoolId: createdIds.school,
+            moduleStartDate: "2026-07-01T00:00:00.000Z",
+            moduleEndDate: "2026-11-30T23:59:59.000Z"
+        });
+    }
+
+    // Year 4 Semester 1 (CS401, CS402, CS403) - Capstone
+    for (let i = 18; i < 21; i++) {
+        const days = ["Monday", "Tuesday", "Wednesday"];
+        const times = ["09:00", "13:00", "10:00"];
+        const endTimes = ["12:00", "16:00", "13:00"];
+
+        classSchedulesData.push({
+            roomId: createdIds.rooms.classroom,
+            moduleId: csModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i - 18],
+            startTime: times[i - 18],
+            endTime: endTimes[i - 18],
+            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
+            semesterId: createdIds.semesters[6], // Year 4 Semester 1
+            schoolId: createdIds.school,
+            moduleStartDate: "2027-02-01T00:00:00.000Z",
+            moduleEndDate: "2027-06-30T23:59:59.000Z"
+        });
+    }
+
+    // Create schedules for IT course (Year 1-4, 7 semesters)
+    console.log(`[${schoolPrefix}] Creating class schedules for Information Technology course...`);
+
+    // Year 1 Semester 1 (IT101, IT102, IT103)
+    for (let i = 0; i < 3; i++) {
+        const days = ["Monday", "Tuesday", "Wednesday"];
+        const times = ["09:00", "13:00", "10:00"];
+        const endTimes = ["12:00", "16:00", "13:00"];
+
+        classSchedulesData.push({
+            roomId: createdIds.rooms.classroom,
+            moduleId: itModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i],
+            startTime: times[i],
+            endTime: endTimes[i],
+            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
+            semesterId: createdIds.semesters[0], // Year 1 Semester 1
             schoolId: createdIds.school,
             moduleStartDate: "2024-06-01T00:00:00.000Z",
             moduleEndDate: "2024-10-31T23:59:59.000Z"
-        },
-        {
-            roomId: createdIds.rooms.tech_lab,
-            moduleId: createdIds.modules[2],
-            lecturerId: createdIds.lecturers[0],
-            dayOfWeek: "Wednesday",
-            startTime: "10:00",
-            endTime: "13:00",
-            intakeCourseId: createdIds.intakeCourses[0],
-            semesterId: createdIds.semesters[0],
-            schoolId: createdIds.school,
-            moduleStartDate: "2024-02-01T00:00:00.000Z",
-            moduleEndDate: "2024-06-30T23:59:59.000Z"
-        },
-        {
+        });
+    }
+
+    // Year 1 Semester 2 (IT104, IT105, IT106)
+    for (let i = 3; i < 6; i++) {
+        const days = ["Monday", "Tuesday", "Wednesday"];
+        const times = ["14:00", "09:00", "13:00"];
+        const endTimes = ["17:00", "12:00", "16:00"];
+
+        classSchedulesData.push({
             roomId: createdIds.rooms.classroom,
-            moduleId: createdIds.modules[3],
-            lecturerId: createdIds.lecturers[1],
-            dayOfWeek: "Thursday",
-            startTime: "14:00",
-            endTime: "17:00",
-            intakeCourseId: createdIds.intakeCourses[1],
-            semesterId: createdIds.semesters[1],
+            moduleId: itModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i - 3],
+            startTime: times[i - 3],
+            endTime: endTimes[i - 3],
+            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
+            semesterId: createdIds.semesters[1], // Year 1 Semester 2
             schoolId: createdIds.school,
-            moduleStartDate: "2024-06-01T00:00:00.000Z",
-            moduleEndDate: "2024-10-31T23:59:59.000Z"
-        },
-        {
-            roomId: createdIds.rooms.tech_lab,
-            moduleId: createdIds.modules[4],
-            lecturerId: createdIds.lecturers[0],
-            dayOfWeek: "Friday",
-            startTime: "09:00",
-            endTime: "12:00",
-            intakeCourseId: createdIds.intakeCourses[0],
-            semesterId: createdIds.semesters[0],
-            schoolId: createdIds.school,
-            moduleStartDate: "2024-02-01T00:00:00.000Z",
-            moduleEndDate: "2024-06-30T23:59:59.000Z"
-        },
-        {
+            moduleStartDate: "2024-11-01T00:00:00.000Z",
+            moduleEndDate: "2025-03-31T23:59:59.000Z"
+        });
+    }
+
+    // Year 2 Semester 1 (IT201, IT202, IT203)
+    for (let i = 6; i < 9; i++) {
+        const days = ["Thursday", "Friday", "Monday"];
+        const times = ["09:00", "13:00", "10:00"];
+        const endTimes = ["12:00", "16:00", "13:00"];
+
+        classSchedulesData.push({
             roomId: createdIds.rooms.classroom,
-            moduleId: createdIds.modules[5],
-            lecturerId: createdIds.lecturers[1],
-            dayOfWeek: "Monday",
-            startTime: "14:00",
-            endTime: "17:00",
-            intakeCourseId: createdIds.intakeCourses[1],
-            semesterId: createdIds.semesters[1],
+            moduleId: itModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i - 6],
+            startTime: times[i - 6],
+            endTime: endTimes[i - 6],
+            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
+            semesterId: createdIds.semesters[2], // Year 2 Semester 1
             schoolId: createdIds.school,
-            moduleStartDate: "2024-06-01T00:00:00.000Z",
-            moduleEndDate: "2024-10-31T23:59:59.000Z"
-        },
-        {
-            roomId: createdIds.rooms.tech_lab,
-            moduleId: createdIds.modules[6],
-            lecturerId: createdIds.lecturers[0],
-            dayOfWeek: "Tuesday",
-            startTime: "09:00",
-            endTime: "12:00",
-            intakeCourseId: createdIds.intakeCourses[2],
-            semesterId: createdIds.semesters[2],
+            moduleStartDate: "2025-04-01T00:00:00.000Z",
+            moduleEndDate: "2025-08-31T23:59:59.000Z"
+        });
+    }
+
+    // Year 2 Semester 2 (IT204, IT205, IT206)
+    for (let i = 9; i < 12; i++) {
+        const days = ["Tuesday", "Wednesday", "Thursday"];
+        const times = ["14:00", "09:00", "13:00"];
+        const endTimes = ["17:00", "12:00", "16:00"];
+
+        classSchedulesData.push({
+            roomId: createdIds.rooms.classroom,
+            moduleId: itModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i - 9],
+            startTime: times[i - 9],
+            endTime: endTimes[i - 9],
+            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
+            semesterId: createdIds.semesters[3], // Year 2 Semester 2
+            schoolId: createdIds.school,
+            moduleStartDate: "2025-09-01T00:00:00.000Z",
+            moduleEndDate: "2026-01-31T23:59:59.000Z"
+        });
+    }
+
+    // Year 3 Semester 1 (IT301, IT302, IT303)
+    for (let i = 12; i < 15; i++) {
+        const days = ["Friday", "Monday", "Tuesday"];
+        const times = ["09:00", "13:00", "10:00"];
+        const endTimes = ["12:00", "16:00", "13:00"];
+
+        classSchedulesData.push({
+            roomId: createdIds.rooms.classroom,
+            moduleId: itModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i - 12],
+            startTime: times[i - 12],
+            endTime: endTimes[i - 12],
+            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
+            semesterId: createdIds.semesters[4], // Year 3 Semester 1
+            schoolId: createdIds.school,
+            moduleStartDate: "2026-02-01T00:00:00.000Z",
+            moduleEndDate: "2026-06-30T23:59:59.000Z"
+        });
+    }
+
+    // Year 3 Semester 2 (IT304, IT305, IT306)
+    for (let i = 15; i < 18; i++) {
+        const days = ["Wednesday", "Thursday", "Friday"];
+        const times = ["14:00", "09:00", "13:00"];
+        const endTimes = ["17:00", "12:00", "16:00"];
+
+        classSchedulesData.push({
+            roomId: createdIds.rooms.classroom,
+            moduleId: itModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i - 15],
+            startTime: times[i - 15],
+            endTime: endTimes[i - 15],
+            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
+            semesterId: createdIds.semesters[5], // Year 3 Semester 2
+            schoolId: createdIds.school,
+            moduleStartDate: "2026-07-01T00:00:00.000Z",
+            moduleEndDate: "2026-11-30T23:59:59.000Z"
+        });
+    }
+
+    // Year 4 Semester 1 (IT401, IT402, IT403) - Capstone
+    for (let i = 18; i < 21; i++) {
+        const days = ["Monday", "Tuesday", "Wednesday"];
+        const times = ["09:00", "13:00", "10:00"];
+        const endTimes = ["12:00", "16:00", "13:00"];
+
+        classSchedulesData.push({
+            roomId: createdIds.rooms.classroom,
+            moduleId: itModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i - 18],
+            startTime: times[i - 18],
+            endTime: endTimes[i - 18],
+            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
+            semesterId: createdIds.semesters[6], // Year 4 Semester 1
+            schoolId: createdIds.school,
+            moduleStartDate: "2027-02-01T00:00:00.000Z",
+            moduleEndDate: "2027-06-30T23:59:59.000Z"
+        });
+    }
+
+    // Add some additional schedules for September 2024 intake (IT course)
+    console.log(`[${schoolPrefix}] Creating additional schedules for September 2024 intake...`);
+
+    // Year 1 Semester 1 for September intake (IT101, IT102, IT103)
+    for (let i = 0; i < 3; i++) {
+        const days = ["Monday", "Tuesday", "Wednesday"];
+        const times = ["14:00", "09:00", "13:00"];
+        const endTimes = ["17:00", "12:00", "16:00"];
+
+        classSchedulesData.push({
+            roomId: createdIds.rooms.classroom,
+            moduleId: itModules[i],
+            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+            dayOfWeek: days[i],
+            startTime: times[i],
+            endTime: endTimes[i],
+            intakeCourseId: createdIds.intakeCourses[2], // September 2024 intake
+            semesterId: createdIds.semesters[0], // Year 1 Semester 1
             schoolId: createdIds.school,
             moduleStartDate: "2024-10-01T00:00:00.000Z",
             moduleEndDate: "2025-02-28T23:59:59.000Z"
-        },
-        {
-            roomId: createdIds.rooms.classroom,
-            moduleId: createdIds.modules[7],
-            lecturerId: createdIds.lecturers[1],
-            dayOfWeek: "Wednesday",
-            startTime: "13:00",
-            endTime: "16:00",
-            intakeCourseId: createdIds.intakeCourses[2],
-            semesterId: createdIds.semesters[2],
-            schoolId: createdIds.school,
-            moduleStartDate: "2024-10-01T00:00:00.000Z",
-            moduleEndDate: "2025-02-28T23:59:59.000Z"
-        },
-        {
-            roomId: createdIds.rooms.tech_lab,
-            moduleId: createdIds.modules[8],
-            lecturerId: createdIds.lecturers[0],
-            dayOfWeek: "Thursday",
-            startTime: "10:00",
-            endTime: "13:00",
-            intakeCourseId: createdIds.intakeCourses[2],
-            semesterId: createdIds.semesters[2],
-            schoolId: createdIds.school,
-            moduleStartDate: "2024-10-01T00:00:00.000Z",
-            moduleEndDate: "2025-02-28T23:59:59.000Z"
-        }
-    ];
+        });
+    }
     for (let i = 0; i < classSchedulesData.length; i++) {
         const classScheduleResponse = await apiCall('POST', '/api/class-schedule', classSchedulesData[i]);
         createdIds.classSchedules.push(classScheduleResponse.data._id);
@@ -810,16 +1777,18 @@ async function createFullSchoolData({
 
     // 12. Create Exam Schedules
     console.log(`[${schoolPrefix}] 12. Creating Exam Schedules...`);
+
     // Calculate exam dates: current date + 1 week
     const currentDate = new Date();
     const examDate1 = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000); // +1 week
     const examDate2 = new Date(currentDate.getTime() + 8 * 24 * 60 * 60 * 1000); // +1 week + 1 day
 
     const examSchedulesData = [
+        // CS Course - Year 1 Semester 1
         {
             intakeCourseId: createdIds.intakeCourses[0],
             courseId: createdIds.courses[0],
-            moduleId: createdIds.modules[0],
+            moduleId: createdIds.modules[0], // CS101
             examDate: examDate1.toISOString().split('T')[0],
             examTime: "09:00",
             semesterId: createdIds.semesters[0],
@@ -829,13 +1798,63 @@ async function createFullSchoolData({
             schoolId: createdIds.school
         },
         {
+            intakeCourseId: createdIds.intakeCourses[0],
+            courseId: createdIds.courses[0],
+            moduleId: createdIds.modules[1], // CS102
+            examDate: examDate1.toISOString().split('T')[0],
+            examTime: "14:00",
+            semesterId: createdIds.semesters[0],
+            roomId: createdIds.rooms.classroom,
+            invigilators: [createdIds.lecturers[1]],
+            durationMinute: 120,
+            schoolId: createdIds.school
+        },
+        {
+            intakeCourseId: createdIds.intakeCourses[0],
+            courseId: createdIds.courses[0],
+            moduleId: createdIds.modules[2], // CS103
+            examDate: examDate2.toISOString().split('T')[0],
+            examTime: "09:00",
+            semesterId: createdIds.semesters[0],
+            roomId: createdIds.rooms.tech_lab,
+            invigilators: [createdIds.lecturers[0]],
+            durationMinute: 120,
+            schoolId: createdIds.school
+        },
+
+        // IT Course - Year 1 Semester 1
+        {
             intakeCourseId: createdIds.intakeCourses[1],
             courseId: createdIds.courses[1],
-            moduleId: createdIds.modules[1],
-            semesterId: createdIds.semesters[1],
-            examDate: examDate2.toISOString().split('T')[0],
+            moduleId: createdIds.modules[21], // IT101
+            examDate: examDate1.toISOString().split('T')[0],
+            examTime: "09:00",
+            semesterId: createdIds.semesters[0],
+            roomId: createdIds.rooms.classroom,
+            invigilators: [createdIds.lecturers[1]],
+            durationMinute: 120,
+            schoolId: createdIds.school
+        },
+        {
+            intakeCourseId: createdIds.intakeCourses[1],
+            courseId: createdIds.courses[1],
+            moduleId: createdIds.modules[22], // IT102
+            examDate: examDate1.toISOString().split('T')[0],
             examTime: "14:00",
+            semesterId: createdIds.semesters[0],
             roomId: createdIds.rooms.tech_lab,
+            invigilators: [createdIds.lecturers[0]],
+            durationMinute: 120,
+            schoolId: createdIds.school
+        },
+        {
+            intakeCourseId: createdIds.intakeCourses[1],
+            courseId: createdIds.courses[1],
+            moduleId: createdIds.modules[23], // IT103
+            examDate: examDate2.toISOString().split('T')[0],
+            examTime: "09:00",
+            semesterId: createdIds.semesters[0],
+            roomId: createdIds.rooms.classroom,
             invigilators: [createdIds.lecturers[1]],
             durationMinute: 120,
             schoolId: createdIds.school
@@ -876,15 +1895,20 @@ async function createFullSchoolData({
         console.log(`[${schoolPrefix}] Creating ${studentsForThisIntake} students for ${intakeData.intakeName} - ${courseData.courseName}`);
 
         for (let studentInIntake = 0; studentInIntake < studentsForThisIntake; studentInIntake++) {
+            // Generate unique name for this student
+            const courseIndex = intakeCourseIndex % coursesData.length;
+            const { fullName, uniqueId } = generateUniqueStudentName(schoolPrefix, studentUserIndex, intakeCourseIndex, courseIndex);
+
             // Create user for this student
             const userData = {
-                name: `${schoolPrefix} Student_${studentUserIndex}`,
+                name: fullName,
                 email: (schoolPrefix === "APU" && studentUserIndex === 0) ? "studentcampushub@gmail.com" : `student${studentUserIndex}@student.${schoolEmailDomain}`,
                 password: (schoolPrefix === "APU" && studentUserIndex === 0) ? "P@ssw0rd$$" : "password123",
                 phoneNumber: studentPhoneBase + 100 + studentUserIndex,
                 role: "student",
                 twoFA_enabled: false
             };
+            console.log("🚀 ~ createFullSchoolData ~ userData:", userData)
 
             const userResponse = await apiCall('POST', '/api/user', userData);
             const userId = userResponse.data._id;
@@ -948,21 +1972,26 @@ async function createFullSchoolData({
         const studentIntakeCourseId = studentData.intakeCourseId;
 
         // Find class schedules that match this student's intake course
-        for (let j = 0; j < createdIds.classSchedules.length; j++) {
-            // Only create attendance for schedules that match the student's intake course
-            // This is a simplified check - in a real scenario, you'd match based on intakeCourseId
-            if (j < 2) { // Limit to first 2 schedules for demonstration
-                for (let k = 0; k < 2; k++) { // 2 records per schedule
-                    const attendanceData = {
-                        studentId: createdIds.students[i],
-                        scheduleId: createdIds.classSchedules[j],
-                        status: attendanceStatuses[(i + j + k) % attendanceStatuses.length],
-                        date: `2024-02-${(5 + k + j * 3).toString().padStart(2, '0')}T00:00:00.000Z`,
-                        schoolId: createdIds.school
-                    };
-                    const attendanceResponse = await apiCall('POST', '/api/attendance', attendanceData);
-                    createdIds.attendance.push(attendanceResponse.data._id);
-                }
+        const studentSchedules = createdIds.classSchedules.filter(schedule => {
+            // Match schedules based on intake course ID
+            return schedule.intakeCourseId === studentIntakeCourseId;
+        });
+
+        // Create attendance for the first 3 schedules (first semester modules)
+        const schedulesToTrack = studentSchedules.slice(0, 3);
+
+        for (let j = 0; j < schedulesToTrack.length; j++) {
+            // Create 3 attendance records per schedule (different dates)
+            for (let k = 0; k < 3; k++) {
+                const attendanceData = {
+                    studentId: createdIds.students[i],
+                    scheduleId: schedulesToTrack[j],
+                    status: attendanceStatuses[(i + j + k) % attendanceStatuses.length],
+                    date: `2024-02-${(5 + k + j * 3).toString().padStart(2, '0')}T00:00:00.000Z`,
+                    schoolId: createdIds.school
+                };
+                const attendanceResponse = await apiCall('POST', '/api/attendance', attendanceData);
+                createdIds.attendance.push(attendanceResponse.data._id);
             }
         }
     }
@@ -988,21 +2017,30 @@ async function createFullSchoolData({
         const studentCourseId = studentIntakeCourseIndex >= 0 ? intakeCoursesData[studentIntakeCourseIndex].courseId : createdIds.courses[0];
 
         // Get modules for this student's course
-        const courseModules = modulesData.filter(module => module.courseId === studentCourseId);
+        let courseModules;
+        if (studentCourseId === createdIds.courses[0]) {
+            // Computer Science course - use first 21 modules
+            courseModules = createdIds.modules.slice(0, 21);
+        } else {
+            // Information Technology course - use next 21 modules
+            courseModules = createdIds.modules.slice(21, 42);
+        }
 
-        // Create results for each module in the student's course
-        for (let j = 0; j < courseModules.length; j++) {
+        // Create results for each module in the student's course (limit to first 6 modules for Year 1-2)
+        const modulesToGrade = courseModules.slice(0, Math.min(6, courseModules.length));
+
+        for (let j = 0; j < modulesToGrade.length; j++) {
             const selectedGrade = grades[(i + j) % grades.length];
             const totalMarks = 100;
             const marks = Math.floor(Math.random() * 40) + (selectedGrade === 'F' ? 0 : 50); // 50-90 for passing, 0-49 for F
 
-            // Assign semester based on student's current semester and available semesters
-            const semesterIndex = (studentData.currentSemester - 1) % createdIds.semesters.length;
-            const semesterId = createdIds.semesters[semesterIndex];
+            // Assign semester based on module index (first 3 modules = semester 1, next 3 = semester 2)
+            const semesterIndex = Math.floor(j / 3);
+            const semesterId = createdIds.semesters[semesterIndex] || createdIds.semesters[0];
 
             const resultData = {
                 studentId: createdIds.students[i],
-                moduleId: createdIds.modules[j],
+                moduleId: modulesToGrade[j],
                 semesterId: semesterId,
                 grade: selectedGrade,
                 creditHours: 3,
@@ -2058,19 +3096,72 @@ async function createFullSchoolData({
     createdIds.responds.push(respondRes.data._id);
 
     console.log(`[${schoolPrefix}] Service: Creating LostItem...`);
-    const lostItemData = {
-        personId: createdIds.students[0],
-        schoolId: createdIds.school,
-        itemDetails: {
-            name: "Wallet",
-            description: "Lost black leather wallet.",
-            location: "cafeteria",
-            lostDate: new Date().toISOString()
+
+    // Create multiple lost items with sample images
+    const lostItemsData = [
+        {
+            personId: createdIds.students[0],
+            schoolId: createdIds.school,
+            itemDetails: {
+                name: "Water Bottle",
+                description: "Lost white cylindrical water bottle with black lid. Has 'Botella' text printed on it.",
+                location: "cafeteria",
+                lostDate: new Date().toISOString(),
+                image: "/bottle.jpeg",
+                imageData: null,
+                imageType: null
+            },
+            status: "reported"
         },
-        status: "reported"
-    };
-    const lostItemRes = await apiCall('POST', '/api/lost-item', lostItemData);
-    createdIds.lostItems.push(lostItemRes.data._id);
+        {
+            personId: createdIds.students[1] || createdIds.students[0],
+            schoolId: createdIds.school,
+            itemDetails: {
+                name: "USB Flash Drive",
+                description: "Lost black USB flash drive (SanDisk Cruzer micro 4GB) with retractable connector.",
+                location: "library",
+                lostDate: new Date().toISOString(),
+                image: "/pendrive.jpeg",
+                imageData: null,
+                imageType: null
+            },
+            status: "found"
+        },
+        {
+            personId: createdIds.students[2] || createdIds.students[0],
+            schoolId: createdIds.school,
+            itemDetails: {
+                name: "Laptop Charger",
+                description: "Lost laptop charger with black cable and rectangular connector.",
+                location: "classroom",
+                lostDate: new Date().toISOString(),
+                image: "/laptopCharger.jpeg",
+                imageData: null,
+                imageType: null
+            },
+            status: "reported"
+        },
+        {
+            personId: createdIds.students[5] || createdIds.students[4],
+            schoolId: createdIds.school,
+            itemDetails: {
+                name: "Laptop Charger",
+                description: "Found a laptop charger with black cable and rectangular connector.",
+                location: "classroom",
+                lostDate: new Date().toISOString(),
+                image: "/laptopCharger.jpeg",
+                imageData: null,
+                imageType: null
+            },
+            status: "found"
+        }
+    ];
+
+    for (const lostItemData of lostItemsData) {
+        const lostItemRes = await apiCall('POST', '/api/lost-item', lostItemData);
+        createdIds.lostItems.push(lostItemRes.data._id);
+        console.log(`[${schoolPrefix}] ✅ Lost Item created: ${lostItemData.itemDetails.name} (${lostItemRes.data._id})`);
+    }
 
     // Save IDs to file for reference
     const fs = await import('fs');
@@ -2092,6 +3183,7 @@ const clearDatabase = async () => {
         await apiCall('DELETE', '/api/student/all');
         await apiCall('DELETE', '/api/exam-schedule/all');
         await apiCall('DELETE', '/api/class-schedule/all');
+        await apiCall('DELETE', '/api/semester-module/all');
         await apiCall('DELETE', '/api/semester/all');
         await apiCall('DELETE', '/api/intake-course/all');
         await apiCall('DELETE', '/api/module/all');

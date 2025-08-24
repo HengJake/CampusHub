@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: analytics.jsx
+// Description: Analytics dashboard providing comprehensive insights into system usage, client metrics, and business performance indicators
+// First Written on: July 22, 2024
+// Edited on: Friday, July 31, 2024
+
 "use client"
 
 import React from "react";

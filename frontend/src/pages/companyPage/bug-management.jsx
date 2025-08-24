@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: bug-management.jsx
+// Description: Bug tracking and management system for company administrators to monitor, prioritize, and resolve system issues
+// First Written on: July 20, 2024
+// Edited on: Friday, August 2, 2024
+
 import React, { useState, useEffect } from 'react';
 import {
     Box,

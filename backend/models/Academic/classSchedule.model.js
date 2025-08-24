@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: classSchedule.model.js
+// Description: ClassSchedule model schema defining class timetables, room assignments, and scheduling conflicts management
+// First Written on: July 8, 2024
+// Edited on: Friday, July 10, 2024
+
 import mongoose from "mongoose";
 
 const classScheduleSchema = new mongoose.Schema({

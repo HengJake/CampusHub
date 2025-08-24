@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: signUpOuter.jsx
+// Description: Main signup container component providing user registration interface with role selection and form validation
+// First Written on: June 23, 2024
+// Edited on: Friday, August 7, 2024
+
 import React, { useState, useEffect } from "react";
 import {
   Box,

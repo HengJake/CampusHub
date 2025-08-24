@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: authRedirect.js
+// Description: Authentication redirect utilities for handling user navigation based on authentication status and role-based access control
+// First Written on: July 17, 2024
+// Edited on: Friday, August 16, 2024
+
 import { useAuthStore } from '../store/auth.js';
 /**
  * Utility functions for JWT token detection and role-based redirection
@@ -114,33 +120,32 @@ export const getRedirectPath = (role, isSchoolSetupComplete = true) => {
  */
 export const detectTokenAndRedirect = async (navigate) => {
     try {
-        const authResult = await useAuthStore.getState().refreshUserAuthData();
 
         // Check if user is authenticated
         const isAuthenticated = await hasValidToken();
         if (!isAuthenticated) {
             return { redirected: false };
         }
-
+        
         // Get user role from auth endpoint
         const role = await getRoleFromAuth();
         if (!role) {
-
+            
             return { redirected: false };
         }
-
-
-
+        
+        
+        
         // For schoolAdmin, check if school setup is complete
         let isSchoolSetupComplete = true;
         if (role === 'schoolAdmin') {
             isSchoolSetupComplete = await checkSchoolSetupComplete();
-
+            
         }
 
 
-        const redirectPath = getRedirectPath(role, isSchoolSetupComplete);
 
+        const redirectPath = getRedirectPath(role, isSchoolSetupComplete);
 
         // Navigate to appropriate page
         navigate(redirectPath);

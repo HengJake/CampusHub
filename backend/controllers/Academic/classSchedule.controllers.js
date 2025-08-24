@@ -324,7 +324,7 @@ export const getClassSchedulesByStudentId = controllerWrapper(async (req, res) =
                 populate: { path: "userId" }
             }
         ]);
-        console.log("🚀 ~ classSchedules:", classSchedules.length)
+
 
         return {
             success: true,

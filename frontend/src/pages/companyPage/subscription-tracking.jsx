@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: subscription-tracking.jsx
+// Description: Subscription management interface for tracking client subscriptions, billing status, and subscription lifecycle management
+// First Written on: July 18, 2024
+// Edited on: Friday, August 4, 2024
+
 "use client";
 
 import React from "react";
@@ -97,7 +103,7 @@ export default function SubscriptionTracking() {
     setLoadingPayments(true);
     try {
       // Fetch payments for all schools
-      const paymentPromises = schools.map(school => 
+      const paymentPromises = schools.map(school =>
         fetch(`/api/payment/school/${school._id}`)
           .then(res => res.json())
           .catch(error => {
@@ -119,7 +125,7 @@ export default function SubscriptionTracking() {
   const fetchUserCounts = async () => {
     try {
       // Fetch user counts for each school
-      const userCountPromises = schools.map(school => 
+      const userCountPromises = schools.map(school =>
         fetch(`/api/student/school/${school._id}`)
           .then(res => res.json())
           .catch(error => {
@@ -175,13 +181,13 @@ export default function SubscriptionTracking() {
   const subscriptionData = schools.map((school) => {
     const subscription = subscriptions.find(sub => sub.schoolId === school._id);
     const userCount = userCounts[school._id]?.totalUsers || 0;
-    
+
     // Calculate days until renewal and renewal date (mock data for now)
     const daysUntilRenewal = subscription ? Math.floor(Math.random() * 365) : null;
-    const renewalDate = subscription && daysUntilRenewal !== null 
-      ? new Date(Date.now() + daysUntilRenewal * 24 * 60 * 60 * 1000) 
+    const renewalDate = subscription && daysUntilRenewal !== null
+      ? new Date(Date.now() + daysUntilRenewal * 24 * 60 * 60 * 1000)
       : null;
-    
+
     return {
       id: school._id,
       schoolName: school.name,
@@ -505,12 +511,12 @@ export default function SubscriptionTracking() {
                                   value={
                                     subscription.daysUntilRenewal > 0
                                       ? Math.max(
-                                          0,
-                                          100 -
-                                            (subscription.daysUntilRenewal /
-                                              365) *
-                                              100
-                                        )
+                                        0,
+                                        100 -
+                                        (subscription.daysUntilRenewal /
+                                          365) *
+                                        100
+                                      )
                                       : 100
                                   }
                                   size="sm"
@@ -737,12 +743,12 @@ export default function SubscriptionTracking() {
                         value={
                           selectedSubscription.daysUntilRenewal > 0
                             ? Math.max(
-                                0,
-                                100 -
-                                  (selectedSubscription.daysUntilRenewal /
-                                    365) *
-                                    100
-                              )
+                              0,
+                              100 -
+                              (selectedSubscription.daysUntilRenewal /
+                                365) *
+                              100
+                            )
                             : 100
                         }
                         size="lg"

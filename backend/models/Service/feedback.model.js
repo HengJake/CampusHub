@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: feedback.model.js
+// Description: Feedback model schema defining user feedback collection, rating systems, and service improvement tracking
+// First Written on: July 8, 2024
+// Edited on: Friday, July 10, 2024
+
 import mongoose from 'mongoose';
 
 const feedbackSchema = new mongoose.Schema({

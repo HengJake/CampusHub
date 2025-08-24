@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: BookingRow.jsx
+// Description: Individual booking row component for displaying booking information in table format with action buttons
+// First Written on: July 24, 2024
+// Edited on: Friday, July 31, 2024
+
 import { Tr, Td, Text, Badge, VStack, IconButton } from "@chakra-ui/react"
 import { FiTrash2 } from "react-icons/fi"
 import { getTypeColor, getStatusColor } from "./utils"

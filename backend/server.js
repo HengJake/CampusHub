@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: server.js
+// Description: Main Express server configuration, middleware setup, route registration, and application entry point
+// First Written on: July 12, 2024
+// Edited on: Friday, July 19, 2024
+
 import express from "express";
 import exceljs from "exceljs";
 import dotenv from "dotenv";
@@ -24,6 +30,7 @@ import attendanceRoutes from "./routes/Academic/attendance.routes.js";
 import resultRoutes from "./routes/Academic/result.routes.js";
 import roomRoutes from "./routes/Academic/room.routes.js";
 import semesterRoutes from "./routes/Academic/semester.routes.js";
+import semesterModuleRoutes from "./routes/Academic/semesterModule.routes.js";
 import schoolDataStatusRoutes from "./routes/schoolDataStatus.routes.js";
 
 // 2 Billing
@@ -152,6 +159,7 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/result", resultRoutes);
 app.use("/api/room", roomRoutes);
 app.use("/api/semester", semesterRoutes);
+app.use("/api/semester-module", semesterModuleRoutes);
 app.use("/api/school-data-status", schoolDataStatusRoutes);
 
 // 2 Billing

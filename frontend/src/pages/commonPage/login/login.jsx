@@ -1,3 +1,9 @@
+// Programmer Name : Choy Chi Lam, Frontend Developer
+// Program Name: login.jsx
+// Description: User authentication login component with form validation, OAuth integration, and role-based redirect logic
+// First Written on: June 20, 2024
+// Edited on: Friday, August 5, 2024
+
 import React from "react";
 import { useRef, useState, useEffect, useContext } from "react";
 import {
@@ -69,6 +75,7 @@ function login() {
   useEffect(() => {
     const checkExistingAuth = async () => {
       const result = await detectTokenAndRedirect(navigate);
+
       if (result.redirected) {
         if (result.isLecturer) {
           showToast.error(

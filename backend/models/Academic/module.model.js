@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: module.model.js
+// Description: Module model schema defining individual academic modules, their content, assessment methods, and relationship with courses
+// First Written on: July 2, 2024
+// Edited on: Friday, July 9, 2024
+
 import mongoose from "mongoose";
 
 const moduleSchema = new mongoose.Schema({

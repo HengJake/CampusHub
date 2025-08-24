@@ -1,3 +1,9 @@
+// Programmer Name : Heng Jun Kai, Project Manager, Leader Full Stack developer
+// Program Name: cookieUtils.js
+// Description: Utility functions for managing browser cookies, including setting, getting, and removing cookies for authentication and user preferences
+// First Written on: June 20, 2024
+// Edited on: Friday, August 9, 2024
+
 export function setCookie(name, value, days) {
   let expires = "";
   if (days) {

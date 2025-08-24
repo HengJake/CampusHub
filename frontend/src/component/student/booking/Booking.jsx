@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: Booking.jsx
+// Description: Main booking component that orchestrates the booking workflow, managing state and coordinating between different booking sub-components
+// First Written on: July 17, 2024
+// Edited on: Friday, August 7, 2024
+
 "use client"
 
 import { useState, useEffect } from "react"

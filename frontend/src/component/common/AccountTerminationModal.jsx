@@ -61,7 +61,7 @@ function AccountTerminationModal({ isOpen, onClose, onConfirm, userEmail }) {
             })
 
             const responseData = await response.json()
-            console.log("🚀 ~ handleValidation ~ response:", responseData)
+
 
             if (response.ok) {
                 // Credentials are valid, proceed to confirmation

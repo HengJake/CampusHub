@@ -109,7 +109,7 @@ const RouteTab = ({ loading, error, onView, onEdit, onDelete }) => {
                 ) || []
             };
 
-            console.log("🚀 ~ handleSave ~ processedEditValues:", processedEditValues);
+
             const result = await updateRoute(editingRoute, processedEditValues);
             if (result.success) {
                 setEditingRoute(null);

@@ -16,40 +16,37 @@ import {
   HStack,
   Text,
   Icon,
+  Spinner,
+  Alert,
+  AlertIcon,
+  Badge,
 } from "@chakra-ui/react"
-import { useState } from "react"
-import { FiMapPin, FiNavigation } from "react-icons/fi"
-import { useStudentStore } from "../../store/TBI/studentStore.js"
-
-const campusLocations = [
-  "Main Gate",
-  "Library",
-  "Student Center",
-  "Cafeteria",
-  "Engineering Building",
-  "Science Building",
-  "Sports Complex",
-  "Dormitory Block A",
-  "Dormitory Block B",
-  "Parking Lot A",
-  "Parking Lot B",
-  "Medical Center",
-  "Administration Building",
-]
+import { useState, useEffect } from "react"
+import { FiMapPin, FiNavigation, FiClock, FiDollarSign } from "react-icons/fi"
+import { useTransportationStore } from "../../store/transportation.js"
+import { useAuthStore } from "../../store/auth.js"
 
 export function CampusRideModal({ isOpen, onClose }) {
-  const [fromLocation, setFromLocation] = useState("")
-  const [toLocation, setToLocation] = useState("")
+  const [selectedRoute, setSelectedRoute] = useState("")
   const [notes, setNotes] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { requestCampusRide } = useStudentStore()
+  const { fetchRoutesBySchoolId, routes, loading, errors, createEHailing, fetchEHailingsByStudentId } = useTransportationStore()
+  const { getCurrentUser, getSchoolId } = useAuthStore()
   const toast = useToast()
 
-  const handleSubmit = () => {
-    if (!fromLocation || !toLocation) {
+  // Fetch routes when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchRoutesBySchoolId()
+    }
+  }, [isOpen, fetchRoutesBySchoolId])
+
+  const handleSubmit = async () => {
+    if (!selectedRoute) {
       toast({
         title: "Missing Information",
-        description: "Please select both pickup and destination locations",
+        description: "Please select a route for your ride",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -57,33 +54,71 @@ export function CampusRideModal({ isOpen, onClose }) {
       return
     }
 
-    if (fromLocation === toLocation) {
+    setIsSubmitting(true)
+
+    try {
+      const userContext = getCurrentUser()
+      const schoolId = getSchoolId()
+
+      if (!userContext.studentId) {
+        throw new Error("Student ID not found. Please ensure you are logged in as a student.")
+      }
+
+      if (!schoolId) {
+        throw new Error("School ID not found. Please ensure you are associated with a school.")
+      }
+
+      // Create eHailing data
+      const eHailingData = {
+        studentId: userContext.studentId,
+        schoolId: schoolId,
+        routeId: selectedRoute,
+        notes: notes,
+        status: "waiting"
+      }
+
+      const result = await createEHailing(eHailingData)
+
+      if (result.success) {
+        toast({
+          title: "Ride Request Submitted",
+          description: "Your campus ride request has been submitted successfully. You'll be notified when a driver is assigned.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        })
+
+        // Reset form
+        setSelectedRoute("")
+        setNotes("")
+        onClose()
+      } else {
+        throw new Error(result.message || "Failed to submit ride request")
+      }
+    } catch (error) {
       toast({
-        title: "Invalid Route",
-        description: "Pickup and destination locations cannot be the same",
+        title: "Request Failed",
+        description: error.message || "Failed to submit ride request. Please try again.",
         status: "error",
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       })
-      return
+    } finally {
+      setIsSubmitting(false)
     }
-
-    requestCampusRide(fromLocation, toLocation)
-
-    toast({
-      title: "Ride Requested",
-      description: "Your campus ride request has been submitted. You'll be notified when a driver is assigned.",
-      status: "success",
-      duration: 5000,
-      isClosable: true,
-    })
-
-    // Reset form
-    setFromLocation("")
-    setToLocation("")
-    setNotes("")
-    onClose()
   }
+
+  const getRouteName = (routeId) => {
+    const route = routes.find(r => r._id === routeId)
+    return route ? route.name : routeId
+  }
+
+  const getRouteDetails = (routeId) => {
+    const route = routes.find(r => r._id === routeId)
+    return route || null
+  }
+
+  const selectedRouteDetails = getRouteDetails(selectedRoute)
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
@@ -98,83 +133,113 @@ export function CampusRideModal({ isOpen, onClose }) {
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4} align="stretch">
-            <FormControl isRequired>
-              <FormLabel>
-                <HStack>
-                  <Icon as={FiMapPin} color="green.500" boxSize={4} />
-                  <Text>Pickup Location</Text>
-                </HStack>
-              </FormLabel>
-              <Select
-                placeholder="Select pickup location"
-                value={fromLocation}
-                onChange={(e) => setFromLocation(e.target.value)}
-              >
-                {campusLocations.map((location) => (
-                  <option key={location} value={location}>
-                    {location}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
+            {loading.routes && (
+              <HStack justify="center" py={4}>
+                <Spinner size="md" color="blue.500" />
+                <Text>Loading available routes...</Text>
+              </HStack>
+            )}
 
-            <FormControl isRequired>
-              <FormLabel>
-                <HStack>
-                  <Icon as={FiMapPin} color="red.500" boxSize={4} />
-                  <Text>Destination</Text>
-                </HStack>
-              </FormLabel>
-              <Select
-                placeholder="Select destination"
-                value={toLocation}
-                onChange={(e) => setToLocation(e.target.value)}
-              >
-                {campusLocations.map((location) => (
-                  <option key={location} value={location} disabled={location === fromLocation}>
-                    {location}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
+            {errors.routes && (
+              <Alert status="error">
+                <AlertIcon />
+                Failed to load routes. Please try again.
+              </Alert>
+            )}
 
-            <FormControl>
-              <FormLabel>Additional Notes</FormLabel>
-              <Textarea
-                placeholder="Any special instructions or accessibility requirements..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-              />
-            </FormControl>
+            {!loading.routes && routes.length === 0 && (
+              <Alert status="warning">
+                <AlertIcon />
+                No routes available. Please contact your administrator.
+              </Alert>
+            )}
 
-            {fromLocation && toLocation && (
-              <VStack align="start" p={3} bg="blue.50" borderRadius="md">
-                <Text fontSize="sm" fontWeight="medium" color="blue.800">
-                  Route Summary:
-                </Text>
-                <HStack>
-                  <Text fontSize="sm" color="blue.700">
-                    {fromLocation}
-                  </Text>
-                  <Icon as={FiNavigation} color="blue.500" boxSize={3} />
-                  <Text fontSize="sm" color="blue.700">
-                    {toLocation}
-                  </Text>
-                </HStack>
-                <Text fontSize="xs" color="blue.600">
-                  Estimated wait time: 5-10 minutes
-                </Text>
-              </VStack>
+            {!loading.routes && routes.length > 0 && (
+              <>
+                <FormControl isRequired>
+                  <FormLabel>
+                    <HStack>
+                      <Icon as={FiMapPin} color="blue.500" boxSize={4} />
+                      <Text>Select Route</Text>
+                    </HStack>
+                  </FormLabel>
+                  <Select
+                    placeholder="Choose your route"
+                    value={selectedRoute}
+                    onChange={(e) => setSelectedRoute(e.target.value)}
+                  >
+                    {routes.map((route) => (
+                      <option key={route._id} value={route._id}>
+                        {route.name}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {selectedRouteDetails && (
+                  <VStack align="start" p={4} bg="blue.50" borderRadius="md" spacing={3}>
+                    <Text fontSize="lg" fontWeight="semibold" color="blue.800">
+                      Route Details: {selectedRouteDetails.name}
+                    </Text>
+
+                    <HStack spacing={4}>
+                      <HStack>
+                        <Icon as={FiClock} color="blue.500" />
+                        <Text fontSize="sm" color="blue.700">
+                          Est. Time: {selectedRouteDetails.estimateTimeMinute} min
+                        </Text>
+                      </HStack>
+
+                      <HStack>
+                        <Icon as={FiDollarSign} color="green.500" />
+                        <Text fontSize="sm" color="green.700">
+                          Fare: ${selectedRouteDetails.fare}
+                        </Text>
+                      </HStack>
+                    </HStack>
+
+                    {selectedRouteDetails.stopIds && selectedRouteDetails.stopIds.length > 0 && (
+                      <VStack align="start" spacing={2}>
+                        <Text fontSize="sm" fontWeight="medium" color="blue.700">
+                          Stops on this route:
+                        </Text>
+                        <HStack flexWrap="wrap" spacing={2}>
+                          {selectedRouteDetails.stopIds.map((stop, index) => (
+                            <Badge key={stop._id || index} colorScheme="blue" variant="subtle">
+                              {stop.name || `Stop ${index + 1}`}
+                            </Badge>
+                          ))}
+                        </HStack>
+                      </VStack>
+                    )}
+                  </VStack>
+                )}
+
+                <FormControl>
+                  <FormLabel>Additional Notes</FormLabel>
+                  <Textarea
+                    placeholder="Any special instructions or accessibility requirements..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={3}
+                  />
+                </FormControl>
+              </>
             )}
           </VStack>
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
+          <Button variant="ghost" mr={3} onClick={onClose} isDisabled={isSubmitting}>
             Cancel
           </Button>
-          <Button colorScheme="blue" onClick={handleSubmit}>
+          <Button
+            colorScheme="blue"
+            onClick={handleSubmit}
+            isDisabled={!selectedRoute || loading.routes || isSubmitting}
+            isLoading={isSubmitting}
+            loadingText="Submitting..."
+          >
             Request Ride
           </Button>
         </ModalFooter>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { Box, Spinner, Alert, AlertIcon, AlertTitle, AlertDescription } from '@chakra-ui/react';
+import { EHailingNotification } from './EHailingNotification.jsx';
 
 /**
  * RoleBasedComponent - A wrapper component that provides role-based context
@@ -149,6 +150,7 @@ export const StudentComponent = ({ children, ...props }) => {
             {...props}
         >
             {children}
+            <EHailingNotification />
         </RoleBasedComponent>
     );
 };

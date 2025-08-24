@@ -1,3 +1,9 @@
+// Programmer Name : Ritchie Boon Win Yew, Backend Developer
+// Program Name: ResourceFilters.jsx
+// Description: Filter component for refining resource search results, providing location, type, and availability filtering options
+// First Written on: July 21, 2024
+// Edited on: Friday, August 3, 2024
+
 import { Grid, InputGroup, InputLeftElement, Input, Select } from "@chakra-ui/react"
 import { FiSearch } from "react-icons/fi"
 

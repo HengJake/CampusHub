@@ -239,7 +239,7 @@ export const updateRecord = async (Model, id, updates, entityName = "record", va
     try {
         // Custom validation if provided
         if (validationFn) {
-            const validationResult = await validationFn(updates, isPartialUpdate);
+            const validationResult = await validationFn(updates);
             if (validationResult && !validationResult.isValid) {
                 return {
                     success: false,
@@ -350,10 +350,17 @@ export const controllerWrapper = (controllerFn) => {
     return async (req, res) => {
         try {
             const result = await controllerFn(req, res);
-            return res.status(result.statusCode).json({
-                success: result.success,
-                data: result.data,
-                message: result.message
+            
+            // Ensure result has required properties with defaults
+            const statusCode = result?.statusCode || 200;
+            const success = result?.success ?? false;
+            const data = result?.data || null;
+            const message = result?.message || "No message provided";
+            
+            return res.status(statusCode).json({
+                success,
+                data,
+                message
             });
         } catch (error) {
             console.error("Controller wrapper error:", error);

@@ -42,6 +42,7 @@ import { useShowToast } from "../../store/utils/toast"
 import React, { useState, useEffect } from "react"
 import ParkingTemplateModal from "../../component/schoolAdminDashboard/facility/ParkingTemplateModal"
 import ParkingBulkUploadModal from "../../component/schoolAdminDashboard/facility/ParkingBulkUploadModal"
+import { IoIosMore } from "react-icons/io";
 
 
 
@@ -114,6 +115,7 @@ export function ParkingManagement() {
     loading,
     getSchoolId
   } = useFacilityStore();
+  console.log("🚀 ~ ParkingManagement ~ parkingLots:", parkingLots)
   const showToast = useShowToast();
 
   // Modal/form state
@@ -170,6 +172,28 @@ export function ParkingManagement() {
     setIsModalOpen(false);
     setIsEdit(false);
     setEditId(null);
+  };
+
+  const handleToggleStatus = async (lot) => {
+    try {
+      const updatedFormData = {
+        ...lot,
+        active: !lot.active,
+        schoolId: await getSchoolId()
+      };
+
+      const res = await updateParkingLot(lot.id || lot._id, updatedFormData);
+      if (res.success) {
+        showToast.success(`Parking lot ${updatedFormData.active ? 'activated' : 'deactivated'}`);
+        console.log("Parking lot status updated", res.data);
+      } else {
+        showToast.error("Failed to update parking lot status", res.message);
+        console.error("Failed to update parking lot status", res.message);
+      }
+    } catch (error) {
+      showToast.error("Error updating parking lot status", error.message);
+      console.error("Error updating parking lot status:", error);
+    }
   };
 
   const handleChange = (e) => {
@@ -562,8 +586,6 @@ export function ParkingManagement() {
                         {zoneLots.map((lot) => (
                           <Card
                             key={lot.id || lot._id}
-                            cursor="pointer"
-                            onClick={() => handleOpenEdit(lot)}
                             _hover={{ transform: "scale(1.02)", shadow: "md" }}
                             transition="all 0.2s"
                             bg={lot.active ? "green.50" : "red.50"}
@@ -573,6 +595,23 @@ export function ParkingManagement() {
                             minH="80px"
                           >
                             <CardBody p={2} textAlign="center">
+                              <Button
+                                _hover={{ bg: "md" }}
+                                transition="all 0.2s"
+                                cursor="pointer"
+                                onClick={() => handleOpenEdit(lot)}
+                                position="absolute"
+                                top={0}
+                                left={0}
+                                zIndex={2}
+                                p={0}
+                                m={0}
+                                h={"30px"}
+                                bg="transparent"
+                              >
+                                <IoIosMore />
+                              </Button>
+
                               <VStack spacing={1}>
                                 <Text fontSize="sm" fontWeight="bold" color="#333333">
                                   {lot.slotNumber || 'N/A'}
@@ -583,9 +622,16 @@ export function ParkingManagement() {
                                 >
                                   {lot.active ? "🅿️" : "🚘"}
                                 </Box>
-                                <Text fontSize="2xs" color="gray.600" noOfLines={1}>
+                                <Button
+                                  fontSize="2xs"
+                                  color="gray.600"
+                                  noOfLines={1}
+                                  onClick={(e) => handleToggleStatus(lot, e)}
+                                  _hover={{ bg: lot.active ? "red.100" : "green.100" }}
+                                  transition="all 0.2s"
+                                >
                                   {lot.active ? "Active" : "Inactive"}
-                                </Text>
+                                </Button>
                               </VStack>
 
                               {/* Delete Button */}
@@ -947,190 +993,10 @@ export function ParkingManagement() {
                   </PieChart>
                 </ResponsiveContainer>
               </Box>
-
-              {/* Hourly Usage Pattern */}
-              <Box>
-                <HStack spacing={2} align="center" mb={3}>
-                  <FiClock color="#48BB78" />
-                  <Text fontSize="md" fontWeight="medium" color="gray.700">
-                    Hourly Usage Pattern (Weekday vs Weekend)
-                  </Text>
-                </HStack>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={hourlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hour" />
-                    <YAxis domain={[0, 100]} />
-                    <Tooltip
-                      formatter={(value, name) => [`${value}%`, name]}
-                      labelFormatter={(label) => `${label}:00`}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="weekday"
-                      stroke="#48BB78"
-                      strokeWidth={2}
-                      name="Weekday"
-                      dot={{ fill: "#48BB78", strokeWidth: 2, r: 3 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="weekend"
-                      stroke="#ED8936"
-                      strokeWidth={2}
-                      name="Weekend"
-                      dot={{ fill: "#ED8936", strokeWidth: 2, r: 3 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Box>
-
-              {/* Monthly Statistics */}
-              <Box>
-                <HStack spacing={2} align="center" mb={3}>
-                  <FiPieChart color="#D69E2E" />
-                  <Text fontSize="md" fontWeight="medium" color="gray.700">
-                    Monthly Parking Statistics
-                  </Text>
-                </HStack>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip
-                      formatter={(value, name) => [value, name]}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="totalSlots"
-                      stroke="#3182CE"
-                      strokeWidth={2}
-                      name="Total Slots"
-                      dot={{ fill: "#3182CE", strokeWidth: 2, r: 3 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="activeSlots"
-                      stroke="#38A169"
-                      strokeWidth={2}
-                      name="Active Slots"
-                      dot={{ fill: "#38A169", strokeWidth: 2, r: 3 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="utilization"
-                      stroke="#D69E2E"
-                      strokeWidth={2}
-                      name="Utilization %"
-                      dot={{ fill: "#D69E2E", strokeWidth: 2, r: 3 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Box>
-            </Grid>
-
-            {/* Additional Analytics Cards */}
-            <Grid templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }} gap={4} mt={6}>
-              <Card bg="blue.50" borderColor="blue.200" borderRadius="lg" _hover={{ transform: "translateY(-2px)", shadow: "lg" }} transition="all 0.2s">
-                <CardBody p={4}>
-                  <VStack spacing={3} align="center">
-                    <Box
-                      p={3}
-                      bg="linear-gradient(135deg, #3182CE 0%, #63B3ED 100%)"
-                      borderRadius="full"
-                      color="white"
-                    >
-                      <FiClock size={24} />
-                    </Box>
-                    <Text fontSize="lg" fontWeight="bold" color="blue.600">
-                      Peak Hours
-                    </Text>
-                    <Text fontSize="2xl" fontWeight="bold" color="blue.700">
-                      9AM - 11AM
-                    </Text>
-                    <Text fontSize="sm" color="blue.600" textAlign="center">
-                      85% average occupancy
-                    </Text>
-                  </VStack>
-                </CardBody>
-              </Card>
-
-              <Card bg="green.50" borderColor="green.200" borderRadius="lg" _hover={{ transform: "translateY(-2px)", shadow: "lg" }} transition="all 0.2s">
-                <CardBody p={4}>
-                  <VStack spacing={3} align="center">
-                    <Box
-                      p={3}
-                      bg="linear-gradient(135deg, #38A169 0%, #68D391 100%)"
-                      borderRadius="full"
-                      color="white"
-                    >
-                      <FiStar size={24} />
-                    </Box>
-                    <Text fontSize="lg" fontWeight="bold" color="green.600">
-                      Best Zone
-                    </Text>
-                    <Text fontSize="2xl" fontWeight="bold" color="green.700">
-                      Zone A
-                    </Text>
-                    <Text fontSize="sm" color="green.600" textAlign="center">
-                      92% utilization rate
-                    </Text>
-                  </VStack>
-                </CardBody>
-              </Card>
-
-              <Card bg="orange.50" borderColor="orange.200" borderRadius="lg" _hover={{ transform: "translateY(-2px)", shadow: "lg" }} transition="all 0.2s">
-                <CardBody p={4}>
-                  <VStack spacing={3} align="center">
-                    <Box
-                      p={3}
-                      bg="linear-gradient(135deg, #ED8936 0%, #F6AD55 100%)"
-                      borderRadius="full"
-                      color="white"
-                    >
-                      <FiZap size={24} />
-                    </Box>
-                    <Text fontSize="lg" fontWeight="bold" color="orange.600">
-                      Quiet Hours
-                    </Text>
-                    <Text fontSize="2xl" fontWeight="bold" color="orange.700">
-                      2AM - 6AM
-                    </Text>
-                    <Text fontSize="sm" color="orange.600" textAlign="center">
-                      15% average occupancy
-                    </Text>
-                  </VStack>
-                </CardBody>
-              </Card>
-
-              <Card bg="purple.50" borderColor="purple.200" borderRadius="lg" _hover={{ transform: "translateY(-2px)", shadow: "lg" }} transition="all 0.2s">
-                <CardBody p={4}>
-                  <VStack spacing={3} align="center">
-                    <Box
-                      p={3}
-                      bg="linear-gradient(135deg, #805AD5 0%, #B794F4 100%)"
-                      borderRadius="full"
-                      color="white"
-                    >
-                      <FiTrendingUp size={24} />
-                    </Box>
-                    <Text fontSize="lg" fontWeight="bold" color="purple.600">
-                      Weekly Trend
-                    </Text>
-                    <Text fontSize="2xl" fontWeight="bold" color="purple.700">
-                      +12%
-                    </Text>
-                    <Text fontSize="sm" color="purple.600" textAlign="center">
-                      vs last week
-                    </Text>
-                  </VStack>
-                </CardBody>
-              </Card>
             </Grid>
           </CardBody>
         </Card>
       </VStack>
     </Box>
-  )
+  );
 }
