@@ -72,13 +72,23 @@ export const updateStudentAcademicPerformance = async (studentId) => {
             totalCreditHours: totalCreditHours
         }
 
+        // Validate the data before sending
+        if (!updatedStudent.intakeCourseId || !updatedStudent.userId || !updatedStudent.schoolId) {
+            throw new Error(`Missing required fields for student ${studentId}: intakeCourseId=${!!updatedStudent.intakeCourseId}, userId=${!!updatedStudent.userId}, schoolId=${!!updatedStudent.schoolId}`);
+        }
+
+        if (typeof updatedStudent.cgpa !== 'number' || typeof updatedStudent.completedCreditHours !== 'number' || typeof updatedStudent.totalCreditHours !== 'number') {
+            throw new Error(`Invalid data types for student ${studentId}: cgpa=${typeof updatedStudent.cgpa}, completedCreditHours=${typeof updatedStudent.completedCreditHours}, totalCreditHours=${typeof updatedStudent.totalCreditHours}`);
+        }
+
         // Update student using existing store method
         const result = await updateStudent(studentId, updatedStudent);
-
+        
+        // The store function already handles the HTTP response and returns processed data
         if (result.success) {
             return { success: true, data: result.data };
         } else {
-            throw new Error(result.message);
+            throw new Error(result.message || 'Failed to update student');
         }
 
     } catch (error) {
@@ -104,6 +114,7 @@ export const updateAllStudentsAcademicPerformance = async () => {
     for (const student of students) {
         try {
             const result = await updateStudentAcademicPerformance(student._id);
+
             if (result.success) {
                 results.successCount++;
                 results.updatedStudents.push({

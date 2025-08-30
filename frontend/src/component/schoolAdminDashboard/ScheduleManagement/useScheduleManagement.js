@@ -72,7 +72,7 @@ export const useScheduleManagement = () => {
 
                 if (selectedIntakeCourse) {
                     try {
-                        const response = await fetchSemestersByCourse(selectedIntakeCourse.courseId._id)
+                        const response = await fetchSemestersByIntakeCourse(selectedIntakeCourse._id)
                         if (response.success) {
                             setAvailableSemesters(response.data)
                             setSelectedYear("")

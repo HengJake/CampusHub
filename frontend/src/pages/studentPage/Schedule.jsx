@@ -131,6 +131,7 @@ const transformClassScheduleData = (classSchedules, rooms, modules, lecturers, i
                 moduleEndDate: schedule.moduleEndDate,
                 moduleId: module?._id,
                 intakeCourseId: intakeCourse?._id,
+                semesterId: schedule.semesterId?._id || null,
             };
         });
 };
@@ -152,10 +153,10 @@ export default function Schedule() {
     // Get store functions and state
     const {
         fetchClassSchedulesByStudentId,
-        fetchRooms,
-        fetchModules,
-        fetchLecturers,
-        fetchIntakeCourses,
+        fetchRoomsBySchoolId,
+        fetchModulesBySchoolId,
+        fetchLecturersBySchoolId,
+        fetchIntakeCoursesBySchoolId,
         fetchSemesters,
         classSchedules,
         rooms,
@@ -167,7 +168,7 @@ export default function Schedule() {
         errors
     } = useAcademicStore()
 
-    const { initializeAuth, getCurrentUser } = useAuthStore()
+    const { initializeAuth } = useAuthStore()
     const [currentUser, setCurrentUser] = useState(null)
     const [isInitializing, setIsInitializing] = useState(true)
 
@@ -187,10 +188,10 @@ export default function Schedule() {
                         // Fetch all required data
                         await Promise.all([
                             fetchClassSchedulesByStudentId(authResult.data.student._id),
-                            fetchRooms(),
-                            fetchModules(),
-                            fetchLecturers(),
-                            fetchIntakeCourses(),
+                            fetchRoomsBySchoolId(),
+                            fetchModulesBySchoolId(),
+                            fetchLecturersBySchoolId(),
+                            fetchIntakeCoursesBySchoolId(),
                             fetchSemesters()
                         ]);
                     }
@@ -219,7 +220,7 @@ export default function Schedule() {
         };
 
         initializeAndFetch();
-    }, [initializeAuth, fetchClassSchedulesByStudentId, fetchRooms, fetchModules, fetchLecturers, fetchIntakeCourses, fetchSemesters, toast]);
+    }, [initializeAuth, fetchClassSchedulesByStudentId, fetchRoomsBySchoolId, fetchModulesBySchoolId, fetchLecturersBySchoolId, fetchIntakeCoursesBySchoolId, fetchSemesters, toast]);
 
     // Use useMemo to transform data when raw data changes
     const scheduleData = useMemo(() => {
@@ -229,8 +230,6 @@ export default function Schedule() {
             return {
                 classSchedules: [],
                 studentProfile: {
-                    name: "Loading...",
-                    studentId: "Loading...",
                     intakeCourse: "Loading...",
                     semester: "Loading...",
                     advisor: "Loading...",
@@ -243,8 +242,6 @@ export default function Schedule() {
             return {
                 classSchedules: [],
                 studentProfile: {
-                    name: "Loading...",
-                    studentId: "Loading...",
                     intakeCourse: "Loading...",
                     semester: "Loading...",
                     advisor: "Loading...",
@@ -291,14 +288,12 @@ export default function Schedule() {
         return {
             classSchedules: transformedClassSchedules,
             studentProfile: {
-                name: currentUser?.name || "Student",
-                studentId: currentUser?.student?._id || "N/A",
                 intakeCourse: userIntakeCourse ? `${userIntakeCourse.intakeId?.intakeName || 'N/A'} - ${userIntakeCourse.courseId?.courseName || 'N/A'}` : "N/A",
                 semester: semesterInfo,
                 advisor: "Academic Advisor",
             }
         };
-    }, [classSchedules, rooms, modules, lecturers, intakeCourses, semesters, selectedSemester, selectedYear, currentUser?.name, currentUser?.user?.student?.studentId, currentUser?.user?.student?.intakeCourseId]);
+    }, [classSchedules, rooms, modules, lecturers, intakeCourses, semesters, selectedSemester, selectedYear, currentUser?.student?.intakeCourseId]);
 
     const handleRefresh = async () => {
         try {
@@ -315,10 +310,10 @@ export default function Schedule() {
 
             await Promise.all([
                 fetchClassSchedulesByStudentId(currentUser.student._id),
-                fetchRooms(),
-                fetchModules(),
-                fetchLecturers(),
-                fetchIntakeCourses(),
+                fetchRoomsBySchoolId(),
+                fetchModulesBySchoolId(),
+                fetchLecturersBySchoolId(),
+                fetchIntakeCoursesBySchoolId(),
                 fetchSemesters()
             ]);
 

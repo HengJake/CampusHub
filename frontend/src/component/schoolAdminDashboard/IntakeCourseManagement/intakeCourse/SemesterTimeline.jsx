@@ -158,25 +158,6 @@ export function SemesterTimeline({ semesters, currentSemesterIndex, onSemesterCl
                                 </Box>
 
 
-                                <Box
-                                    position="relative"
-                                    zIndex={2}
-                                >
-                                    <Box
-                                        bg={color}
-                                        color="white"
-                                        px={3}
-                                        py={1}
-                                        borderRadius="full"
-                                        fontSize="sm"
-                                        fontWeight="bold"
-                                        transform="rotate(90deg)"
-                                        whiteSpace="nowrap"
-                                    >
-                                        {semester.startDate ? new Date(semester.startDate).getFullYear() : 'N/A'}
-                                    </Box>
-                                </Box>
-
                                 {/* Right Side - Year Badge */}
                                 <Box
                                     position="relative"

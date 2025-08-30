@@ -304,9 +304,6 @@ export const getClassSchedulesByStudentId = controllerWrapper(async (req, res) =
             };
         }
 
-        // get all the class according to intake course
-        console.log(student.intakeCourseId.courseId._id)
-
         // Get class schedules that match the student's intake course
         const classSchedules = await ClassSchedule.find({
             intakeCourseId: student.intakeCourseId._id

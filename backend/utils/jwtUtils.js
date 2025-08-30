@@ -10,6 +10,7 @@ export default function generateToken(user, extraPayload = {}) {
         ...extraPayload
     }
 
-    // return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
-    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "30d" });
+
+
+    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
 }

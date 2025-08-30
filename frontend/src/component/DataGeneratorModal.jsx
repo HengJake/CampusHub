@@ -350,7 +350,7 @@ const DataGeneratorModal = ({ isOpen, onClose, onDataGenerated }) => {
                         {/* Progress Bar */}
                         {isGenerating && (
                             <Box>
-                                <Text mb={2}>Generating academic data...</Text>
+                                <Text mb={2}>Generating academic data... (2 minutes~)</Text>
                                 <Progress value={progress} colorScheme="green" size="lg" />
                                 <Text fontSize="sm" mt={2} textAlign="center">
                                     {Math.round(progress)}%
@@ -375,7 +375,8 @@ const DataGeneratorModal = ({ isOpen, onClose, onDataGenerated }) => {
                                                     Departments: {generatedData.summary.totalDepartments} |
                                                     Courses: {generatedData.summary.totalCourses} |
                                                     Students: {generatedData.summary.totalStudents} |
-                                                    Lecturers: {generatedData.summary.totalLecturers}
+                                                    Lecturers: {generatedData.summary.totalLecturers} |
+                                                    Semester Modules: {generatedData.summary.totalSemesterModules}
                                                 </>
                                             )}
                                         </Text>

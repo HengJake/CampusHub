@@ -34,7 +34,7 @@ import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { redirect } from "react-router-dom";
 import { color } from "framer-motion";
 import { useDisclosure } from "@chakra-ui/react";
-import { Checkbox, CheckboxGroup } from "@chakra-ui/react";
+
 import { useUserStore } from "../../../store/user";
 import { useNavigate } from "react-router-dom";
 import RegisterBox from "../../../component/common/registerBox";
@@ -452,16 +452,10 @@ function login() {
           <Box
             width={"100%"}
             display="flex"
-            flexDirection={"row"}
+            justifyContent={"right"}
             paddingTop={5}
           >
-            <Checkbox width={"100%"} color={"white"} defaultChecked>
-              Remember me
-            </Checkbox>
             <ChakraLink
-              width={"100%"}
-              display={"flex"}
-              justifyContent={"right"}
               color="White"
               onClick={onOpen}
             >

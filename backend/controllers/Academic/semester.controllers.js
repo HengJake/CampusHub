@@ -1,6 +1,7 @@
 import Semester from "../../models/Academic/semester.model.js";
 import Course from "../../models/Academic/course.model.js";
 import School from "../../models/Billing/school.model.js";
+import IntakeCourse from "../../models/Academic/intakeCourse.model.js";
 import {
     createRecord,
     getAllRecords,
@@ -13,13 +14,16 @@ import {
     validateUniqueField
 } from "../../utils/reusable.js";
 
-const getLastSemesterForCourse = async (courseId) => {
+const getLastSemesterForIntakeCourse = async (intakeCourseId) => {
     const lastSemester = await Semester.findOne({
-        courseId,
+        intakeCourseId,
         isActive: true
     })
         .sort({ endDate: -1 }) // Get the semester with the latest end date
-        .populate('courseId');
+        .populate({
+            path: 'intakeCourseId',
+            populate: { path: 'courseId' }
+        });
 
     return lastSemester;
 };
@@ -30,26 +34,36 @@ const getMaxDuration = async (courseId) => {
 };
 
 const validateSemesterData = async (data, excludeId = null) => {
-    const { courseId, semesterNumber, year, semesterName, startDate, endDate, registrationStartDate, registrationEndDate, examStartDate, examEndDate, schoolId } = data;
+    const { intakeCourseId, semesterNumber, year, semesterName, startDate, endDate, examStartDate, examEndDate, schoolId } = data;
 
     // Check required fields for create operations (when excludeId is null)
     if (!excludeId) {
-        if (!courseId || !semesterNumber || !year || !semesterName || !startDate || !endDate || !registrationStartDate || !registrationEndDate || !examStartDate || !examEndDate || !schoolId) {
+        if (!intakeCourseId || !semesterNumber || !year || !semesterName || !startDate || !endDate || !examStartDate || !examEndDate || !schoolId) {
             return {
                 isValid: false,
-                message: "All fields are required: courseId, semesterNumber, year, semesterName, startDate, endDate, registrationStartDate, registrationEndDate, examStartDate, examEndDate, schoolId"
+                message: "All fields are required: intakeCourseId, semesterNumber, year, semesterName, startDate, endDate, examStartDate, examEndDate, schoolId"
             };
         }
     }
-
-    // Validate course duration if courseId is provided
-    if (courseId) {
-        const maxDuration = await getMaxDuration(courseId);
+ 
+    // Validate course duration if intakeCourseId is provided
+    if (intakeCourseId) {
+        // Get the course from the intake course to check duration
+        const IntakeCourse = await import("../../models/Academic/intakeCourse.model.js");
+        const intakeCourse = await IntakeCourse.default.findById(intakeCourseId);
+        if (!intakeCourse) {
+            return {
+                isValid: false,
+                message: "Invalid intakeCourseId"
+            };
+        }
+        
+        const maxDuration = await getMaxDuration(intakeCourse.courseId);
 
         if (maxDuration) {
-            // Get all existing semesters for this course to calculate total duration
+            // Get all existing semesters for this intake course to calculate total duration
             const existingSemesters = await Semester.find({
-                courseId,
+                intakeCourseId,
                 isActive: true
             }).sort({ startDate: 1 });
 
@@ -117,19 +131,17 @@ const validateSemesterData = async (data, excludeId = null) => {
         mergedData = {
             startDate: startDate || currentSemester.startDate,
             endDate: endDate || currentSemester.endDate,
-            registrationStartDate: registrationStartDate || currentSemester.registrationStartDate,
-            registrationEndDate: registrationEndDate || currentSemester.registrationEndDate,
             examStartDate: examStartDate || currentSemester.examStartDate,
             examEndDate: examEndDate || currentSemester.examEndDate,
-            courseId: courseId || currentSemester.courseId,
+            intakeCourseId: intakeCourseId || currentSemester.intakeCourseId,
             semesterNumber: semesterNumber || currentSemester.semesterNumber,
             year: year || currentSemester.year
         };
     }
 
     // NEW: Validate start date against last semester (only for new semesters)
-    if (!excludeId && mergedData.courseId && mergedData.startDate) {
-        const lastSemester = await getLastSemesterForCourse(mergedData.courseId);
+    if (!excludeId && mergedData.intakeCourseId && mergedData.startDate) {
+        const lastSemester = await getLastSemesterForIntakeCourse(mergedData.intakeCourseId);
 
         if (lastSemester) {
             const newStartDate = new Date(mergedData.startDate);
@@ -150,11 +162,9 @@ const validateSemesterData = async (data, excludeId = null) => {
     }
 
     // Validate dates if they exist
-    if (mergedData.startDate && mergedData.endDate && mergedData.registrationStartDate && mergedData.registrationEndDate && mergedData.examStartDate && mergedData.examEndDate) {
+    if (mergedData.startDate && mergedData.endDate && mergedData.examStartDate && mergedData.examEndDate) {
         const start = new Date(mergedData.startDate);
         const end = new Date(mergedData.endDate);
-        const regStart = new Date(mergedData.registrationStartDate);
-        const regEnd = new Date(mergedData.registrationEndDate);
         const examStart = new Date(mergedData.examStartDate);
         const examEnd = new Date(mergedData.examEndDate);
 
@@ -166,23 +176,7 @@ const validateSemesterData = async (data, excludeId = null) => {
             };
         }
 
-        // 2. Registration end date must be after registration start date
-        if (regEnd <= regStart) {
-            return {
-                isValid: false,
-                message: "Registration end date must be after registration start date"
-            };
-        }
-
-        // 3. Registration end date must be before semester start date
-        if (regEnd > start) {
-            return {
-                isValid: false,
-                message: "Registration end date must be before or equal to semester start date"
-            };
-        }
-
-        // 4. Exam start date must be within semester dates
+        // 2. Exam start date must be within semester dates
         if (examStart < start || examStart > end) {
             return {
                 isValid: false,
@@ -190,7 +184,7 @@ const validateSemesterData = async (data, excludeId = null) => {
             };
         }
 
-        // 5. Exam end date must be after exam start date
+        // 3. Exam end date must be after exam start date
         if (examEnd <= examStart) {
             return {
                 isValid: false,
@@ -198,7 +192,7 @@ const validateSemesterData = async (data, excludeId = null) => {
             };
         }
 
-        // 6. Exam end date must be within semester dates
+        // 4. Exam end date must be within semester dates
         if (examEnd > end) {
             return {
                 isValid: false,
@@ -209,7 +203,7 @@ const validateSemesterData = async (data, excludeId = null) => {
 
     // Validate references if provided
     const references = {};
-    if (mergedData.courseId) references.courseId = { id: mergedData.courseId, Model: Course };
+            if (mergedData.intakeCourseId) references.intakeCourseId = { id: mergedData.intakeCourseId, Model: IntakeCourse };
     if (schoolId) references.schoolId = { id: schoolId, Model: School };
 
     if (Object.keys(references).length > 0) {
@@ -222,10 +216,10 @@ const validateSemesterData = async (data, excludeId = null) => {
         }
     }
 
-    // Check for duplicate semester number within the same course and year
-    if (mergedData.semesterNumber && mergedData.courseId && mergedData.year) {
+    // Check for duplicate semester number within the same intake course and year
+    if (mergedData.semesterNumber && mergedData.intakeCourseId && mergedData.year) {
         const query = {
-            courseId: mergedData.courseId,
+            intakeCourseId: mergedData.intakeCourseId,
             semesterNumber: mergedData.semesterNumber,
             year: mergedData.year,
             isActive: true
@@ -241,7 +235,7 @@ const validateSemesterData = async (data, excludeId = null) => {
         if (existingSemester) {
             return {
                 isValid: false,
-                message: `Semester ${mergedData.semesterNumber} of Year ${mergedData.year} already exists for this course`
+                message: `Semester ${mergedData.semesterNumber} of Year ${mergedData.year} already exists for this intake course`
             };
         }
     }
@@ -252,12 +246,45 @@ const validateSemesterData = async (data, excludeId = null) => {
 
 
 export const createSemester = controllerWrapper(async (req, res) => {
-    return await createRecord(
-        Semester,
-        req.body,
-        "semester",
-        validateSemesterData
-    );
+    const data = req.body;
+    const { intakeCourseId, semesterNumber, year, semesterName, startDate, endDate, examStartDate, examEndDate, schoolId } = data;
+
+    // Validate required fields and identify which ones are missing
+    const requiredFields = [
+        { field: 'intakeCourseId', value: intakeCourseId, label: 'Intake Course ID' },
+        { field: 'semesterNumber', value: semesterNumber, label: 'Semester Number' },
+        { field: 'year', value: year, label: 'Year' },
+        { field: 'semesterName', value: semesterName, label: 'Semester Name' },
+        { field: 'startDate', value: startDate, label: 'Start Date' },
+        { field: 'endDate', value: endDate, label: 'End Date' },
+        { field: 'examStartDate', value: examStartDate, label: 'Exam Start Date' },
+        { field: 'examEndDate', value: examEndDate, label: 'Exam End Date' },
+        { field: 'schoolId', value: schoolId, label: 'School ID' }
+    ];
+
+    const missingFields = requiredFields.filter(field => !field.value);
+    
+    if (missingFields.length > 0) {
+        const missingFieldLabels = missingFields.map(field => field.label).join(', ');
+        return {
+            success: false,
+            message: `Missing required fields: ${missingFieldLabels}`,
+            statusCode: 400,
+            missingFields: missingFields.map(field => field.field)
+        };
+    }
+
+    // Validate semester data before creation
+    const validation = await validateSemesterData(data);
+    if (!validation.isValid) {
+        return {
+            success: false,
+            message: validation.message,
+            statusCode: 400
+        };
+    }
+
+    return await createRecord(Semester, data, "semester");
 });
 
 export const getSemesters = controllerWrapper(async (req, res) => {
@@ -265,7 +292,10 @@ export const getSemesters = controllerWrapper(async (req, res) => {
         Semester,
         "semesters",
         [
-            { path: 'courseId' },
+            { 
+                path: 'intakeCourseId',
+                populate: { path: 'courseId' }
+            },
             { path: 'schoolId', select: 'schoolName' }
         ],
         { isActive: true }
@@ -278,20 +308,26 @@ export const getSemestersBySchoolId = controllerWrapper(async (req, res) => {
         Semester,
         "semesters",
         [
-            { path: 'courseId' },
+            { 
+                path: 'intakeCourseId',
+                populate: { path: 'courseId' }
+            },
             { path: 'schoolId' }
         ],
         { schoolId, isActive: true }
     );
 });
 
-export const getSemestersByCourse = controllerWrapper(async (req, res) => {
-    const { courseId } = req.params;
+export const getSemestersByIntakeCourse = controllerWrapper(async (req, res) => {
+    const { intakeCourseId } = req.params;
     return await getAllRecords(
         Semester,
         "semesters",
-        [{ path: 'courseId' }],
-        { courseId, isActive: true }
+        [{ 
+            path: 'intakeCourseId',
+            populate: { path: 'courseId' }
+        }],
+        { intakeCourseId, isActive: true }
     );
 });
 
@@ -302,7 +338,10 @@ export const getSemesterById = controllerWrapper(async (req, res) => {
         id,
         "semester",
         [
-            { path: 'courseId' },
+            { 
+                path: 'intakeCourseId',
+                populate: { path: 'courseId' }
+            },
             { path: 'schoolId', select: 'schoolName' }
         ]
     );
@@ -327,15 +366,18 @@ export const deleteSemester = controllerWrapper(async (req, res) => {
 });
 
 export const getCurrentSemester = controllerWrapper(async (req, res) => {
-    const { courseId } = req.params;
+    const { intakeCourseId } = req.params;
     const now = new Date();
 
     const currentSemester = await Semester.findOne({
-        courseId,
+        intakeCourseId,
         startDate: { $lte: now },
         endDate: { $gte: now },
         isActive: true
-    }).populate('courseId');
+    }).populate({
+        path: 'intakeCourseId',
+        populate: { path: 'courseId' }
+    });
 
     if (!currentSemester) {
         return {
@@ -362,7 +404,10 @@ export const getUpcomingSemesters = controllerWrapper(async (req, res) => {
         startDate: { $gt: now },
         isActive: true
     })
-        .populate('courseId')
+        .populate({
+            path: 'intakeCourseId',
+            populate: { path: 'courseId' }
+        })
         .sort({ startDate: 1 });
 
     return {
@@ -390,7 +435,10 @@ export const updateSemesterStatus = controllerWrapper(async (req, res) => {
         id,
         { status },
         { new: true, runValidators: true }
-    ).populate('courseId');
+    ).populate({
+        path: 'intakeCourseId',
+        populate: { path: 'courseId' }
+    });
 
     if (!semester) {
         return {

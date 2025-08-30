@@ -21,6 +21,7 @@ import Attendance from "../models/Academic/attendance.model.js";
 import Result from "../models/Academic/result.model.js";
 import Room from "../models/Academic/room.model.js";
 import Semester from "../models/Academic/semester.model.js";
+import SemesterModule from "../models/Academic/semesterModule.model.js";
 import User from "../models/Academic/user.model.js";
 
 import Invoice from "../models/Billing/invoice.model.js";
@@ -91,6 +92,7 @@ const getDatabaseStats = async (req, res) => {
             results: await Result.countDocuments({ schoolId }).catch(() => 0),
             rooms: await Room.countDocuments({ schoolId }).catch(() => 0),
             semesters: await Semester.countDocuments({ schoolId }).catch(() => 0),
+            semesterModules: await SemesterModule.countDocuments({ schoolId }).catch(() => 0),
 
             // Billing collections
             invoices: await Invoice.countDocuments({ schoolId }).catch(() => 0),
@@ -129,7 +131,7 @@ const getDatabaseStats = async (req, res) => {
             academic: stats.students + stats.courses + stats.modules +
                 stats.lecturers + stats.departments + stats.intakes + stats.intakeCourses +
                 stats.classSchedules + stats.examSchedules + stats.attendance +
-                stats.results + stats.rooms + stats.semesters,
+                stats.results + stats.rooms + stats.semesters + stats.semesterModules,
             billing: stats.invoices + stats.payments + stats.subscriptions,
             facility: stats.bookings + stats.lockerUnits + stats.parkingLots + stats.resources,
             service: stats.feedback + stats.lostItems + stats.responses,
@@ -204,6 +206,7 @@ const deleteAllSchoolData = async (req, res) => {
             results: await Result.deleteMany({ schoolId }).catch(err => ({ error: err.message, deletedCount: 0 })),
             rooms: await Room.deleteMany({ schoolId }).catch(err => ({ error: err.message, deletedCount: 0 })),
             semesters: await Semester.deleteMany({ schoolId }).catch(err => ({ error: err.message, deletedCount: 0 })),
+            semesterModules: await SemesterModule.deleteMany({ schoolId }).catch(err => ({ error: err.message, deletedCount: 0 })),
 
             // Facility collections
             bookings: await Booking.deleteMany({ schoolId }).catch(err => ({ error: err.message, deletedCount: 0 })),

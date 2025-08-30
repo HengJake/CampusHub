@@ -17,8 +17,9 @@ import {
 import { FiChevronLeft, FiChevronRight, FiCalendar, FiTrash2, FiX, FiBookOpen } from 'react-icons/fi';
 import { CompletionStatusBadge } from './CompletionStatusBadge';
 import { SemesterTimeline } from './SemesterTimeline';
-import AddModuleModal from './AddModuleModal';
+
 import { useAcademicStore } from '../../../../store/academic';
+import { useNavigate } from 'react-router-dom';
 
 const SemesterDetailsModal = ({
     isOpen,
@@ -31,9 +32,10 @@ const SemesterDetailsModal = ({
 }) => {
     const [currentSemesterIndex, setCurrentSemesterIndex] = useState(0);
     const [moduleCounts, setModuleCounts] = useState({});
-    const [isAddModuleModalOpen, setIsAddModuleModalOpen] = useState(false);
+
     const toast = useToast();
     const { getModuleCountBySemester } = useAcademicStore();
+    const navigate = useNavigate();
 
     // Calculate progress
     const progress = React.useMemo(() => {
@@ -160,7 +162,7 @@ const SemesterDetailsModal = ({
                     aria-label="Close"
                 />
 
-                <Flex w="full" h="full">
+                <Flex w="full" h="full" flexDirection={{ base: "column", lg: "row" }}>
                     {/* Right Side - Details */}
                     <Box flex="1" p={6}>
                         <VStack align="start" spacing={4} h="full">
@@ -266,7 +268,7 @@ const SemesterDetailsModal = ({
                                     flex="1"
                                     disabled={progress.progressPercentage == 100}
                                 >
-                                    Add Semester
+                                    Add 
                                 </Button>
                                 {currentSemesters.length > 0 && (
                                     <Button
@@ -355,38 +357,30 @@ const SemesterDetailsModal = ({
                                             </Text>
                                         </HStack>
 
-                                                                                    <HStack justify="space-between">
-                                                <Text fontSize="sm" color="gray.600">Status:</Text>
-                                                <Badge colorScheme={currentSemesters[currentSemesterIndex].isActive ? 'green' : 'gray'}>
-                                                    {currentSemesters[currentSemesterIndex].isActive ? 'Active' : 'Inactive'}
-                                                </Badge>
-                                            </HStack>
+                                        <HStack justify="space-between">
+                                            <Text fontSize="sm" color="gray.600">Status:</Text>
+                                            <Badge colorScheme={currentSemesters[currentSemesterIndex].isActive ? 'green' : 'gray'}>
+                                                {currentSemesters[currentSemesterIndex].isActive ? 'Active' : 'Inactive'}
+                                            </Badge>
+                                        </HStack>
 
-                                            <HStack justify="space-between">
-                                                <Text fontSize="sm" color="gray.600">Modules:</Text>
-                                                <HStack spacing={2}>
-                                                    <Text fontSize="sm" fontWeight="medium">
-                                                        {moduleCounts[currentSemesters[currentSemesterIndex]._id] || 0} assigned
-                                                    </Text>
-                                                    <Button
-                                                        size="xs"
-                                                        colorScheme="blue"
-                                                        variant="outline"
-                                                        onClick={() => setIsAddModuleModalOpen(true)}
-                                                        leftIcon={<Icon as={FiBookOpen} />}
-                                                    >
-                                                        Add Module
-                                                    </Button>
-                                                </HStack>
+                                        <HStack justify="space-between">
+                                            <Text fontSize="sm" color="gray.600">Modules:</Text>
+                                            <HStack spacing={2}>
+                                                <Text fontSize="sm" fontWeight="medium">
+                                                    {moduleCounts[currentSemesters[currentSemesterIndex]._id] || 0} assigned
+                                                </Text>
+                                               
                                             </HStack>
+                                        </HStack>
 
-                                            {moduleCounts[currentSemesters[currentSemesterIndex]._id] > 0 && (
-                                                <Box p={3} bg="blue.50" borderRadius="md">
-                                                    <Text fontSize="xs" color="blue.700" fontWeight="medium">
-                                                        This semester has {moduleCounts[currentSemesters[currentSemesterIndex]._id]} module(s) assigned
-                                                    </Text>
-                                                </Box>
-                                            )}
+                                        {moduleCounts[currentSemesters[currentSemesterIndex]._id] > 0 && (
+                                            <Box p={3} bg="blue.50" borderRadius="md">
+                                                <Text fontSize="xs" color="blue.700" fontWeight="medium">
+                                                    This semester has {moduleCounts[currentSemesters[currentSemesterIndex]._id]} module(s) assigned
+                                                </Text>
+                                            </Box>
+                                        )}
 
                                         {currentSemesters[currentSemesterIndex].description && (
                                             <>
@@ -401,7 +395,7 @@ const SemesterDetailsModal = ({
                                     <Divider />
 
                                     {/* Course Information */}
-                                    <Box py={2} px={3} mt={3} bg="gray.50" borderRadius="md">
+                                    <Box py={2} px={3} mt={3} bg="gray.50" borderRadius="md" display={{ base: "none", lg: "block" }}>
                                         <VStack align="start">
                                             <Text fontWeight="medium">
                                                 {selectedIntakeCourse?.courseId?.courseName || 'Unknown Course'}
@@ -426,7 +420,7 @@ const SemesterDetailsModal = ({
                     </Box>
 
                     {/* Left Side - Timeline */}
-                    <Box flex="1" p={6} borderRight="1px solid" borderColor="gray.200" overflowY="hidden">
+                    <Box flex="1" p={6} borderRight="1px solid" borderColor="gray.200" overflowY="hidden" display={{ base: "none", lg: "block" }}>
                         <VStack align="start" spacing={4} h="full" overflowY="hidden">
                             <Text fontSize="lg" fontWeight="bold" color="gray.800">
                                 Semester Timeline
@@ -435,28 +429,18 @@ const SemesterDetailsModal = ({
                                 Click on any semester to view its details
                             </Text>
 
-                                                            <Box flex="1" w="full" overflowY="auto">
-                                    <SemesterTimeline
-                                        semesters={currentSemesters}
-                                        currentSemesterIndex={currentSemesterIndex}
-                                        onSemesterClick={onSemesterClick}
-                                        moduleCounts={moduleCounts}
-                                    />
-                                </Box>
+                            <Box flex="1" w="full" overflowY="auto">
+                                <SemesterTimeline
+                                    semesters={currentSemesters}
+                                    currentSemesterIndex={currentSemesterIndex}
+                                    onSemesterClick={onSemesterClick}
+                                    moduleCounts={moduleCounts}
+                                />
+                            </Box>
                         </VStack>
                     </Box>
                 </Flex>
             </Box>
-
-            {/* Add Module Modal */}
-            <AddModuleModal
-                isOpen={isAddModuleModalOpen}
-                onClose={() => setIsAddModuleModalOpen(false)}
-                semester={currentSemesters[currentSemesterIndex]}
-                courseId={selectedIntakeCourse?.courseId?._id}
-                intakeCourseId={selectedIntakeCourse?._id}
-                onModuleAdded={handleModuleAdded}
-            />
         </Box>
     );
 };

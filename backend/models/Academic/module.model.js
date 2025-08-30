@@ -57,7 +57,7 @@ const moduleSchema = new mongoose.Schema({
 
     assessmentMethods: {
         type: [String],
-        enum: ['exam', 'assignment', 'project', 'presentation', 'quiz'],
+        enum: ['exam', 'assignment', 'project', 'presentation', 'quiz','lab'],
         default: ['exam', 'assignment'],
         // Methods used to assess student performance
     },

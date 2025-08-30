@@ -8,13 +8,20 @@ import {
     getSemesterModuleById,
     updateSemesterModule,
     getModuleCountBySemester,
-    getAvailableModulesForSemester
+    getAvailableModulesForSemester,
+    getSemesterModulesByIntakeCourse,
+    getSemesterModulesByIntakeCourseAndYear,
+    bulkAddModulesToSemester,
+    deleteAllSemesterModules
 } from "../../controllers/Academic/semesterModule.controllers.js";
 
 const router = express.Router();
 
 // Get all semester modules by school ID
 router.get("/school/:schoolId", getSemesterModulesBySchoolId);
+
+// Delete all semester modules for a school
+router.delete("/all", deleteAllSemesterModules);
 
 // Get modules for a specific semester
 router.get("/semester/:semesterId", getModulesBySemester);
@@ -26,10 +33,19 @@ router.get("/module/:moduleId", getSemestersByModule);
 router.get("/count/:semesterId", getModuleCountBySemester);
 
 // Get available modules for a semester
-router.get("/available/:semesterId/:courseId/:schoolId", getAvailableModulesForSemester);
+router.get("/available/:semesterId/:intakeCourseId/:schoolId", getAvailableModulesForSemester);
+
+// Get semester modules by intake course
+router.get("/intake-course/:intakeCourseId/school/:schoolId", getSemesterModulesByIntakeCourse);
+
+// Get semester modules by intake course and year
+router.get("/intake-course/:intakeCourseId/year/:academicYear/school/:schoolId", getSemesterModulesByIntakeCourseAndYear);
 
 // Add module to semester
 router.post("/", addModuleToSemester);
+
+// Bulk add modules to semester
+router.post("/bulk", bulkAddModulesToSemester);
 
 // Get semester module by ID
 router.get("/:id", getSemesterModuleById);

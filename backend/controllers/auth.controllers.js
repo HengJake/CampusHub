@@ -354,8 +354,7 @@ export const signupWithOAuth = async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: newUser._id, email: newUser.email, role: newUser.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      process.env.JWT_SECRET
     );
 
     // Set cookie
