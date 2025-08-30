@@ -4,6 +4,7 @@ import {
     getSemesters,
     getSemestersBySchoolId,
     getSemestersByIntakeCourse,
+    getSemestersByCourse,
     getSemesterById,
     updateSemester,
     deleteSemester,
@@ -29,6 +30,7 @@ router.get("/school/:schoolId", getSemestersBySchoolId);
 router.get("/school/:schoolId/upcoming", getUpcomingSemesters);
 
 // Course-specific routes
+router.get("/course/:courseId", getSemestersByCourse);
 router.get("/intake-course/:intakeCourseId", getSemestersByIntakeCourse);
 router.get("/intake-course/:intakeCourseId/current", getCurrentSemester);
 

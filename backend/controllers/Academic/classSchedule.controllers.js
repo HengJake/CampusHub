@@ -4,6 +4,7 @@ import Module from '../../models/Academic/module.model.js';
 import Lecturer from '../../models/Academic/lecturer.model.js';
 import IntakeCourse from '../../models/Academic/intakeCourse.model.js';
 import Semester from '../../models/Academic/semester.model.js';
+import SemesterModule from '../../models/Academic/semesterModule.model.js';
 import School from '../../models/Billing/school.model.js';
 import Student from '../../models/Academic/student.model.js';
 import {
@@ -36,13 +37,22 @@ const checkTimeConflict = (start1, end1, start2, end2) => {
 };
 
 // Function to check for room and time conflicts
-const checkRoomTimeConflict = async (roomId, dayOfWeek, startTime, endTime, semesterId, excludeId = null) => {
+const checkRoomTimeConflict = async (roomId, dayOfWeek, startTime, endTime, semesterModuleId, excludeId = null) => {
     try {
+        // Get semesterId from semesterModule
+        const semesterModule = await SemesterModule.findById(semesterModuleId);
+        if (!semesterModule) {
+            return {
+                hasConflict: false,
+                error: 'SemesterModule not found'
+            };
+        }
+
         // Build query to find existing schedules with the same room and day
         const query = {
             roomId: roomId,
             dayOfWeek: dayOfWeek,
-            semesterId: semesterId
+            'semesterModuleId.semesterId': semesterModule.semesterId
         };
 
         // Exclude current record if updating
@@ -75,13 +85,13 @@ const checkRoomTimeConflict = async (roomId, dayOfWeek, startTime, endTime, seme
 
 // Custom validation function for class schedule data
 const validateClassScheduleData = async (data) => {
-    const { roomId, moduleId, lecturerId, dayOfWeek, startTime, endTime, intakeCourseId, semesterId, schoolId, moduleStartDate, moduleEndDate } = data;
+    const { roomId, semesterModuleId, lecturerId, dayOfWeek, startTime, endTime, intakeCourseId, schoolId, moduleStartDate, moduleEndDate } = data;
 
     // Check required fields
-    if (!roomId || !moduleId || !lecturerId || !dayOfWeek || !startTime || !endTime || !intakeCourseId || !semesterId || !schoolId || !moduleStartDate || !moduleEndDate) {
+    if (!roomId || !semesterModuleId || !lecturerId || !dayOfWeek || !startTime || !endTime || !intakeCourseId || !schoolId || !moduleStartDate || !moduleEndDate) {
         return {
             isValid: false,
-            message: "Please provide all required fields (roomId, moduleId, lecturerId, dayOfWeek, startTime, endTime, intakeCourseId, semesterId, schoolId, moduleStartDate, moduleEndDate)"
+            message: "Please provide all required fields (roomId, semesterModuleId, lecturerId, dayOfWeek, startTime, endTime, intakeCourseId, schoolId, moduleStartDate, moduleEndDate)"
         };
     }
 
@@ -148,10 +158,9 @@ const validateClassScheduleData = async (data) => {
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
         roomId: { id: roomId, Model: Room },
-        moduleId: { id: moduleId, Model: Module },
+        semesterModuleId: { id: semesterModuleId, Model: SemesterModule },
         lecturerId: { id: lecturerId, Model: Lecturer },
         intakeCourseId: { id: intakeCourseId, Model: IntakeCourse },
-        semesterId: { id: semesterId, Model: Semester },
         schoolId: { id: schoolId, Model: School }
     });
 
@@ -163,7 +172,7 @@ const validateClassScheduleData = async (data) => {
     }
 
     // Check for room and time conflicts
-    const conflictCheck = await checkRoomTimeConflict(roomId, dayOfWeek, startTime, endTime, semesterId);
+    const conflictCheck = await checkRoomTimeConflict(roomId, dayOfWeek, startTime, endTime, semesterModuleId);
     if (conflictCheck.hasConflict) {
         return {
             isValid: false,
@@ -189,7 +198,10 @@ export const getClassSchedules = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         ClassSchedule,
         "classSchedules",
-        ['roomId', 'moduleId', 'intakeCourseId', 'semesterId', 'schoolId', {
+        ['roomId', {
+            path: 'semesterModuleId',
+            populate: ['moduleId', 'semesterId']
+        }, 'intakeCourseId', 'schoolId', {
             path: "lecturerId",
             populate: [{ path: "userId" }]
         }]
@@ -203,7 +215,10 @@ export const getClassScheduleById = controllerWrapper(async (req, res) => {
         ClassSchedule,
         id,
         "classSchedule",
-        ['roomId', 'moduleId', 'semesterId', 'schoolId', {
+        ['roomId', {
+            path: 'semesterModuleId',
+            populate: ['moduleId', 'semesterId']
+        }, 'schoolId', {
             path: 'intakeCourseId',
             populate: { path: ["intakeId", "courseId"] }
         }, {
@@ -230,7 +245,7 @@ export const updateClassSchedule = controllerWrapper(async (req, res) => {
             data.dayOfWeek,
             data.startTime,
             data.endTime,
-            data.semesterId,
+            data.semesterModuleId,
             id
         );
 
@@ -269,7 +284,10 @@ export const getClassSchedulesBySchoolId = controllerWrapper(async (req, res) =>
     return await getAllRecords(
         ClassSchedule,
         "classSchedules",
-        ['roomId', 'moduleId', 'semesterId', 'schoolId', {
+        ['roomId',{
+            path: 'semesterModuleId',
+            populate: ['moduleId', 'semesterId']
+        }, 'schoolId', {
             path: 'intakeCourseId',
             populate: ["intakeId", "courseId"]
         }, {
@@ -309,8 +327,10 @@ export const getClassSchedulesByStudentId = controllerWrapper(async (req, res) =
             intakeCourseId: student.intakeCourseId._id
         }).populate([
             'roomId',
-            'moduleId',
-            'semesterId',
+            {
+                path: 'semesterModuleId',
+                populate: ['moduleId', 'semesterId']
+            },
             'schoolId',
             {
                 path: 'intakeCourseId',

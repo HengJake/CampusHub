@@ -1,4 +1,4 @@
-const generateClassSchedule = async (selectedIntake, selectedCourse, selectedIntakeCourse, modules, rooms, lecturers, scheduleConfig = {}, selectedSemester = null, selectedModule = null) => {
+const generateClassSchedule = async (selectedIntake, selectedCourse, selectedIntakeCourse, modules, rooms, lecturers, scheduleConfig = {}, selectedSemester = null, selectedModule = null, semesterModules = []) => {
     // Configuration with defaults
     const CLASSES_PER_MODULE_PER_WEEK = scheduleConfig.classesPerWeek || 2;
     const DAYS_OF_WEEK = scheduleConfig.daysOfWeek || ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
@@ -14,25 +14,53 @@ const generateClassSchedule = async (selectedIntake, selectedCourse, selectedInt
     const DEFAULT_MODULE_DURATION_WEEKS = scheduleConfig.moduleDurationWeeks || 12;
     const SEMESTER_START_DATE = scheduleConfig.semesterStartDate || new Date();
 
+    // Debug logging
+    console.log("🚀 ~ generateClassSchedule ~ Parameters:", {
+        selectedIntake,
+        selectedCourse,
+        selectedIntakeCourse: selectedIntakeCourse?._id,
+        modulesCount: modules?.length,
+        roomsCount: rooms?.length,
+        lecturersCount: lecturers?.length,
+        selectedSemester,
+        selectedModule
+    });
+
     if (!selectedIntakeCourse) {
         throw new Error("Selected intake course not found");
     }
 
-    // Get all modules for the selected course
-    let courseModules = modules?.filter(module =>
-        module.courseId.some(courseId => courseId._id === selectedCourse)
-    ) || [];
-
-
-    // If selectedModule is provided, filter to only that specific module
+    // Get semester modules for the selected semester
+    let semesterModulesToProcess = [];
+    
     if (selectedModule) {
-        courseModules = courseModules.filter(module => module._id === selectedModule);
+        // If a specific module is selected, find the corresponding semester module
+        const semesterModule = semesterModules?.find(sm => 
+            sm._id === selectedModule && 
+            sm.semesterId._id === selectedSemester._id
+        );
+        
+        if (semesterModule) {
+            semesterModulesToProcess = [semesterModule];
+            console.log("🚀 ~ Selected specific semester module:", semesterModule);
+        } else {
+            throw new Error(`No semester module found for module ${selectedModule} in semester ${selectedSemester._id}`);
+        }
+    } else {
+        // If no specific module selected, get all semester modules for this semester
+        semesterModulesToProcess = semesterModules?.filter(sm => 
+            sm.semesterId._id === selectedSemester._id
+        ) || [];
+        console.log("🚀 ~ Found semester modules for semester:", semesterModulesToProcess.map(sm => ({ 
+            moduleCode: sm.moduleId.code, 
+            moduleName: sm.moduleId.moduleName,
+            semesterModuleId: sm._id 
+        })));
     }
 
-    if (courseModules.length === 0) {
-        throw new Error("No modules found for the selected course");
+    if (semesterModulesToProcess.length === 0) {
+        throw new Error("No semester modules found for the selected semester");
     }
-
     // Initialize schedule tracking
     const schedule = [];
     const conflicts = {
@@ -127,16 +155,17 @@ const generateClassSchedule = async (selectedIntake, selectedCourse, selectedInt
         return classDates.slice(0, Math.min(classDates.length, maxClasses));
     };
 
-    // Generate schedule for each module
-    for (let moduleIndex = 0; moduleIndex < courseModules.length; moduleIndex++) {
+    // Generate schedule for each semester module
+    for (let moduleIndex = 0; moduleIndex < semesterModulesToProcess.length; moduleIndex++) {
 
-        const module = courseModules[moduleIndex];
+        const semesterModule = semesterModulesToProcess[moduleIndex];
+        const module = semesterModule.moduleId; // Get the actual module from semester module
 
-        // Skip modules not linked to selected intake course
-        if (module.courseId?.includes(selectedIntakeCourse.courseId._id)) continue;
+        // Debug: Log module being processed
+        console.log(`🚀 ~ Processing semester module: ${semesterModule._id} for module ${module.code} (${module._id})`);
 
         // Calculate module dates
-        const { startDate: moduleStartDate, endDate: moduleEndDate } = calculateModuleDates(moduleIndex, courseModules.length);
+        const { startDate: moduleStartDate, endDate: moduleEndDate } = calculateModuleDates(moduleIndex, semesterModulesToProcess.length);
 
         // Select one random day and time slot
         const randomDay = getRandomElement(DAYS_OF_WEEK);
@@ -153,10 +182,24 @@ const generateClassSchedule = async (selectedIntake, selectedCourse, selectedInt
         // Get available resources
         const availableRooms = getAvailableRooms(randomDay, randomTimeSlot, classDate);
         const availableLecturers = getAvailableLecturers(randomDay, randomTimeSlot, classDate);
-        if (availableRooms.length === 0 || availableLecturers.length === 0) continue;
+        
+        if (availableRooms.length === 0) {
+            console.warn(`🚨 No available rooms for ${randomDay} at ${randomTimeSlot.start}`);
+            continue;
+        }
+        
+        if (availableLecturers.length === 0) {
+            console.warn(`🚨 No available lecturers for ${randomDay} at ${randomTimeSlot.start}`);
+            continue;
+        }
 
         const selectedRoom = getRandomElement(availableRooms);
         const selectedLecturer = getRandomElement(availableLecturers);
+
+        console.log("🚀 ~ generateClassSchedule ~ selectedIntakeCourse:", selectedIntakeCourse)
+        console.log("🚀 ~ generateClassSchedule ~ selectedSemester:", selectedSemester)
+        console.log("🚀 ~ generateClassSchedule ~ semesterModule:", semesterModule)
+        console.log("🚀 ~ generateClassSchedule ~ module:", module)
 
         const classEntry = {
             intakeCourseId: selectedIntakeCourse._id,
@@ -165,7 +208,8 @@ const generateClassSchedule = async (selectedIntake, selectedCourse, selectedInt
             courseCode: selectedIntakeCourse.courseId.courseCode,
             intakeId: selectedIntakeCourse.intakeId._id,
             intakeName: selectedIntakeCourse.intakeId.intakeName,
-            moduleId: module._id,
+            semesterModuleId: semesterModule._id, // Use the actual semester module ID
+            moduleId: module._id, // Add moduleId for easier access
             moduleName: module.moduleName,
             moduleCode: module.code,
             dayOfWeek: randomDay,
@@ -178,6 +222,7 @@ const generateClassSchedule = async (selectedIntake, selectedCourse, selectedInt
             schoolId: selectedIntakeCourse.schoolId._id,
             moduleStartDate,
             moduleEndDate,
+            semesterId: selectedSemester._id, // Keep semesterId for reference
         };
 
         markResourceUsed(randomDay, randomTimeSlot, classDate, selectedRoom._id, selectedLecturer._id);
@@ -187,9 +232,21 @@ const generateClassSchedule = async (selectedIntake, selectedCourse, selectedInt
 
     // Sort schedule by date and time
     schedule.sort((a, b) => {
-        const dateCompare = new Date(a.classDate) - new Date(b.classDate);
+        const dateCompare = new Date(a.moduleStartDate) - new Date(b.moduleStartDate);
         if (dateCompare !== 0) return dateCompare;
         return a.startTime.localeCompare(b.startTime);
+    });
+
+    console.log("🚀 ~ generateClassSchedule ~ Final schedule:", {
+        totalClasses: schedule.length,
+        semesterModulesProcessed: semesterModulesToProcess.length,
+        schedule: schedule.map(s => ({
+            module: s.moduleCode,
+            day: s.dayOfWeek,
+            time: s.startTime,
+            room: s.roomName,
+            semesterModuleId: s.semesterModuleId
+        }))
     });
 
     return {

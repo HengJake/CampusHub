@@ -3,6 +3,7 @@
 // Helper function to transform exam data to schedule format
 export const transformExamToScheduleFormat = (examSchedules) => {
     return examSchedules.map(exam => {
+        
         // Convert exam date to day of week
         const examDate = new Date(exam.examDate)
         const dayOfWeek = examDate.toLocaleDateString('en-US', { weekday: 'long' })
@@ -16,50 +17,71 @@ export const transformExamToScheduleFormat = (examSchedules) => {
         const endDate = new Date(startDate.getTime() + (exam.durationMinute * 60000))
         const endTime = endDate.toTimeString().slice(0, 5)
 
-        return {
+        // Extract nested properties safely - handle both nested and direct structures
+        // For exam schedules, moduleId and semesterId come from semesterModuleId
+        const moduleId = exam.semesterModuleId?.moduleId?._id || exam.moduleId?._id || exam.moduleId
+        const courseId = exam.intakeCourseId?.courseId?._id || exam.courseId
+        const semesterId = exam.semesterModuleId?.semesterId?._id || exam.semesterId?._id || exam.semesterId
+
+        // Get module details from various possible sources
+        const moduleName = exam.semesterModuleId?.moduleId?.moduleName || exam.moduleId?.moduleName || exam.moduleName || 'Unknown Module'
+        const moduleCode = exam.semesterModuleId?.moduleId?.code || exam.moduleId?.code || exam.moduleCode || 'Unknown Code'
+
+        const transformed = {
             id: exam._id,
             type: 'exam', // Add type field
             dayOfWeek: dayOfWeek,
             startTime: startTime,
             endTime: endTime,
-            moduleId: exam.moduleId,
+            moduleId: moduleId,
             intakeCourseId: exam.intakeCourseId,
-            courseId: exam.courseId,
+            courseId: courseId,
             roomId: exam.roomId,
             schoolId: exam.schoolId,
-            semesterId: exam.semesterId, // Add semester ID
+            semesterModuleId: exam.semesterModuleId,
+            semesterId: semesterId, // Add semester ID
             examDate: exam.examDate,
             durationMinute: exam.durationMinute,
             invigilators: exam.invigilators,
             // Additional exam-specific fields
-            subject: exam.moduleId?.moduleName || 'Unknown Module',
-            code: exam.moduleId?.code || 'Unknown Code',
+            subject: moduleName,
+            code: moduleCode,
             room: exam.roomId, // Assuming roomId has room details
             lecturer: exam.invigilators?.[0] || null, // First invigilator as primary
         }
+                
+        return transformed
     })
 }
 
 // Helper function to transform class schedule data
 export const transformClassToScheduleFormat = (classSchedules) => {
     return classSchedules.map(classItem => {
+        // Handle both nested and direct property structures
+        const moduleId = classItem.moduleId?._id || classItem.moduleId || classItem.semesterModuleId?.moduleId?._id;
+        const semesterId = classItem.semesterId?._id || classItem.semesterId || classItem.semesterModuleId?.semesterId?._id;
+        const moduleName = classItem.moduleName || classItem.semesterModuleId?.moduleId?.moduleName || 'Unknown Module';
+        const moduleCode = classItem.moduleCode || classItem.code || classItem.semesterModuleId?.moduleId?.code || 'Unknown Code';
+        const lecturerName = classItem.lecturerName || classItem.lecturerId?.userId?.name || 'Unassigned';
+        
         return ({
             id: classItem._id,
             type: 'class', // Add type field
             dayOfWeek: classItem.dayOfWeek,
             startTime: classItem.startTime,
             endTime: classItem.endTime,
-            moduleId: classItem.moduleId,
+            moduleId: moduleId,
             intakeCourseId: classItem.intakeCourseId,
             lecturerId: classItem.lecturerId,
             roomId: classItem.roomId,
             schoolId: classItem.schoolId,
-            semesterId: classItem.semesterId, // Add semester ID
+            semesterId: semesterId,
+            semesterModuleId: classItem.semesterModuleId,
             // Additional class-specific fields
-            subject: classItem.moduleId?.moduleName || 'Unknown Module',
-            code: classItem.moduleId?.code || 'Unknown Code',
+            subject: moduleName,
+            code: moduleCode,
             room: classItem.roomId,
-            lecturer: classItem.lecturerId?.userId?.name || 'Unassigned', // Fix: Extract lecturer name
+            lecturer: lecturerName,
         });
     })
 }
@@ -69,7 +91,9 @@ export const combineScheduleData = (classSchedules, examSchedules) => {
     const transformedClasses = transformClassToScheduleFormat(classSchedules)
     const transformedExams = transformExamToScheduleFormat(examSchedules)
 
-    return [...transformedClasses, ...transformedExams]
+    const combined = [...transformedClasses, ...transformedExams]
+    
+    return combined
 }
 
 // Get color scheme for schedule types
@@ -102,6 +126,11 @@ export const transformExamData = (examData) => {
         const endDate = new Date(startDate.getTime() + (exam.durationMinute * 60000))
         const endTime = endDate.toTimeString().slice(0, 5)
 
+        // Extract nested properties safely
+        const moduleId = exam.moduleId?._id || exam.moduleId
+        const courseId = exam.intakeCourseId?.courseId?._id || exam.courseId
+        const semesterId = exam.semesterId?._id || exam.semesterId
+
         return {
             id: exam._id,
             code: exam.moduleId?.code ?? 'N/A',
@@ -124,9 +153,10 @@ export const transformExamData = (examData) => {
             invigilators: exam.invigilators,
             durationMinute: exam.durationMinute,
             intakeCourseId: exam.intakeCourseId,
-            courseId: exam.courseId,
-            moduleId: exam.moduleId,
-            semesterId: exam.semesterId // Add semester ID
+            courseId: courseId,
+            moduleId: moduleId,
+            semesterModuleId: exam.semesterModuleId,
+            semesterId: semesterId // Add semester ID
         }
     })
 }
@@ -135,8 +165,8 @@ export const transformExamData = (examData) => {
 export const transformClassData = (classData) => {
     return classData.map(classItem => ({
         id: classItem._id,
-        code: classItem.moduleId?.code ?? 'N/A',
-        subject: classItem.moduleId?.moduleName ?? 'Unknown',
+        code: classItem.semesterModuleId?.moduleId?.code ?? 'N/A',
+        subject: classItem.semesterModuleId?.moduleId?.moduleName ?? 'Unknown',
         room: classItem.roomId?.roomNumber
             ? `${classItem.roomId.block} ${classItem.roomId.roomNumber}`
             : 'TBD',
@@ -150,9 +180,10 @@ export const transformClassData = (classData) => {
         examType: "",
         intakeCourseId: classItem.intakeCourseId,
         courseId: classItem.courseId,
-        moduleId: classItem.moduleId,
+        moduleId: classItem.semesterModuleId?.moduleId, // Get moduleId from semesterModule
         lecturerId: classItem.lecturerId,
-        semesterId: classItem.semesterId // Add semester ID
+        semesterModuleId: classItem.semesterModuleId,
+        semesterId: classItem.semesterModuleId?.semesterId // Get semesterId from semesterModule
     }))
 }
 
@@ -193,10 +224,10 @@ export const getCombinedAndFilteredData = (
         if (selectedYear && item.semesterId?.year?.toString() !== selectedYear) return false
 
         // Filter by semester if selected
-        if (selectedSemester && item.semesterId?._id !== selectedSemester) return false
+        if (selectedSemester && item.semesterId?.semesterNumber !== selectedSemester.semesterNumber) return false
 
         if (selectedModule &&
-            item.moduleId?._id !== selectedModule) return false
+            item.moduleId !== selectedModule) return false
 
         return true
     })

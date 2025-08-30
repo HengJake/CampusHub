@@ -1161,74 +1161,90 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
             }
         }
 
-        // 11. Generate Class Schedules
+        // 11. Generate Class Schedules (First 2 semesters only)
         const classSchedules = [];
 
-        for (let i = 0; i < Math.min(modules.length, 8); i++) {
+        // Limit to first 6 modules (3 per semester) for first 2 semesters
+        for (let i = 0; i < Math.min(modules.length, 6); i++) {
             const module = modules[i];
             const lecturer = lecturers[i % lecturers.length];
             const room = rooms[i % rooms.length];
             const intakeCourse = intakeCourses[i % intakeCourses.length];
-            const semester = semesters[i % semesters.length];
+            const semester = semesters[i % 2]; // Only use first 2 semesters
 
-            const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-            const dayOfWeek = days[i % days.length];
-            const startTime = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00"][i % 6];
-            const endTime = ["12:00", "13:00", "14:00", "16:00", "17:00", "18:00"][i % 6];
+            // Find the corresponding semester module for this module and semester
+            const semesterModule = semesterModules.find(sm => 
+                sm.semesterId === semester._id && 
+                sm.moduleId === module._id
+            );
 
-            const classScheduleData = {
-                roomId: room._id,
-                moduleId: module._id,
-                lecturerId: lecturer._id,
-                dayOfWeek: dayOfWeek,
-                startTime: startTime,
-                endTime: endTime,
-                intakeCourseId: intakeCourse._id,
-                semesterId: semester._id,
-                schoolId: schoolId,
-                moduleStartDate: semester.startDate,
-                moduleEndDate: semester.endDate
-            };
+            if (semesterModule) {
+                const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+                const dayOfWeek = days[i % days.length];
+                const startTime = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00"][i % 6];
+                const endTime = ["12:00", "13:00", "14:00", "16:00", "17:00", "18:00"][i % 6];
 
-            try {
-                const createdClassSchedule = await academicStore.createClassSchedule(classScheduleData);
-                classSchedules.push(createdClassSchedule.data);
-            } catch (error) {
-                handleError('create class schedule', error, `module ${module.code}`);
+                const classScheduleData = {
+                    roomId: room._id,
+                    semesterModuleId: semesterModule._id,
+                    lecturerId: lecturer._id,
+                    dayOfWeek: dayOfWeek,
+                    startTime: startTime,
+                    endTime: endTime,
+                    intakeCourseId: intakeCourse._id,
+                    schoolId: schoolId,
+                    moduleStartDate: semester.startDate,
+                    moduleEndDate: semester.endDate
+                };
+
+                try {
+                    const createdClassSchedule = await academicStore.createClassSchedule(classScheduleData);
+                    classSchedules.push(createdClassSchedule.data);
+                } catch (error) {
+                    handleError('create class schedule', error, `module ${module.code}`);
+                }
             }
         }
 
-        // 12. Generate Exam Schedules
+        // 12. Generate Exam Schedules (First 2 semesters only)
         const examSchedules = [];
 
-        for (let i = 0; i < Math.min(modules.length, 5); i++) {
+        // Limit to first 6 modules (3 per semester) for first 2 semesters
+        for (let i = 0; i < Math.min(modules.length, 6); i++) {
             const module = modules[i];
             const intakeCourse = intakeCourses[i % intakeCourses.length];
-            const semester = semesters[i % semesters.length];
+            const semester = semesters[i % 2]; // Only use first 2 semesters
             const room = rooms[i % rooms.length];
             const lecturer = lecturers[i % lecturers.length];
 
-            const examDate = new Date();
-            examDate.setDate(examDate.getDate() + (i + 1) * 7); // Spread exams over weeks
+            // Find the corresponding semester module for this module and semester
+            const semesterModule = semesterModules.find(sm =>
+                sm.semesterId === semester._id &&
+                sm.moduleId === module._id
+            );
 
-            const examScheduleData = {
-                intakeCourseId: intakeCourse._id,
-                courseId: intakeCourse.courseId,
-                moduleId: module._id,
-                examDate: examDate.toISOString().split('T')[0],
-                examTime: ["09:00", "14:00"][i % 2],
-                semesterId: semester._id,
-                roomId: room._id,
-                invigilators: [lecturer._id],
-                durationMinute: 120,
-                schoolId: schoolId
-            };
+            if (semesterModule) {
+                const examDate = new Date();
+                examDate.setDate(examDate.getDate() + (i + 1) * 7); // Spread exams over weeks
 
-            try {
-                const createdExamSchedule = await academicStore.createExamSchedule(examScheduleData);
-                examSchedules.push(createdExamSchedule.data);
-            } catch (error) {
-                handleError('create exam schedule', error, `module ${module.code}`);
+                const examScheduleData = {
+                    intakeCourseId: intakeCourse._id,
+                    courseId: intakeCourse.courseId,
+                    semesterModuleId: semesterModule._id,
+                    examDate: examDate.toISOString().split('T')[0],
+                    examTime: ["09:00", "14:00"][i % 2],
+                    roomId: room._id,
+                    invigilators: [lecturer._id],
+                    durationMinute: 120,
+                    schoolId: schoolId
+                };
+
+                try {
+                    const createdExamSchedule = await academicStore.createExamSchedule(examScheduleData);
+                    examSchedules.push(createdExamSchedule.data);
+                } catch (error) {
+                    handleError('create exam schedule', error, `module ${module.code}`);
+                }
             }
         }
 

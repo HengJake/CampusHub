@@ -253,9 +253,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateSchool: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/school', id, updates, 'schools');
-
-            const data = await res.json();
+            const data = await get().buildPUT('/api/school', id, updates, 'schools');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update school");
@@ -421,9 +419,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateCourse: async (id, updates) => {
         try {
-            const res = await get().buildPUT("/api/course", id, updates, 'courses');
-
-            const data = await res.json();
+            const data = await get().buildPUT("/api/course", id, updates, 'courses');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update course");
@@ -512,9 +508,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateLecturer: async (id, updates) => {
         try {
-            const res = await get().buildPUT("/api/lecturer", id, updates, 'lecturers');
-
-            const data = await res.json();
+            const data = await get().buildPUT("/api/lecturer", id, updates, 'lecturers');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update lecturer");
@@ -595,9 +589,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateDepartment: async (id, updates) => {
         try {
-            const res = await get().buildPUT("/api/department", id, updates, 'departments');
-
-            const data = await res.json();
+            const data = await get().buildPUT("/api/department", id, updates, 'departments');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update department");
@@ -678,9 +670,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateModule: async (id, updates) => {
         try {
-            const res = await get().buildPUT("/api/module", id, updates, 'modules');
-
-            const data = await res.json();
+            const data = await get().buildPUT("/api/module", id, updates, 'modules');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update module");
@@ -806,8 +796,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateEnrollment: async (id, action) => {
         try {
-            const res = await get().buildPATCH("/api/intake-course", id, { action }, 'intakeCourses');
-            const data = await res.json();
+            const data = await get().buildPATCH("/api/intake-course", id, { action }, 'intakeCourses');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update enrollment");
@@ -874,8 +863,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateAttendance: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/attendance', id, updates, 'attendance');
-            const data = await res.json();
+            const data = await get().buildPUT('/api/attendance', id, updates, 'attendance');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update attendance");
@@ -1018,8 +1006,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateClassSchedule: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/class-schedule', id, updates, 'classSchedules');
-            const data = await res.json();
+            const data = await get().buildPUT('/api/class-schedule', id, updates, 'classSchedules');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update class schedule");
@@ -1128,8 +1115,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateResult: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/result', id, updates, 'results');
-            const data = await res.json();
+            const data = await get().buildPUT('/api/result', id, updates, 'results');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update result");
@@ -1209,8 +1195,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateIntake: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/intake', id, updates, 'intakes');
-            const data = await res.json();
+            const data = await get().buildPUT('/api/intake', id, updates, 'intakes');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update intake");
@@ -1892,8 +1877,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateExamSchedule: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/exam-schedule', id, updates, 'examSchedules');
-            const data = await res.json();
+            const data = await get().buildPUT('/api/exam-schedule', id, updates, 'examSchedules');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update exam schedule");
@@ -1987,6 +1971,21 @@ export const useAcademicStore = create((set, get) => ({
             fetchSemestersByIntakeCourse: async (intakeCourseId) => {
             try {
                 const res = await fetch(`/api/semester/intake-course/${intakeCourseId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch semesters by course");
+            }
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    fetchSemestersByCourse: async (courseId) => {
+        try {
+            const res = await fetch(`/api/semester/course/${courseId}`);
             const data = await res.json();
 
             if (!data.success) {
@@ -2105,8 +2104,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateSemesterStatus: async (id, status) => {
         try {
-            const res = await get().buildPATCH("/api/semester", id, { status }, 'semesters');
-            const data = await res.json();
+            const data = await get().buildPATCH("/api/semester", id, { status }, 'semesters');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update semester status");

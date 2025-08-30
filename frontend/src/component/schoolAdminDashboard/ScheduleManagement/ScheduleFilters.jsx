@@ -33,14 +33,15 @@ export default function ScheduleFilters({
     triggerDownload,
     setTriggerDownload,
 }) {
-    const { intakeCourses, modules, fetchIntakeCourses, fetchModules, fetchSemestersByCourse } = useAcademicStore()
+    const { semesterModules, intakeCourses, modules, fetchIntakeCoursesBySchoolId, fetchModulesBySchoolId, fetchSemestersByCourse, fetchSemesterModulesBySchoolId } = useAcademicStore()
 
     const bgColor = useColorModeValue("white", "gray.800")
     const borderColor = useColorModeValue("gray.200", "gray.600")
 
     useEffect(() => {
-        fetchIntakeCourses()
-        fetchModules()
+        fetchIntakeCoursesBySchoolId()
+        fetchModulesBySchoolId()
+        fetchSemesterModulesBySchoolId()
     }, [])
 
     // Fetch semesters when intake and course are selected
@@ -76,7 +77,7 @@ export default function ScheduleFilters({
         }
 
         fetchSemestersForIntakeCourse()
-    }, [selectedIntake, selectedCourse, intakeCourses])
+    }, [selectedIntake, selectedCourse])
 
     return (
         <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
@@ -186,16 +187,16 @@ export default function ScheduleFilters({
                                 <Badge>Module (Optional)</Badge>
                             </FormLabel>
                             <Select
-                                disabled={selectedCourse === "" || selectedIntake === ""}
+                                disabled={selectedCourse === "" || selectedIntake === "" || selectedSemester === null}
                                 placeholder="Select Module"
-                                value={selectedCourse === "" || selectedIntake === "" ? "" : selectedModule}
+                                value={selectedCourse === "" || selectedIntake === "" || selectedSemester === null ? "" : selectedModule}
                                 onChange={e => setSelectedModule(e.target.value)}
                             >
-                                {modules?.filter(m => {
-                                    return m.courseId.some(c => c._id === selectedCourse)
+                                {semesterModules?.filter(m => {
+                                    return m.semesterId._id === selectedSemester?._id
                                 }).map(m => (
                                     <option key={m._id} value={m._id}>
-                                        {m.moduleName}
+                                        {m.moduleId.moduleName} ({m.moduleId.code})
                                     </option>
                                 ))}
                             </Select>

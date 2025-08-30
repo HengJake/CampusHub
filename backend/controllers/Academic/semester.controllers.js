@@ -418,6 +418,44 @@ export const getUpcomingSemesters = controllerWrapper(async (req, res) => {
     };
 });
 
+export const getSemestersByCourse = controllerWrapper(async (req, res) => {
+    const { courseId } = req.params;
+    
+    // First get all intake courses for this course
+    const IntakeCourse = await import("../../models/Academic/intakeCourse.model.js");
+    const intakeCourses = await IntakeCourse.default.find({ 
+        courseId, 
+        isActive: true 
+    }).select('_id');
+    
+    if (!intakeCourses.length) {
+        return {
+            success: true,
+            message: "No intake courses found for this course",
+            data: [],
+            statusCode: 200
+        };
+    }
+    
+    const intakeCourseIds = intakeCourses.map(ic => ic._id);
+    
+    // Then get all semesters for these intake courses
+    const semesters = await Semester.find({
+        intakeCourseId: { $in: intakeCourseIds },
+        isActive: true
+    }).populate({
+        path: 'intakeCourseId',
+        populate: { path: 'courseId' }
+    });
+    
+    return {
+        success: true,
+        message: "Semesters fetched successfully",
+        data: semesters,
+        statusCode: 200
+    };
+});
+
 export const updateSemesterStatus = controllerWrapper(async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;

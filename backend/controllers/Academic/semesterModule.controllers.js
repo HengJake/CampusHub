@@ -57,11 +57,9 @@ export const getSemestersByModule = controllerWrapper(async (req, res) => {
  
 // Add module to semester
 export const addModuleToSemester = controllerWrapper(async (req, res) => {
-    console.log("🚀 ~ addModuleToSemester ~ Request body:", req.body);
     
     const { semesterId, moduleId, intakeCourseId, schoolId, academicYear, semesterNumber, notes, customAssessmentMethods, semesterSpecificRequirements } = req.body;
 
-    console.log("🚀 ~ addModuleToSemester ~ Checking for existing assignment...");
     
     // Check if module is already assigned to this semester
     const existingAssignment = await SemesterModule.findOne({
@@ -70,7 +68,6 @@ export const addModuleToSemester = controllerWrapper(async (req, res) => {
         isActive: true
     });
 
-    console.log("🚀 ~ addModuleToSemester ~ Existing assignment:", existingAssignment);
 
     if (existingAssignment) {
         return {
@@ -79,11 +76,9 @@ export const addModuleToSemester = controllerWrapper(async (req, res) => {
         };
     }
 
-    console.log("🚀 ~ addModuleToSemester ~ Validating semester...");
     
     // Validate that semester exists
     const semester = await Semester.findById(semesterId);
-    console.log("🚀 ~ addModuleToSemester ~ Semester found:", semester);
     
     if (!semester) {
         return {
@@ -92,11 +87,9 @@ export const addModuleToSemester = controllerWrapper(async (req, res) => {
         };
     }
 
-    console.log("🚀 ~ addModuleToSemester ~ Validating module...");
     
     // Validate that module exists
     const module = await Module.findById(moduleId);
-    console.log("🚀 ~ addModuleToSemester ~ Module found:", module);
     
     if (!module) {
         return {
@@ -105,11 +98,9 @@ export const addModuleToSemester = controllerWrapper(async (req, res) => {
         };
     }
 
-    console.log("🚀 ~ addModuleToSemester ~ Validating intake course...");
     
     // Validate that intake course exists and get courseId from it
     const intakeCourse = await IntakeCourse.findById(intakeCourseId).populate('courseId');
-    console.log("🚀 ~ addModuleToSemester ~ IntakeCourse found:", intakeCourse);
     
     if (!intakeCourse) {
         return {
@@ -119,8 +110,6 @@ export const addModuleToSemester = controllerWrapper(async (req, res) => {
     }
 
     const courseId = intakeCourse.courseId._id || intakeCourse.courseId;
-    console.log("🚀 ~ addModuleToSemester ~ Course ID from intake course:", courseId);
-    console.log("🚀 ~ addModuleToSemester ~ Module courseId:", module.courseId);
     
     // Validate that module belongs to the course
     if (!module.courseId.includes(courseId)) {
@@ -150,11 +139,7 @@ export const addModuleToSemester = controllerWrapper(async (req, res) => {
         semesterSpecificRequirements
     };
 
-    console.log("🚀 ~ addModuleToSemester ~ Final semesterModuleData:", semesterModuleData);
-    console.log("🚀 ~ addModuleToSemester ~ Calling createRecord...");
-
     const result = await createRecord(SemesterModule, semesterModuleData, "semesterModule");
-    console.log("🚀 ~ addModuleToSemester ~ createRecord result:", result);
 
     return result;
 });

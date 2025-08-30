@@ -6,6 +6,7 @@ import Intake from "../../models/Academic/intake.model.js";
 import IntakeCourse from "../../models/Academic/intakeCourse.model.js";
 import Course from "../../models/Academic/course.model.js";
 import School from "../../models/Billing/school.model.js";
+import SemesterModule from "../../models/Academic/semesterModule.model.js";
 import {
     createRecord,
     getAllRecords,
@@ -90,7 +91,7 @@ const checkExamRoomTimeConflict = async (roomId, examDate, examTime, durationMin
 const validateExamScheduleData = async (data) => {
     const {
         intakeCourseId,
-        moduleId,
+        semesterModuleId,
         examDate,
         examTime,
         roomId,
@@ -102,7 +103,7 @@ const validateExamScheduleData = async (data) => {
     // Check required fields
     if (
         !intakeCourseId ||
-        !moduleId ||
+        !semesterModuleId ||
         !examDate ||
         !examTime ||
         !roomId ||
@@ -114,7 +115,7 @@ const validateExamScheduleData = async (data) => {
     ) {
         return {
             isValid: false,
-            message: "Please provide all required fields (intakeCourseId, moduleId, examDate, examTime, roomId, invigilators, durationMinute, schoolId)"
+            message: "Please provide all required fields (intakeCourseId, semesterModuleId, examDate, examTime, roomId, invigilators, durationMinute, schoolId)"
         };
     }
 
@@ -157,7 +158,7 @@ const validateExamScheduleData = async (data) => {
     // Validate references exist
     const referenceValidation = await validateMultipleReferences({
         intakeCourseId: { id: intakeCourseId, Model: IntakeCourse },
-        moduleId: { id: moduleId, Model: Module },
+        semesterModuleId: { id: semesterModuleId, Model: SemesterModule },
         roomId: { id: roomId, Model: Room },
         schoolId: { id: schoolId, Model: School },
         // For invigilators, check each ID
@@ -208,7 +209,10 @@ export const getExamSchedules = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         ExamSchedule,
         "exam schedules",
-        ['roomId', 'moduleId', 'semesterId', 'intakeCourseId']
+        ['roomId', {
+            path: 'semesterModuleId',
+            populate: ['moduleId', 'semesterId']
+        }, 'intakeCourseId']
     );
 });
 
@@ -219,7 +223,10 @@ export const getExamScheduleById = controllerWrapper(async (req, res) => {
         ExamSchedule,
         id,
         "exam schedule",
-        ['roomId', 'moduleId', 'semesterId', 'intakeCourseId']
+        ['roomId', {
+            path: 'semesterModuleId',
+            populate: ['moduleId', 'semesterId']
+        }, 'intakeCourseId']
     );
 });
 
@@ -279,10 +286,12 @@ export const getExamSchedulesBySchoolId = controllerWrapper(async (req, res) => 
         ExamSchedule,
         "examSchedules",
         [
-            "moduleId",
+            {
+                path: 'semesterModuleId',
+                populate: ['moduleId', 'semesterId']
+            },
             "schoolId",
             "roomId",
-            'semesterId',
             {
                 path: 'intakeCourseId',
                 populate: [

@@ -69,7 +69,6 @@ export default function ScheduleDisplay({
                                 {daysOfWeek.map((day) => {
                                     // Use the same filtering logic as the desktop view
                                     const dayItems = scheduleData?.filter((item) => item.dayOfWeek === day) || []
-
                                     return (
                                         // Mobile View
                                         <Card key={day} w="full" borderWidth="1px">

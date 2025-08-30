@@ -12,6 +12,7 @@ export const useScheduleManagement = () => {
         semesters,
         fetchSemesters,
         fetchSemestersByCourse,
+        fetchSemestersByIntakeCourse,
         createClassSchedule,
         createExamSchedule,
         classSchedules,
@@ -25,7 +26,9 @@ export const useScheduleManagement = () => {
         modules,
         fetchModules,
         examSchedules,
-        fetchExamSchedules
+        fetchExamSchedules,
+        semesterModules,
+        fetchSemesterModulesBySchoolId
     } = useAcademicStore()
 
 
@@ -59,6 +62,7 @@ export const useScheduleManagement = () => {
         fetchClassSchedules()
         fetchExamSchedules()
         fetchSemesters()
+        fetchSemesterModulesBySchoolId()
     }, [])
 
 
@@ -136,7 +140,8 @@ export const useScheduleManagement = () => {
                 lecturers,
                 scheduleConfig,
                 selectedSemester,
-                selectedModule
+                selectedModule,
+                semesterModules // Pass semesterModules from the store
             )
 
             if (schedule.length === 0) {
@@ -157,6 +162,7 @@ export const useScheduleManagement = () => {
                 moduleCode: item.moduleCode,
                 intakeId: item.intakeId,
                 intakeName: item.intakeName,
+                semesterModuleId: item.semesterModuleId, // Use semesterModuleId for validation
                 semesterId: selectedSemester._id,
                 dayOfWeek: item.dayOfWeek,
                 startTime: item.startTime,
@@ -182,22 +188,23 @@ export const useScheduleManagement = () => {
                 const formattedExamSchedule = examSchedule.map(item => ({
                     type: "exam",
                     intakeCourseId: item.intakeCourseId,
-                    courseId: "",
-                    courseName: "",
-                    courseCode: "",
-                    moduleId: item.moduleId,
-                    moduleName: "",
-                    moduleCode: "",
-                    intakeId: "",
-                    intakeName: "",
-                    semesterId: selectedSemester._id,
+                    courseId: selectedIntakeCourse?.courseId?._id || "",
+                    courseName: selectedIntakeCourse?.courseId?.courseName || "",
+                    courseCode: selectedIntakeCourse?.courseId?.courseCode || "",
+                    moduleId: item.semesterModuleId?.moduleId?._id || item.moduleId || "",
+                    moduleName: item.semesterModuleId?.moduleId?.moduleName || modules?.find(m => m._id === item.moduleId)?.moduleName || "",
+                    moduleCode: item.semesterModuleId?.moduleId?.code || modules?.find(m => m._id === item.moduleId)?.code || "",
+                    intakeId: selectedIntakeCourse?.intakeId?._id || "",
+                    intakeName: selectedIntakeCourse?.intakeId?.intakeName || "",
+                    semesterModuleId: item.semesterModuleId || "", // Use semesterModuleId for validation
+                    semesterId: item.semesterModuleId?.semesterId?._id || selectedSemester._id,
                     dayOfWeek: "",
                     startTime: "",
                     endTime: "",
                     moduleStartDate: "",
                     moduleEndDate: "",
                     roomId: item.roomId,
-                    roomName: "",
+                    roomName: rooms?.find(r => r._id === item.roomId)?.roomName || "",
                     lecturerId: "",
                     lecturerName: "",
                     schoolId: item.schoolId,
@@ -221,6 +228,7 @@ export const useScheduleManagement = () => {
                 { header: "moduleCode", key: "moduleCode", width: 15 },
                 { header: "intakeId", key: "intakeId", width: 15 },
                 { header: "intakeName", key: "intakeName", width: 15 },
+                { header: "semesterModuleId", key: "semesterModuleId", width: 25 },
                 { header: "semesterId", key: "semesterId", width: 25 },
                 { header: "dayOfWeek", key: "dayOfWeek", width: 15 },
                 { header: "startTime", key: "startTime", width: 15 },
@@ -282,6 +290,7 @@ export const useScheduleManagement = () => {
                         const scheduleType = scheduleData.type?.toLowerCase()
 
                         if (scheduleType === "class") {
+
                             const res = await createClassSchedule(scheduleData)
                             if (res.success) {
                                 classCount++
@@ -294,6 +303,7 @@ export const useScheduleManagement = () => {
                                 ...scheduleData,
                                 invigilators: scheduleData.invigilators ? scheduleData.invigilators.split(', ').filter(inv => inv.trim()) : []
                             }
+
 
                             const res = await createExamSchedule(examData)
                             if (res.success) {
@@ -342,21 +352,9 @@ export const useScheduleManagement = () => {
     // Get combined schedule data
     const scheduleData = combineScheduleData(classSchedules, examSchedules)
 
-
-
-    // For now, use a simple filtering approach until we can properly import the function
-    let allItems = []
-
-    if (showClasses && classSchedules) {
-        allItems = [...allItems, ...classSchedules]
-    }
-
-    if (showExams && examSchedules) {
-        allItems = [...allItems, ...examSchedules]
-    }
-
     // Apply comprehensive filtering
-    allItems = scheduleData.filter(item => {
+    let allItems = scheduleData.filter(item => {
+
         // Check if required filters are selected
         if (!selectedCourse || !selectedIntake || !selectedYear || !selectedSemester) {
             return false;
@@ -368,6 +366,8 @@ export const useScheduleManagement = () => {
         // Type filtering
         if (item.type === 'exam' && showExams) include = true;
         if (item.type === 'class' && showClasses) include = true;
+
+        if (!include) return false;
 
         // Filter by intake (deep path check)
         if (
@@ -385,31 +385,43 @@ export const useScheduleManagement = () => {
             return false;
         }
 
+        // Filter by year - handle both nested and direct semesterId structures
+        if (selectedYear) {
+            // For exam schedules, get year from semesterModuleId.semesterId.year
+            // For class schedules, get year from semesterId.year or semesterModuleId.semesterId.year
+            const itemYear = item.type === 'exam'
+                ? item.semesterModuleId?.semesterId?.year
+                : (item.semesterId?.year || item.semesterModuleId?.semesterId?.year);
+
+
+            if (itemYear?.toString() !== selectedYear) {
+                return false;
+            }
+        }
+
+        // Filter by semester - handle both nested and direct semesterId structures
+        if (selectedSemester) {
+
+            const itemSemesterNumber = item.type === 'exam'
+                ? item.semesterModuleId?.semesterId?.semesterNumber
+                : (item.semesterId?.semesterNumber || item.semesterModuleId?.semesterId?.semesterNumber);
+
+            if (itemSemesterNumber !== selectedSemester.semesterNumber) {
+                return false;
+            }
+        }
+
+
         // Filter by module
         if (
             selectedModule &&
-            item.moduleId?._id !== selectedModule
+            item.moduleId !== selectedModule
         ) {
             return false;
         }
 
-        // Filter by year 
-        if (
-            selectedYear &&
-            item.semesterId?.year !== parseInt(selectedYear)
-        ) {
-            return false;
-        }
-
-        // Filter by semester
-        if (
-            selectedSemester &&
-            item.semesterId?.semesterNumber !== selectedSemester.semesterNumber
-        ) {
-            return false;
-        }
-
-        return include;
+        console.log(item)
+        return true;
     });
 
     return {

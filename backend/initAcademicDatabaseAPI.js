@@ -675,7 +675,7 @@ async function createFullSchoolData({
 
     // 8.5. Create IT Modules with staged approach (similar to CS modules)
     console.log(`[${schoolPrefix}] 8.5. Creating IT Modules with staged approach...`);
-    
+
     let itModules = [];
 
     // First, create foundation IT modules (no prerequisites)
@@ -1066,10 +1066,10 @@ async function createFullSchoolData({
 
     // 9.5. Create Additional Modules for September 2024 Intake (CS Course)
     console.log(`[${schoolPrefix}] 9.5. Creating Additional Modules for September 2024 Intake...`);
-    
+
     // Create additional CS modules for the September 2024 intake (third intake course)
     let septemberCSModules = [];
-    
+
     // Create foundation modules for September intake
     const septemberFoundationModules = [
         {
@@ -1270,7 +1270,7 @@ async function createFullSchoolData({
         const intakeCourseData = intakeCoursesData[intakeCourseIndex];
         const courseData = coursesData.find(c => c._id === intakeCourseData.courseId);
         const intakeCourseId = createdIds.intakeCourses[intakeCourseIndex];
-        
+
         // Get modules for this specific intake course
         let courseModules = [];
         if (courseData.courseCode === 'BCS') {
@@ -1289,33 +1289,33 @@ async function createFullSchoolData({
             // For BIT course, use IT modules (only one intake course for IT)
             courseModules = itModules;
         }
-        
+
         // Validate that we have modules for this course
         if (!courseModules || courseModules.length === 0) {
             console.log(`[${schoolPrefix}] ⚠️ No modules found for course ${courseData.courseCode} (${courseData.courseName}), skipping...`);
             continue;
         }
-        
+
         // Get semesters for this intake course
         const courseSemesters = createdIds.semesters.slice(intakeCourseIndex * 7, (intakeCourseIndex + 1) * 7);
-        
+
         // Validate that we have semesters for this course
         if (!courseSemesters || courseSemesters.length === 0) {
             console.log(`[${schoolPrefix}] ⚠️ No semesters found for course ${courseData.courseCode} (${courseData.courseName}), skipping...`);
             continue;
         }
-        
+
         console.log(`[${schoolPrefix}] 📚 Assigning ${courseModules.length} ${courseData.courseCode} modules to ${courseSemesters.length} semesters for ${courseData.courseName}...`);
 
         // Distribute modules strategically across semesters based on academic progression
         for (let semesterIndex = 0; semesterIndex < courseSemesters.length; semesterIndex++) {
             const semesterId = courseSemesters[semesterIndex];
             const semesterNumber = semesterIndex + 1;
-            
+
             // Strategic module distribution based on semester level and available modules
             let semesterModules = [];
             const modulesPerSemester = Math.ceil(courseModules.length / courseSemesters.length);
-            
+
             if (semesterNumber === 1) {
                 // First semester: Foundation modules (first 3-4 modules)
                 semesterModules = courseModules.slice(0, Math.min(4, courseModules.length));
@@ -1346,7 +1346,7 @@ async function createFullSchoolData({
                 semesterModules = courseModules.slice(startIndex, endIndex);
                 console.log(`[${schoolPrefix}] 🔄 Fallback distribution: ${semesterModules.length} modules for Semester ${semesterNumber}`);
             }
-            
+
             // Additional validation: ensure all assigned modules are within bounds
             semesterModules = semesterModules.filter(moduleId => {
                 if (!courseModules.includes(moduleId)) {
@@ -1355,15 +1355,15 @@ async function createFullSchoolData({
                 }
                 return true;
             });
-            
+
             console.log(`[${schoolPrefix}] 📋 Semester ${semesterNumber}: ${semesterModules.length} modules assigned`);
-            
+
             // Skip if no modules assigned to this semester
             if (semesterModules.length === 0) {
                 console.log(`[${schoolPrefix}] ⚠️ No modules assigned to Semester ${semesterNumber}, skipping...`);
                 continue;
             }
-            
+
             // Create semester module relationships
             for (const moduleId of semesterModules) {
                 // Validate that this module is actually available for this intake course
@@ -1371,7 +1371,7 @@ async function createFullSchoolData({
                     console.log(`[${schoolPrefix}] ⚠️ Module ${moduleId} is not available for ${courseData.courseCode} course, skipping...`);
                     continue;
                 }
-                
+
                 // Generate realistic semester module data based on semester level
                 const customAssessmentMethods = [];
 
@@ -1429,7 +1429,7 @@ async function createFullSchoolData({
                     });
                     continue;
                 }
-                
+
                 // Final validation: ensure module belongs to this course
                 if (!courseModules.includes(moduleId)) {
                     console.log(`[${schoolPrefix}] ⚠️ Module ${moduleId} validation failed - not available for ${courseData.courseCode} course, skipping...`);
@@ -1450,15 +1450,15 @@ async function createFullSchoolData({
 
                 console.log(`[${schoolPrefix}] 📚 Semester ${semesterNumber} - Academic Year: ${semesterModuleData.academicYear}`);
                 console.log(`[${schoolPrefix}] 📋 Module ${moduleId} assigned to Semester ${semesterNumber}`);
-                
+
                 try {
                     const semesterModuleResponse = await apiCall('POST', '/api/semester-module', semesterModuleData);
                     if (semesterModuleResponse.success) {
                         createdIds.semesterModules.push(semesterModuleResponse.data._id);
                         console.log(`[${schoolPrefix}] ✅ Semester Module created: Module assigned to Semester ${semesterNumber} with ${customAssessmentMethods.length} assessment methods (${semesterModuleResponse.data._id})`);
-                                } else {
-                console.warn(`[${schoolPrefix}] ⚠️ Failed to create semester module: ${semesterModuleResponse.message}`);
-            }
+                    } else {
+                        console.warn(`[${schoolPrefix}] ⚠️ Failed to create semester module: ${semesterModuleResponse.message}`);
+                    }
                 } catch (error) {
                     handleError('create semester module', error, `semester ${semesterNumber}`, schoolPrefix);
                 }
@@ -1466,42 +1466,41 @@ async function createFullSchoolData({
         }
     }
 
-    // Summary of semester module creation
-    console.log(`[${schoolPrefix}] 📊 Semester Module Creation Summary:`);
-    console.log(`[${schoolPrefix}] ✅ Total semester modules created: ${createdIds.semesterModules.length}`);
-    console.log(`[${schoolPrefix}] ✅ CS modules distributed: ${csModules.length}`);
-    console.log(`[${schoolPrefix}] ✅ IT modules distributed: ${itModules.length}`);
-    console.log(`[${schoolPrefix}] ✅ September CS modules distributed: ${septemberCSModules.length}`);
-    console.log(`[${schoolPrefix}] ✅ Total semesters: ${createdIds.semesters.length}`);
-
     // 11. Create Class Schedules
     console.log(`[${schoolPrefix}] 11. Creating Class Schedules...`);
 
     // Generate comprehensive class schedules for all modules across semesters
     const classSchedulesData = [];
 
-    // Create schedules for CS course (Year 1-4, 7 semesters)
-    console.log(`[${schoolPrefix}] Creating class schedules for Computer Science course...`);
+    // Create schedules for CS course (Year 1-2, 2 semesters only)
+    console.log(`[${schoolPrefix}] Creating class schedules for Computer Science course (First 2 semesters only)...`);
 
     // Year 1 Semester 1 (CS101, CS102, CS103)
     for (let i = 0; i < 3; i++) {
         const days = ["Monday", "Tuesday", "Wednesday"];
         const times = ["09:00", "13:00", "10:00"];
         const endTimes = ["12:00", "16:00", "13:00"];
+        
+        // Find the corresponding semester module for this module and semester
+        const semesterModule = createdIds.semesterModules.find(sm =>
+            sm.semesterId === createdIds.semesters[0] &&
+            sm.moduleId === csModules[i]
+        );
 
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: csModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i],
-            startTime: times[i],
-            endTime: endTimes[i],
-            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
-            semesterId: createdIds.semesters[0], // Year 1 Semester 1
-            schoolId: createdIds.school,
-            moduleStartDate: "2024-02-01T00:00:00.000Z",
-            moduleEndDate: "2024-06-30T23:59:59.000Z"
-        });
+        if (semesterModule) {
+            classSchedulesData.push({
+                roomId: createdIds.rooms.classroom,
+                semesterModuleId: semesterModule._id,
+                lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+                dayOfWeek: days[i],
+                startTime: times[i],
+                endTime: endTimes[i],
+                intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
+                schoolId: createdIds.school,
+                moduleStartDate: "2024-02-01T00:00:00.000Z",
+                moduleEndDate: "2024-06-30T23:59:59.000Z"
+            });
+        }
     }
 
     // Year 1 Semester 2 (CS104, CS105, CS106)
@@ -1510,128 +1509,30 @@ async function createFullSchoolData({
         const times = ["14:00", "09:00", "13:00"];
         const endTimes = ["17:00", "12:00", "16:00"];
 
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: csModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i - 3],
-            startTime: times[i - 3],
-            endTime: endTimes[i - 3],
-            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
-            semesterId: createdIds.semesters[1], // Year 1 Semester 2
-            schoolId: createdIds.school,
-            moduleStartDate: "2024-07-01T00:00:00.000Z",
-            moduleEndDate: "2024-11-30T23:59:59.000Z"
-        });
+        // Find the corresponding semester module for this module and semester
+        const semesterModule = createdIds.semesterModules.find(sm =>
+            sm.semesterId === createdIds.semesters[1] &&
+            sm.moduleId === csModules[i]
+        );
+
+        if (semesterModule) {
+            classSchedulesData.push({
+                roomId: createdIds.rooms.classroom,
+                semesterModuleId: semesterModule._id,
+                lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+                dayOfWeek: days[i - 3],
+                startTime: times[i - 3],
+                endTime: endTimes[i - 3],
+                intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
+                schoolId: createdIds.school,
+                moduleStartDate: "2024-07-01T00:00:00.000Z",
+                moduleEndDate: "2024-11-30T23:59:59.000Z"
+            });
+        }
     }
 
-    // Year 2 Semester 1 (CS201, CS202, CS203)
-    for (let i = 6; i < 9; i++) {
-        const days = ["Thursday", "Friday", "Monday"];
-        const times = ["09:00", "13:00", "10:00"];
-        const endTimes = ["12:00", "16:00", "13:00"];
-
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: csModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i - 6],
-            startTime: times[i - 6],
-            endTime: endTimes[i - 6],
-            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
-            semesterId: createdIds.semesters[2], // Year 2 Semester 1
-            schoolId: createdIds.school,
-            moduleStartDate: "2025-02-01T00:00:00.000Z",
-            moduleEndDate: "2025-06-30T23:59:59.000Z"
-        });
-    }
-
-    // Year 2 Semester 2 (CS204, CS205, CS206)
-    for (let i = 9; i < 12; i++) {
-        const days = ["Tuesday", "Wednesday", "Thursday"];
-        const times = ["14:00", "09:00", "13:00"];
-        const endTimes = ["17:00", "12:00", "16:00"];
-
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: csModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i - 9],
-            startTime: times[i - 9],
-            endTime: endTimes[i - 9],
-            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
-            semesterId: createdIds.semesters[3], // Year 2 Semester 2
-            schoolId: createdIds.school,
-            moduleStartDate: "2025-07-01T00:00:00.000Z",
-            moduleEndDate: "2025-11-30T23:59:59.000Z"
-        });
-    }
-
-    // Year 3 Semester 1 (CS301, CS302, CS303)
-    for (let i = 12; i < 15; i++) {
-        const days = ["Friday", "Monday", "Tuesday"];
-        const times = ["09:00", "13:00", "10:00"];
-        const endTimes = ["12:00", "16:00", "13:00"];
-
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: csModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i - 12],
-            startTime: times[i - 12],
-            endTime: endTimes[i - 12],
-            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
-            semesterId: createdIds.semesters[4], // Year 3 Semester 1
-            schoolId: createdIds.school,
-            moduleStartDate: "2026-02-01T00:00:00.000Z",
-            moduleEndDate: "2026-06-30T23:59:59.000Z"
-        });
-    }
-
-    // Year 3 Semester 2 (CS304, CS305, CS306)
-    for (let i = 15; i < 18; i++) {
-        const days = ["Wednesday", "Thursday", "Friday"];
-        const times = ["14:00", "09:00", "13:00"];
-        const endTimes = ["17:00", "12:00", "16:00"];
-
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: csModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i - 15],
-            startTime: times[i - 15],
-            endTime: endTimes[i - 15],
-            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
-            semesterId: createdIds.semesters[5], // Year 3 Semester 2
-            schoolId: createdIds.school,
-            moduleStartDate: "2026-07-01T00:00:00.000Z",
-            moduleEndDate: "2026-11-30T23:59:59.000Z"
-        });
-    }
-
-    // Year 4 Semester 1 (CS401, CS402, CS403) - Capstone
-    for (let i = 18; i < 21; i++) {
-        const days = ["Monday", "Tuesday", "Wednesday"];
-        const times = ["09:00", "13:00", "10:00"];
-        const endTimes = ["12:00", "16:00", "13:00"];
-
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: csModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i - 18],
-            startTime: times[i - 18],
-            endTime: endTimes[i - 18],
-            intakeCourseId: createdIds.intakeCourses[0], // January 2024 intake
-            semesterId: createdIds.semesters[6], // Year 4 Semester 1
-            schoolId: createdIds.school,
-            moduleStartDate: "2027-02-01T00:00:00.000Z",
-            moduleEndDate: "2027-06-30T23:59:59.000Z"
-        });
-    }
-
-    // Create schedules for IT course (Year 1-4, 7 semesters)
-    console.log(`[${schoolPrefix}] Creating class schedules for Information Technology course...`);
+    // Create schedules for IT course (Year 1-2, 2 semesters only)
+    console.log(`[${schoolPrefix}] Creating class schedules for Information Technology course (First 2 semesters only)...`);
 
     // Year 1 Semester 1 (IT101, IT102, IT103)
     for (let i = 0; i < 3; i++) {
@@ -1639,19 +1540,26 @@ async function createFullSchoolData({
         const times = ["09:00", "13:00", "10:00"];
         const endTimes = ["12:00", "16:00", "13:00"];
 
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: itModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i],
-            startTime: times[i],
-            endTime: endTimes[i],
-            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
-            semesterId: createdIds.semesters[0], // Year 1 Semester 1
-            schoolId: createdIds.school,
-            moduleStartDate: "2024-06-01T00:00:00.000Z",
-            moduleEndDate: "2024-10-31T23:59:59.000Z"
-        });
+        // Find the corresponding semester module for this module and semester
+        const semesterModule = createdIds.semesterModules.find(sm =>
+            sm.semesterId === createdIds.semesters[0] &&
+            sm.moduleId === itModules[i]
+        );
+
+        if (semesterModule) {
+            classSchedulesData.push({
+                roomId: createdIds.rooms.classroom,
+                semesterModuleId: semesterModule._id,
+                lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+                dayOfWeek: days[i],
+                startTime: times[i],
+                endTime: endTimes[i],
+                intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
+                schoolId: createdIds.school,
+                moduleStartDate: "2024-06-01T00:00:00.000Z",
+                moduleEndDate: "2024-10-31T23:59:59.000Z"
+            });
+        }
     }
 
     // Year 1 Semester 2 (IT104, IT105, IT106)
@@ -1660,126 +1568,27 @@ async function createFullSchoolData({
         const times = ["14:00", "09:00", "13:00"];
         const endTimes = ["17:00", "12:00", "16:00"];
 
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: itModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i - 3],
-            startTime: times[i - 3],
-            endTime: endTimes[i - 3],
-            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
-            semesterId: createdIds.semesters[1], // Year 1 Semester 2
-            schoolId: createdIds.school,
-            moduleStartDate: "2024-11-01T00:00:00.000Z",
-            moduleEndDate: "2025-03-31T23:59:59.000Z"
-        });
+        // Find the corresponding semester module for this module and semester
+        const semesterModule = createdIds.semesterModules.find(sm =>
+            sm.semesterId === createdIds.semesters[1] &&
+            sm.moduleId === itModules[i]
+        );
+
+        if (semesterModule) {
+            classSchedulesData.push({
+                roomId: createdIds.rooms.classroom,
+                semesterModuleId: semesterModule._id,
+                lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
+                dayOfWeek: days[i - 3],
+                startTime: times[i - 3],
+                endTime: endTimes[i - 3],
+                intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
+                schoolId: createdIds.school,
+                moduleStartDate: "2024-11-01T00:00:00.000Z",
+                moduleEndDate: "2025-03-31T23:59:59.000Z"
+            });
+        }
     }
-
-    // Year 2 Semester 1 (IT201, IT202, IT203)
-    for (let i = 6; i < 9; i++) {
-        const days = ["Thursday", "Friday", "Monday"];
-        const times = ["09:00", "13:00", "10:00"];
-        const endTimes = ["12:00", "16:00", "13:00"];
-
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: itModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i - 6],
-            startTime: times[i - 6],
-            endTime: endTimes[i - 6],
-            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
-            semesterId: createdIds.semesters[2], // Year 2 Semester 1
-            schoolId: createdIds.school,
-            moduleStartDate: "2025-04-01T00:00:00.000Z",
-            moduleEndDate: "2025-08-31T23:59:59.000Z"
-        });
-    }
-
-    // Year 2 Semester 2 (IT204, IT205, IT206)
-    for (let i = 9; i < 12; i++) {
-        const days = ["Tuesday", "Wednesday", "Thursday"];
-        const times = ["14:00", "09:00", "13:00"];
-        const endTimes = ["17:00", "12:00", "16:00"];
-
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: itModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i - 9],
-            startTime: times[i - 9],
-            endTime: endTimes[i - 9],
-            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
-            semesterId: createdIds.semesters[3], // Year 2 Semester 2
-            schoolId: createdIds.school,
-            moduleStartDate: "2025-09-01T00:00:00.000Z",
-            moduleEndDate: "2026-01-31T23:59:59.000Z"
-        });
-    }
-
-    // Year 3 Semester 1 (IT301, IT302, IT303)
-    for (let i = 12; i < 15; i++) {
-        const days = ["Friday", "Monday", "Tuesday"];
-        const times = ["09:00", "13:00", "10:00"];
-        const endTimes = ["12:00", "16:00", "13:00"];
-
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: itModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i - 12],
-            startTime: times[i - 12],
-            endTime: endTimes[i - 12],
-            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
-            semesterId: createdIds.semesters[4], // Year 3 Semester 1
-            schoolId: createdIds.school,
-            moduleStartDate: "2026-02-01T00:00:00.000Z",
-            moduleEndDate: "2026-06-30T23:59:59.000Z"
-        });
-    }
-
-    // Year 3 Semester 2 (IT304, IT305, IT306)
-    for (let i = 15; i < 18; i++) {
-        const days = ["Wednesday", "Thursday", "Friday"];
-        const times = ["14:00", "09:00", "13:00"];
-        const endTimes = ["17:00", "12:00", "16:00"];
-
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: itModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i - 15],
-            startTime: times[i - 15],
-            endTime: endTimes[i - 15],
-            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
-            semesterId: createdIds.semesters[5], // Year 3 Semester 2
-            schoolId: createdIds.school,
-            moduleStartDate: "2026-07-01T00:00:00.000Z",
-            moduleEndDate: "2026-11-30T23:59:59.000Z"
-        });
-    }
-
-    // Year 4 Semester 1 (IT401, IT402, IT403) - Capstone
-    for (let i = 18; i < 21; i++) {
-        const days = ["Monday", "Tuesday", "Wednesday"];
-        const times = ["09:00", "13:00", "10:00"];
-        const endTimes = ["12:00", "16:00", "13:00"];
-
-        classSchedulesData.push({
-            roomId: createdIds.rooms.classroom,
-            moduleId: itModules[i],
-            lecturerId: createdIds.lecturers[i % createdIds.lecturers.length],
-            dayOfWeek: days[i - 18],
-            startTime: times[i - 18],
-            endTime: endTimes[i - 18],
-            intakeCourseId: createdIds.intakeCourses[1], // May 2024 intake
-            semesterId: createdIds.semesters[6], // Year 4 Semester 1
-            schoolId: createdIds.school,
-            moduleStartDate: "2027-02-01T00:00:00.000Z",
-            moduleEndDate: "2027-06-30T23:59:59.000Z"
-        });
-    }
-
 
     //TODO: fix exam schedule
     // 12. Create Exam Schedules
@@ -1800,12 +1609,12 @@ async function createFullSchoolData({
     const hasTimeConflict = (date, time, roomId, durationMinutes = 120) => {
         const startTime = new Date(`2000-01-01T${time}:00`);
         const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
-        
+
         return examSchedulesData.some(exam => {
             if (exam.examDate === date && exam.roomId === roomId) {
                 const examStartTime = new Date(`2000-01-01T${exam.examTime}:00`);
                 const examEndTime = new Date(examStartTime.getTime() + exam.durationMinute * 60000);
-                
+
                 // Check if times overlap
                 return (startTime < examEndTime && endTime > examStartTime);
             }
@@ -1817,14 +1626,14 @@ async function createFullSchoolData({
     const findNextAvailableSlot = (date, roomId, preferredTime = "09:00") => {
         const timeSlots = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"];
         let timeIndex = timeSlots.indexOf(preferredTime);
-        
+
         for (let i = 0; i < timeSlots.length; i++) {
             const checkTime = timeSlots[(timeIndex + i) % timeSlots.length];
             if (!hasTimeConflict(date, checkTime, roomId)) {
                 return checkTime;
             }
         }
-        
+
         // If no time available on this date, try next date
         const nextDate = new Date(date);
         nextDate.setDate(nextDate.getDate() + 1);
@@ -1838,17 +1647,24 @@ async function createFullSchoolData({
         const examTime = findNextAvailableSlot(examDate, createdIds.rooms.tech_lab, preferredTime);
         const examRoom = createdIds.rooms.tech_lab;
 
-        examSchedulesData.push({
-            intakeCourseId: createdIds.intakeCourses[0],
-            moduleId: csModules[i],
-            examDate: examDate,
-            examTime: examTime,
-            semesterId: createdIds.semesters[0],
-            roomId: examRoom,
-            invigilators: [createdIds.lecturers[i % createdIds.lecturers.length]],
-            durationMinute: 120,
-            schoolId: createdIds.school
-        });
+        // Find the corresponding semester module for this module and semester
+        const semesterModule = createdIds.semesterModules.find(sm =>
+            sm.semesterId === createdIds.semesters[0] &&
+            sm.moduleId === csModules[i]
+        );
+
+        if (semesterModule) {
+            examSchedulesData.push({
+                intakeCourseId: createdIds.intakeCourses[0],
+                semesterModuleId: semesterModule._id,
+                examDate: examDate,
+                examTime: examTime,
+                roomId: examRoom,
+                invigilators: [createdIds.lecturers[i % createdIds.lecturers.length]],
+                durationMinute: 120,
+                schoolId: createdIds.school
+            });
+        }
     }
 
     // CS Course - Year 1 Semester 2 (CS104, CS105, CS106)
@@ -1858,17 +1674,24 @@ async function createFullSchoolData({
         const examTime = findNextAvailableSlot(examDate, createdIds.rooms.classroom, preferredTime);
         const examRoom = createdIds.rooms.classroom;
 
-        examSchedulesData.push({
-            intakeCourseId: createdIds.intakeCourses[0],
-            moduleId: csModules[i],
-            examDate: examDate,
-            examTime: examTime,
-            semesterId: createdIds.semesters[1],
-            roomId: examRoom,
-            invigilators: [createdIds.lecturers[i % createdIds.lecturers.length]],
-            durationMinute: 120,
-            schoolId: createdIds.school
-        });
+        // Find the corresponding semester module for this module and semester
+        const semesterModule = createdIds.semesterModules.find(sm =>
+            sm.semesterId === createdIds.semesters[1] &&
+            sm.moduleId === csModules[i]
+        );
+
+        if (semesterModule) {
+            examSchedulesData.push({
+                intakeCourseId: createdIds.intakeCourses[0],
+                semesterModuleId: semesterModule._id,
+                examDate: examDate,
+                examTime: examTime,
+                roomId: examRoom,
+                invigilators: [createdIds.lecturers[i % createdIds.lecturers.length]],
+                durationMinute: 120,
+                schoolId: createdIds.school
+            });
+        }
     }
 
     // Create exam schedules for IT course (Year 1-4, 7 semesters)
@@ -1881,17 +1704,24 @@ async function createFullSchoolData({
         const examTime = findNextAvailableSlot(examDate, createdIds.rooms.classroom, preferredTime);
         const examRoom = createdIds.rooms.classroom;
 
-        examSchedulesData.push({
-            intakeCourseId: createdIds.intakeCourses[1],
-            moduleId: itModules[i],
-            examDate: examDate,
-            examTime: examTime,
-            semesterId: createdIds.semesters[0],
-            roomId: examRoom,
-            invigilators: [createdIds.lecturers[i % createdIds.lecturers.length]],
-            durationMinute: 120,
-            schoolId: createdIds.school
-        });
+        // Find the corresponding semester module for this module and semester
+        const semesterModule = createdIds.semesterModules.find(sm =>
+            sm.semesterId === createdIds.semesters[0] &&
+            sm.moduleId === itModules[i]
+        );
+
+        if (semesterModule) {
+            examSchedulesData.push({
+                intakeCourseId: createdIds.intakeCourses[1],
+                semesterModuleId: semesterModule._id,
+                examDate: examDate,
+                examTime: examTime,
+                roomId: examRoom,
+                invigilators: [createdIds.lecturers[i % createdIds.lecturers.length]],
+                durationMinute: 120,
+                schoolId: createdIds.school
+            });
+        }
     }
 
     // IT Course - Year 1 Semester 2 (IT104, IT105, IT106)
@@ -1901,22 +1731,29 @@ async function createFullSchoolData({
         const examTime = findNextAvailableSlot(examDate, createdIds.rooms.tech_lab, preferredTime);
         const examRoom = createdIds.rooms.tech_lab;
 
-        examSchedulesData.push({
-            intakeCourseId: createdIds.intakeCourses[1],
-            moduleId: itModules[i],
-            examDate: examDate,
-            examTime: examTime,
-            semesterId: createdIds.semesters[1],
-            roomId: examRoom,
-            invigilators: [createdIds.lecturers[i % createdIds.lecturers.length]],
-            durationMinute: 120,
-            schoolId: createdIds.school
-        });
+        // Find the corresponding semester module for this module for this module and semester
+        const semesterModule = createdIds.semesterModules.find(sm =>
+            sm.semesterId === createdIds.semesters[1] &&
+            sm.moduleId === itModules[i]
+        );
+
+        if (semesterModule) {
+            examSchedulesData.push({
+                intakeCourseId: createdIds.intakeCourses[1],
+                semesterModuleId: semesterModule._id,
+                examDate: examDate,
+                examTime: examTime,
+                roomId: examRoom,
+                invigilators: [createdIds.lecturers[i % createdIds.lecturers.length]],
+                durationMinute: 120,
+                schoolId: createdIds.school
+            });
+        }
     }
 
     // Create and save all exam schedules
     console.log(`[${schoolPrefix}] Creating ${examSchedulesData.length} exam schedules...`);
-    
+
     for (let i = 0; i < examSchedulesData.length; i++) {
         try {
             const examScheduleResponse = await apiCall('POST', '/api/exam-schedule', examSchedulesData[i]);
@@ -1973,7 +1810,6 @@ async function createFullSchoolData({
                 role: "student",
                 twoFA_enabled: false
             };
-            console.log("🚀 ~ createFullSchoolData ~ userData:", userData)
 
             const userResponse = await apiCall('POST', '/api/user', userData);
             const userId = userResponse.data._id;
@@ -2099,11 +1935,11 @@ async function createFullSchoolData({
             const totalMarks = 100;
             const marks = Math.floor(Math.random() * 40) + (selectedGrade === 'F' ? 0 : 50); // 50-90 for passing, 0-49 for F
 
-                    // Assign semester based on module index (first 3 modules = semester 1, next 3 = semester 2)
-        // Find the semester that belongs to this student's intake course
-        const studentIntakeCourseIndex = createdIds.intakeCourses.indexOf(studentData.intakeCourseId);
-        const semesterIndex = Math.floor(j / 3);
-        const semesterId = createdIds.semesters[studentIntakeCourseIndex * 7 + semesterIndex] || createdIds.semesters[0];
+            // Assign semester based on module index (first 3 modules = semester 1, next 3 = semester 2)
+            // Find the semester that belongs to this student's intake course
+            const studentIntakeCourseIndex = createdIds.intakeCourses.indexOf(studentData.intakeCourseId);
+            const semesterIndex = Math.floor(j / 3);
+            const semesterId = createdIds.semesters[studentIntakeCourseIndex * 7 + semesterIndex] || createdIds.semesters[0];
 
             const resultData = {
                 studentId: createdIds.students[i],
@@ -3043,7 +2879,7 @@ async function createFullSchoolData({
     for (let i = 0; i < busSchedulesData.length; i++) {
         const busScheduleRes = await apiCall('POST', '/api/bus-schedule', busSchedulesData[i]);
         createdIds.busSchedules.push(busScheduleRes.data._id);
-        console.log(`[${schoolPrefix}] ✅ Bus Schedule created: ${busSchedulesData[i].startTime} - ${busSchedulesData[i].endTime} (${busScheduleRes.data._id})`);
+        console.log(`[${schoolPrefix}] ✅ Bus Schedule created: ${busSchedulesData[i].startDate} - ${busSchedulesData[i].endDate} (${busScheduleRes.data._id})`);
     }
 
     console.log(`[${schoolPrefix}] Transportation: Creating EHailing...`);
