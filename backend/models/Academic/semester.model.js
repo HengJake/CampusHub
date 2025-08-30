@@ -7,11 +7,11 @@
 import mongoose from "mongoose";
 
 const semesterSchema = new mongoose.Schema({
-    courseId: {
+    intakeCourseId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course',
+        ref: 'IntakeCourse',
         required: true,
-        // Reference to the course
+        // Reference to the intake course
     },
 
     semesterNumber: {
@@ -46,19 +46,6 @@ const semesterSchema = new mongoose.Schema({
         type: Date,
         required: true,
         // When this semester ends
-    },
-
-    // Important semester dates
-    registrationStartDate: {
-        type: Date,
-        required: true,
-        // When course registration opens for this semester
-    },
-
-    registrationEndDate: {
-        type: Date,
-        required: true,
-        // When course registration closes for this semester
     },
 
     examStartDate: {
@@ -97,7 +84,7 @@ const semesterSchema = new mongoose.Schema({
 });
 
 // Indexes
-semesterSchema.index({ courseId: 1, semesterNumber: 1, year: 1 });
+semesterSchema.index({ intakeCourseId: 1, semesterNumber: 1, year: 1 });
 semesterSchema.index({ schoolId: 1 });
 semesterSchema.index({ status: 1 });
 semesterSchema.index({ startDate: 1, endDate: 1 });
@@ -107,12 +94,6 @@ semesterSchema.index({ isActive: 1 });
 semesterSchema.virtual('isCurrent').get(function () {
     const now = new Date();
     return now >= this.startDate && now <= this.endDate;
-});
-
-// Virtual for checking if registration is open
-semesterSchema.virtual('isRegistrationOpen').get(function () {
-    const now = new Date();
-    return now >= this.registrationStartDate && now <= this.registrationEndDate;
 });
 
 const Semester = mongoose.model("Semester", semesterSchema);

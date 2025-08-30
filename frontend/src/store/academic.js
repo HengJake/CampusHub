@@ -253,9 +253,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateSchool: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/school', id, updates, 'schools');
-
-            const data = await res.json();
+            const data = await get().buildPUT('/api/school', id, updates, 'schools');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update school");
@@ -340,9 +338,7 @@ export const useAcademicStore = create((set, get) => ({
     updateStudent: async (id, updates) => {
         try {
 
-            const res = await get().buildPUT('/api/student', id, updates, 'students')
-
-            const data = await res.json();
+            const data = await get().buildPUT('/api/student', id, updates, 'students')
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update student");
@@ -423,9 +419,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateCourse: async (id, updates) => {
         try {
-            const res = await get().buildPUT("/api/course", id, updates, 'courses');
-
-            const data = await res.json();
+            const data = await get().buildPUT("/api/course", id, updates, 'courses');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update course");
@@ -514,9 +508,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateLecturer: async (id, updates) => {
         try {
-            const res = await get().buildPUT("/api/lecturer", id, updates, 'lecturers');
-
-            const data = await res.json();
+            const data = await get().buildPUT("/api/lecturer", id, updates, 'lecturers');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update lecturer");
@@ -597,9 +589,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateDepartment: async (id, updates) => {
         try {
-            const res = await get().buildPUT("/api/department", id, updates, 'departments');
-
-            const data = await res.json();
+            const data = await get().buildPUT("/api/department", id, updates, 'departments');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update department");
@@ -680,9 +670,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateModule: async (id, updates) => {
         try {
-            const res = await get().buildPUT("/api/module", id, updates, 'modules');
-
-            const data = await res.json();
+            const data = await get().buildPUT("/api/module", id, updates, 'modules');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update module");
@@ -793,9 +781,8 @@ export const useAcademicStore = create((set, get) => ({
 
     updateIntakeCourse: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/intake-course', id, updates, 'intakeCourses');
+            const data = await get().buildPUT('/api/intake-course', id, updates, 'intakeCourses');
 
-            const data = await res.json();
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update intake course");
@@ -809,8 +796,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateEnrollment: async (id, action) => {
         try {
-            const res = await get().buildPATCH("/api/intake-course", id, { action }, 'intakeCourses');
-            const data = await res.json();
+            const data = await get().buildPATCH("/api/intake-course", id, { action }, 'intakeCourses');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update enrollment");
@@ -877,8 +863,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateAttendance: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/attendance', id, updates, 'attendance');
-            const data = await res.json();
+            const data = await get().buildPUT('/api/attendance', id, updates, 'attendance');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update attendance");
@@ -1021,8 +1006,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateClassSchedule: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/class-schedule', id, updates, 'classSchedules');
-            const data = await res.json();
+            const data = await get().buildPUT('/api/class-schedule', id, updates, 'classSchedules');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update class schedule");
@@ -1131,8 +1115,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateResult: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/result', id, updates, 'results');
-            const data = await res.json();
+            const data = await get().buildPUT('/api/result', id, updates, 'results');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update result");
@@ -1212,8 +1195,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateIntake: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/intake', id, updates, 'intakes');
-            const data = await res.json();
+            const data = await get().buildPUT('/api/intake', id, updates, 'intakes');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update intake");
@@ -1895,8 +1877,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateExamSchedule: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/exam-schedule', id, updates, 'examSchedules');
-            const data = await res.json();
+            const data = await get().buildPUT('/api/exam-schedule', id, updates, 'examSchedules');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update exam schedule");
@@ -1987,6 +1968,21 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
+            fetchSemestersByIntakeCourse: async (intakeCourseId) => {
+            try {
+                const res = await fetch(`/api/semester/intake-course/${intakeCourseId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch semesters by course");
+            }
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
     fetchSemestersByCourse: async (courseId) => {
         try {
             const res = await fetch(`/api/semester/course/${courseId}`);
@@ -2047,8 +2043,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateSemester: async (id, updates) => {
         try {
-            const res = await get().buildPUT('/api/semester', id, updates, 'semesters');
-            const data = await res.json();
+            const data = await get().buildPUT('/api/semester', id, updates, 'semesters');
 
             if (!data.success) {
                 return {
@@ -2077,9 +2072,9 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    getCurrentSemester: async (courseId) => {
-        try {
-            const res = await fetch(`/api/semester/course/${courseId}/current`);
+            getCurrentSemester: async (intakeCourseId) => {
+            try {
+                const res = await fetch(`/api/semester/intake-course/${intakeCourseId}/current`);
             const data = await res.json();
 
             if (!data.success) {
@@ -2109,8 +2104,7 @@ export const useAcademicStore = create((set, get) => ({
 
     updateSemesterStatus: async (id, status) => {
         try {
-            const res = await get().buildPATCH("/api/semester", id, { status }, 'semesters');
-            const data = await res.json();
+            const data = await get().buildPATCH("/api/semester", id, { status }, 'semesters');
 
             if (!data.success) {
                 throw new Error(data.message || "Failed to update semester status");
@@ -2125,10 +2119,37 @@ export const useAcademicStore = create((set, get) => ({
 
     // Semester Module Functions
     fetchSemesterModulesBySchoolId: async () => {
+        const schoolId = get().getSchoolId();
+
+        if (!schoolId) {
+            set((state) => ({
+                loading: { ...state.loading, semesterModules: false },
+                errors: { ...state.errors, semesterModules: "No school ID available. Please ensure you are logged in." },
+            }));
+            return { success: false, message: "No school ID available. Please ensure you are logged in." };
+        }
+
+        set((state) => ({ loading: { ...state.loading, semesterModules: true } }));
         try {
-            const data = await get().buildGET('/api/semester-module/school');
+            const res = await fetch(`/api/semester-module/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch semester modules");
+            }
+
+            set((state) => ({
+                semesterModules: data.data,
+                loading: { ...state.loading, semesterModules: false },
+                errors: { ...state.errors, semesterModules: null },
+            }));
+
             return { success: true, data: data.data };
         } catch (error) {
+            set((state) => ({
+                loading: { ...state.loading, semesterModules: false },
+                errors: { ...state.errors, semesterModules: error.message },
+            }));
             return { success: false, message: error.message };
         }
     },
@@ -2163,12 +2184,12 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    getAvailableModulesForSemester: async (semesterId, courseId) => {
+    getAvailableModulesForSemester: async (semesterId, intakeCourseId) => {
         try {
             const authStore = useAuthStore.getState();
             const schoolId = authStore.getSchoolId();
-            
-            const res = await fetch(`/api/semester-module/available/${semesterId}/${courseId}/${schoolId}`);
+
+            const res = await fetch(`/api/semester-module/available/${semesterId}/${intakeCourseId}/${schoolId}`);
             const data = await res.json();
 
             if (!data.success) {
@@ -2181,19 +2202,26 @@ export const useAcademicStore = create((set, get) => ({
         }
     },
 
-    addModuleToSemester: async (semesterId, moduleId, courseId, intakeCourseId) => {
+    addModuleToSemester: async (semesterId, moduleId, intakeCourseId, additionalData = {}) => {
         try {
             const authStore = useAuthStore.getState();
-            const schoolId = authStore.getSchoolId();
             
+            const schoolId = authStore.getSchoolId();
+
+            if (!schoolId) {
+                console.error("🚨 ~ addModuleToSemester ~ No schoolId available");
+                return { success: false, message: "No school ID available. Please ensure you are logged in." };
+            }
+
             const semesterModuleData = {
                 semesterId,
                 moduleId,
-                courseId,
                 intakeCourseId,
-                schoolId
+                schoolId,
+                ...additionalData
             };
-
+            
+            
             const res = await fetch('/api/semester-module', {
                 method: 'POST',
                 headers: {
@@ -2201,6 +2229,11 @@ export const useAcademicStore = create((set, get) => ({
                 },
                 body: JSON.stringify(semesterModuleData),
             });
+
+
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
 
             const data = await res.json();
 
@@ -2233,6 +2266,103 @@ export const useAcademicStore = create((set, get) => ({
             await get().fetchSemesterModulesBySchoolId();
 
             return { success: true, message: data.message };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    updateSemesterModule: async (id, updates) => {
+        try {
+            const res = await fetch(`/api/semester-module/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updates),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to update semester module");
+            }
+
+            // Refresh semester modules
+            await get().fetchSemesterModulesBySchoolId();
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    bulkAddModulesToSemester: async (semesterId, moduleIds, intakeCourseId) => {
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+
+            const bulkData = {
+                semesterId,
+                moduleIds,
+                courseId,
+                intakeCourseId,
+                schoolId
+            };
+
+            const res = await fetch('/api/semester-module/bulk', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(bulkData),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to bulk add modules");
+            }
+
+            // Refresh semester modules
+            await get().fetchSemesterModulesBySchoolId();
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    getSemesterModulesByIntakeCourseAndYear: async (intakeCourseId, academicYear) => {
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+
+            const res = await fetch(`/api/semester-module/intake-course/${intakeCourseId}/year/${academicYear}/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch semester modules by course and year");
+            }
+
+            return { success: true, data: data.data };
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
+    },
+
+    getSemesterModulesByIntakeCourse: async (intakeCourseId) => {
+        try {
+            const authStore = useAuthStore.getState();
+            const schoolId = authStore.getSchoolId();
+
+            const res = await fetch(`/api/semester-module/intake-course/${intakeCourseId}/school/${schoolId}`);
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.message || "Failed to fetch semester modules by intake course");
+            }
+
+            return { success: true, data: data.data };
         } catch (error) {
             return { success: false, message: error.message };
         }

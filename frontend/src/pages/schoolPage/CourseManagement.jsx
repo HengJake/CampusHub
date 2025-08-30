@@ -16,10 +16,21 @@ import {
   Text,
   Divider
 } from "@chakra-ui/react";
+import { useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 export function CourseManagementPage() {
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(0);
+
+  useEffect(() => {
+    if (location.state?.activeTab !== undefined) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
+
   return (
-    <Box p={4}>
+    <Box >
       <VStack spacing={6} align="stretch">
         {/* Page Header */}
         <Box>
@@ -32,14 +43,14 @@ export function CourseManagementPage() {
         </Box>
 
         {/* Two Column Layout */}
-        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={8}>
+        <Grid templateColumns={'1fr'} gap={8}>
           {/* Left Column - Intake Course & Semester Management */}
           <GridItem>
             <Box>
               <Text fontSize="xl" fontWeight="semibold" mb={4} color="gray.700">
                 Course Planning & Semesters
               </Text>
-              <Tabs variant="enclosed" colorScheme="blue" height="fit-content">
+              <Tabs variant="enclosed" colorScheme="blue" height="fit-content" index={activeTab} onChange={setActiveTab}>
                 <TabList>
                   <Tab>Intake Courses</Tab>
                   <Tab>Semester Modules</Tab>

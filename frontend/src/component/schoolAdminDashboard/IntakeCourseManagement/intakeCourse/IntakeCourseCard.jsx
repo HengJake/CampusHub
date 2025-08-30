@@ -43,7 +43,9 @@ export function IntakeCourseCard({
     };
 
     const getSemesterProgress = () => {
-        const totalSemester = semesters.filter(s => s.courseId._id == intakeCourse.courseId._id);
+        const totalSemester = semesters.filter(s => 
+            s.intakeCourseId?.courseId?._id === intakeCourse.courseId?._id
+        );
 
         // Calculate total duration of all semesters in days
         const totalDurationInDays = totalSemester.reduce((total, semester) => {
@@ -60,7 +62,7 @@ export function IntakeCourseCard({
         const totalDurationInMonths = Math.round(totalDurationInDays / 30);
 
         // Calculate progress percentage
-        const courseDurationInMonths = intakeCourse.courseId.duration; // Convert years to months
+        const courseDurationInMonths = intakeCourse.courseId?.duration; // Convert years to months
         const progressPercentage = courseDurationInMonths > 0 ?
             Math.min((totalDurationInMonths / courseDurationInMonths) * 100, 100) : 0;
 
@@ -74,7 +76,7 @@ export function IntakeCourseCard({
     };
 
     const getProgressColor = (percentage) => {
-        if (percentage == 100) return "green";
+        if (percentage > 80) return "green";
         return "red";
     };
 
@@ -263,7 +265,7 @@ export function IntakeCourseCard({
                         </HStack>
 
                         {/* Additional animated warning overlay for incomplete semesters */}
-                        {semesterProgress.progressPercentage < 100 && (
+                        {semesterProgress.progressPercentage < 80 && (
                             <Box
                                 position="absolute"
                                 top="0"

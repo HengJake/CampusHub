@@ -39,17 +39,6 @@ export function SemesterFormModal({
         return end.toISOString().split('T')[0]; // Format as YYYY-MM-DD
     };
 
-    // Calculate registration end date based on registration start date and duration in days
-    const calculateRegistrationEndDate = (registrationStartDate, registrationDurationDays) => {
-        if (!registrationStartDate || !registrationDurationDays) return '';
-
-        const start = new Date(registrationStartDate);
-        const end = new Date(start);
-        end.setDate(end.getDate() + parseInt(registrationDurationDays));
-
-        return end.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-    };
-
     // Calculate exam end date based on exam start date and exam duration in days
     const calculateExamEndDate = (examStartDate, examDurationDays) => {
         if (!examStartDate || !examDurationDays) return '';
@@ -94,7 +83,6 @@ export function SemesterFormModal({
     };
 
     const calculatedEndDate = calculateEndDate(semesterForm.startDate, semesterForm.durationMonths);
-    const calculatedRegistrationEndDate = calculateRegistrationEndDate(semesterForm.registrationStartDate, semesterForm.registrationDurationDays);
     const calculatedExamEndDate = calculateExamEndDate(semesterForm.examStartDate, semesterForm.examDurationDays);
 
     // Update the endDate in form when calculated date changes (for new semesters)
@@ -103,13 +91,6 @@ export function SemesterFormModal({
             onFormChange('endDate', calculatedEndDate);
         }
     }, [calculatedEndDate, semesterForm.endDate, onFormChange, isEditMode]);
-
-    // Update the registrationEndDate in form when calculated date changes
-    React.useEffect(() => {
-        if (!isEditMode && calculatedRegistrationEndDate && calculatedRegistrationEndDate !== semesterForm.registrationEndDate) {
-            onFormChange('registrationEndDate', calculatedRegistrationEndDate);
-        }
-    }, [calculatedRegistrationEndDate, semesterForm.registrationEndDate, onFormChange, isEditMode]);
 
     // Update the examEndDate in form when calculated exam end date changes
     React.useEffect(() => {
@@ -128,16 +109,6 @@ export function SemesterFormModal({
         }
     }, [isEditMode, semesterForm.startDate, semesterForm.endDate, semesterForm.durationMonths, onFormChange]);
 
-    // Calculate and set registration duration when editing existing semester
-    React.useEffect(() => {
-        if (isEditMode && semesterForm.registrationStartDate && semesterForm.registrationEndDate && !semesterForm.registrationDurationDays) {
-            const regDuration = calculateDurationDays(semesterForm.registrationStartDate, semesterForm.registrationEndDate);
-            if (regDuration > 0) {
-                onFormChange('registrationDurationDays', regDuration.toString());
-            }
-        }
-    }, [isEditMode, semesterForm.registrationStartDate, semesterForm.registrationEndDate, semesterForm.registrationDurationDays, onFormChange]);
-
     // Calculate and set exam duration when editing existing semester
     React.useEffect(() => {
         if (isEditMode && semesterForm.examStartDate && semesterForm.examEndDate && !semesterForm.examDurationDays) {
@@ -153,10 +124,6 @@ export function SemesterFormModal({
             onFormChange('examEndDate', calculateExamEndDate(semesterForm.examStartDate, value))
         }
 
-        if (field === 'registrationDurationDays') {
-            onFormChange('registrationEndDate', calculateRegistrationEndDate(semesterForm.registrationStartDate, value))
-        }
-
         if (field === 'durationMonths') {
             onFormChange('endDate', calculateEndDate(semesterForm.startDate, value))
         }
@@ -165,7 +132,7 @@ export function SemesterFormModal({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="lg" scrollBehavior="inside">
+        <Modal isOpen={isOpen} onClose={onClose} size="lg" scrollBehavior="inside" isCentered>
             <ModalContent>
                 <ModalHeader>{isEditMode ? 'Edit Semester' : 'Add New Semester'}</ModalHeader>
                 <ModalCloseButton />
@@ -231,35 +198,6 @@ export function SemesterFormModal({
                                 </FormControl>
                             </HStack>
                             <Text alignSelf="start" fontSize="xs" color="gray.700">End Date: {calculatedEndDate}</Text>
-                        </VStack>
-
-                        <VStack w="full">
-                            <HStack spacing={4} w="full">
-                                <FormControl isRequired>
-                                    <FormLabel>Registration Start Date</FormLabel>
-                                    <Input
-                                        type="date"
-                                        value={semesterForm.registrationStartDate}
-                                        onChange={(e) => handleInputChange('registrationStartDate', e.target.value)}
-                                    />
-                                </FormControl>
-
-                                <FormControl isRequired>
-                                    <FormLabel>Registration Duration (Days)</FormLabel>
-                                    <Input
-                                        type="number"
-                                        value={semesterForm.registrationDurationDays || ''}
-                                        onChange={(e) => handleInputChange('registrationDurationDays', e.target.value)}
-                                        placeholder="e.g., 30"
-                                        min="1"
-                                    />
-                                </FormControl>
-                            </HStack>
-                            {calculatedRegistrationEndDate && (
-                                <Text alignSelf="start" fontSize="xs" color="gray.700">
-                                    Registration End Date: {calculatedRegistrationEndDate}
-                                </Text>
-                            )}
                         </VStack>
 
                         <VStack w="full">

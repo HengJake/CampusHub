@@ -1,7 +1,16 @@
 const generateExamSchedule = (classSchedule, rooms, lecturers, selectedSemester = null, selectedModule = null) => {
     if (!classSchedule || classSchedule.length === 0) {
+        console.warn("🚨 No class schedule provided for exam generation");
         return [];
     }
+
+    console.log("🚀 ~ generateExamSchedule ~ Parameters:", {
+        classScheduleCount: classSchedule.length,
+        roomsCount: rooms?.length,
+        lecturersCount: lecturers?.length,
+        selectedSemester: selectedSemester?._id,
+        selectedModule
+    });
 
     const examSchedule = [];
     const EXAM_DURATION_MINUTES = 120; // 2 hours default
@@ -32,19 +41,23 @@ const generateExamSchedule = (classSchedule, rooms, lecturers, selectedSemester 
     const processedModules = new Set();
 
     classSchedule.forEach(classItem => {
+        // Use moduleId for uniqueness check since we're generating exams per module
         const moduleKey = `${classItem.moduleId}-${classItem.intakeCourseId}`;
 
         // Skip if we've already processed this module for this intake course
         if (processedModules.has(moduleKey)) {
+            console.log(`🚀 ~ Skipping already processed module: ${classItem.moduleCode || classItem.moduleId}`);
             return;
         }
 
         // If selectedModule is provided, only generate exam for that specific module
         if (selectedModule && classItem.moduleId !== selectedModule) {
+            console.log(`🚀 ~ Skipping module ${classItem.moduleCode || classItem.moduleId} - not selected`);
             return;
         }
 
         processedModules.add(moduleKey);
+        console.log(`🚀 ~ Processing module for exam: ${classItem.moduleCode || classItem.moduleId}`);
 
         // Get available rooms and invigilators
         const availableRooms = rooms || [];
@@ -75,7 +88,7 @@ const generateExamSchedule = (classSchedule, rooms, lecturers, selectedSemester 
 
         const examEntry = {
             intakeCourseId: classItem.intakeCourseId,
-            moduleId: classItem.moduleId,
+            semesterModuleId: classItem.semesterModuleId, // Use semesterModuleId consistently
             examDate: calculateExamDate(classItem.moduleEndDate),
             examTime: selectedTime,
             durationMinute: EXAM_DURATION_MINUTES,
@@ -85,6 +98,17 @@ const generateExamSchedule = (classSchedule, rooms, lecturers, selectedSemester 
         };
 
         examSchedule.push(examEntry);
+        console.log(`🚀 ~ Generated exam for module: ${classItem.moduleCode || classItem.moduleId}`);
+    });
+
+    console.log("🚀 ~ generateExamSchedule ~ Final exam schedule:", {
+        totalExams: examSchedule.length,
+        exams: examSchedule.map(e => ({
+            moduleId: e.moduleId,
+            examDate: e.examDate,
+            examTime: e.examTime,
+            roomId: e.roomId
+        }))
     });
 
     return examSchedule;

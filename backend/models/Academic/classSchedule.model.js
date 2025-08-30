@@ -13,10 +13,11 @@ const classScheduleSchema = new mongoose.Schema({
         required: true
     },
 
-    moduleId: {
+    semesterModuleId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Module",
+        ref: "SemesterModule",
         required: true
+        // Reference to the semester-module relationship instead of just moduleId
     },
 
     lecturerId: {
@@ -52,14 +53,15 @@ const classScheduleSchema = new mongoose.Schema({
             message: props => `${props.value} is not a valid time format!`
         }
     },
-    intakeCourseId: { type: mongoose.Schema.Types.ObjectId, ref: 'IntakeCourse', required: true }, // Add this
-
-    semesterId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Semester',
-        required: true,
-        // Reference to the semester when this class is scheduled
+    
+    intakeCourseId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'IntakeCourse', 
+        required: true 
     },
+
+    // Note: semesterId is now available through semesterModuleId.semesterId
+    // Keeping it for backward compatibility but it's redundant
 
     schoolId: {
         type: mongoose.Schema.Types.ObjectId,

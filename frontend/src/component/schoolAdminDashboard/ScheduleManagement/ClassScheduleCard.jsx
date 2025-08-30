@@ -31,33 +31,49 @@ import { useDisclosure } from '@chakra-ui/react';
 const transformExamData = (examData) => {
     return examData
         .map(exam => {
-            if (typeof exam !== 'object' || !exam || !exam.examTime) {
+            if (typeof exam !== 'object' || !exam) {
                 return null;
             }
 
             try {
-                const examDate = new Date(exam.examDate);
-                const dayOfWeek = examDate.toLocaleDateString('en-US', { weekday: 'long' });
-                const startTime = exam.examTime;
-                const [hours, minutes] = startTime.split(':').map(Number);
-                const startDate = new Date();
-                startDate.setHours(hours, minutes, 0, 0);
-                const endDate = new Date(startDate.getTime() + (exam.durationMinute * 60000));
-                const endTime = endDate.toTimeString().slice(0, 5);
-
+                console.log('🚀 ~ transformExamData ~ processing exam:', exam);
+                // Use the existing dayOfWeek if available, otherwise calculate from examDate
+                let dayOfWeek = exam.dayOfWeek;
+                let startTime = exam.startTime;
+                let endTime = exam.endTime;
+                
+                // If dayOfWeek is not available, calculate from examDate
+                if (!dayOfWeek && exam.examDate) {
+                    const examDate = new Date(exam.examDate);
+                    dayOfWeek = examDate.toLocaleDateString('en-US', { weekday: 'long' });
+                }
+                
+                // If startTime is not available, use examTime
+                if (!startTime && exam.examTime) {
+                    startTime = exam.examTime;
+                }
+                
+                // If endTime is not available, calculate from startTime and duration
+                if (!endTime && startTime && exam.durationMinute) {
+                    const [hours, minutes] = startTime.split(':').map(Number);
+                    const startDate = new Date();
+                    startDate.setHours(hours, minutes, 0, 0);
+                    const endDate = new Date(startDate.getTime() + (exam.durationMinute * 60000));
+                    endTime = endDate.toTimeString().slice(0, 5);
+                }
 
                 const transformedExam = {
                     id: exam._id,
-                    code: exam.moduleId?.code ?? 'N/A',
-                    subject: exam.moduleId?.moduleName ?? 'Unknown',
-                    room: exam.roomId,
-                    building: exam.roomId?.block ?? 'TBD',
-                    lecturer: exam.invigilators?.length > 0
+                    code: exam.code || (exam.semesterModuleId.moduleId?.code ?? 'N/A'),
+                    subject: exam.subject || (exam.semesterModuleId.moduleId?.moduleName ?? 'Unknown'),
+                    room: exam.room || exam.roomId,
+                    building: exam.building || (exam.roomId?.block ?? 'TBD'),
+                    lecturer: exam.lecturer || (exam.invigilators?.length > 0
                         ? `${exam.invigilators.length} Invigilator(s)`
-                        : 'No Invigilator',
+                        : 'No Invigilator'),
                     startTime: startTime,
                     endTime: endTime,
-                    date: examDate.toLocaleDateString(),
+                    date: exam.date || (exam.examDate ? new Date(exam.examDate).toLocaleDateString() : ''),
                     dayOfWeek: dayOfWeek,
                     type: "exam",
                     examType: "Final",
@@ -66,14 +82,15 @@ const transformExamData = (examData) => {
                     invigilators: exam.invigilators,
                     durationMinute: exam.durationMinute,
                     intakeCourseId: exam.intakeCourseId,
-                    courseId: exam.intakeCourseId.courseId._id,
+                    courseId: exam.courseId || (exam.intakeCourseId?.courseId?._id),
                     moduleId: exam.moduleId,
-                    year: exam.semesterId.year,
-                    semesterId: exam.semesterId
+                    year: exam.year || (exam.semesterId?.year),
+                    semesterId: exam.semesterId || (exam.semesterModuleId?.semesterId)
                 };
 
                 return transformedExam;
             } catch (e) {
+                console.error('Error transforming exam data:', e, exam);
                 return null;
             }
         })
@@ -90,8 +107,8 @@ const transformClassData = (classData) => {
             try {
                 const transformedClass = {
                     id: classItem._id,
-                    code: classItem.moduleId?.code ?? 'N/A',
-                    subject: classItem.moduleId?.moduleName ?? 'Unknown',
+                    code: classItem.semesterModuleId?.moduleId?.code ?? 'N/A',
+                    subject: classItem.semesterModuleId?.moduleId?.moduleName ?? 'Unknown',
                     room: classItem.roomId,
                     building: classItem.roomId?.block ?? 'TBD',
                     lecturer: classItem.lecturerId?.userId?.name ?? 'Unassigned',
@@ -103,10 +120,10 @@ const transformClassData = (classData) => {
                     examType: "",
                     intakeCourseId: classItem.intakeCourseId,
                     courseId: classItem.courseId,
-                    moduleId: classItem.moduleId,
+                    moduleId: classItem.semesterModuleId?.moduleId, // Get moduleId from semesterModule
                     lecturerId: classItem.lecturerId,
                     year: classItem.year,
-                    semesterId: classItem.semesterId
+                    semesterId: classItem.semesterModuleId?.semesterId // Get semesterId from semesterModule
                 };
 
                 return transformedClass;
@@ -127,16 +144,18 @@ const getCombinedAndFilteredData = (
 ) => {
     let allItems = [];
 
-    if (showClasses && classSchedules) {
+    // Always include both class and exam schedules
+    if (classSchedules) {
         allItems = [...allItems, ...transformClassData(classSchedules)];
     }
 
-    if (showExams && examSchedules) {
+    if (examSchedules) {
         allItems = [...allItems, ...transformExamData(examSchedules)];
     }
 
     // Defensive: filter out nulls
     allItems = allItems.filter(Boolean);
+    console.log('🚀 ~ getCombinedAndFilteredData ~ allItems after transform:', allItems);
 
     // Apply filters
     const filteredItems = allItems.filter(item => {
@@ -146,12 +165,8 @@ const getCombinedAndFilteredData = (
             return false;
         }
 
-        // Default: don't include
-        let include = false;
-
-        // Type filtering
-        if (item.type === 'exam' && showExams) include = true;
-        if (item.type === 'class' && showClasses) include = true;
+        // Include all items regardless of type
+        let include = true;
 
         // Filter by intake (deep path check)
         if (
@@ -346,6 +361,10 @@ const findConsecutiveClasses = (items, timeSlots) => {
 // Enhanced table row component for list view
 const EnhancedTableRow = ({ item, getTypeColor, onEditClick }) => {
     const isExam = item.type === "exam";
+    
+    if (isExam) {
+        console.log("🚀 ~ EnhancedTableRow ~ item:", item)
+    }
 
     return (
         <Tr
@@ -606,16 +625,12 @@ export const ClusteredScheduleGrid = ({
             const itemDay = item.dayOfWeek;
             const itemStartTime = item.startTime;
 
-            // Default: don't include
-            let include = false;
-
             // Check if item matches time slot
             const isTimeMatch = itemDay === day && itemStartTime === time;
             if (!isTimeMatch) return false;
 
-            // Type filtering
-            if (item.type === 'exam' && showExams) include = true;
-            if (item.type === 'class' && showClasses) include = true;
+            // Include all items regardless of type
+            let include = true;
 
             // Filter by intake (deep path check)
             if (
@@ -629,21 +644,22 @@ export const ClusteredScheduleGrid = ({
                 item.intakeCourseId?.courseId?._id !== filter.selectedCourse
             ) return false;
 
-            // Filter by year
+            // Filter by year - use new semesterModuleId structure
             if (
                 filter?.selectedYear &&
-                item.semesterId.year != filter.selectedYear
+                item.semesterModuleId?.semesterId?.year != filter.selectedYear
             ) return false;
 
-            // Filter by semester
+            // Filter by semester - use new semesterModuleId structure
             if (
                 filter?.selectedSemester &&
-                item.semesterId?.semesterNumber != filter.selectedSemester.semesterNumber
+                item.semesterModuleId?.semesterId?.semesterNumber != filter.selectedSemester.semesterNumber
             ) return false;
-      
+
+            // Filter by module - use new semesterModuleId structure
             if (
                 filter?.selectedModule &&
-                item.moduleId._id != filter.selectedModule
+                item.semesterModuleId?.moduleId?._id != filter.selectedModule
             ) return false;
 
             return include;

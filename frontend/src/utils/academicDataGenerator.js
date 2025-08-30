@@ -9,6 +9,13 @@ import { useServiceStore } from '../store/service.js';
 import { useTransportationStore } from '../store/transportation.js';
 import { convertImageFileToBase64 } from './imageToBase64.js';
 
+// Standardized error handling utility
+const handleError = (operation, error, context = '') => {
+    const errorMessage = `❌ Failed to ${operation}${context ? ` for ${context}` : ''}: ${error.message || error}`;
+    console.error(errorMessage);
+    throw new Error(errorMessage);
+};
+
 // Function to delete all school data
 export const deleteAllSchoolData = async (schoolId) => {
     try {
@@ -36,8 +43,7 @@ export const deleteAllSchoolData = async (schoolId) => {
             throw new Error(result.message || 'Deletion failed');
         }
     } catch (error) {
-        console.error('Error deleting school data:', error);
-        throw error;
+        handleError('delete school data', error, `school ${schoolId}`);
     }
 };
 
@@ -47,8 +53,7 @@ export const clearSchoolData = async (schoolId) => {
         const result = await deleteAllSchoolData(schoolId);
         return result;
     } catch (error) {
-        console.error('Error clearing school data:', error);
-        throw error;
+        handleError('clear school data', error, `school ${schoolId}`);
     }
 };
 
@@ -208,8 +213,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 const createdRoom = await academicStore.createRoom(roomDataItem);
                 rooms.push(createdRoom.data);
             } catch (error) {
-                console.error('Failed to create room:', error);
-                throw error;
+                handleError('create room', error, `room ${roomDataItem.roomNumber}`);
             }
         }
 
@@ -251,8 +255,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 const createdDept = await academicStore.createDepartment(deptDataItem);
                 departments.push(createdDept.data);
             } catch (error) {
-                console.error('Failed to create department:', error);
-                throw error;
+                handleError('create department', error, `department ${deptDataItem.departmentName}`);
             }
         }
 
@@ -318,8 +321,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 const createdCourse = await academicStore.createCourse(courseDataItem);
                 courses.push(createdCourse.data);
             } catch (error) {
-                console.error('Failed to create course:', error);
-                throw error;
+                handleError('create course', error, `course ${courseDataItem.courseCode}`);
             }
         }
 
@@ -397,172 +399,11 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 const createdIntake = await academicStore.createIntake(intakeDataItem);
                 intakes.push(createdIntake.data);
             } catch (error) {
-                console.error('Failed to create intake:', error);
-                throw error;
+                handleError('create intake', error, `intake ${intakeDataItem.intakeName}`);
             }
         }
 
-        // 5. Generate Modules
-        const modules = [];
-        const moduleData = [
-            {
-                moduleName: "Database Systems",
-                code: "CS301",
-                totalCreditHours: 3,
-                courseId: [courses[0]._id, courses[1]._id], // Shared between CS and IT
-                prerequisites: [],
-                moduleDescription: "Introduction to database design and management",
-                learningOutcomes: [
-                    "Understand database concepts",
-                    "Design relational databases",
-                    "Write SQL queries"
-                ],
-                assessmentMethods: ["exam", "assignment", "project"],
-                isActive: true,
-                schoolId: schoolId
-            },
-            {
-                moduleName: "Web Development",
-                code: "CS302",
-                totalCreditHours: 3,
-                courseId: [courses[0]._id], // CS only
-                prerequisites: [],
-                moduleDescription: "Learn to build modern web applications",
-                learningOutcomes: [
-                    "Understand web technologies",
-                    "Build responsive websites",
-                    "Deploy web apps"
-                ],
-                assessmentMethods: ["exam", "assignment"],
-                isActive: true,
-                schoolId: schoolId
-            },
-            {
-                moduleName: "Software Engineering",
-                code: "CS303",
-                totalCreditHours: 3,
-                courseId: [courses[0]._id], // CS only
-                prerequisites: [],
-                moduleDescription: "Principles of software engineering",
-                learningOutcomes: [
-                    "Understand SDLC",
-                    "Apply design patterns",
-                    "Work in teams"
-                ],
-                assessmentMethods: ["exam", "project"],
-                isActive: true,
-                schoolId: schoolId
-            },
-            {
-                moduleName: "Computer Networks",
-                code: "CS304",
-                totalCreditHours: 3,
-                courseId: [courses[0]._id, courses[1]._id], // Shared between CS and IT
-                prerequisites: [],
-                moduleDescription: "Fundamentals of computer networking",
-                learningOutcomes: [
-                    "Understand network protocols",
-                    "Configure network devices",
-                    "Troubleshoot network issues"
-                ],
-                assessmentMethods: ["exam", "assignment"],
-                isActive: true,
-                schoolId: schoolId
-            },
-            {
-                moduleName: "IT Infrastructure",
-                code: "IT301",
-                totalCreditHours: 3,
-                courseId: [courses[1]._id], // IT only
-                prerequisites: [],
-                moduleDescription: "IT infrastructure and system administration",
-                learningOutcomes: [
-                    "Manage IT infrastructure",
-                    "Configure servers",
-                    "Implement security measures"
-                ],
-                assessmentMethods: ["exam", "assignment"],
-                isActive: true,
-                schoolId: schoolId
-            },
-            {
-                moduleName: "Cybersecurity",
-                code: "IT302",
-                totalCreditHours: 3,
-                courseId: [courses[1]._id], // IT only
-                prerequisites: [],
-                moduleDescription: "Cybersecurity principles and practices",
-                learningOutcomes: [
-                    "Understand security threats",
-                    "Implement security measures",
-                    "Conduct security audits"
-                ],
-                assessmentMethods: ["exam", "project"],
-                isActive: true,
-                schoolId: schoolId
-            },
-            {
-                moduleName: "Business Management",
-                code: "BA301",
-                totalCreditHours: 3,
-                courseId: [courses[2]._id], // Business only
-                prerequisites: [],
-                moduleDescription: "Principles of business management",
-                learningOutcomes: [
-                    "Understand business concepts",
-                    "Apply management principles",
-                    "Analyze business cases"
-                ],
-                assessmentMethods: ["exam", "assignment"],
-                isActive: true,
-                schoolId: schoolId
-            },
-            {
-                moduleName: "Mathematics for Computing",
-                code: "MATH101",
-                totalCreditHours: 3,
-                courseId: [courses[0]._id, courses[1]._id], // Shared between CS and IT
-                prerequisites: [],
-                moduleDescription: "Foundation mathematics for computing students",
-                learningOutcomes: [
-                    "Solve mathematical problems",
-                    "Apply mathematical concepts to computing",
-                    "Develop logical thinking"
-                ],
-                assessmentMethods: ["exam", "assignment"],
-                isActive: true,
-                schoolId: schoolId
-            },
-            {
-                moduleName: "Business Statistics",
-                code: "STAT101",
-                totalCreditHours: 3,
-                courseId: [courses[2]._id], // Business only
-                prerequisites: [],
-                moduleDescription: "Statistical methods for business analysis",
-                learningOutcomes: [
-                    "Understand statistical concepts",
-                    "Analyze business data",
-                    "Make data-driven decisions"
-                ],
-                assessmentMethods: ["exam", "assignment"],
-                isActive: true,
-                schoolId: schoolId
-            }
-        ];
-
-        // Create modules and get their IDs
-        for (const moduleDataItem of moduleData) {
-            try {
-                const createdModule = await academicStore.createModule(moduleDataItem);
-                modules.push(createdModule.data);
-            } catch (error) {
-                console.error('Failed to create module:', error);
-                throw error;
-            }
-        }
-
-        // 6. Generate Intake Courses
+        // 5. Generate Intake Courses (moved up before modules)
         const intakeCourses = [];
         const intakeCourseData = [
             {
@@ -612,17 +453,396 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 const createdIntakeCourse = await academicStore.createIntakeCourse(intakeCourseDataItem);
                 intakeCourses.push(createdIntakeCourse.data);
             } catch (error) {
-                console.error('Failed to create intake course:', error);
-                throw error;
+                handleError('create intake course', error, `intake course ${intakeCourseDataItem.intakeId}`);
             }
         }
+
+        // 6. Generate Modules with proper prerequisites
+        const modules = [];
+        
+        // First, create foundation modules (no prerequisites)
+        const foundationModules = [
+            {
+                moduleName: "Introduction to Programming",
+                code: "CS101",
+                totalCreditHours: 3,
+                courseId: [courses[0]._id], // January 2024 intake for CS - use courseId array
+                prerequisites: [],
+                moduleDescription: "Fundamentals of programming concepts and logic",
+                learningOutcomes: [
+                    "Understand basic programming concepts",
+                    "Write simple programs",
+                    "Use control structures and functions"
+                ],
+                assessmentMethods: ["exam", "assignment"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Mathematics for Computing",
+                code: "CS102",
+                totalCreditHours: 3,
+                courseId: [courses[0]._id], // January 2024 intake for CS - use courseId array
+                prerequisites: [],
+                moduleDescription: "Mathematical foundations for computer science",
+                learningOutcomes: [
+                    "Apply mathematical concepts",
+                    "Solve computational problems",
+                    "Use mathematical tools"
+                ],
+                assessmentMethods: ["exam", "assignment"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Computer Architecture",
+                code: "CS103",
+                totalCreditHours: 3,
+                courseId: [courses[0]._id], // January 2024 intake for CS - use courseId array
+                prerequisites: [],
+                moduleDescription: "Understanding computer hardware and organization",
+                learningOutcomes: [
+                    "Understand computer components",
+                    "Analyze system performance",
+                    "Design simple circuits"
+                ],
+                assessmentMethods: ["exam", "lab"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Business Fundamentals",
+                code: "BA101",
+                totalCreditHours: 3,
+                courseId: [courses[2]._id], // September 2024 intake for Business - use courseId array
+                prerequisites: [],
+                moduleDescription: "Introduction to business concepts and principles",
+                learningOutcomes: [
+                    "Understand business environment",
+                    "Apply business concepts",
+                    "Analyze business scenarios"
+                ],
+                assessmentMethods: ["exam", "assignment"],
+                isActive: true,
+                schoolId: schoolId
+            }
+        ];
+
+        // Create foundation modules first
+        for (const moduleDataItem of foundationModules) {
+            try {
+                const createdModule = await academicStore.createModule(moduleDataItem);
+                modules.push(createdModule.data);
+            } catch (error) {
+                handleError('create foundation module', error, `module ${moduleDataItem.code}`);
+            }
+        }
+
+        // Now create intermediate modules with prerequisites
+        const intermediateModules = [
+            {
+                moduleName: "Object-Oriented Programming",
+                code: "CS201",
+                totalCreditHours: 3,
+                courseId: [courses[0]._id], // January 2024 intake for CS - use courseId array
+                prerequisites: [modules[0]._id], // CS101
+                moduleDescription: "Advanced programming with OOP principles",
+                learningOutcomes: [
+                    "Implement OOP concepts",
+                    "Design class hierarchies",
+                    "Use inheritance and polymorphism"
+                ],
+                assessmentMethods: ["exam", "project"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Data Structures",
+                code: "CS202",
+                totalCreditHours: 3,
+                courseId: [courses[0]._id], // January 2024 intake for CS - use courseId array
+                prerequisites: [modules[0]._id], // CS101
+                moduleDescription: "Fundamental data structures and algorithms",
+                learningOutcomes: [
+                    "Implement basic data structures",
+                    "Analyze algorithm complexity",
+                    "Choose appropriate structures"
+                ],
+                assessmentMethods: ["exam", "assignment"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Digital Logic Design",
+                code: "CS203",
+                totalCreditHours: 3,
+                courseId: [courses[0]._id], // January 2024 intake for CS - use courseId array
+                prerequisites: [modules[1]._id], // CS102
+                moduleDescription: "Digital circuit design and Boolean algebra",
+                learningOutcomes: [
+                    "Design digital circuits",
+                    "Use Boolean algebra",
+                    "Implement logic gates"
+                ],
+                assessmentMethods: ["exam", "lab"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Business Statistics",
+                code: "BA201",
+                totalCreditHours: 3,
+                courseId: [courses[2]._id], // September 2024 intake for Business - use courseId array
+                prerequisites: [modules[1]._id], // CS102 (Mathematics)
+                moduleDescription: "Statistical methods for business analysis",
+                learningOutcomes: [
+                    "Understand statistical concepts",
+                    "Analyze business data",
+                    "Make data-driven decisions"
+                ],
+                assessmentMethods: ["exam", "assignment"],
+                isActive: true,
+                schoolId: schoolId
+            }
+        ];
+
+        // Create intermediate modules
+        for (const moduleDataItem of intermediateModules) {
+            try {
+                const createdModule = await academicStore.createModule(moduleDataItem);
+                modules.push(createdModule.data);
+            } catch (error) {
+                handleError('create intermediate module', error, `module ${moduleDataItem.code}`);
+            }
+        }
+
+        // Create advanced modules with multiple prerequisites
+        const advancedModules = [
+            {
+                moduleName: "Advanced Data Structures & Algorithms",
+                code: "CS301",
+                totalCreditHours: 4,
+                courseId: [courses[0]._id], // January 2024 intake for CS - use courseId array
+                prerequisites: [modules[4]._id], // CS202 (Data Structures)
+                moduleDescription: "Complex data structures and algorithm analysis",
+                learningOutcomes: [
+                    "Implement advanced data structures",
+                    "Analyze algorithm efficiency",
+                    "Solve complex problems"
+                ],
+                assessmentMethods: ["exam", "project"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Computer Networks",
+                code: "CS302",
+                totalCreditHours: 3,
+                courseId: [courses[0]._id], // January 2024 intake for CS - use courseId array
+                prerequisites: [modules[2]._id], // CS203 (Computer Architecture)
+                moduleDescription: "Network protocols and communication",
+                learningOutcomes: [
+                    "Understand network protocols",
+                    "Configure network devices",
+                    "Troubleshoot network issues"
+                ],
+                assessmentMethods: ["exam", "lab"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Database Systems",
+                code: "CS303",
+                totalCreditHours: 3,
+                courseId: [courses[0]._id], // January 2024 intake for CS - use courseId array
+                prerequisites: [modules[0]._id], // CS101 (Programming)
+                moduleDescription: "Database design and management",
+                learningOutcomes: [
+                    "Design relational databases",
+                    "Write SQL queries",
+                    "Normalize database schemas"
+                ],
+                assessmentMethods: ["exam", "project"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Software Engineering",
+                code: "CS304",
+                totalCreditHours: 3,
+                courseId: [courses[0]._id], // January 2024 intake for CS - use courseId array
+                prerequisites: [modules[4]._id, modules[0]._id], // CS202 (Data Structures) + CS101 (Programming)
+                moduleDescription: "Software development lifecycle and practices",
+                learningOutcomes: [
+                    "Understand SDLC",
+                    "Apply design patterns",
+                    "Work in development teams"
+                ],
+                assessmentMethods: ["exam", "project"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Web Development",
+                code: "CS305",
+                totalCreditHours: 3,
+                courseId: [courses[0]._id], // January 2024 intake for CS - use courseId array
+                prerequisites: [modules[4]._id], // CS202 (Data Structures)
+                moduleDescription: "Modern web application development",
+                learningOutcomes: [
+                    "Build responsive websites",
+                    "Use modern web technologies",
+                    "Deploy web applications"
+                ],
+                assessmentMethods: ["exam", "project"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "IT Infrastructure",
+                code: "IT301",
+                totalCreditHours: 3,
+                courseId: [courses[1]._id], // May 2024 intake for IT - use courseId array
+                prerequisites: [modules[2]._id], // CS203 (Computer Architecture)
+                moduleDescription: "IT infrastructure and system administration",
+                learningOutcomes: [
+                    "Manage IT infrastructure",
+                    "Configure servers",
+                    "Implement security measures"
+                ],
+                assessmentMethods: ["exam", "assignment"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Cybersecurity",
+                code: "IT302",
+                totalCreditHours: 3,
+                courseId: [courses[1]._id], // May 2024 intake for IT - use courseId array
+                prerequisites: [modules[2]._id, modules[5]._id], // CS203 (Computer Architecture) + CS302 (Networks)
+                moduleDescription: "Cybersecurity principles and practices",
+                learningOutcomes: [
+                    "Understand security threats",
+                    "Implement security measures",
+                    "Conduct security audits"
+                ],
+                assessmentMethods: ["exam", "project"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Business Management",
+                code: "BA301",
+                totalCreditHours: 3,
+                courseId: [courses[2]._id], // September 2024 intake for Business - use courseId array
+                prerequisites: [modules[3]._id], // BA101 (Business Fundamentals)
+                moduleDescription: "Principles of business management",
+                learningOutcomes: [
+                    "Understand business concepts",
+                    "Apply management principles",
+                    "Analyze business cases"
+                ],
+                assessmentMethods: ["exam", "assignment"],
+                isActive: true,
+                schoolId: schoolId
+            }
+        ];
+
+        // Create advanced modules
+        for (const moduleDataItem of advancedModules) {
+            try {
+                const createdModule = await academicStore.createModule(moduleDataItem);
+                modules.push(createdModule.data);
+            } catch (error) {
+                handleError('create advanced module', error, `module ${moduleDataItem.code}`);
+            }
+        }
+
+        // Create capstone modules
+        const capstoneModules = [
+            {
+                moduleName: "Final Year Project I",
+                code: "CS401",
+                totalCreditHours: 6,
+                courseId: [courses[0]._id], // January 2024 intake for CS - use courseId array
+                prerequisites: [modules[8]._id, modules[0]._id], // CS301 (Advanced Data Structures) + CS101 (Programming)
+                moduleDescription: "Capstone project planning and design",
+                learningOutcomes: [
+                    "Plan complex projects",
+                    "Apply learned concepts",
+                    "Design system architecture"
+                ],
+                assessmentMethods: ["project", "presentation"],
+                isActive: true,
+                schoolId: schoolId
+            },
+            {
+                moduleName: "Final Year Project II",
+                code: "CS402",
+                totalCreditHours: 6,
+                courseId: [courses[0]._id], // January 2024 intake for CS - use courseId array
+                prerequisites: [], // Will be updated after CS401 is created
+                moduleDescription: "Capstone project implementation and delivery",
+                learningOutcomes: [
+                    "Implement complex systems",
+                    "Deploy production applications",
+                    "Present project results"
+                ],
+                assessmentMethods: ["project", "presentation"],
+                isActive: true,
+                schoolId: schoolId
+            }
+        ];
+
+        // Create capstone modules
+        let cs401Module = null;
+        for (const moduleDataItem of capstoneModules) {
+            try {
+                console.log("🚀 ~ generateAcademicData ~ moduleDataItem:", moduleDataItem)
+                const createdModule = await academicStore.createModule(moduleDataItem);
+                modules.push(createdModule.data);
+                
+                // Store CS401 module for updating CS402 prerequisites
+                console.log("🚀 ~ generateAcademicData ~ moduleDataItem:", moduleDataItem)
+                if (moduleDataItem.code === "CS401") {
+                    cs401Module = createdModule.data;
+                }
+            } catch (error) {
+                handleError('create capstone module', error, `module ${moduleDataItem.code}`);
+            }
+        }
+
+        // Update CS402 prerequisites to include CS401
+        if (cs401Module) {
+            try {
+                console.log("🚀 ~ generateAcademicData ~ modules:", modules)
+                const cs402Module = modules.find(m => m.code === "CS402");
+                if (cs402Module) {
+                    await academicStore.updateModule(cs402Module._id, {
+                        prerequisites: [cs401Module._id]
+                    });
+                    // Update the local modules array
+                    const updatedModule = modules.find(m => m.code === "CS402");
+                    if (updatedModule) {
+                        updatedModule.prerequisites = [cs401Module._id];
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Failed to update CS402 prerequisites:', error.message);
+                // Don't throw here as this is not critical for the main flow
+            }
+        }
+
+        console.log(`✅ Created ${modules.length} modules with proper prerequisites`);
 
         // 7. Generate Semesters
         const semesters = [];
 
-        // Generate semesters for each course
-        for (let courseIndex = 0; courseIndex < courses.length; courseIndex++) {
-            const course = courses[courseIndex];
+        // Generate semesters for each intake course
+        for (let intakeCourseIndex = 0; intakeCourseIndex < intakeCourses.length; intakeCourseIndex++) {
+            const intakeCourse = intakeCourses[intakeCourseIndex];
+            const course = courses.find(c => c._id === intakeCourse.courseId);
+            
             for (let year = 1; year <= course.totalYear; year++) {
                 for (let semesterInYear = 1; semesterInYear <= 2; semesterInYear++) {
                     const semesterNumber = semesterInYear;
@@ -635,20 +855,17 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
 
                     const startDate = new Date(baseYear + yearOffset, startMonth, 1);
                     const endDate = new Date(baseYear + yearOffset, endMonth, 30);
-                    const regStartDate = new Date(baseYear + yearOffset, startMonth - 1, 15);
-                    const regEndDate = new Date(baseYear + yearOffset, startMonth - 1, 28);
+                    // Registration dates removed - no longer needed
                     const examStartDate = new Date(baseYear + yearOffset, endMonth, 1);
                     const examEndDate = new Date(baseYear + yearOffset, endMonth, 15);
 
                     const semesterData = {
-                        courseId: course._id,
+                        intakeCourseId: intakeCourse._id,
                         semesterNumber: semesterNumber,
                         year: year,
                         semesterName: `Year ${year} Semester ${semesterNumber}`,
                         startDate: startDate.toISOString(),
                         endDate: endDate.toISOString(),
-                        registrationStartDate: regStartDate.toISOString(),
-                        registrationEndDate: regEndDate.toISOString(),
                         examStartDate: examStartDate.toISOString(),
                         examEndDate: examEndDate.toISOString(),
                         status: year === 1 && semesterInYear === 1 ? "in_progress" : "upcoming",
@@ -659,89 +876,185 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                         const createdSemester = await academicStore.createSemester(semesterData);
                         semesters.push(createdSemester.data);
                     } catch (error) {
-                        console.error('Failed to create semester:', error);
-                        throw error;
+                        handleError('create semester', error, `semester ${semesterData.semesterName}`);
                     }
                 }
             }
         }
 
-        // 7.5. Generate Semester Modules (Assign modules to semesters)
+        // 8. Generate Semester Modules (Assign modules to semesters)
+        // This section creates the many-to-many relationship between semesters and modules
+        // Modules are strategically distributed based on academic progression:
+        // - Semesters 1-2: Foundation modules (basic concepts, assignments, quizzes) - Academic Year 1
+        // - Semesters 3-4: Intermediate modules (problem-solving, mix of assessment methods) - Academic Year 2
+        // - Semesters 5-6: Advanced modules (analytical skills, projects, presentations) - Academic Year 3
+        // - Semesters 7-8: Capstone modules (integration, real-world applications) - Academic Year 4
+        // Academic Year calculation: 2024 + Math.floor((semesterNumber - 1) / 2)
         const semesterModules = [];
         console.log('Generating semester modules...');
         console.log(`Total modules: ${modules.length}, Total semesters: ${semesters.length}`);
 
-        // Assign modules to semesters based on course
-        for (let courseIndex = 0; courseIndex < courses.length; courseIndex++) {
-            const courseId = courses[courseIndex]._id;
+        // Assign modules to semesters based on intake course
+        for (let intakeCourseIndex = 0; intakeCourseIndex < intakeCourses.length; intakeCourseIndex++) {
+            const intakeCourse = intakeCourses[intakeCourseIndex];
+            const courseId = intakeCourse.courseId;
             const courseModules = modules.filter(module => {
-                // Handle courseId as array since modules can belong to multiple courses
-                if (Array.isArray(module.courseId)) {
+                // Filter modules by courseId (now an array)
+                if (module.courseId && Array.isArray(module.courseId)) {
+                    // Check if this module belongs to the current course
                     return module.courseId.includes(courseId);
-                } else {
-                    // Fallback for single courseId (if model was changed)
-                    return module.courseId === courseId;
                 }
+                return false; // Skip modules without courseId
             });
 
-            // Find the matching intake course for this course
-            const matchingIntakeCourse = intakeCourses.find(ic => ic.courseId === courseId);
-            if (!matchingIntakeCourse) {
-                console.warn(`No intake course found for course ${courses[courseIndex].courseName}`);
-                continue;
+            // Get semesters for this specific intake course (6 semesters per intake course: 3 years × 2 semesters)
+            const courseSemesters = semesters.filter(semester => semester.intakeCourseId === intakeCourse._id);
+
+            console.log(`Assigning ${courseModules.length} modules to ${courseSemesters.length} semesters for ${courses.find(c => c._id === courseId).courseName}...`);
+
+            // Distribute modules strategically across semesters based on academic progression
+        for (let semesterIndex = 0; semesterIndex < courseSemesters.length; semesterIndex++) {
+            const semesterId = courseSemesters[semesterIndex]._id;
+            const semesterNumber = semesterIndex + 1;
+
+            // Strategic module distribution based on semester level
+            let semesterModulesForSemester = [];
+            
+            if (semesterNumber === 1) {
+                // First semester: Foundation modules (first 4-5 modules)
+                semesterModulesForSemester = courseModules.slice(0, Math.min(5, courseModules.length));
+            } else if (semesterNumber === 2) {
+                // Second semester: Basic modules (next 4-5 modules)
+                semesterModulesForSemester = courseModules.slice(5, Math.min(10, courseModules.length));
+            } else if (semesterNumber === 3) {
+                // Third semester: Intermediate modules
+                semesterModulesForSemester = courseModules.slice(10, Math.min(15, courseModules.length));
+            } else if (semesterNumber === 4) {
+                // Fourth semester: Advanced intermediate modules
+                semesterModulesForSemester = courseModules.slice(15, Math.min(20, courseModules.length));
+            } else if (semesterNumber === 5) {
+                // Fifth semester: Advanced modules
+                semesterModulesForSemester = courseModules.slice(20, Math.min(25, courseModules.length));
+            } else if (semesterNumber === 6) {
+                // Sixth semester: Specialized modules
+                semesterModulesForSemester = courseModules.slice(25, Math.min(30, courseModules.length));
+            } else if (semesterNumber === 7) {
+                // Seventh semester: Capstone preparation modules
+                semesterModulesForSemester = courseModules.slice(30, Math.min(35, courseModules.length));
+            } else {
+                // Eighth semester: Capstone and final modules
+                semesterModulesForSemester = courseModules.slice(35, courseModules.length);
             }
 
-            // Get semesters for this specific course (6 semesters per course: 3 years × 2 semesters)
-            const courseSemesters = semesters.filter(semester => semester.courseId === courseId);
+            // Ensure we don't exceed available modules
+            if (semesterModulesForSemester.length === 0) {
+                semesterModulesForSemester = courseModules.slice(semesterIndex * 3, Math.min((semesterIndex + 1) * 3, courseModules.length));
+            }
 
-            console.log(`Assigning ${courseModules.length} modules to ${courseSemesters.length} semesters for ${courses[courseIndex].courseName}...`);
-
-            // Distribute modules evenly across semesters
-            for (let semesterIndex = 0; semesterIndex < courseSemesters.length; semesterIndex++) {
-                const semesterId = courseSemesters[semesterIndex]._id;
-                const semesterNumber = semesterIndex + 1;
-
-                // Calculate how many modules should go to this semester
-                const modulesPerSemester = Math.ceil(courseModules.length / courseSemesters.length);
-                const startModuleIndex = semesterIndex * modulesPerSemester;
-                const endModuleIndex = Math.min(startModuleIndex + modulesPerSemester, courseModules.length);
-                const semesterModulesForSemester = courseModules.slice(startModuleIndex, endModuleIndex);
-
-                console.log(`Semester ${semesterNumber} will get ${semesterModulesForSemester.length} modules`);
+            console.log(`Semester ${semesterNumber} will get ${semesterModulesForSemester.length} modules`);
 
                 // Create semester module relationships
                 for (const module of semesterModulesForSemester) {
+                    // Generate realistic semester module data based on semester level
+                    let customAssessmentMethods = [];
+                    
+                    // Assessment methods vary by semester level
+                    if (semesterNumber <= 2) {
+                        // Foundation semesters: More assignments and quizzes
+                        customAssessmentMethods.push('assignment', 'quiz');
+                        if (Math.random() > 0.5) customAssessmentMethods.push('presentation');
+                    } else if (semesterNumber <= 4) {
+                        // Intermediate semesters: Mix of methods
+                        customAssessmentMethods.push('assignment', 'exam');
+                        if (Math.random() > 0.3) customAssessmentMethods.push('project');
+                        if (Math.random() > 0.4) customAssessmentMethods.push('presentation');
+                    } else if (semesterNumber <= 6) {
+                        // Advanced semesters: More projects and presentations
+                        customAssessmentMethods.push('project', 'assignment');
+                        if (Math.random() > 0.2) customAssessmentMethods.push('exam');
+                        if (Math.random() > 0.3) customAssessmentMethods.push('presentation');
+                    } else {
+                        // Capstone semesters: Focus on projects and presentations
+                        customAssessmentMethods.push('project', 'presentation');
+                        if (Math.random() > 0.4) customAssessmentMethods.push('assignment');
+                    }
+
+                    // Ensure all assessment methods are valid enum values
+                    const validAssessmentMethods = ['exam', 'assignment', 'project', 'presentation', 'quiz', 'lab'];
+                    customAssessmentMethods = customAssessmentMethods.filter(method => validAssessmentMethods.includes(method));
+
+                    // Generate meaningful notes and requirements
+                    const semesterLevel = semesterNumber <= 2 ? 'Foundation' : 
+                                        semesterNumber <= 4 ? 'Intermediate' : 
+                                        semesterNumber <= 6 ? 'Advanced' : 'Capstone';
+                    
+                    // Find the course to get its name for the notes
+                    const course = courses.find(c => c._id === courseId);
+                    const courseName = course ? course.courseName : 'Unknown Course';
+                    
+                    const notes = `${semesterLevel} level module ${module.moduleName} for ${courseName} Semester ${semesterNumber}`;
+                    
+                    const requirements = semesterNumber <= 2 ? 
+                        `Basic understanding required. Focus on fundamental concepts and practical applications.` :
+                        semesterNumber <= 4 ? 
+                        `Intermediate knowledge expected. Emphasis on problem-solving and analytical skills.` :
+                        semesterNumber <= 6 ? 
+                        `Advanced concepts covered. Requires strong analytical and critical thinking abilities.` :
+                        `Capstone level. Integration of all previous knowledge with real-world applications.`;
+
+                    // Calculate academic year: Semesters 1-2 = Year 1, Semesters 3-4 = Year 2, Semesters 5-6 = Year 3
+                    const academicYear = 2024 + Math.floor((semesterNumber - 1) / 2);
+                    
+                    // Find the matching intake course for this course to get intakeCourseId
+                    const matchingIntakeCourse = intakeCourses.find(ic => ic.courseId === courseId);
+                    if (!matchingIntakeCourse) {
+                        console.warn(`No intake course found for course ${courseName}`);
+                        continue;
+                    }
+
                     const semesterModuleData = {
                         semesterId: semesterId,
                         moduleId: module._id,
-                        courseId: courseId,
-                        intakeCourseId: matchingIntakeCourse._id,
-                        schoolId: schoolId
+                        intakeCourseId: matchingIntakeCourse._id, // Required by semesterModule model
+                        schoolId: schoolId,
+                        semesterNumber: semesterNumber,
+                        academicYear: academicYear,
+                        notes: notes,
+                        customAssessmentMethods: customAssessmentMethods,
+                        semesterSpecificRequirements: requirements
                     };
+                    console.log("🚀 ~ generateAcademicData ~ semesterModuleData:", semesterModuleData)
+                    console.log(`📚 Semester ${semesterNumber} - Academic Year: ${semesterModuleData.academicYear}`)
 
                     try {
                         console.log(`Assigning module ${module.code} to semester ${semesterNumber}...`);
                         const createdSemesterModule = await academicStore.addModuleToSemester(
                             semesterId,
                             module._id,
-                            courseId,
-                            matchingIntakeCourse._id
+                            matchingIntakeCourse._id,
+                            {
+                                semesterNumber: semesterModuleData.semesterNumber,
+                                academicYear: semesterModuleData.academicYear,
+                                notes: semesterModuleData.notes,
+                                customAssessmentMethods: semesterModuleData.customAssessmentMethods,
+                                semesterSpecificRequirements: semesterModuleData.semesterSpecificRequirements
+                            }
                         );
                         if (createdSemesterModule.success) {
                             semesterModules.push(createdSemesterModule.data);
-                            console.log(`✅ Module ${module.code} assigned to semester ${semesterNumber}`);
+                            console.log(`✅ Module ${module.code} assigned to semester ${semesterNumber} with ${customAssessmentMethods.length} assessment methods`);
                         } else {
                             console.warn(`⚠️ Module assignment failed: ${createdSemesterModule.message}`);
                         }
                     } catch (error) {
-                        console.error(`❌ Failed to assign module ${module.code} to semester ${semesterNumber}:`, error);
+                        console.warn(`⚠️ Failed to assign module ${module.code} to semester ${semesterNumber}: ${error.message}`);
                         // Don't throw error, continue with other modules
                     }
                 }
             }
         }
 
-        // 8. Generate Lecturers
+        // 9. Generate Lecturers
         const lecturers = [];
         const lecturerUsers = []; // Array to store user documents for lecturers
 
@@ -783,12 +1096,11 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 const createdLecturer = await academicStore.createLecturer(lecturerData);
                 lecturers.push(createdLecturer.data);
             } catch (error) {
-                console.error('Failed to create lecturer:', error);
-                throw error;
+                handleError('create lecturer', error, `lecturer ${i + 1}`);
             }
         }
 
-        // 9. Generate Students
+        // 10. Generate Students
         const students = [];
         const studentUsers = []; // Array to store user documents for students
 
@@ -845,85 +1157,98 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 // Debug: Log the relationship for verification
                 // console.log(`🔗 Student ${i + 1} assigned to intake course ${intakeCourseIndex + 1} with courseId: ${intakeCourses[intakeCourseIndex].courseId}`);
             } catch (error) {
-                console.error('Failed to create student:', error);
-                throw error;
+                handleError('create student', error, `student ${i + 1}`);
             }
         }
 
-        // 10. Generate Class Schedules
+        // 11. Generate Class Schedules (First 2 semesters only)
         const classSchedules = [];
 
-        for (let i = 0; i < Math.min(modules.length, 8); i++) {
+        // Limit to first 6 modules (3 per semester) for first 2 semesters
+        for (let i = 0; i < Math.min(modules.length, 6); i++) {
             const module = modules[i];
             const lecturer = lecturers[i % lecturers.length];
             const room = rooms[i % rooms.length];
             const intakeCourse = intakeCourses[i % intakeCourses.length];
-            const semester = semesters[i % semesters.length];
+            const semester = semesters[i % 2]; // Only use first 2 semesters
 
-            const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-            const dayOfWeek = days[i % days.length];
-            const startTime = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00"][i % 6];
-            const endTime = ["12:00", "13:00", "14:00", "16:00", "17:00", "18:00"][i % 6];
+            // Find the corresponding semester module for this module and semester
+            const semesterModule = semesterModules.find(sm => 
+                sm.semesterId === semester._id && 
+                sm.moduleId === module._id
+            );
 
-            const classScheduleData = {
-                roomId: room._id,
-                moduleId: module._id,
-                lecturerId: lecturer._id,
-                dayOfWeek: dayOfWeek,
-                startTime: startTime,
-                endTime: endTime,
-                intakeCourseId: intakeCourse._id,
-                semesterId: semester._id,
-                schoolId: schoolId,
-                moduleStartDate: semester.startDate,
-                moduleEndDate: semester.endDate
-            };
+            if (semesterModule) {
+                const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+                const dayOfWeek = days[i % days.length];
+                const startTime = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00"][i % 6];
+                const endTime = ["12:00", "13:00", "14:00", "16:00", "17:00", "18:00"][i % 6];
 
-            try {
-                const createdClassSchedule = await academicStore.createClassSchedule(classScheduleData);
-                classSchedules.push(createdClassSchedule.data);
-            } catch (error) {
-                console.error('Failed to create class schedule:', error);
-                throw error;
+                const classScheduleData = {
+                    roomId: room._id,
+                    semesterModuleId: semesterModule._id,
+                    lecturerId: lecturer._id,
+                    dayOfWeek: dayOfWeek,
+                    startTime: startTime,
+                    endTime: endTime,
+                    intakeCourseId: intakeCourse._id,
+                    schoolId: schoolId,
+                    moduleStartDate: semester.startDate,
+                    moduleEndDate: semester.endDate
+                };
+
+                try {
+                    const createdClassSchedule = await academicStore.createClassSchedule(classScheduleData);
+                    classSchedules.push(createdClassSchedule.data);
+                } catch (error) {
+                    handleError('create class schedule', error, `module ${module.code}`);
+                }
             }
         }
 
-        // 11. Generate Exam Schedules
+        // 12. Generate Exam Schedules (First 2 semesters only)
         const examSchedules = [];
 
-        for (let i = 0; i < Math.min(modules.length, 5); i++) {
+        // Limit to first 6 modules (3 per semester) for first 2 semesters
+        for (let i = 0; i < Math.min(modules.length, 6); i++) {
             const module = modules[i];
             const intakeCourse = intakeCourses[i % intakeCourses.length];
-            const semester = semesters[i % semesters.length];
+            const semester = semesters[i % 2]; // Only use first 2 semesters
             const room = rooms[i % rooms.length];
             const lecturer = lecturers[i % lecturers.length];
 
-            const examDate = new Date();
-            examDate.setDate(examDate.getDate() + (i + 1) * 7); // Spread exams over weeks
+            // Find the corresponding semester module for this module and semester
+            const semesterModule = semesterModules.find(sm =>
+                sm.semesterId === semester._id &&
+                sm.moduleId === module._id
+            );
 
-            const examScheduleData = {
-                intakeCourseId: intakeCourse._id,
-                courseId: intakeCourse.courseId,
-                moduleId: module._id,
-                examDate: examDate.toISOString().split('T')[0],
-                examTime: ["09:00", "14:00"][i % 2],
-                semesterId: semester._id,
-                roomId: room._id,
-                invigilators: [lecturer._id],
-                durationMinute: 120,
-                schoolId: schoolId
-            };
+            if (semesterModule) {
+                const examDate = new Date();
+                examDate.setDate(examDate.getDate() + (i + 1) * 7); // Spread exams over weeks
 
-            try {
-                const createdExamSchedule = await academicStore.createExamSchedule(examScheduleData);
-                examSchedules.push(createdExamSchedule.data);
-            } catch (error) {
-                console.error('Failed to create exam schedule:', error);
-                throw error;
+                const examScheduleData = {
+                    intakeCourseId: intakeCourse._id,
+                    courseId: intakeCourse.courseId,
+                    semesterModuleId: semesterModule._id,
+                    examDate: examDate.toISOString().split('T')[0],
+                    examTime: ["09:00", "14:00"][i % 2],
+                    roomId: room._id,
+                    invigilators: [lecturer._id],
+                    durationMinute: 120,
+                    schoolId: schoolId
+                };
+
+                try {
+                    const createdExamSchedule = await academicStore.createExamSchedule(examScheduleData);
+                    examSchedules.push(createdExamSchedule.data);
+                } catch (error) {
+                    handleError('create exam schedule', error, `module ${module.code}`);
+                }
             }
         }
 
-        // 12. Generate Attendance Records
+        // 13. Generate Attendance Records
         const attendance = [];
 
         students.forEach(async (student, studentIndex) => {
@@ -946,13 +1271,13 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                     const createdAttendance = await academicStore.createAttendance(attendanceData);
                     attendance.push(createdAttendance.data);
                 } catch (error) {
-                    console.error('Failed to create attendance:', error);
-                    throw error;
+                    console.warn(`⚠️ Failed to create attendance record: ${error.message}`);
+                    // Don't throw error, continue with other records
                 }
             }
         });
 
-        // 13. Generate Results
+        // 14. Generate Results
         const results = [];
 
         // Generate results for each student based on their enrolled modules
@@ -972,18 +1297,16 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
 
             // Find modules for the student's course
             const studentModules = modules.filter(module => {
-                // Handle courseId as array since modules can belong to multiple courses
-                if (Array.isArray(module.courseId)) {
+                // Filter by courseId (now an array) - check if module belongs to student's course
+                if (module.courseId && Array.isArray(module.courseId)) {
                     return module.courseId.includes(studentIntakeCourse.courseId);
-                } else {
-                    // Fallback for single courseId (if model was changed)
-                    return module.courseId === studentIntakeCourse.courseId;
                 }
+                return false;
             });
 
-            // Find semesters for the student's course
+            // Find semesters for the student's intake course
             const studentSemesters = semesters.filter(semester =>
-                semester.courseId === studentIntakeCourse.courseId
+                semester.intakeCourseId === student.intakeCourseId
             );
 
             if (studentModules.length === 0) {
@@ -1055,13 +1378,13 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                     const createdResult = await academicStore.createResult(resultData);
                     results.push(createdResult.data);
                 } catch (error) {
-                    console.error(`Failed to create result for ${module.moduleName}:`, error);
-                    throw error;
+                    console.warn(`⚠️ Failed to create result for ${module.moduleName}: ${error.message}`);
+                    // Don't throw error, continue with other results
                 }
             }
         }
 
-        // 14. Generate Facility Resources
+        // 15. Generate Facility Resources
         const resources = [];
         const resourceData = [
             {
@@ -1253,12 +1576,11 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 const createdResource = await facilityStore.createResource(resourceDataItem);
                 resources.push(createdResource.data);
             } catch (error) {
-                console.error('Failed to create resource:', error);
-                throw error;
+                handleError('create resource', error, `resource ${resourceDataItem.name}`);
             }
         }
 
-        // 14.5. Generate Locker Units from locker resources
+        // 15.5. Generate Locker Units from locker resources
         const lockerUnits = [];
         const lockerResources = resources.filter(resource => resource.type === 'locker');
 
@@ -1274,12 +1596,11 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 const createdLockerUnit = await facilityStore.createLockerUnit(lockerUnitData);
                 lockerUnits.push(createdLockerUnit.data);
             } catch (error) {
-                console.error('Failed to create locker unit:', error);
-                throw error;
+                handleError('create locker unit', error, `locker unit for resource ${lockerResource.name}`);
             }
         }
 
-        // 14.6. Generate Parking Lots
+        // 15.6. Generate Parking Lots
         const parkingLots = [];
         const parkingData = [
             {
@@ -1369,11 +1690,10 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 throw new Error(`Failed to create parking lots: ${bulkResult.message}`);
             }
         } catch (error) {
-            console.error('Failed to create parking lots:', error);
-            throw error;
+            handleError('create parking lots in bulk', error);
         }
 
-        // 15. Generate Bookings
+        // 16. Generate Bookings
         const bookings = [];
 
         students.forEach(async (student, studentIndex) => {
@@ -1391,17 +1711,17 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                     status: statuses[studentIndex % statuses.length]
                 };
 
-                try {
-                    const createdBooking = await facilityStore.createBooking(bookingData);
-                    bookings.push(createdBooking.data);
-                } catch (error) {
-                    console.error('Failed to create booking:', error);
-                    throw error;
-                }
+                            try {
+                const createdBooking = await facilityStore.createBooking(bookingData);
+                bookings.push(createdBooking.data);
+            } catch (error) {
+                console.warn(`⚠️ Failed to create booking: ${error.message}`);
+                // Don't throw error, continue with other bookings
+            }
             }
         });
 
-        // 16. Generate Feedback
+        // 17. Generate Feedback
         const feedbacks = [];
 
         students.forEach(async (student, studentIndex) => {
@@ -1419,18 +1739,18 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                     status: statuses[studentIndex % statuses.length]
                 };
 
-                try {
-                    const serviceStore = useServiceStore.getState();
-                    const createdFeedback = await serviceStore.createFeedback(feedbackData);
-                    feedbacks.push(createdFeedback.data);
-                } catch (error) {
-                    console.error('Failed to create feedback:', error);
-                    throw error;
-                }
+                            try {
+                const serviceStore = useServiceStore.getState();
+                const createdFeedback = await serviceStore.createFeedback(feedbackData);
+                feedbacks.push(createdFeedback.data);
+            } catch (error) {
+                console.warn(`⚠️ Failed to create feedback: ${error.message}`);
+                // Don't throw error, continue with other feedback
+            }
             }
         });
 
-        // 17. Generate Lost Items
+        // 18. Generate Lost Items
         const lostItems = [];
 
         const lostItemSampleData = [
@@ -1527,12 +1847,11 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 const createdLostItem = await serviceStore.createLostItem(lostItemData);
                 lostItems.push(createdLostItem.data);
             } catch (error) {
-                console.error('Failed to create lost item:', error);
-                throw error;
+                handleError('create lost item', error, `item ${sampleData.name}`);
             }
         }
 
-        // 18. Generate Transportation Data
+        // 19. Generate Transportation Data
         const transportationStore = useTransportationStore.getState();
 
         // Generate Stops (Stations)
@@ -1576,8 +1895,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 const createdStop = await transportationStore.createStop(stopDataItem);
                 stops.push(createdStop.data);
             } catch (error) {
-                console.error('Failed to create stop:', error);
-                throw error;
+                handleError('create stop', error, `stop ${stopDataItem.name}`);
             }
         }
 
@@ -1627,8 +1945,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 const createdVehicle = await transportationStore.createVehicle(vehicleDataItem);
                 vehicles.push(createdVehicle.data);
             } catch (error) {
-                console.error('Failed to create vehicle:', error);
-                throw error;
+                handleError('create vehicle', error, `vehicle ${vehicleDataItem.plateNumber}`);
             }
         }
 
@@ -1678,8 +1995,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 const createdRoute = await transportationStore.createRoute(routeDataItem);
                 routes.push(createdRoute.data);
             } catch (error) {
-                console.error('Failed to create route:', error);
-                throw error;
+                handleError('create route', error, `route ${routeDataItem.name}`);
             }
         }
 
@@ -1754,8 +2070,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                 const createdBusSchedule = await transportationStore.createBusSchedule(scheduleDataItem);
                 busSchedules.push(createdBusSchedule.data);
             } catch (error) {
-                console.error('Failed to create bus schedule:', error);
-                throw error;
+                handleError('create bus schedule', error, `schedule for day ${scheduleDataItem.dayOfWeek}`);
             }
         }
 
@@ -1778,13 +2093,13 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
                     schoolId: schoolId
                 };
 
-                try {
-                    const createdEHailing = await transportationStore.createEHailing(eHailingData);
-                    eHailings.push(createdEHailing.data);
-                } catch (error) {
-                    console.error('Failed to create e-hailing:', error);
-                    throw error;
-                }
+                            try {
+                const createdEHailing = await transportationStore.createEHailing(eHailingData);
+                eHailings.push(createdEHailing.data);
+            } catch (error) {
+                console.warn(`⚠️ Failed to create e-hailing: ${error.message}`);
+                // Don't throw error, continue with other e-hailing requests
+            }
             }
         });
 
@@ -1820,8 +2135,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
             lockerUnits
         };
     } catch (error) {
-        console.error('Error generating academic data:', error);
-        throw error;
+        handleError('generate academic data', error, `school ${schoolId}`);
     }
 };
 

@@ -94,43 +94,43 @@ const transformClassScheduleData = (classSchedules, rooms, modules, lecturers, i
         .filter(schedule => {
             // Only include schedules for modules that belong to the user's intake course
             // Add null checks to prevent errors
-            if (!schedule.moduleId || !schedule.intakeCourseId || !intakeCourse) {
+            if (!schedule.semesterModuleId || !schedule.intakeCourseId || !intakeCourse) {
                 return false;
             }
 
-            const module = modules.find(m => m._id === schedule.moduleId._id);
-            // console.log("🚀 ~ transformClassScheduleData ~ schedule:", schedule.intakeCourseId.courseId.courseName)
-            // console.log("🚀 ~ transformClassScheduleData ~ schedule:", schedule.intakeCourseId.intakeId.intakeName)
+            // Get module from semesterModule
+            const module = schedule.semesterModuleId?.moduleId ? modules.find(m => m._id === schedule.semesterModuleId.moduleId._id) : null;
             const filterModule = module && userModules.some(userModule => userModule._id === module._id) && schedule.intakeCourseId._id === intakeCourse._id;
             return filterModule;
         })
         .map(schedule => {
             // Add null checks for all related objects
             const room = schedule.roomId ? rooms.find(r => r._id === schedule.roomId._id) : null;
-            const module = schedule.moduleId ? modules.find(m => m._id === schedule.moduleId._id) : null;
+            const module = schedule.semesterModuleId?.moduleId ? modules.find(m => m._id === schedule.semesterModuleId.moduleId._id) : null;
             const lecturer = schedule.lecturerId ? lecturers.find(l => l._id === schedule.lecturerId._id) : null;
 
             return {
                 id: schedule._id,
-                courseCode: module?.code || 'N/A',
-                courseName: module?.moduleName || 'N/A',
-                day: schedule.dayOfWeek || 'N/A',
+                courseCode: typeof module?.code === 'string' ? module.code : 'N/A',
+                courseName: typeof module?.moduleName === 'string' ? module.moduleName : 'N/A',
+                day: typeof schedule.dayOfWeek === 'string' ? schedule.dayOfWeek : 'N/A',
                 time: `${formatTime(schedule.startTime || '')} - ${formatTime(schedule.endTime || '')}`,
-                room: room ? `${room.block}-${room.roomNumber}` : 'N/A',
-                building: room?.block || 'N/A',
-                instructor: lecturer?.userId?.name || 'N/A',
+                room: room && typeof room.block === 'string' && typeof room.roomNumber === 'string' ? `${room.block}-${room.roomNumber}` : 'N/A',
+                building: typeof room?.block === 'string' ? room.block : 'N/A',
+                instructor: typeof lecturer?.userId?.name === 'string' ? lecturer.userId.name : 'N/A',
                 credits: module?.totalCreditHours || 0,
                 type: 'Lecture', // Default type
                 color: getColorForType('Lecture'),
-                description: module?.moduleDescription || 'No description available',
-                prerequisites: module?.prerequisites || 'None',
-                textbook: module?.textbook || 'Not specified',
+                description: typeof module?.moduleDescription === 'string' ? module.moduleDescription : 'No description available',
+                prerequisites: typeof module?.prerequisites === 'string' ? module.prerequisites : 'None',
+                textbook: typeof module?.textbook === 'string' ? module.textbook : 'Not specified',
                 startTime: schedule.startTime,
                 endTime: schedule.endTime,
                 moduleStartDate: schedule.moduleStartDate,
                 moduleEndDate: schedule.moduleEndDate,
                 moduleId: module?._id,
                 intakeCourseId: intakeCourse?._id,
+                semesterId: schedule.semesterModuleId?.semesterId?._id || null,
             };
         });
 };
@@ -152,10 +152,10 @@ export default function Schedule() {
     // Get store functions and state
     const {
         fetchClassSchedulesByStudentId,
-        fetchRooms,
-        fetchModules,
-        fetchLecturers,
-        fetchIntakeCourses,
+        fetchRoomsBySchoolId,
+        fetchModulesBySchoolId,
+        fetchLecturersBySchoolId,
+        fetchIntakeCoursesBySchoolId,
         fetchSemesters,
         classSchedules,
         rooms,
@@ -167,7 +167,7 @@ export default function Schedule() {
         errors
     } = useAcademicStore()
 
-    const { initializeAuth, getCurrentUser } = useAuthStore()
+    const { initializeAuth } = useAuthStore()
     const [currentUser, setCurrentUser] = useState(null)
     const [isInitializing, setIsInitializing] = useState(true)
 
@@ -187,10 +187,10 @@ export default function Schedule() {
                         // Fetch all required data
                         await Promise.all([
                             fetchClassSchedulesByStudentId(authResult.data.student._id),
-                            fetchRooms(),
-                            fetchModules(),
-                            fetchLecturers(),
-                            fetchIntakeCourses(),
+                            fetchRoomsBySchoolId(),
+                            fetchModulesBySchoolId(),
+                            fetchLecturersBySchoolId(),
+                            fetchIntakeCoursesBySchoolId(),
                             fetchSemesters()
                         ]);
                     }
@@ -219,7 +219,7 @@ export default function Schedule() {
         };
 
         initializeAndFetch();
-    }, [initializeAuth, fetchClassSchedulesByStudentId, fetchRooms, fetchModules, fetchLecturers, fetchIntakeCourses, fetchSemesters, toast]);
+    }, [initializeAuth, fetchClassSchedulesByStudentId, fetchRoomsBySchoolId, fetchModulesBySchoolId, fetchLecturersBySchoolId, fetchIntakeCoursesBySchoolId, fetchSemesters, toast]);
 
     // Use useMemo to transform data when raw data changes
     const scheduleData = useMemo(() => {
@@ -229,8 +229,6 @@ export default function Schedule() {
             return {
                 classSchedules: [],
                 studentProfile: {
-                    name: "Loading...",
-                    studentId: "Loading...",
                     intakeCourse: "Loading...",
                     semester: "Loading...",
                     advisor: "Loading...",
@@ -243,8 +241,6 @@ export default function Schedule() {
             return {
                 classSchedules: [],
                 studentProfile: {
-                    name: "Loading...",
-                    studentId: "Loading...",
                     intakeCourse: "Loading...",
                     semester: "Loading...",
                     advisor: "Loading...",
@@ -259,7 +255,7 @@ export default function Schedule() {
         let filteredClassSchedules = classSchedules;
         if (selectedSemester && selectedYear) {
             filteredClassSchedules = classSchedules.filter(schedule => {
-                if (!schedule.semesterId) return false;
+                if (!schedule.semesterId || !schedule.semesterId._id) return false;
 
                 const semester = semesters.find(s => s._id === schedule.semesterId._id);
                 if (!semester) return false;
@@ -288,17 +284,23 @@ export default function Schedule() {
             semesterInfo = `Year ${selectedYear}`;
         }
 
+        // Ensure intakeCourse is always a string
+        let intakeCourseDisplay = "N/A";
+        if (userIntakeCourse) {
+            const intakeName = userIntakeCourse.intakeId?.intakeName || 'N/A';
+            const courseName = userIntakeCourse.courseId?.courseName || 'N/A';
+            intakeCourseDisplay = `${intakeName} - ${courseName}`;
+        }
+
         return {
             classSchedules: transformedClassSchedules,
             studentProfile: {
-                name: currentUser?.name || "Student",
-                studentId: currentUser?.student?._id || "N/A",
-                intakeCourse: userIntakeCourse ? `${userIntakeCourse.intakeId?.intakeName || 'N/A'} - ${userIntakeCourse.courseId?.courseName || 'N/A'}` : "N/A",
+                intakeCourse: intakeCourseDisplay,
                 semester: semesterInfo,
                 advisor: "Academic Advisor",
             }
         };
-    }, [classSchedules, rooms, modules, lecturers, intakeCourses, semesters, selectedSemester, selectedYear, currentUser?.name, currentUser?.user?.student?.studentId, currentUser?.user?.student?.intakeCourseId]);
+    }, [classSchedules, rooms, modules, lecturers, intakeCourses, semesters, selectedSemester, selectedYear, currentUser?.student?.intakeCourseId]);
 
     const handleRefresh = async () => {
         try {
@@ -315,10 +317,10 @@ export default function Schedule() {
 
             await Promise.all([
                 fetchClassSchedulesByStudentId(currentUser.student._id),
-                fetchRooms(),
-                fetchModules(),
-                fetchLecturers(),
-                fetchIntakeCourses(),
+                fetchRoomsBySchoolId(),
+                fetchModulesBySchoolId(),
+                fetchLecturersBySchoolId(),
+                fetchIntakeCoursesBySchoolId(),
                 fetchSemesters()
             ]);
 
@@ -414,7 +416,7 @@ export default function Schedule() {
 
         const semesterNumbers = [...new Set(
             classSchedules
-                .filter(schedule => schedule.semesterId)
+                .filter(schedule => schedule.semesterId && schedule.semesterId._id)
                 .map(schedule => {
                     const semester = semesters.find(s => s._id === schedule.semesterId._id);
                     return semester?.semesterNumber;
@@ -430,7 +432,7 @@ export default function Schedule() {
 
         const years = [...new Set(
             classSchedules
-                .filter(schedule => schedule.semesterId)
+                .filter(schedule => schedule.semesterId && schedule.semesterId._id)
                 .map(schedule => {
                     const semester = semesters.find(s => s._id === schedule.semesterId._id);
                     return semester?.year;
@@ -507,8 +509,31 @@ export default function Schedule() {
                             Class Schedule
                         </Text>
                         <Text color="gray.600" noOfLines={2}>
-                            {scheduleData.studentProfile.semester} • {scheduleData.studentProfile.intakeCourse}
+                            {scheduleData.studentProfile.intakeCourse}
                         </Text>
+                        {/* Current Semester/Year Display */}
+                        <HStack mt={2} spacing={3}>
+                            <Badge 
+                                colorScheme="blue" 
+                                variant="solid" 
+                                fontSize="sm"
+                                px={3}
+                                py={1}
+                            >
+                                {scheduleData.studentProfile.semester}
+                            </Badge>
+                            {selectedSemester && selectedYear && (
+                                <Badge 
+                                    colorScheme="green" 
+                                    variant="outline" 
+                                    fontSize="sm"
+                                    px={3}
+                                    py={1}
+                                >
+                                    Filtered: Year {selectedYear} Semester {selectedSemester}
+                                </Badge>
+                            )}
+                        </HStack>
                     </Box>
                     <HStack flexShrink={0}>
                         <Text fontSize="sm" color="gray.500" display={{ base: "none", sm: "block" }}>
@@ -570,7 +595,25 @@ export default function Schedule() {
                 )}
 
                 {/* Quick Stats */}
-                <Grid templateColumns={{ base: "1fr", md: "repeat(1, 1fr)", lg: "repeat(4, 1fr)" }} gap={6}>
+                <Grid templateColumns={{ base: "1fr", md: "repeat(1, 1fr)", lg: "repeat(5, 1fr)" }} gap={6}>
+                    <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
+                        <CardBody>
+                            <Stat>
+                                <StatLabel>Current Period</StatLabel>
+                                <StatNumber color="purple.500" fontSize="lg">
+                                    {selectedSemester && selectedYear 
+                                        ? `Y${selectedYear} S${selectedSemester}` 
+                                        : 'All Periods'
+                                    }
+                                </StatNumber>
+                                <StatHelpText>
+                                    <Icon as={FiCalendar} mr={1} />
+                                    {scheduleData.studentProfile.semester}
+                                </StatHelpText>
+                            </Stat>
+                        </CardBody>
+                    </Card>
+
                     <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                         <CardBody>
                             <Stat>
@@ -578,7 +621,7 @@ export default function Schedule() {
                                 <StatNumber color="blue.500">{totalCredits}</StatNumber>
                                 <StatHelpText>
                                     <Icon as={FiBook} mr={1} />
-                                    This Semester
+                                    {selectedSemester && selectedYear ? 'Selected Period' : 'All Periods'}
                                 </StatHelpText>
                             </Stat>
                         </CardBody>
@@ -733,15 +776,50 @@ export default function Schedule() {
                     </CardBody>
                 </Card>
 
+                {/* Schedule Summary */}
+                <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
+                    <CardBody>
+                        <HStack justify="space-between" align="center">
+                            <VStack align="start" spacing={1}>
+                                <Text fontSize="lg" fontWeight="semibold" color="gray.800">
+                                    Schedule Summary
+                                </Text>
+                                <Text fontSize="sm" color="gray.600">
+                                    {filteredSchedule.length} course{filteredSchedule.length !== 1 ? 's' : ''} • {scheduleData.studentProfile.semester}
+                                </Text>
+                            </VStack>
+                            <HStack spacing={3}>
+                                {selectedSemester && selectedYear && (
+                                    <Badge colorScheme="green" variant="solid">
+                                        Year {selectedYear} Semester {selectedSemester}
+                                    </Badge>
+                                )}
+                                {!selectedSemester && !selectedYear && (
+                                    <Badge colorScheme="blue" variant="solid">
+                                        All Semesters
+                                    </Badge>
+                                )}
+                            </HStack>
+                        </HStack>
+                    </CardBody>
+                </Card>
+
                 {/* Schedule Display */}
                 {/* Show table and grid views only on lg screens and up */}
                 <Box display={{ base: "none", lg: "block" }}>
                     {viewMode === "table" && (
                         <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                             <CardBody>
-                                <Text fontSize="lg" fontWeight="semibold" mb={4}>
-                                    Course Schedule - Table View
-                                </Text>
+                                <HStack justify="space-between" align="center" mb={4}>
+                                    <Text fontSize="lg" fontWeight="semibold">
+                                        Course Schedule - Table View
+                                    </Text>
+                                    {selectedSemester && selectedYear && (
+                                        <Badge colorScheme="green" variant="solid">
+                                            Year {selectedYear} Semester {selectedSemester}
+                                        </Badge>
+                                    )}
+                                </HStack>
 
                                 {filteredSchedule.length === 0 ? (
                                     <Center py={8}>
@@ -816,7 +894,18 @@ export default function Schedule() {
                     )}
 
                     {viewMode === "grid" && (
-                        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }} gap={6}>
+                        <Box>
+                            <HStack justify="space-between" align="center" mb={4}>
+                                <Text fontSize="lg" fontWeight="semibold">
+                                    Course Schedule - Grid View
+                                </Text>
+                                {selectedSemester && selectedYear && (
+                                    <Badge colorScheme="green" variant="solid">
+                                        Year {selectedYear} Semester {selectedSemester}
+                                    </Badge>
+                                )}
+                            </HStack>
+                            <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }} gap={6}>
                             {filteredSchedule.map((course) => (
                                 <Card key={course.id} bg={bgColor} borderColor={borderColor} borderWidth="1px" _hover={{ shadow: "md" }}>
                                     <CardBody>
@@ -882,6 +971,7 @@ export default function Schedule() {
                                 </Card>
                             ))}
                         </Grid>
+                        </Box>
                     )}
                 </Box>
 
@@ -890,12 +980,26 @@ export default function Schedule() {
                     <Card bg={bgColor} borderColor={borderColor} borderWidth="1px">
                         <CardBody>
                             <Flex justify="space-between" align="center" mb={4}>
-                                <Text fontSize="lg" fontWeight="semibold">
-                                    Weekly Schedule - Calendar View
-                                </Text>
-                                <Badge colorScheme="blue" variant="subtle" display={{ base: "block", lg: "none" }}>
-                                    Mobile View
-                                </Badge>
+                                <VStack align="start" spacing={1}>
+                                    <Text fontSize="lg" fontWeight="semibold">
+                                        Weekly Schedule - Calendar View
+                                    </Text>
+                                    {selectedSemester && selectedYear && (
+                                        <Text fontSize="sm" color="green.600" fontWeight="medium">
+                                            Year {selectedYear} Semester {selectedSemester}
+                                        </Text>
+                                    )}
+                                </VStack>
+                                <VStack align="end" spacing={1}>
+                                    <Badge colorScheme="blue" variant="subtle" display={{ base: "block", lg: "none" }}>
+                                        Mobile View
+                                    </Badge>
+                                    {selectedSemester && selectedYear && (
+                                        <Badge colorScheme="green" variant="solid" display={{ base: "block", lg: "none" }}>
+                                            Y{selectedYear} S{selectedSemester}
+                                        </Badge>
+                                    )}
+                                </VStack>
                             </Flex>
 
                             <Box overflowX="auto" w="100%">
@@ -979,7 +1083,7 @@ export default function Schedule() {
                                         // Get unique semesters from the schedule data
                                         const uniqueSemesters = [...new Set(
                                             filteredSchedule
-                                                .filter(course => course.semesterId)
+                                                .filter(course => course.semesterId && typeof course.semesterId === 'string')
                                                 .map(course => {
                                                     const semester = semesters.find(s => s._id === course.semesterId);
                                                     return semester ? `${semester.year}-${semester.semesterNumber}` : null;
@@ -999,6 +1103,7 @@ export default function Schedule() {
                                             uniqueSemesters.forEach(semesterKey => {
                                                 const [year, semesterNum] = semesterKey.split('-');
                                                 const semesterModules = filteredSchedule.filter(course => {
+                                                    if (!course.semesterId || typeof course.semesterId !== 'string') return false;
                                                     const semester = semesters.find(s => 
                                                         s._id === course.semesterId
                                                     );

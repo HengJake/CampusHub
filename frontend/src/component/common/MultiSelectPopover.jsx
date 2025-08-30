@@ -15,7 +15,8 @@ import {
     HStack,
     Tag,
     TagLabel,
-    TagCloseButton
+    TagCloseButton,
+    Text
 } from "@chakra-ui/react";
 
 /**
@@ -56,26 +57,32 @@ export default function MultiSelectPopover({
                             <PopoverHeader color="black">Select {label}</PopoverHeader>
                             <PopoverBody maxH="180px" overflowY="auto">
                                 <VStack align="start" color="black">
-                                    {items.map(item => {
-                                        const id = getId(item);
-                                        return (
-                                            <Checkbox
-                                                key={id}
-                                                isChecked={selectedIds.includes(id)}
-                                                onChange={e => {
-                                                    let updated;
-                                                    if (e.target.checked) {
-                                                        updated = [...selectedIds, id];
-                                                    } else {
-                                                        updated = selectedIds.filter(selId => selId !== id);
-                                                    }
-                                                    onChange(updated);
-                                                }}
-                                            >
-                                                {getLabel(item)}
-                                            </Checkbox>
-                                        );
-                                    })}
+                                    {items.length > 0 ? (
+                                        items.map(item => {
+                                            const id = getId(item);
+                                            return (
+                                                <Checkbox
+                                                    key={id}
+                                                    isChecked={selectedIds.includes(id)}
+                                                    onChange={e => {
+                                                        let updated;
+                                                        if (e.target.checked) {
+                                                            updated = [...selectedIds, id];
+                                                        } else {
+                                                            updated = selectedIds.filter(selId => selId !== id);
+                                                        }
+                                                        onChange(updated);
+                                                    }}
+                                                >
+                                                    {getLabel(item)}
+                                                </Checkbox>
+                                            );
+                                        })
+                                    ) : (
+                                        <Text color="gray.500" fontSize="sm" textAlign="center" w="100%">
+                                            No {label.toLowerCase()} available
+                                        </Text>
+                                    )}
                                 </VStack>
                             </PopoverBody>
                             <PopoverFooter>
@@ -87,15 +94,26 @@ export default function MultiSelectPopover({
             </Popover>
             {/* Show selected as tags */}
             <HStack wrap="wrap" mt={2}>
-                {selectedIds.map(id => {
-                    const item = items.find(i => getId(i) === id);
-                    return item ? (
-                        <Tag key={id} size="sm" colorScheme="blue" borderRadius="full">
-                            <TagLabel>{getLabel(item)}</TagLabel>
-                            <TagCloseButton onClick={() => onChange(selectedIds.filter(selId => selId !== id))} />
-                        </Tag>
-                    ) : null;
-                })}
+                {selectedIds.length > 0 ? (
+                    selectedIds.map(id => {
+                        const item = items.find(i => getId(i) === id);
+                        return item ? (
+                            <Tag key={id} size="sm" colorScheme="blue" borderRadius="full">
+                                <TagLabel>{getLabel(item)}</TagLabel>
+                                <TagCloseButton onClick={() => onChange(selectedIds.filter(selId => selId !== id))} />
+                            </Tag>
+                        ) : (
+                            <Tag key={id} size="sm" colorScheme="red" borderRadius="full">
+                                <TagLabel>Unknown Item (ID: {id})</TagLabel>
+                                <TagCloseButton onClick={() => onChange(selectedIds.filter(selId => selId !== id))} />
+                            </Tag>
+                        );
+                    })
+                ) : (
+                    <Text color="gray.400" fontSize="sm">
+                        No {label.toLowerCase()} selected
+                    </Text>
+                )}
             </HStack>
         </FormControl>
     );

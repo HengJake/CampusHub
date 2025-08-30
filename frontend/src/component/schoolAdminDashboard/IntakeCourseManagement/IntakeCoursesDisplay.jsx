@@ -39,16 +39,13 @@ export function IntakeCoursesDisplay() {
     const [isEditMode, setIsEditMode] = useState(false);
     const [selectedSemester, setSelectedSemester] = useState(null);
     const [semesterForm, setSemesterForm] = useState({
-        courseId: '',
+        intakeCourseId: '', // Updated: use intakeCourseId instead of courseId
         semesterNumber: '',
         year: '',
         semesterName: '',
         startDate: '',
         endDate: '',
         durationMonths: '',
-        registrationStartDate: '',
-        registrationEndDate: '',
-        registrationDurationDays: '',
         examStartDate: '',
         examEndDate: '',
         examDurationDays: '',
@@ -89,16 +86,13 @@ export function IntakeCoursesDisplay() {
     // Helper functions for add semester functionality
     const resetSemesterForm = () => {
         setSemesterForm({
-            courseId: '',
+            intakeCourseId: '', // Updated: use intakeCourseId instead of courseId
             semesterNumber: '',
             year: '',
             semesterName: '',
             startDate: '',
             endDate: '',
             durationMonths: '',
-            registrationStartDate: '',
-            registrationEndDate: '',
-            registrationDurationDays: '',
             examStartDate: '',
             examEndDate: '',
             examDurationDays: '',
@@ -126,16 +120,13 @@ export function IntakeCoursesDisplay() {
 
 
         setSemesterForm({
-            courseId: selectedIntakeCourse?.courseId?._id || '',
+            intakeCourseId: selectedIntakeCourse?._id || '', // Updated: use intakeCourseId instead of courseId
             semesterNumber: latestSemester.semesterNumber + 1,
             year: latestSemester.year,
             semesterName: `Year ${latestSemester.year} Semester ${latestSemester.semesterNumber + 1}`,
             startDate: calculatedStartDate,
             endDate: '', // Will be calculated based on start date
             durationMonths: '',
-            registrationStartDate: '',
-            registrationEndDate: '',
-            registrationDurationDays: '',
             examStartDate: '',
             examEndDate: '',
             examDurationDays: '',
@@ -150,24 +141,23 @@ export function IntakeCoursesDisplay() {
     const handleOpenEditSemesterModal = () => {
         if (currentSemesters.length > 0 && currentSemesters[currentSemesterIndex]) {
             const semester = currentSemesters[currentSemesterIndex];
+            console.log("🚀 ~ handleOpenEditSemesterModal ~ semester:", semester)
             setSelectedSemester(semester);
             setIsEditMode(true);
 
             // Use the original semester's start date instead of recalculating
             const originalStartDate = semester.startDate ? new Date(semester.startDate).toISOString().split('T')[0] : '';
+            console.log("🚀 ~ handleOpenEditSemesterModal ~ semester:", semester)
 
             // Populate form with current semester data
             setSemesterForm({
-                courseId: semester.courseId._id,
+                intakeCourseId: semester.intakeCourseId._id, // Updated: use intakeCourseId instead of courseId
                 semesterNumber: semester.semesterNumber?.toString() || '',
                 year: semester.year?.toString() || '',
                 semesterName: semester.semesterName || '',
                 startDate: originalStartDate, // Use original start date
                 endDate: semester.endDate ? new Date(semester.endDate).toISOString().split('T')[0] : '',
                 durationMonths: '', // Will be calculated by the modal component
-                registrationStartDate: semester.registrationStartDate ? new Date(semester.registrationStartDate).toISOString().split('T')[0] : '',
-                registrationEndDate: semester.registrationEndDate ? new Date(semester.registrationEndDate).toISOString().split('T')[0] : '',
-                registrationDurationDays: '', // Will be calculated by the modal component
                 examStartDate: semester.examStartDate ? new Date(semester.examStartDate).toISOString().split('T')[0] : '',
                 examEndDate: semester.examEndDate ? new Date(semester.examEndDate).toISOString().split('T')[0] : '',
                 examDurationDays: '', // Will be calculated by the modal component
@@ -193,6 +183,7 @@ export function IntakeCoursesDisplay() {
     };
 
     const handleAddSemester = async () => {
+
         if (!selectedIntakeCourse?.courseId?._id) {
             toast({
                 title: "Error",
@@ -205,7 +196,7 @@ export function IntakeCoursesDisplay() {
         }
 
         // Validate required fields
-        const requiredFields = ['semesterNumber', 'year', 'semesterName', 'startDate', 'endDate', 'registrationStartDate', 'registrationEndDate', 'examStartDate', 'examEndDate'];
+        const requiredFields = ['intakeCourseId', 'semesterNumber', 'year', 'semesterName', 'startDate', 'endDate', 'examStartDate', 'examEndDate'];
         const missingFields = requiredFields.filter(field => !semesterForm[field]);
 
         if (missingFields.length > 0) {
@@ -223,7 +214,7 @@ export function IntakeCoursesDisplay() {
         try {
             const semesterData = {
                 ...semesterForm,
-                courseId: selectedIntakeCourse.courseId._id,
+                intakeCourseId: selectedIntakeCourse._id, // Updated: use intakeCourseId instead of courseId
                 semesterNumber: parseInt(semesterForm.semesterNumber),
                 year: parseInt(semesterForm.year)
             };
@@ -282,7 +273,7 @@ export function IntakeCoursesDisplay() {
         }
 
         // Validate required fields
-        const requiredFields = ['semesterNumber', 'year', 'semesterName', 'startDate', 'endDate', 'registrationStartDate', 'registrationEndDate', 'examStartDate', 'examEndDate'];
+        const requiredFields = ['semesterNumber', 'year', 'semesterName', 'startDate', 'endDate', 'examStartDate', 'examEndDate'];
         const missingFields = requiredFields.filter(field => !semesterForm[field]);
 
         if (missingFields.length > 0) {
@@ -372,7 +363,7 @@ export function IntakeCoursesDisplay() {
     const handleViewSemester = (intakeCourse) => {
         // Filter semesters for this specific intake course
         const courseSemesters = semesters.filter(s =>
-            s.courseId._id === intakeCourse.courseId._id
+            s.intakeCourseId?.courseId?._id === intakeCourse.courseId?._id
         );
 
         if (courseSemesters.length === 0) {
@@ -416,7 +407,7 @@ export function IntakeCoursesDisplay() {
 
             // Re-filter semesters for the current intake course
             const courseSemesters = semesters.filter(s =>
-                s.courseId._id === selectedIntakeCourse.courseId._id
+                s.intakeCourseId?.courseId?._id === selectedIntakeCourse.courseId?._id
             );
 
             setCurrentSemesters(courseSemesters);

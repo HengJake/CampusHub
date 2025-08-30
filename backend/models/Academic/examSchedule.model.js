@@ -8,19 +8,13 @@ import mongoose from 'mongoose';
 import Course from './course.model.js';
 
 const examScheduleSchema = new mongoose.Schema({
-    intakeCourseId: { type: mongoose.Schema.Types.ObjectId, ref: 'IntakeCourse', required: true }, // Add this
+    intakeCourseId: { type: mongoose.Schema.Types.ObjectId, ref: 'IntakeCourse', required: true },
 
-    semesterId: {
+    semesterModuleId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Semester',
-        required: true,
-        // Reference to the semester when this exam is scheduled
-    },
-
-    moduleId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Module",
+        ref: "SemesterModule",
         required: true
+        // Reference to the semester-module relationship instead of just moduleId
     },
 
     examDate: {
@@ -69,6 +63,8 @@ const examScheduleSchema = new mongoose.Schema({
         required: true,
         // Each exam schedule belongs to a specific school
     },
+    // Note: semesterId is now available through semesterModuleId.semesterId
+    // Keeping it for backward compatibility but it's redundant
 });
 
 const ExamSchedule = mongoose.model('ExamSchedule', examScheduleSchema);

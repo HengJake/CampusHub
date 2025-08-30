@@ -115,7 +115,7 @@ const UpdateScheduleModal = ({ schedule, isOpenEdit, onCloseEdit }) => {
                 roomId: formData.roomId, // Use the selected room ID
                 invigilators: formData.invigilators?.map(inv => inv._id) || [], // Convert to array of IDs
                 // Keep original values for required fields that shouldn't change
-                moduleId: schedule.moduleId?._id,
+                moduleId: schedule.moduleId?._id, // Keep moduleId for exam schedules
                 intakeCourseId: schedule.intakeCourseId?._id,
                 schoolId: schedule.schoolId?._id
             };
@@ -137,13 +137,15 @@ const UpdateScheduleModal = ({ schedule, isOpenEdit, onCloseEdit }) => {
                 roomId: formData.roomId, // Use the selected room ID
                 lecturerId: formData.lecturerId, // Use the selected lecturer ID
                 // Keep original values for required fields that shouldn't change
-                moduleId: schedule.moduleId?._id,
+                semesterModuleId: schedule.semesterModuleId?._id,
                 intakeCourseId: schedule.intakeCourseId?._id,
                 schoolId: schedule.schoolId?._id,
                 moduleStartDate: schedule.moduleStartDate,
                 moduleEndDate: schedule.moduleEndDate
             };
-
+            console.log("🚀 ~ handleSave ~ schedule:", schedule)
+            console.log("🚀 ~ handleSave ~ updateClassData:", updateClassData)
+            return;
             res = await updateClassSchedule(schedule.id, updateClassData);
             if (!res.success) {
                 showToast.error("Unable to update class schedule", res.message, "id");

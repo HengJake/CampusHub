@@ -103,9 +103,6 @@ export function IntakeManagement() {
     }
   }, []);
 
-
-  console.log(intakes)
-
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
 

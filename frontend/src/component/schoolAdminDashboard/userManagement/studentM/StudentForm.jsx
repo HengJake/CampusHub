@@ -22,9 +22,14 @@ export function StudentForm({
     const getCourseSemesters = () => {
         if (!formData.courseId) return { years: [], semesters: [] }
 
-        const courseSemesters = semesters.filter(semester =>
-            semester.courseId._id === formData.courseId && semester.isActive
-        )
+        // Filter semesters that belong to intake courses of the selected course
+        const courseSemesters = semesters.filter(semester => {
+            // Check if semester has intakeCourseId and it has courseId
+            if (!semester.intakeCourseId || !semester.intakeCourseId.courseId) {
+                return false
+            }
+            return semester.intakeCourseId.courseId._id === formData.courseId && semester.isActive
+        })
 
         const ayears = [...new Set(courseSemesters.map(sem => sem.year))].sort()
         const asemesters = [...new Set(courseSemesters.map(sem => sem.semesterNumber))].sort()

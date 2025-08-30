@@ -91,12 +91,56 @@ export const createResult = controllerWrapper(async (req, res) => {
 });
 
 export const getAllResults = controllerWrapper(async (req, res) => {
-    return await getAllRecords(Result, "results", ["studentId", "moduleId", "semesterId"]);
+    return await getAllRecords(Result, "results", [
+        {
+            path: "studentId",
+            populate: {
+                path: "intakeCourseId",
+                populate: [
+                    { path: "intakeId" },
+                    { path: "courseId" }
+                ]
+            }
+        },
+        "moduleId",
+        {
+            path: "semesterId",
+            populate: {
+                path: "intakeCourseId",
+                populate: [
+                    { path: "intakeId" },
+                    { path: "courseId" }
+                ]
+            }
+        }
+    ]);
 });
 
 export const getResultById = controllerWrapper(async (req, res) => {
     const { id } = req.params;
-    return await getRecordById(Result, id, "result", ["studentId", "moduleId", "semesterId"]);
+    return await getRecordById(Result, id, "result", [
+        {
+            path: "studentId",
+            populate: {
+                path: "intakeCourseId",
+                populate: [
+                    { path: "intakeId" },
+                    { path: "courseId" }
+                ]
+            }
+        },
+        "moduleId",
+        {
+            path: "semesterId",
+            populate: {
+                path: "intakeCourseId",
+                populate: [
+                    { path: "intakeId" },
+                    { path: "courseId" }
+                ]
+            }
+        }
+    ]);
 });
 
 export const updateResult = controllerWrapper(async (req, res) => {
@@ -114,7 +158,29 @@ export const getResultsByStudentId = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Result,
         "results",
-        ["studentId", "moduleId", "semesterId"],
+        [
+            {
+                path: "studentId",
+                populate: {
+                    path: "intakeCourseId",
+                    populate: [
+                        { path: "intakeId" },
+                        { path: "courseId" }
+                    ]
+                }
+            },
+            "moduleId",
+            {
+                path: "semesterId",
+                populate: {
+                    path: "intakeCourseId",
+                    populate: [
+                        { path: "intakeId" },
+                        { path: "courseId" }
+                    ]
+                }
+            }
+        ],
         { studentId }
     );
 });
@@ -124,7 +190,29 @@ export const getResultsByModuleId = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Result,
         "results",
-        ["studentId", "moduleId", "semesterId"],
+        [
+            {
+                path: "studentId",
+                populate: {
+                    path: "intakeCourseId",
+                    populate: [
+                        { path: "intakeId" },
+                        { path: "courseId" }
+                    ]
+                }
+            },
+            "moduleId",
+            {
+                path: "semesterId",
+                populate: {
+                    path: "intakeCourseId",
+                    populate: [
+                        { path: "intakeId" },
+                        { path: "courseId" }
+                    ]
+                }
+            }
+        ],
         { moduleId }
     );
 });
@@ -134,7 +222,29 @@ export const getResultsBySemesterId = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Result,
         "results",
-        ["studentId", "moduleId", "semesterId"],
+        [
+            {
+                path: "studentId",
+                populate: {
+                    path: "intakeCourseId",
+                    populate: [
+                        { path: "intakeId" },
+                        { path: "courseId" }
+                    ]
+                }
+            },
+            "moduleId",
+            {
+                path: "semesterId",
+                populate: {
+                    path: "intakeCourseId",
+                    populate: [
+                        { path: "intakeId" },
+                        { path: "courseId" }
+                    ]
+                }
+            }
+        ],
         { semesterId }
     );
 });
@@ -155,7 +265,29 @@ export const getResultsByGrade = controllerWrapper(async (req, res) => {
     return await getAllRecords(
         Result,
         "results",
-        ["studentId", "moduleId", "semesterId"],
+        [
+            {
+                path: "studentId",
+                populate: {
+                    path: "intakeCourseId",
+                    populate: [
+                        { path: "intakeId" },
+                        { path: "courseId" }
+                    ]
+                }
+            },
+            "moduleId",
+            {
+                path: "semesterId",
+                populate: {
+                    path: "intakeCourseId",
+                    populate: [
+                        { path: "intakeId" },
+                        { path: "courseId" }
+                    ]
+                }
+            }
+        ],
         { grade }
     );
 });
@@ -164,7 +296,19 @@ export const getStudentGPA = controllerWrapper(async (req, res) => {
     const { studentId } = req.params;
 
     try {
-        const results = await Result.find({ studentId }).populate(['moduleId', 'semesterId']);
+        const results = await Result.find({ studentId }).populate([
+            'moduleId', 
+            {
+                path: 'semesterId',
+                populate: {
+                    path: 'intakeCourseId',
+                    populate: [
+                        { path: 'intakeId' },
+                        { path: 'courseId' }
+                    ]
+                }
+            }
+        ]);
 
         if (results.length === 0) {
             return {
@@ -179,9 +323,15 @@ export const getStudentGPA = controllerWrapper(async (req, res) => {
         let totalCreditHours = 0;
 
         const gradePointMap = {
+            'A+': 4.0,
             'A': 4.0,
+            'A-': 3.7,
+            'B+': 3.3,
             'B': 3.0,
+            'B-': 2.7,
+            'C+': 2.3,
             'C': 2.0,
+            'C-': 1.7,
             'D': 1.0,
             'F': 0.0
         };
@@ -219,7 +369,28 @@ export const getModuleStatistics = controllerWrapper(async (req, res) => {
     const { moduleId } = req.params;
 
     try {
-        const results = await Result.find({ moduleId }).populate(['studentId', 'semesterId']);
+        const results = await Result.find({ moduleId }).populate([
+            {
+                path: 'studentId',
+                populate: {
+                    path: 'intakeCourseId',
+                    populate: [
+                        { path: 'intakeId' },
+                        { path: 'courseId' }
+                    ]
+                }
+            },
+            {
+                path: 'semesterId',
+                populate: {
+                    path: 'intakeCourseId',
+                    populate: [
+                        { path: 'intakeId' },
+                        { path: 'courseId' }
+                    ]
+                }
+            }
+        ]);
 
         if (results.length === 0) {
             return {
@@ -270,7 +441,19 @@ export const getSemesterStatistics = controllerWrapper(async (req, res) => {
     const { semesterId } = req.params;
 
     try {
-        const results = await Result.find({ semesterId }).populate(['studentId', 'moduleId']);
+        const results = await Result.find({ semesterId }).populate([
+            {
+                path: 'studentId',
+                populate: {
+                    path: 'intakeCourseId',
+                    populate: [
+                        { path: 'intakeId' },
+                        { path: 'courseId' }
+                    ]
+                }
+            },
+            'moduleId'
+        ]);
 
         if (results.length === 0) {
             return {
@@ -331,16 +514,25 @@ export const getResultsBySchoolId = controllerWrapper(async (req, res) => {
             {
                 path: "studentId",
                 populate: {
-                    path: ["intakeCourseId", "userId"]
+                    path: "intakeCourseId",
+                    populate: [
+                        { path: "intakeId" },
+                        { path: "courseId" }
+                    ]
                 }
             },
             {
                 path: "semesterId",
                 populate: {
-                    path: ["courseId"]
+                    path: "intakeCourseId",
+                    populate: [
+                        { path: "intakeId" },
+                        { path: "courseId" }
+                    ]
                 }
-            }
-            , "moduleId", "schoolId"],
+            },
+            "moduleId"
+        ],
         { schoolId }
     );
 });
