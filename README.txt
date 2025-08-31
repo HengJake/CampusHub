@@ -1,3 +1,7 @@
+Git Repository: https://github.com/HengJake/CampusHub.git
+Live URL (requires a few minute to load): https://campushub-grna.onrender.com
+
+
 // to install all the dependencies 
 npm i 
 
