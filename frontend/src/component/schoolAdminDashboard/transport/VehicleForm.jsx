@@ -36,6 +36,28 @@ const VehicleForm = ({ onSubmit, selectedItem, isEditMode }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        
+        // Validate plate number format (Malaysian regulations)
+        const plateNumber = formData.plateNumber.trim().toUpperCase();
+        const malaysianPlateRegex = /^[A-Z]{1,3}\s?\d{1,4}\s?[A-Z]{0,3}$/;
+        
+        if (!malaysianPlateRegex.test(plateNumber)) {
+            alert('Please enter a valid Malaysian number plate format.\n\nExamples:\nABC 1234\nW 1234\nABC 1234 DEF');
+            return;
+        }
+        
+        // Validate bus capacity limits
+        if (formData.type === 'bus') {
+            if (formData.capacity < 20) {
+                alert('Bus capacity must be at least 20 passengers.');
+                return;
+            }
+            if (formData.capacity > 300) {
+                alert('Bus capacity cannot exceed 300 passengers.');
+                return;
+            }
+        }
+        
         onSubmit(formData);
     };
 

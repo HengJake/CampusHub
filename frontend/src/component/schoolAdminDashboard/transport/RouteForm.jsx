@@ -42,6 +42,27 @@ const RouteForm = ({ onSubmit, selectedItem, isEditMode }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        
+        // Validate estimated time limits (10 minutes to 1 hour)
+        if (formData.estimateTimeMinute < 10) {
+            alert('Estimated time must be at least 10 minutes.');
+            return;
+        }
+        if (formData.estimateTimeMinute > 60) {
+            alert('Estimated time cannot exceed 1 hour (60 minutes).');
+            return;
+        }
+        
+        // Validate fare limits (RM1 to RM50)
+        if (formData.fare < 1) {
+            alert('Fare must be at least RM1.');
+            return;
+        }
+        if (formData.fare > 50) {
+            alert('Fare cannot exceed RM50.');
+            return;
+        }
+        
         const submitData = {
             ...formData,
             stopIds: selectedStopIds
