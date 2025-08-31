@@ -840,7 +840,8 @@ export default function Schedule() {
                                                     </Tr>
                                                 </Thead>
                                                 <Tbody>
-                                                    {filteredSchedule.map((schedule) => (
+                                                    {filteredSchedule.map((schedule) => {                                                        
+                                                        return(
                                                         <Tr key={schedule.id}>
                                                             <Td>
                                                                 <VStack align="start" spacing={1}>
@@ -862,7 +863,7 @@ export default function Schedule() {
                                                                 <VStack align="start" spacing={1}>
                                                                     <HStack>
                                                                         <Icon as={FiMapPin} color="gray.400" boxSize={3} />
-                                                                        <Text fontWeight="medium" noOfLines={1}>{schedule.room}</Text>
+                                                                        <Text fontWeight="medium" noOfLines={1}>{schedule.roomId?.block}-{schedule.roomId?.roomNumber}</Text>
                                                                     </HStack>
                                                                     <Text fontSize="sm" color="gray.600" noOfLines={1}>
                                                                         {schedule.building}
@@ -883,7 +884,7 @@ export default function Schedule() {
                                                                 </Badge>
                                                             </Td>
                                                         </Tr>
-                                                    ))}
+                                                    )})}
                                                 </Tbody>
                                             </Table>
                                         </TableContainer>

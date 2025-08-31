@@ -243,14 +243,10 @@ export default function Exams() {
     result.studentId?._id === currentStudentId
   )
 
-  // Filter results by semester
-  const filteredResults = currentStudentResults.filter((result) => {
-    if (selectedSemester === "all") return true
-    return result.semesterId?.semesterNumber === selectedSemester
-  })
+
 
   // Filter exam schedules by status
-  const upcomingExams = examSchedules.filter((exam) => exam.status === "scheduled")
+  const upcomingExams = examSchedules.filter((exam) => exam?.intakeCourseId?._id === currentUser.student.intakeCourseId)
   const completedExams = examSchedules.filter((exam) => exam.status === "completed")
 
   const performanceTrend = getPerformanceTrend()
@@ -427,10 +423,10 @@ export default function Exams() {
                               <HStack justify="space-between" flexWrap="wrap">
                                 <VStack align="start" spacing={1} minW="0" flex="1">
                                   <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }} noOfLines={1}>
-                                    {exam.moduleId?.moduleCode || "N/A"}
+                                    {exam.semesterModuleId?.moduleId?.code || "N/A"}
                                   </Text>
                                   <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" noOfLines={2}>
-                                    {exam.moduleId?.moduleName || "N/A"}
+                                    {exam.semesterModuleId?.moduleId?.moduleName || "N/A"}
                                   </Text>
                                 </VStack>
                                 <Badge
@@ -455,20 +451,23 @@ export default function Exams() {
                                 <HStack>
                                   <Icon as={FiClock} color="orange.500" flexShrink={0} />
                                   <Text fontSize={{ base: "sm", md: "md" }}>
-                                    {exam.startTime} - {exam.endTime}
+                                    {exam.examTime}
                                   </Text>
                                   <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
-                                    ({exam.duration} hours)
+                                    ({exam.durationMinute} minutes)
                                   </Text>
                                 </HStack>
                                 <HStack>
                                   <Icon as={FiMapPin} color="orange.500" flexShrink={0} />
                                   <VStack align="start" spacing={0} minW="0" flex="1">
                                     <Text fontSize={{ base: "sm", md: "md" }} noOfLines={1}>
-                                      {exam.roomId?.roomName || "TBD"}
+                                      {exam.roomId?.block || "TBD"}
                                     </Text>
                                     <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" noOfLines={1}>
-                                      {exam.roomId?.building || "TBD"}
+                                      {exam.roomId?.floor || "TBD"}
+                                    </Text>
+                                    <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" noOfLines={1}>
+                                      Room {exam.roomId?.roomNumber || "TBD"}
                                     </Text>
                                   </VStack>
                                 </HStack>
@@ -567,9 +566,6 @@ export default function Exams() {
                   <VStack spacing={6} align="stretch">
                     {Object.values(resultsBySemester)
                       .filter((semester) => {
-
-                        console.log(semester.semester.semesterName)
-                        console.log(semester)
 
                         if (selectedSemester === "all") return true
                         return semester.semester?.semesterNumber === selectedSemester
@@ -808,7 +804,7 @@ export default function Exams() {
               <VStack spacing={4} align="stretch">
                 <Box p={4} bg="orange.50" borderRadius="md">
                   <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" noOfLines={2}>
-                    {selectedExam.moduleId?.moduleCode || "N/A"} - {selectedExam.moduleId?.moduleName || "N/A"}
+                    {selectedExam.semesterModuleId?.moduleId?.code || "N/A"} - {selectedExam.semesterModuleId?.moduleId?.moduleName || "N/A"}
                   </Text>
                   <Badge colorScheme={selectedExam.examType === "Final" ? "red" : "blue"} mt={2} fontSize="xs">
                     {selectedExam.examType || "Exam"} Examination
@@ -830,11 +826,11 @@ export default function Exams() {
                       <HStack>
                         <Icon as={FiClock} color="orange.500" flexShrink={0} />
                         <Text fontSize={{ base: "sm", md: "md" }}>
-                          {selectedExam.startTime} - {selectedExam.endTime}
+                          {selectedExam.examTime}
                         </Text>
                       </HStack>
                       <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600">
-                        Duration: {selectedExam.duration} hours
+                        Duration: {selectedExam.durationMinute} minutes
                       </Text>
                     </VStack>
                   </Box>
@@ -847,18 +843,18 @@ export default function Exams() {
                       <HStack>
                         <Icon as={FiMapPin} color="orange.500" flexShrink={0} />
                         <Text fontSize={{ base: "sm", md: "md" }} noOfLines={1}>
-                          {selectedExam.roomId?.roomName || "TBD"}
+                          {selectedExam.roomId?.block || "TBD"}
                         </Text>
                       </HStack>
                       <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" noOfLines={1}>
-                        {selectedExam.roomId?.building || "TBD"}
+                        {selectedExam.roomId?.floor || "TBD"}
+                      </Text>
+                      <Text fontSize={{ base: "xs", md: "sm" }} color="gray.600" noOfLines={1}>
+                        Room {selectedExam.roomId?.roomNumber || "TBD"}
                       </Text>
                       <HStack flexWrap="wrap">
                         <Badge colorScheme="blue" variant="outline" fontSize="xs">
                           {selectedExam.totalMarks || 100} Marks
-                        </Badge>
-                        <Badge colorScheme="green" variant="outline" fontSize="xs">
-                          {selectedExam.weightage || "N/A"}
                         </Badge>
                       </HStack>
                     </VStack>

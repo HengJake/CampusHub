@@ -73,23 +73,11 @@ const classScheduleSchema = new mongoose.Schema({
     moduleStartDate: {
         type: Date,
         required: true,
-        validate: {
-            validator: function (v) {
-                return v instanceof Date && !isNaN(v);
-            },
-            message: 'Module start date must be a valid date'
-        }
     },
 
     moduleEndDate: {
         type: Date,
         required: true,
-        validate: {
-            validator: function (v) {
-                return v instanceof Date && !isNaN(v) && v > this.moduleStartDate;
-            },
-            message: 'Module end date must be a valid date and after start date'
-        }
     },
 });
 

@@ -36,23 +36,22 @@ const transformExamData = (examData) => {
             }
 
             try {
-                console.log('🚀 ~ transformExamData ~ processing exam:', exam);
                 // Use the existing dayOfWeek if available, otherwise calculate from examDate
                 let dayOfWeek = exam.dayOfWeek;
                 let startTime = exam.startTime;
                 let endTime = exam.endTime;
-                
+
                 // If dayOfWeek is not available, calculate from examDate
                 if (!dayOfWeek && exam.examDate) {
                     const examDate = new Date(exam.examDate);
                     dayOfWeek = examDate.toLocaleDateString('en-US', { weekday: 'long' });
                 }
-                
+
                 // If startTime is not available, use examTime
                 if (!startTime && exam.examTime) {
                     startTime = exam.examTime;
                 }
-                
+
                 // If endTime is not available, calculate from startTime and duration
                 if (!endTime && startTime && exam.durationMinute) {
                     const [hours, minutes] = startTime.split(':').map(Number);
@@ -64,8 +63,8 @@ const transformExamData = (examData) => {
 
                 const transformedExam = {
                     id: exam._id,
-                    code: exam.code || (exam.semesterModuleId.moduleId?.code ?? 'N/A'),
-                    subject: exam.subject || (exam.semesterModuleId.moduleId?.moduleName ?? 'Unknown'),
+                    code: exam.code || (exam.semesterModuleId?.moduleId?.code ?? 'N/A'),
+                    subject: exam.subject || (exam.semesterModuleId?.moduleId?.moduleName ?? 'Unknown'),
                     room: exam.room || exam.roomId,
                     building: exam.building || (exam.roomId?.block ?? 'TBD'),
                     lecturer: exam.lecturer || (exam.invigilators?.length > 0
@@ -83,9 +82,9 @@ const transformExamData = (examData) => {
                     durationMinute: exam.durationMinute,
                     intakeCourseId: exam.intakeCourseId,
                     courseId: exam.courseId || (exam.intakeCourseId?.courseId?._id),
-                    moduleId: exam.moduleId,
-                    year: exam.year || (exam.semesterId?.year),
-                    semesterId: exam.semesterId || (exam.semesterModuleId?.semesterId)
+                    moduleId: exam.semesterModuleId?.moduleId?._id,
+                    year: exam.semesterModuleId?.semesterId?.year,
+                    semesterId: exam.semesterModuleId?.semesterId?._id
                 };
 
                 return transformedExam;
@@ -119,11 +118,15 @@ const transformClassData = (classData) => {
                     type: "class",
                     examType: "",
                     intakeCourseId: classItem.intakeCourseId,
-                    courseId: classItem.courseId,
-                    moduleId: classItem.semesterModuleId?.moduleId, // Get moduleId from semesterModule
+                    courseId: classItem.intakeCourseId?.courseId?._id || classItem.courseId,
+                    moduleId: classItem.semesterModuleId?.moduleId?._id, // Get moduleId from semesterModule
                     lecturerId: classItem.lecturerId,
-                    year: classItem.year,
-                    semesterId: classItem.semesterModuleId?.semesterId // Get semesterId from semesterModule
+                    year: classItem.semesterModuleId?.semesterId?.year,
+                    semesterId: classItem.semesterModuleId?.semesterId, // Get semesterId from semesterModule
+                    schoolId: classItem.schoolId,
+                    moduleEndDate: classItem.moduleEndDate,
+                    moduleStartDate: classItem.moduleStartDate,
+                    semesterModuleId: classItem.semesterModuleId,
                 };
 
                 return transformedClass;
@@ -155,7 +158,6 @@ const getCombinedAndFilteredData = (
 
     // Defensive: filter out nulls
     allItems = allItems.filter(Boolean);
-    console.log('🚀 ~ getCombinedAndFilteredData ~ allItems after transform:', allItems);
 
     // Apply filters
     const filteredItems = allItems.filter(item => {
@@ -195,7 +197,7 @@ const getCombinedAndFilteredData = (
         // Filter by year 
         if (
             filter?.selectedYear &&
-            item.semesterId.year !== parseInt(filter.selectedYear)
+            item.semesterId?.year !== parseInt(filter.selectedYear)
         ) {
             return false;
         }
@@ -361,10 +363,6 @@ const findConsecutiveClasses = (items, timeSlots) => {
 // Enhanced table row component for list view
 const EnhancedTableRow = ({ item, getTypeColor, onEditClick }) => {
     const isExam = item.type === "exam";
-    
-    if (isExam) {
-        console.log("🚀 ~ EnhancedTableRow ~ item:", item)
-    }
 
     return (
         <Tr
@@ -644,22 +642,22 @@ export const ClusteredScheduleGrid = ({
                 item.intakeCourseId?.courseId?._id !== filter.selectedCourse
             ) return false;
 
-            // Filter by year - use new semesterModuleId structure
+            // Filter by year - use transformed data structure
             if (
                 filter?.selectedYear &&
                 item.semesterModuleId?.semesterId?.year != filter.selectedYear
             ) return false;
 
-            // Filter by semester - use new semesterModuleId structure
+            // Filter by semester - use transformed data structure
             if (
                 filter?.selectedSemester &&
                 item.semesterModuleId?.semesterId?.semesterNumber != filter.selectedSemester.semesterNumber
             ) return false;
 
-            // Filter by module - use new semesterModuleId structure
+            // Filter by module - use transformed data structure
             if (
                 filter?.selectedModule &&
-                item.semesterModuleId?.moduleId?._id != filter.selectedModule
+                item.semesterModuleId.moduleId?._id != filter.selectedModule
             ) return false;
 
             return include;

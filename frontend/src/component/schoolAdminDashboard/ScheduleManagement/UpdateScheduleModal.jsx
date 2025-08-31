@@ -2,7 +2,7 @@ import {
     Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton,
     ModalBody, ModalFooter, Button, FormControl, FormLabel,
     Input, Select, Stack,
-    HStack, Checkbox
+    HStack, Checkbox, Text
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import MultiSelectPopover from "../../common/MultiSelectPopover";
@@ -59,12 +59,30 @@ const UpdateScheduleModal = ({ schedule, isOpenEdit, onCloseEdit }) => {
                     invigilatorObjects = invigilatorObjects.filter(obj => obj !== null && obj !== undefined);
                 }
 
+                // Calculate end time for exam schedules
+                let startTime = "";
+                let endTime = "";
+
+                if (schedule.type === "exam") {
+                    startTime = schedule.startTime || "";
+                    // Calculate end time from start time and duration
+                    if (startTime && schedule.durationMinute) {
+                        const [hours, minutes] = startTime.split(':').map(Number);
+                        const startDate = new Date();
+                        startDate.setHours(hours, minutes, 0, 0);
+                        const endDate = new Date(startDate.getTime() + (schedule.durationMinute * 60000));
+                        endTime = endDate.toTimeString().slice(0, 5);
+                    }
+                } else {
+                    startTime = schedule.startTime || "";
+                    endTime = schedule.endTime || "";
+                }
 
                 setFormData({
                     type: schedule.type || "",
                     dayOfWeek: schedule.dayOfWeek || "",
-                    startTime: schedule.startTime || "",
-                    endTime: schedule.endTime || "",
+                    startTime: startTime,
+                    endTime: endTime,
                     examDate: schedule.examDate || "",
                     durationMinute: schedule.durationMinute || "",
                     roomId: schedule.room?._id || "",
@@ -97,11 +115,34 @@ const UpdateScheduleModal = ({ schedule, isOpenEdit, onCloseEdit }) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // Auto-calculate end time for exam schedules when start time or duration changes
+    useEffect(() => {
+        if (formData.type === "exam" && formData.startTime && formData.durationMinute) {
+            const [hours, minutes] = formData.startTime.split(':').map(Number);
+            const startDate = new Date();
+            startDate.setHours(hours, minutes, 0, 0);
+            const endDate = new Date(startDate.getTime() + (formData.durationMinute * 60000));
+            const endTime = endDate.toTimeString().slice(0, 5);
+
+            setFormData(prev => ({ ...prev, endTime }));
+        }
+    }, [formData.startTime, formData.durationMinute, formData.type]);
+
     const handleSave = async () => {
-
-
+        // Validate time for both exam and class schedules
         if (timeStringToUTC(formData.endTime.split(":")) < timeStringToUTC(formData.startTime.split(":"))) {
             return showToast.error("End time must be more than start time", "", "asd")
+        }
+
+        // Validate required fields based on schedule type
+        if (formData.type === "exam") {
+            if (!formData.examDate || !formData.durationMinute) {
+                return showToast.error("Exam date and duration are required for exam schedules", "", "validation-error")
+            }
+        } else {
+            if (!formData.dayOfWeek) {
+                return showToast.error("Day of week is required for class schedules", "", "validation-error")
+            }
         }
 
 
@@ -115,7 +156,7 @@ const UpdateScheduleModal = ({ schedule, isOpenEdit, onCloseEdit }) => {
                 roomId: formData.roomId, // Use the selected room ID
                 invigilators: formData.invigilators?.map(inv => inv._id) || [], // Convert to array of IDs
                 // Keep original values for required fields that shouldn't change
-                moduleId: schedule.moduleId?._id, // Keep moduleId for exam schedules
+                semesterModuleId: schedule.semesterModuleId?._id, // ✅ FIXED: Use semesterModuleId instead of moduleId
                 intakeCourseId: schedule.intakeCourseId?._id,
                 schoolId: schedule.schoolId?._id
             };
@@ -143,9 +184,8 @@ const UpdateScheduleModal = ({ schedule, isOpenEdit, onCloseEdit }) => {
                 moduleStartDate: schedule.moduleStartDate,
                 moduleEndDate: schedule.moduleEndDate
             };
-            console.log("🚀 ~ handleSave ~ schedule:", schedule)
+
             console.log("🚀 ~ handleSave ~ updateClassData:", updateClassData)
-            return;
             res = await updateClassSchedule(schedule.id, updateClassData);
             if (!res.success) {
                 showToast.error("Unable to update class schedule", res.message, "id");
@@ -155,7 +195,7 @@ const UpdateScheduleModal = ({ schedule, isOpenEdit, onCloseEdit }) => {
 
         showToast.success(`Schedule updated successfully`, res.message, "id");
 
-        // reset formdata
+        // reset formdata - Updated to match current form structure
         setFormData({
             type: "",
             dayOfWeek: "",
@@ -167,7 +207,6 @@ const UpdateScheduleModal = ({ schedule, isOpenEdit, onCloseEdit }) => {
             lecturerId: "",
             invigilators: []
         });
-        setIncludeExamSchedule(false);
         onCloseEdit();
 
         fetchExamSchedules();
@@ -211,15 +250,17 @@ const UpdateScheduleModal = ({ schedule, isOpenEdit, onCloseEdit }) => {
                 <ModalCloseButton />
                 <ModalBody>
                     <Stack spacing={4}>
-                        <FormControl>
-                            <FormLabel>Day of Week</FormLabel>
-                            <Select name="dayOfWeek" value={formData.dayOfWeek} onChange={handleChange}>
-                                <option value="">Select a day</option>
-                                {daysOfWeek.map(day => (
-                                    <option key={day} value={day}>{day}</option>
-                                ))}
-                            </Select>
-                        </FormControl>
+                        {!isExam && (
+                            <FormControl>
+                                <FormLabel>Day of Week</FormLabel>
+                                <Select name="dayOfWeek" value={formData.dayOfWeek} onChange={handleChange}>
+                                    <option value="">Select a day</option>
+                                    {daysOfWeek.map(day => (
+                                        <option key={day} value={day}>{day}</option>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        )}
 
                         <FormControl>
                             <FormLabel>Start Time</FormLabel>
@@ -228,7 +269,19 @@ const UpdateScheduleModal = ({ schedule, isOpenEdit, onCloseEdit }) => {
 
                         <FormControl>
                             <FormLabel>End Time</FormLabel>
-                            <Input type="time" name="endTime" value={formData.endTime} onChange={handleChange} />
+                            <Input
+                                type="time"
+                                name="endTime"
+                                value={formData.endTime}
+                                onChange={handleChange}
+                                isReadOnly={formData.type === "exam"}
+                                bg={formData.type === "exam" ? "gray.100" : "white"}
+                            />
+                            {formData.type === "exam" && (
+                                <Text fontSize="xs" color="gray.500" mt={1}>
+                                    End time is calculated automatically from start time and duration
+                                </Text>
+                            )}
                         </FormControl>
 
                         {isExam && (

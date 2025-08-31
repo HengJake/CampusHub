@@ -420,7 +420,6 @@ export const useScheduleManagement = () => {
             return false;
         }
 
-        console.log(item)
         return true;
     });
 

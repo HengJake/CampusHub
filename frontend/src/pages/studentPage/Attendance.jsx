@@ -87,7 +87,6 @@ export default function Attendance() {
     }
   }, [fetchAttendanceByStudentId, fetchClassSchedulesByStudentId]);
 
-  console.log(classSchedules)
 
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedModule, setSelectedModule] = useState("")
@@ -124,9 +123,9 @@ export default function Attendance() {
       if (!courseGroups[scheduleId]) {
         courseGroups[scheduleId] = {
           scheduleId: scheduleId,
-          moduleId: record.scheduleId.moduleId,
-          moduleName: record.scheduleId.moduleId?.moduleName || 'Unknown Module',
-          moduleCode: record.scheduleId.moduleId?.code || 'UNK',
+          moduleId: record.scheduleId.semesterModuleId?.moduleId,
+          moduleName: record.scheduleId.semesterModuleId?.moduleId?.moduleName || 'Unknown Module',
+          moduleCode: record.scheduleId.semesterModuleId?.moduleId?.code || 'UNK',
           lecturerId: record.scheduleId.lecturerId,
           lecturerName: record.scheduleId.lecturerId?.userId?.name || 'Unknown Lecturer',
           roomId: record.scheduleId.roomId,
@@ -191,13 +190,13 @@ export default function Attendance() {
       .slice(0, 10)
       .map(record => ({
         id: record._id,
-        courseCode: record.scheduleId.moduleId?.code || 'UNK',
-        courseName: record.scheduleId.moduleId?.moduleName || 'Unknown Module',
+        courseCode: record.scheduleId.semesterModuleId?.moduleId?.code || 'UNK',
+        courseName: record.scheduleId.semesterModuleId?.moduleId?.moduleName || 'Unknown Module',
         date: new Date(record.date).toLocaleDateString(),
         time: record.scheduleId.startTime,
         status: record.status,
         method: 'Manual',
-        location: record.scheduleId.roomId?.roomName || 'Unknown Room',
+        location: `${record.scheduleId.roomId?.block} ${record.scheduleId.roomId?.floor} ${record.scheduleId.roomId?.roomNumber}` || 'Unknown Room',
         instructor: record.scheduleId.lecturerId?.userId?.firstName + ' ' + record.scheduleId.lecturerId?.userId?.lastName || 'Unknown Lecturer'
       }));
 
@@ -713,14 +712,16 @@ export default function Attendance() {
                             {classSchedules && classSchedules.length > 0 &&
                               // Get unique modules to avoid duplicate keys
                               [...new Map(classSchedules
-                                .filter(schedule => schedule.moduleId)
-                                .map(schedule => [schedule.moduleId._id, schedule.moduleId]))
+                                .filter(schedule => schedule.semesterModuleId.moduleId)
+                                .map(schedule => [schedule.semesterModuleId.moduleId._id, schedule.semesterModuleId.moduleId]))
                                 .values()]
-                                .map((module) => (
+                                .map((module) => {
+                                  
+                                  return(
                                   <option key={module._id} value={module.moduleName}>
                                     {module.code} - {module.moduleName}
                                   </option>
-                                ))
+                                )})
                             }
                           </Select>
                         </FormControl>
@@ -735,7 +736,7 @@ export default function Attendance() {
                             {classSchedules && classSchedules.length > 0 && classSchedules
                               .filter(schedule => {
                                 // Filter by module if selected
-                                const moduleFilter = !selectedModule || schedule.moduleId?.moduleName === selectedModule;
+                                const moduleFilter = !selectedModule || schedule.semesterModuleId?.moduleId?.moduleName === selectedModule;
 
                                 // Filter out schedules that already have attendance logged
                                 const hasAttendanceLogged = attendance && attendance.some(record =>
@@ -856,7 +857,8 @@ export default function Attendance() {
                         </Tr>
                       </Thead>
                       <Tbody>
-                        {processedAttendanceData.attendanceLog.map((log) => (
+                        {processedAttendanceData.attendanceLog.map((log) => {                          
+                          return(
                           <Tr key={log.id}>
                             <Td>{log.date}</Td>
                             <Td>
@@ -885,7 +887,7 @@ export default function Attendance() {
                             </Td>
                             <Td>{log.location}</Td>
                           </Tr>
-                        ))}
+                        )})}
                       </Tbody>
                     </Table>
                   </TableContainer>

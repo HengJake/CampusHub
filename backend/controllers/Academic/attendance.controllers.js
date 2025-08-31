@@ -13,6 +13,7 @@ import {
     controllerWrapper,
     deleteAllRecords
 } from "../../utils/reusable.js";
+import { populate } from "dotenv";
 
 const validateAttendanceData = async (data) => {
     const { studentId, scheduleId, status, date, schoolId } = data;
@@ -136,12 +137,13 @@ export const getAttendanceByStudentId = controllerWrapper(async (req, res) => {
         ["studentId", {
             path: "scheduleId",
             populate: [
-                "moduleId",
+                {path: "semesterModuleId",
+                    populate: ["semesterId", "moduleId"]
+                },
                 {
                     path:"lecturerId",
                     populate: ["userId"]
                 },
-                "semesterId",
                 "roomId",
                 {
                     path: "intakeCourseId",

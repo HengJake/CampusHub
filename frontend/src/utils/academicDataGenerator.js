@@ -1253,6 +1253,7 @@ export const generateAcademicData = async (schoolId, schoolPrefix = 'SCH', userC
 
         students.forEach(async (student, studentIndex) => {
             const classSchedule = classSchedules[studentIndex % classSchedules.length];
+            console.log("🚀 ~ generateAcademicData ~ classSchedule:", classSchedule)
             const attendanceStatuses = ["present", "absent", "late"];
 
             for (let k = 0; k < 3; k++) { // 3 records per student

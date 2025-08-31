@@ -3,7 +3,6 @@
 // Helper function to transform exam data to schedule format
 export const transformExamToScheduleFormat = (examSchedules) => {
     return examSchedules.map(exam => {
-        
         // Convert exam date to day of week
         const examDate = new Date(exam.examDate)
         const dayOfWeek = examDate.toLocaleDateString('en-US', { weekday: 'long' })
@@ -43,13 +42,20 @@ export const transformExamToScheduleFormat = (examSchedules) => {
             examDate: exam.examDate,
             durationMinute: exam.durationMinute,
             invigilators: exam.invigilators,
-            // Additional exam-specific fields
+            // Additional exam-specific fields - match ClassScheduleCard.jsx structure
             subject: moduleName,
             code: moduleCode,
             room: exam.roomId, // Assuming roomId has room details
-            lecturer: exam.invigilators?.[0] || null, // First invigilator as primary
+            lecturer: exam.invigilators?.length > 0
+                ? `${exam.invigilators.length} Invigilator(s)`
+                : 'No Invigilator',
+            // Add missing fields to match ClassScheduleCard.jsx
+            building: exam.roomId?.block ?? 'TBD',
+            date: examDate.toLocaleDateString(),
+            examType: "Final",
+            duration: `${exam.durationMinute} min`,
+            year: exam.semesterModuleId?.semesterId?.year || exam.semesterId?.year
         }
-                
         return transformed
     })
 }
@@ -63,7 +69,7 @@ export const transformClassToScheduleFormat = (classSchedules) => {
         const moduleName = classItem.moduleName || classItem.semesterModuleId?.moduleId?.moduleName || 'Unknown Module';
         const moduleCode = classItem.moduleCode || classItem.code || classItem.semesterModuleId?.moduleId?.code || 'Unknown Code';
         const lecturerName = classItem.lecturerName || classItem.lecturerId?.userId?.name || 'Unassigned';
-        
+
         return ({
             id: classItem._id,
             type: 'class', // Add type field
@@ -77,11 +83,18 @@ export const transformClassToScheduleFormat = (classSchedules) => {
             schoolId: classItem.schoolId,
             semesterId: semesterId,
             semesterModuleId: classItem.semesterModuleId,
-            // Additional class-specific fields
+            // Additional class-specific fields - match ClassScheduleCard.jsx structure
             subject: moduleName,
             code: moduleCode,
             room: classItem.roomId,
             lecturer: lecturerName,
+            // Add missing fields to match ClassScheduleCard.jsx
+            building: classItem.roomId?.block ?? 'TBD',
+            date: new Date().toLocaleDateString(),
+            examType: "",
+            year: classItem.semesterModuleId?.semesterId?.year || classItem.semesterId?.year,
+            moduleEndDate: classItem.moduleEndDate,
+            moduleStartDate: classItem.moduleStartDate
         });
     })
 }
@@ -92,7 +105,7 @@ export const combineScheduleData = (classSchedules, examSchedules) => {
     const transformedExams = transformExamToScheduleFormat(examSchedules)
 
     const combined = [...transformedClasses, ...transformedExams]
-    
+
     return combined
 }
 
@@ -112,7 +125,7 @@ export const getTypeColor = (type, examType = null) => {
     return "gray"
 }
 
-// Transform exam data for display
+// Transform exam data for display - Updated to match ClassScheduleCard.jsx
 export const transformExamData = (examData) => {
     return examData.map(exam => {
         const examDate = new Date(exam.examDate)
@@ -126,15 +139,15 @@ export const transformExamData = (examData) => {
         const endDate = new Date(startDate.getTime() + (exam.durationMinute * 60000))
         const endTime = endDate.toTimeString().slice(0, 5)
 
-        // Extract nested properties safely
-        const moduleId = exam.moduleId?._id || exam.moduleId
+        // Extract nested properties safely - match ClassScheduleCard.jsx structure
+        const moduleId = exam.semesterModuleId?.moduleId?._id || exam.moduleId?._id || exam.moduleId
         const courseId = exam.intakeCourseId?.courseId?._id || exam.courseId
-        const semesterId = exam.semesterId?._id || exam.semesterId
+        const semesterId = exam.semesterModuleId?.semesterId?._id || exam.semesterId?._id || exam.semesterId
 
         return {
             id: exam._id,
-            code: exam.moduleId?.code ?? 'N/A',
-            subject: exam.moduleId?.moduleName ?? 'Unknown',
+            code: exam.semesterModuleId?.moduleId?.code ?? 'N/A',
+            subject: exam.semesterModuleId?.moduleId?.moduleName ?? 'Unknown',
             room: exam.roomId?.roomNumber
                 ? `${exam.roomId.block || 'Block'} ${exam.roomId.roomNumber}`
                 : 'TBD',
@@ -156,12 +169,13 @@ export const transformExamData = (examData) => {
             courseId: courseId,
             moduleId: moduleId,
             semesterModuleId: exam.semesterModuleId,
-            semesterId: semesterId // Add semester ID
+            semesterId: semesterId, // Add semester ID
+            year: exam.semesterModuleId?.semesterId?.year || exam.semesterId?.year
         }
     })
 }
 
-// Transform class data for display
+// Transform class data for display - Updated to match ClassScheduleCard.jsx
 export const transformClassData = (classData) => {
     return classData.map(classItem => ({
         id: classItem._id,
@@ -179,11 +193,16 @@ export const transformClassData = (classData) => {
         type: "class",
         examType: "",
         intakeCourseId: classItem.intakeCourseId,
-        courseId: classItem.courseId,
+        courseId: classItem.intakeCourseId?.courseId?._id || classItem.courseId,
         moduleId: classItem.semesterModuleId?.moduleId, // Get moduleId from semesterModule
         lecturerId: classItem.lecturerId,
         semesterModuleId: classItem.semesterModuleId,
-        semesterId: classItem.semesterModuleId?.semesterId // Get semesterId from semesterModule
+        semesterId: classItem.semesterModuleId?.semesterId, // Get semesterId from semesterModule
+        // Add missing fields to match ClassScheduleCard.jsx
+        year: classItem.semesterModuleId?.semesterId?.year,
+        schoolId: classItem.schoolId,
+        moduleEndDate: classItem.moduleEndDate,
+        moduleStartDate: classItem.moduleStartDate
     }))
 }
 
