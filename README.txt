@@ -1,7 +1,3 @@
-Postman - to test the API endpoints
-
-
-
 // to install all the dependencies 
 npm i 
 
@@ -12,14 +8,7 @@ cd frontend && npm i
 cd ..
 cd backend && npm i
 
-@ deployment stage
-npm list express path-to-regexp
-npm install path-to-regexp@6.2.1
-npm uninstall express path-to-regexp
-npm install express@^4.18.2
-
-
-directory for authorization controls
+#### directory for authorization controls #### 
 /test
 
 student dashboard
@@ -30,3 +19,13 @@ school dashboard
 
 company dashboard
 /campushub-dashboard
+
+#### Test Google Account (these are real google account) ####
+schooltestacc818@gmail.com (school administrator)
+acampushub@gmail.com (company administrator)
+studentcampushub@gmail.com (student)
+
+P@ssw0rd$$ (password used for all account)
+
+(Feel free to sign up with your own google account and head to -> profile -> generate MOCK DATA to try out the features on the system)
+
